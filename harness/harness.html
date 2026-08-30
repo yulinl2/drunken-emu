@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- vendored, NOT CDN: the sandbox egress proxy re-signs TLS and Chromium
+     rejects its certificate (ERR_CERT_AUTHORITY_INVALID), so cdnjs/unpkg
+     never load inside headless Chromium here. curl through the proxy works,
+     hence: download once with curl, serve locally forever. -->
+<script src="../vendor/tailwind.js"></script>
+<script src="../vendor/react.js"></script>
+<script src="../vendor/reactdom.js"></script>
+<script src="../vendor/babel.js"></script>
+</head><body style="margin:0"><div id="root"></div>
+<!-- Babel-standalone compiles the JSX in-browser at page load. This is the
+     single biggest latency cost of the kit (measured in README) and the price
+     of having zero build step. -->
+<script type="text/babel" data-presets="env,react" src="app.jsx"></script>
+</body></html>

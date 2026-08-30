@@ -1,0 +1,18 @@
+name: README claims
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Install Playwright + Chromium
+        run: |
+          pip install --quiet playwright
+          python -m playwright install --with-deps chromium
+      - name: Assert README still tells the truth
+        run: python3 checks/ci_claims.py

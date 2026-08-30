@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# emu — one-command entry: sync artifact -> serve -> run checks -> report.
+#
+# Encodes three sandbox survival rules learned the hard way:
+#   1. server and tests MUST run in the same shell invocation
+#      (background processes do not reliably survive across tool calls);
+#   2. never `pkill -f <pattern>` where <pattern> appears in this script's own
+#      command line (it kills the shell itself; we free the port by PID file);
+#   3. `cd` on its own line, never `cd X && cmd &` (the & backgrounds the whole
+#      && list and the cd happens in a throwaway subshell).
+#
+# Usage:
+#   bin/emu smoke  <artifact.jsx>
+#   bin/emu audit  <artifact.jsx> [read_stops] [min_px]
+#   bin/emu shots  <artifact.jsx> "anchor 1" "anchor 2" ...
+set -u
+KIT="$(cd "$(dirname "$0")/.." && pwd)"
+PORT="${EMU_PORT:-8123}"
+URL="http://127.0.0.1:${PORT}/harness/harness.html"
+MODE="${1:?mode: smoke|audit|shots}"; shift
+ART="${1:?path to artifact .jsx}"; shift || true
+
+# 1) sync
+python3 "$KIT/bin/sync_artifact.py" "$ART" "$KIT/harness/app.jsx" || exit $?
+
+# 2) free the port by PID file (rule 2), then serve harness/ (rule 3: plain lines)
+if [ -f "$KIT/out/srv.pid" ]; then
+  kill "$(cat "$KIT/out/srv.pid")" 2>/dev/null
+  sleep 0.3
+fi
+cd "$KIT"
+python3 -m http.server "$PORT" --bind 127.0.0.1 >"$KIT/out/server.log" 2>&1 &
+echo $! > "$KIT/out/srv.pid"
+sleep 1
+cd "$KIT"
+
+# 3) run the requested check (rule 1: same invocation as the server)
+case "$MODE" in
+  smoke) timeout 90  python3 -u checks/smoke.py       "$URL" "$KIT/out" ;;
+  audit) timeout 150 python3 -u checks/blind_audit.py "$URL" "$KIT/out" "$@" ;;
+  shots) timeout 120 python3 -u checks/region_shots.py "$URL" "$KIT/out" "$@" ;;
+  *) echo "unknown mode: $MODE"; exit 64 ;;
+esac
+RC=$?
+
+# 4) tidy: stop the server we started
+kill "$(cat "$KIT/out/srv.pid")" 2>/dev/null
+rm -f "$KIT/out/srv.pid"
+exit $RC

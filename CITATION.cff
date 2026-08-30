@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "add-emu: an attention-deficit emulator for claude.ai artifacts"
+abstract: >-
+  Renders a single-file React artifact in headless Chromium and audits it as a
+  reader with a scarce attention budget would meet it: taps found by visual
+  affordance rather than DOM knowledge, an eight-stop non-linear skim instead
+  of a linear read, thumb-sized hit targets, and horizontal-overflow detection.
+  The audit is content-blind by construction so that the test cannot contain
+  the answer; the accumulated judgment lives in the README rather than in the
+  checks.
+authors:
+  - given-names: Yulin
+    family-names: Li
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # fill in after registering
+repository-code: "https://github.com/yulinl2/add-emu"
+license: Apache-2.0
+keywords:
+  - artifact-emulator
+  - headless-chromium
+  - accessibility
+  - attention
+  - ui-audit
+  - react
