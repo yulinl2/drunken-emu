@@ -1,5 +1,8 @@
 # `explore` — spec
 
+*v0.1.0 · 2026-08-30 · design settled, unbuilt*
+*Provenance: requirement restated by the author 2026-08-30; spec folded the same day.*
+
 Status: **design settled, not implemented**. Tracked as P1 in
 `docs/OPEN-PROBLEMS.md`.
 

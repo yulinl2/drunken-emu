@@ -1,5 +1,8 @@
 # Open problems
 
+*v0.1.1 · 2026-08-30 · ledger, numbered, never renumbered*
+*Provenance: build sessions 2026-08-22 → 08-30 (MetaProof Project).*
+
 Read this before changing anything. Entries are numbered and never renumbered;
 closed ones stay with a `CLOSED` marker and the evidence that closed them.
 

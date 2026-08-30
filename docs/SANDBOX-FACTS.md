@@ -1,5 +1,7 @@
 # Measured facts about the claude.ai container
 
+*v0.1.0 · 2026-08 measurements · append-only; re-verify before trusting across months*
+
 Everything here was run, not recalled. Each row cost a tool call; storing them
 means the next session does not re-spend it. Usefulness is not the filter —
 *having been verified* is.
