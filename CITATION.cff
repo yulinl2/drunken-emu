@@ -13,7 +13,7 @@ abstract: >-
 authors:
   - given-names: Yulin
     family-names: Li
-    # orcid: "https://orcid.org/0000-0000-0000-0000"   # fill in after registering
+    orcid: "https://orcid.org/0009-0004-0050-8688"
 repository-code: "https://github.com/yulinl2/add-emu"
 license: Apache-2.0
 keywords:
