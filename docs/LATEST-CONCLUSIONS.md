@@ -1,6 +1,6 @@
 # Latest conclusions
 
-*v0.1.0 · 2026-08-30 · maintained*
+*v0.1.1 · 2026-08-30 · maintained*
 *Provenance: folded from the build sessions of 2026-08-22 → 08-30 (MetaProof
 Project). Superseded rows move to README `## Falsified`, never deleted here
 silently.*
@@ -46,3 +46,6 @@ mechanically checkable.
   volatile. Anything worth keeping is worth a commit.
 - `[JUDGMENT]` Docs carry version + provenance headers; version numbers anchor
   deployed history, never conversation history.
+- `[JUDGMENT]` `main` receives settled states only; iteration lives in local
+  commits; branches coordinate between agents, never between one agent's
+  drafts. Full statement: `CONTRIBUTING.md`.
