@@ -115,3 +115,13 @@ future session finds itself concluding that intentions are unnecessary, that
 impairment can be dropped for simplicity, or that a fixed tap sequence is "close
 enough" — that is the same failure recurring. Check it against README's
 `## Falsified` row 3 before acting.
+
+## Implemented layer (v0, 2026-08-30)
+
+`bin/emu step ART TRACE [--act JSON] [--salience] [--impulsivity]` — the
+stateless stepper half. Each call replays the recorded trace from a cold mount
+(deterministic; the trace *is* the state), optionally applies one action, then
+reports the impaired observation. The decider is whoever calls it — today a
+chat session enforcing working-memory/distractibility/patience by hand; later
+an API model for sweeps. `has_touch=True` is required on the context or every
+tap throws (cost one debugging round).

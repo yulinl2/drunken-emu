@@ -80,7 +80,9 @@ async def main():
             .map(s=>Math.round(s.getBoundingClientRect().height)).filter(h=>h>0);
           return {buttons: btns.length, buttons_under_min: small.length,
                   term_hits: hits.length,
-                  term_hit_min_px: hits.length?Math.min(...hits):null};
+                  term_hit_min_px: hits.length?Math.min(...hits):null,
+                  term_hit_status: hits.length?'checked'
+                    :'SKIPPED: no [data-term] convention in this artifact'};
         }""", MIN_PX)
 
         # C. dashed-element tap -> sheet open -> outside tap -> closed

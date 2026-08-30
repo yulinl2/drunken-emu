@@ -30,8 +30,17 @@ impairment**", because a competent agent is the *wrong* proxy — it is patient,
 remembers everything, and never gives up, so it would pass artifacts that real
 readers fail.
 
-**Blocked on.** A paid API key. `explore` needs a model call per step, so it can
-never be the CI layer; `blind_audit` stays as the free deterministic gate.
+**Blocked on.** A paid API key — *for the automated sweep only.* The blocker
+was dissolved for interactive use on 2026-08-30 by inverting the architecture:
+`checks/explore_step.py` is a **stateless stepper** (replay trace → apply one
+action → observe under impairment flags) and the **calling session is the
+decider**. No API call, no daemon, deterministic replay ≈0.5 s/step overhead.
+Observation-side impairments (`--salience`, `--impulsivity`) live in the
+stepper; decider-side ones (working-memory N, distractibility p, patience k)
+are the session's contract, stated in EXPLORE-SPEC's implemented-layer note.
+Demonstrated end-to-end: salience-trap fixture, 3-step trace, one deliberate
+hijack, goal reached. Dose–response sweeps still need an API decider; P1 stays
+open for that half only.
 
 ---
 
@@ -57,12 +66,18 @@ Do not re-add a constant assertion. It will be red on day one somewhere.
 
 ---
 
-## P4 — `[data-term]` coupling in the hit-area metric `OPEN`
+## P4 — `[data-term]` coupling in the hit-area metric `CLOSED`
 
 `blind_audit.py`'s hit-area check assumes a `[data-term]` convention and
 self-skips when absent. That is honest but narrow: artifacts not using that
 convention get a silently reduced audit. Either generalise the affordance
 detector or make the skip loud in the JSON output.
+
+**Closed 2026-08-30** by the loud-skip route: `blind_audit` JSON now carries
+`term_hit_status: "checked" | "SKIPPED: no [data-term] convention…"`. Verified
+on a data-term-free fixture (status string present, other checks unaffected).
+Generalising the detector remains possible future work but the silent-degrade
+hazard is gone.
 
 ---
 

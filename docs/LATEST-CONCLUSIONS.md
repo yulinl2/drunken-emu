@@ -49,3 +49,18 @@ mechanically checkable.
 - `[JUDGMENT]` `main` receives settled states only; iteration lives in local
   commits; branches coordinate between agents, never between one agent's
   drafts. Full statement: `CONTRIBUTING.md`.
+
+## Loop of 2026-08-30 (second branch)
+
+- `[FACT]` The container volume survives conversation-branch rollback plus a
+  multi-hour gap: a marker written by one branch was read intact by another.
+  The marker's own "UNVERIFIED" caveat is hereby closed by being read.
+- `[FACT]` `touchscreen.tap` requires `has_touch=True` on the context;
+  `blind_audit` never hit this because it uses a bare `new_page()` on a
+  touch-enabled default. Mount signal is `#root.children.length>0`, not any
+  `window.__mounted` flag.
+- `[FACT]` `tools/tick.sh` (slides repo) measured live: stale-clone catch-up
+  detected a real 70-line drift, prefetch dispatch 204, 2.13 s total.
+- `[JUDGMENT]` "Blocked on X" entries deserve a second look at the
+  architecture: P1's API-key blocker dissolved by moving the decider outside
+  the tool. The ledger keeps the original claim; this line is the correction.
