@@ -8,6 +8,33 @@ Renders a claude.ai single-file React artifact inside headless Chromium and
 audits it the way a first-time phone reader would meet it: blind taps found by
 visual affordance, screenshots judged by eye, mechanics asserted by script.
 
+> **Fresh session? Read in this order.** `docs/OPEN-PROBLEMS.md` (what is
+> unfinished and why) → this file's `## Falsified` (what was already tried and
+> killed) → `docs/SANDBOX-FACTS.md` (measured environment facts, so you do not
+> re-spend the tool calls) → `docs/EXPLORE-SPEC.md` (the design that is settled
+> but unbuilt). The name is the specification: impaired executive function
+> presents from outside like drunkenness, and an artifact that survives a drunk
+> emu survives everyone. It is not self-deprecation about the current code.
+
+```
+drunken-emu/
+├── bin/
+│   ├── emu                    entry point: smoke | audit | shots
+│   └── sync_artifact.py       .jsx -> harness-mountable app.jsx
+├── checks/
+│   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
+│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
+│   ├── region_shots.py        content-aware camera: anchors choose where to look only
+│   └── ci_claims.py           asserts this README is still true; runs in CI
+├── docs/
+│   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered
+│   ├── EXPLORE-SPEC.md        P1 design: parameterised impairment, dose-response curve
+│   └── SANDBOX-FACTS.md       measured container facts
+├── harness/harness.html       offline React mount point
+├── vendor/                    unmodified upstream bundles (see THIRD_PARTY_NOTICES.md)
+└── out/                       screenshots and logs (gitignored)
+```
+
 ## Bootstrap (any fresh session)
 
 Nothing to install. Verified in a claude.ai container: Python `playwright` is
