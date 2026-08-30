@@ -64,3 +64,16 @@ mechanically checkable.
 - `[JUDGMENT]` "Blocked on X" entries deserve a second look at the
   architecture: P1's API-key blocker dissolved by moving the decider outside
   the tool. The ledger keeps the original claim; this line is the correction.
+
+## 2026-08-30 · second Ralph pass (sibling branch, same conversation)
+
+- The cross-branch handoff protocol worked as designed: marker →
+  OPEN-PROBLEMS → Falsified → SANDBOX-FACTS stopped three duplicate builds
+  (tick.sh, repo staging, packaging) before any code was touched.
+- P1 stepper is deterministic across container instances (identical affordance
+  set; screenshot RMS 0.93 with diff confined to the animated banner).
+- P7 opened and closed in-session: sync now refuses src == dst. The bug was
+  triggered, diagnosed, re-triggered twice by the fix procedure itself, then
+  guarded — sequence discipline (patch → verify → only then touch fixtures)
+  is the transferable lesson.
+

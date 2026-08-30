@@ -27,6 +27,12 @@ import sys
 SUPPORTED = {"react", "react-dom", "react-dom/client"}
 
 def main(src_path: str, out_path: str) -> int:
+    import os as _os
+    if _os.path.realpath(src_path) == _os.path.realpath(out_path):
+        sys.stderr.write('refuse: src == dst - sync is not idempotent; '
+                         'double-processing duplicates hook rebinds and the mount call. exit 2\n')
+        return 2
+
     src = open(src_path, encoding="utf-8").read()
 
     # 5. dependency boundary check, before any rewriting
