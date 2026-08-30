@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "add-emu: an attention-deficit emulator for claude.ai artifacts"
+title: "drunken-emu: an attention-deficit emulator for claude.ai artifacts"
 abstract: >-
   Renders a single-file React artifact in headless Chromium and audits it as a
   reader with a scarce attention budget would meet it: taps found by visual
@@ -14,7 +14,7 @@ authors:
   - given-names: Yulin
     family-names: Li
     orcid: "https://orcid.org/0009-0004-0050-8688"
-repository-code: "https://github.com/yulinl2/add-emu"
+repository-code: "https://github.com/yulinl2/drunken-emu"
 license: Apache-2.0
 keywords:
   - artifact-emulator

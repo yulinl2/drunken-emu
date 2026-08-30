@@ -1,6 +1,6 @@
-# add-emu — attention-deficit emulator for claude.ai artifacts
+# drunken-emu — attention-deficit emulator for claude.ai artifacts
 
-[![README claims](https://github.com/yulinl2/add-emu/actions/workflows/claims.yml/badge.svg)](https://github.com/yulinl2/add-emu/actions/workflows/claims.yml)
+[![README claims](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml/badge.svg)](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml)
 
 Models the reader who will not wait. Offline, sandbox-hardened.
 
@@ -39,6 +39,13 @@ a removed error is an error that can come back.
 |---|---|
 | "the Babel phase is linear-ish in source bytes" | 80 KB of pure comments (2 DOM nodes) mounts in 0.20 s; 19 KB of 500 spans takes 0.55 s. Node count is the driver. `ci_claims.py` C1 now pins this comparison so the theory cannot revive. |
 | "mount ~ 0.18 s + 0.55 ms/node" *as a portable constant* | Re-measured in a different container with simpler span fixtures: 0.24 s + 0.17 ms/node. Same shape, 3x different slope. The relationship is the finding; the constant is fixture- and hardware-local. |
+| "Blind by default" as a complete model of a first-time reader | Not killed by measurement — killed by re-reading the original requirement, which asked for *long recursive click chains, each step with a stated intention, driven by common sense and by what is visible on the page*. The anti-leak rule licenses content-blindness only. Intention-lessness was a capability gap wearing a correct principle as a defence, and the defence was persuasive enough to survive review twice. Current state: 4 taps, recursion depth 0, zero feedback. Tracked as `explore`. |
+
+The third row is a different species from the first two. Those were wrong
+numbers; a measurement killed them. This one was a wrong *justification* — it
+came with its own argument, and the argument was sound about something else.
+Numbers get checked. Rationales get quoted. Prefer the ones that can be
+falsified by running something.
 
 ## Quick start
 
@@ -95,12 +102,32 @@ emu-kit/
    own line** — three sandbox rules each purchased with a debugging round
    (background processes die between tool calls; `pkill -f` can match its own
    command line; `A && B &` backgrounds the whole list including the cd).
-5. **Blind by default, content-aware only behind a fence** — `blind_audit.py`
-   may know conventions (dashed underline = tappable; 3–6 sibling buttons = a
-   control cluster) but no content strings; judgment happens by looking at its
-   screenshots. `region_shots.py` is the one content-aware tool and its anchors
-   only aim the camera. This is the anti-leak rule: the test must not already
-   contain the answer.
+5. **Content-blind and — for now — also intention-less. Those are two different
+   things, and an earlier version of this file conflated them.**
+
+   The anti-leak half is real and stays: `blind_audit.py` carries no strings
+   from the artifact, so it cannot pass by already knowing the answer. Only
+   `region_shots.py` is content-aware, and only to decide *where to point the
+   camera*, never what counts as correct.
+
+   What the anti-leak rule does **not** require: that the tapper have no goals.
+   An agent can hold an intention ("find how to change the units"), form it
+   from the rendered page plus common sense, act, observe the result, and
+   choose a next step — without ever seeing source or an expected-output list.
+   That is content-blind *and* goal-directed. Both at once. The rule never
+   forbade it.
+
+   This implementation is not that. Measured, not estimated: 4 `touchscreen.tap`
+   calls, one at a hardcoded pixel; recursion depth 0; no variable carries a
+   result into a later decision; the longest chain is one precomputed
+   coordinate tapped six times.
+
+   It is kept anyway because it is free, deterministic, and finishes in ~12 s,
+   which is what lets it gate CI. A goal-directed agent needs a model call per
+   step: paid, non-deterministic, unfit as a red/green gate. So this is the
+   **smoke layer**, and it should stop presenting itself as how a reader meets
+   the page. That layer is `explore`, and it does not exist yet.
+
 6. **Anchor matching picks the tightest element** (shortest textContent), not
    the first in document order — outer wrappers contain all text and would
    always win otherwise.
