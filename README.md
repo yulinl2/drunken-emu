@@ -16,20 +16,29 @@ visual affordance, screenshots judged by eye, mechanics asserted by script.
 > presents from outside like drunkenness, and an artifact that survives a drunk
 > emu survives everyone. It is not self-deprecation about the current code.
 
+Selected files, annotated for orientation. The complete and CI-asserted index is
+`docs/TREE.md`; this copy is deliberately partial, so do not read an absence
+here as evidence of absence.
+
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots
-│   └── sync_artifact.py       .jsx -> harness-mountable app.jsx
+│   ├── emu                    entry point: smoke | audit | shots | step
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx
+│   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
+│   ├── explore_step.py        P1: one stateless step; the calling session decides
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   └── ci_claims.py           asserts this README is still true; runs in CI
 ├── docs/
 │   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered
+│   ├── LATEST-CONCLUSIONS.md  one line per settled conclusion, tagged
 │   ├── EXPLORE-SPEC.md        P1 design: parameterised impairment, dose-response curve
-│   └── SANDBOX-FACTS.md       measured container facts
+│   ├── ZENODO-RUNBOOK.md      P5: ordering constraint, human part A then session part B
+│   ├── SANDBOX-FACTS.md       measured container facts
+│   └── TREE.md                complete tracked-file index (generated)
 ├── harness/harness.html       offline React mount point
 ├── vendor/                    unmodified upstream bundles (see THIRD_PARTY_NOTICES.md)
 └── out/                       screenshots and logs (gitignored)

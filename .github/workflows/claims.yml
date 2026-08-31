@@ -4,6 +4,15 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  # Dependency-free structural claims, so this fails in seconds rather than
+  # after a Chromium install.
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert docs/TREE.md matches the tracked file set
+        run: python3 bin/gen_tree.py --check
+
   claims:
     runs-on: ubuntu-latest
     steps:

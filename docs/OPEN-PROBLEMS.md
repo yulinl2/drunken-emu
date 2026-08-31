@@ -1,7 +1,7 @@
 # Open problems
 
-*v0.1.2 · 2026-08-30 · ledger, numbered, never renumbered*
-*Provenance: build sessions 2026-08-22 → 08-30 (MetaProof Project).*
+*v0.1.2 · 2026-08-31 · ledger, numbered, never renumbered*
+*Provenance: build sessions 2026-08-22 → 08-31 (MetaProof Project).*
 
 Read this before changing anything. Entries are numbered and never renumbered;
 closed ones stay with a `CLOSED` marker and the evidence that closed them.
@@ -131,6 +131,20 @@ Topics to add when convenient: `artifact-emulator` `headless-chromium`
 author's call, overruling a 🪿 recommendation). `homepage` and `topics` remain
 unset; the topic list above still applies.
 
+**Tested, not merely reasoned (2026-08-31):** the blocker above was inferred
+from documentation. It has now been executed against the live repository with
+the working token (`Contents` + `Actions` + `Workflows` + `Metadata`):
+
+| Call | Result |
+|---|---|
+| `PUT /repos/yulinl2/drunken-emu/topics` | **403** `Resource not accessible by personal access token` |
+| `PATCH /repos/yulinl2/drunken-emu` (homepage) | **403** |
+
+Both endpoints are therefore confirmed closed to this permission set, not
+assumed closed. Confidence on P6's blocker: **A**. The decision not to widen
+the token stands, and this row exists so no future session re-spends the two
+calls to find out.
+
 ---
 
 ## P7 — `sync_artifact` double-processes its own output `CLOSED`
@@ -149,3 +163,37 @@ silently and invites itself back.
 sync is byte-identical across repeated runs on the same input. Full
 idempotence (safe re-sync of any already-synced file) remains future work;
 this guard removes only the observed footgun.
+
+---
+
+## P8 — a live PAT sits in cleartext in `.git/config` `OPEN`
+
+Found 2026-08-31 by inspecting a working tree that arrived from another
+session. `git remote add origin https://x-access-token:<TOKEN>@github.com/...`
+writes the token verbatim into `.git/config`, where it stays for the life of
+the clone. Verified on this tree: the embedded token answered `GET /user` with
+**200** and reports expiry `2026-09-29`.
+
+Three ways it escapes, all of which have nearly happened in this project:
+
+1. **Archiving the working directory.** `tar czf kit.tar .` from the repo root
+   includes `.git/`. The kit was in fact shipped between sessions as a tar; had
+   that tar been made one directory level up and after `git init`, the token
+   would have travelled with it. `.gitignore` does not help — `.git/` is not a
+   tracked path, it *is* the repository.
+2. **Printing the remote.** `git remote -v` and `cat .git/config` both echo it
+   in full. This is how it was found, which means it is also now in a
+   conversation transcript.
+3. **Any command that prints its own invocation** on error, since the URL is an
+   argument.
+
+**Mitigations, in order of preference.** (a) Keep the token out of the URL
+entirely and pass it per-invocation:
+`git -c http.extraheader="Authorization: Bearer $TOK" push ...`, reading `$TOK`
+from a `600` file outside the repository. (b) If a token must be embedded,
+treat the whole clone as a secret and never archive it. (c) Rotate on any
+suspicion; fine-grained tokens are single-repo, so rotation is cheap.
+
+Not closed here because the fix changes how every session sets up its remote,
+and that convention belongs in `CONTRIBUTING.md` rather than being applied
+silently by one session to one clone.

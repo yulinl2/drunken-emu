@@ -1,7 +1,7 @@
 # Latest conclusions
 
-*v0.1.1 · 2026-08-30 · maintained*
-*Provenance: folded from the build sessions of 2026-08-22 → 08-30 (MetaProof
+*v0.1.2 · 2026-08-31 · maintained*
+*Provenance: folded from the build sessions of 2026-08-22 → 08-31 (MetaProof
 Project). Superseded rows move to README `## Falsified`, never deleted here
 silently.*
 
@@ -25,9 +25,28 @@ mechanically checkable.
 - `[FACT]` Mount cost is linear in DOM nodes, not source bytes: 80 KB of
   comments (2 nodes) mounts faster than 19 KB of 500 spans, in every
   environment tried.
-- `[FACT]` The linear *constant* spans 0.122–0.55 ms/node across three
+- `[FACT]` The linear *constant* spans 0.122–0.55 ms/node across **four**
   environments (4.5x). CI therefore asserts orderings and R², never constants
   — first CI run on a foreign runner passed 6/6 because of this choice.
+- `[FACT]` **The slope is not stable within one machine either**, which changes
+  what the cross-environment spread means. Six consecutive runs of
+  `ci_claims.py` in a single claude.ai container, no code or fixture changes:
+  **0.274 · 0.212 · 0.200 · 0.193 · 0.215 · 0.228** ms/node — a 1.42x ratio
+  from the same hardware in one sitting. The first reading of a session is the
+  outlier every time (cold Chromium, cold page cache), so a single measurement
+  systematically over-reports.
+- `[JUDGMENT]` Consequence: "0.122–0.55 across four environments" cannot be
+  read as four environment-specific constants. Roughly a third of that 4.5x
+  span is reproducible within one box, so the between-environment component is
+  smaller than the interval suggests and no single number characterises any one
+  environment. This *strengthens* the P3 resolution rather than weakening it —
+  asserting orderings and R² was correct for a reason stronger than the one
+  originally given.
+- `[JUDGMENT]` Method note, self-inflicted: the fourth datapoint was written
+  into this file as a settled `[FACT]` from **one** run, then corrected within
+  the same session when a routine regression produced 0.212. The project's own
+  rule — sample twice before writing it down — was violated by the session that
+  had just re-read the rule. The rule needs a mechanical home, not a prose one.
 - `[JUDGMENT]` Falsified entries split by species: wrong **numbers** die by
   re-measurement; wrong **justifications** propagate by being quoted. The
   ledger must hold both, and the second kind is the dangerous one.
