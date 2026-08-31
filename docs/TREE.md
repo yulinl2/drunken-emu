@@ -29,6 +29,7 @@ that is never executed is not a regeneration command.
 |       `-- claims.yml
 |-- bin/
 |   |-- apply_doi.sh
+|   |-- blocker_check.py
 |   |-- emu
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
@@ -62,5 +63,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-8 directories, 29 files tracked
+8 directories, 30 files tracked
 ```

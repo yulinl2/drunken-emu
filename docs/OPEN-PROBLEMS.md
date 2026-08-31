@@ -1,6 +1,6 @@
 # Open problems
 
-*v0.1.3 · 2026-08-31 · ledger, numbered, never renumbered*
+*v0.1.4 · 2026-08-31 · ledger, numbered, never renumbered*
 *Provenance: build sessions 2026-08-22 → 08-31 (MetaProof Project).*
 
 Read this before changing anything. Entries are numbered and never renumbered;
@@ -194,9 +194,16 @@ from a `600` file outside the repository. (b) If a token must be embedded,
 treat the whole clone as a secret and never archive it. (c) Rotate on any
 suspicion; fine-grained tokens are single-repo, so rotation is cheap.
 
-Not closed here because the fix changes how every session sets up its remote,
-and that convention belongs in `CONTRIBUTING.md` rather than being applied
-silently by one session to one clone.
+**Convention landed 2026-08-31** as `CONTRIBUTING.md` rule 7: move history with
+`git bundle`, never with a tar of a working tree. Credential-free bundles of
+both repositories now sit in `/mnt/user-data/outputs/bundles/`, and a clone from
+one was checked for `github_pat_`, `x-access-token` and `olp_` in the restored
+`.git/config` — clean, on a second independent sampling.
+
+Still `OPEN`, and the remaining half is the larger one: the *existing* clones
+still carry the token in their remote URL, and no session has switched to
+`git -c http.extraheader=...`. The rule tells new clones what to do; it does
+nothing about the ones already on disk.
 
 ---
 
@@ -216,12 +223,15 @@ an append-only file. That loop found it first; this repository re-derived the
 hazard from scratch because nothing connects the two ledgers. The cost of the
 missing link is one rediscovery, which is cheap; the next one may not be.
 
-**Fix, not yet applied.** Content-derived identifiers instead of positional
-ones: `P-<first 4 hex of sha1(title)>`, allocated without reading any other
-entry, collision-free without coordination. Existing `P1`–`P9` keep their names
-forever (rule: never renumber); the scheme changes for new entries only. Needs a
-line in `CONTRIBUTING.md` before it is applied, since it is a convention every
-session must follow rather than a change one session makes.
+**Convention landed 2026-08-31** as `CONTRIBUTING.md` rule 6: content-derived
+identifiers, `P-<first 4 hex of sha1(title)>`, allocated without reading any
+other entry and therefore collision-free without coordination. `P1`–`P10` keep
+their names forever.
+
+The scheme is now **in use**: the entry below this one is `P-9cef`, the first
+allocated under it. Two sessions writing the same title would produce the same
+id and collide harmlessly on identical content; two writing different titles
+cannot collide at all.
 
 **Left deliberately as `P9`** under the old scheme, so the ledger carries one
 instance of the hazard it describes.
@@ -250,3 +260,34 @@ audience. The two worth taking regardless are the **md5 identity table** (P8
 showed working trees arrive from elsewhere with unknown provenance) and the
 **git bundle** transport (it carries history and refuses to carry `.git/config`
 credentials, which is exactly the P8 hazard).
+
+---
+
+## P-9cef — a blocked entry has no way to notice its blocker clearing `OPEN`
+
+*First entry under the content-derived scheme (`CONTRIBUTING.md` rule 6):
+`P-` + first four hex of `sha1("blocked-on entries have no mechanism to notice
+the blocker clearing")`. Allocated without reading any other entry.*
+
+Twice now, an entry has sat in a blocked state after the block was gone.
+
+| Entry | Said it was waiting for | What had actually happened |
+|---|---|---|
+| P5 | "enable Zenodo, then say the word" | sat three sessions with no instructions written; fixed by `docs/ZENODO-RUNBOOK.md` |
+| P8, P9 | "the convention belongs in `CONTRIBUTING.md`" | rules 6 and 7 were written by another session; both entries still read as unwritten when re-read on 08-31 |
+
+The shape is the same both times, and it is specific to a many-session ledger:
+the session that clears a blocker is rarely the session that recorded it, and
+nothing links the two. In a single-author repository the author remembers; here
+memory *is* the ledger, so an unlinked blocker is a permanent one.
+
+**Not a documentation problem.** Both entries were accurate when written and
+neither author was careless. What is missing is a mechanical re-read trigger.
+
+**Fix, partially applied.** `bin/blocker_check.py` lists every `OPEN` or
+`SPEC'D` entry that names a tracked file, together with whether that file has
+changed more recently than the ledger. It cannot decide whether the block is
+genuinely cleared — that needs reading — but it turns "remember to re-check
+everything" into a short list, which is the part a session can actually do.
+Advisory by design: a hard CI failure would make every edit to `CONTRIBUTING.md`
+red, which trains people to ignore it.
