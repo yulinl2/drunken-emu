@@ -89,24 +89,33 @@ hazard is gone.
 
 ---
 
-## P5 — no Zenodo DOI yet `OPEN`
+## P5 — no Zenodo DOI yet `SPEC'D`
 
-Plan: tag `v0.1.0`, cut a GitHub Release, enable the repo in Zenodo, which mints
-a DOI via DataCite. With ORCID auto-update authorised, the DOI then flows into
-the author's ORCID record without manual entry. Nothing here is built yet; the
-`CITATION.cff` is in place and already carries the ORCID iD.
+Runbook: **`docs/ZENODO-RUNBOOK.md`** (written 2026-08-31 — it did not exist
+before, which is why this entry sat in the human queue for three sessions
+saying "enable Zenodo, then say the word" while giving nobody anything to
+click). `CITATION.cff` is in place and carries the ORCID iD under `authors:`,
+which Zenodo maps to DataCite `creators` — the field auto-update requires.
 
-**Ordering constraint (added 2026-08-30, confidence B — Zenodo webhook
-behaviour from documentation, not yet exercised here):** Zenodo archives only
-releases created *after* the repo is enabled on zenodo.org; a release cut first
-mints no DOI and burns the version number. Runbook: (1) human — zenodo.org →
-GitHub → enable drunken-emu, authorise ORCID auto-update; (2) session — push
-tag `v0.1.0` + create the GitHub Release via API (`Contents: RW` suffices);
-(3) verify the DOI, add badge to README and `doi:` to CITATION.cff. Step 2 is
-ready and waiting on step 1.
+**Ordering constraint, now confidence A** (was B; raised 2026-08-31 after three
+independent sources agreed): Zenodo archives only releases created *after* the
+repository is enabled there. A release cut first mints no DOI and spends the
+version number, because a repository cannot be attached to an existing Zenodo
+record, no DOI can be reserved, and the DOI is unknowable before minting.
 
+**Correction to this entry's earlier text.** It said to "authorise ORCID
+auto-update" on Zenodo. That switch is not on Zenodo. Zenodo mints through
+DataCite, so auto-update is enabled at <https://profiles.datacite.org/> →
+Settings → ORCID Auto-Update. Anyone following the old wording would have
+hunted for a control that does not exist.
 
----
+**State checked 2026-08-31:** 0 tags, 0 releases, no Zenodo record under this
+name. Nothing spent; `v0.1.0` is still free.
+
+**Ready and waiting on the human:** part B of the runbook is one tag push plus
+one API call, and `bin/apply_doi.sh <doi>` then writes the badge into README.md
+and the `identifiers:` block into CITATION.cff idempotently (tested: applied
+twice with different DOIs, exactly one of each remains, CFF still parses).
 
 ## P6 — repo metadata is set by hand `OPEN`
 
