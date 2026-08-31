@@ -77,3 +77,12 @@ or by measuring in a second environment.
 
 Single-point observations of caching, asynchronous, or lazily-indexed systems
 are not facts. Sample twice, or in two environments, before writing it down.
+
+## 2026-08-31 (pass 4, claude.ai chats)
+- GitHub `workflow_runs` JSON can contain raw control characters in string
+  fields; Python `json.loads` default-strict rejects the payload. Parse with
+  `strict=False`. Symptom: a poller that never sees its own run complete.
+- `/mnt/project` is not a mounted path in this container even when the system
+  prompt lists project files under it; `ls /mnt` shows no such directory and
+  direct reads fail. Project knowledge is reachable only through the
+  project-knowledge search tool. Re-confirms: disk mount state != project state.
