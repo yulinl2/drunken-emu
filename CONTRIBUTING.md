@@ -20,3 +20,22 @@ branches that no one — including their author — can later identify.
    them.
 5. **Session rhythm:** wake by reading `docs/OPEN-PROBLEMS.md` (the reading
    order is at the top of the README); sleep by making your at-most-one push.
+
+6. **Allocate problem IDs from content, not from position.** New entries in
+   `docs/OPEN-PROBLEMS.md` take the form `P-<first 4 hex of sha1(title)>`:
+
+       printf '%s' 'your problem title' | sha1sum | cut -c1-4
+
+   Sequential numbering assumes one writer. This project has not had one since
+   2026-08-30 — three sessions touched the repository within an hour on 08-31 —
+   and two sessions opening a problem in parallel both compute the same next
+   integer. Rule 4 forbids rewriting `main`, so such a collision is permanent.
+   The sibling metascience loop hit exactly this as `NEED-0011` with append-only
+   ledger IDs. `P1`–`P10` keep their names forever; the scheme changes only for
+   entries opened after this rule.
+
+7. **Move history between machines with `git bundle`, never with `tar` of a
+   working tree.** `git remote add` writes the token verbatim into
+   `.git/config`, so a tar of the repository root carries a live credential —
+   demonstrated, not hypothesised (P8). `git bundle create out.bundle --all`
+   carries every commit and ref and no configuration at all.
