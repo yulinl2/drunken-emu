@@ -1,6 +1,6 @@
 # Open problems
 
-*v0.1.2 · 2026-08-31 · ledger, numbered, never renumbered*
+*v0.1.3 · 2026-08-31 · ledger, numbered, never renumbered*
 *Provenance: build sessions 2026-08-22 → 08-31 (MetaProof Project).*
 
 Read this before changing anything. Entries are numbered and never renumbered;
@@ -197,3 +197,56 @@ suspicion; fine-grained tokens are single-repo, so rotation is cheap.
 Not closed here because the fix changes how every session sets up its remote,
 and that convention belongs in `CONTRIBUTING.md` rather than being applied
 silently by one session to one clone.
+
+---
+
+## P9 — this ledger's numbering cannot survive parallel sessions `OPEN`
+
+Numbers here are allocated max-seen-plus-one, which assumes a single writer.
+This project has not had a single writer since 2026-08-30: on 08-31 two sessions
+worked the same repository within one hour, and a third arrived holding a clone
+three commits stale. Two sessions that each open a problem allocate the same
+integer, and `CONTRIBUTING.md` rule 4 forbids rewriting `main`, so the collision
+is permanent — two different P9s, both published, neither withdrawable.
+
+**This is not a new discovery.** The same failure is recorded as `NEED-0011` in
+the sibling metascience loop, where region-B ledger IDs are also sequential
+integers and two parallel retry branches each wrote a different `COR-0007` into
+an append-only file. That loop found it first; this repository re-derived the
+hazard from scratch because nothing connects the two ledgers. The cost of the
+missing link is one rediscovery, which is cheap; the next one may not be.
+
+**Fix, not yet applied.** Content-derived identifiers instead of positional
+ones: `P-<first 4 hex of sha1(title)>`, allocated without reading any other
+entry, collision-free without coordination. Existing `P1`–`P9` keep their names
+forever (rule: never renumber); the scheme changes for new entries only. Needs a
+line in `CONTRIBUTING.md` before it is applied, since it is a convention every
+session must follow rather than a change one session makes.
+
+**Left deliberately as `P9`** under the old scheme, so the ledger carries one
+instance of the hazard it describes.
+
+---
+
+## P10 — organisational conventions proven in sibling loops are not adopted here `OPEN`
+
+A search of this project's other Ralph loops on 2026-08-31 found machinery that
+neither this repository nor the Overleaf sync repository uses. Recorded here so
+the comparison is not re-run:
+
+| Convention | Where it is in service | State here |
+|---|---|---|
+| Numeric filename prefixes fixing read order (`00_INDEX_dir-tree`, `01_OPEN-PROBLEMS`, `02_LATEST-CONCLUSIONS`, `03_REFERENCE-LEDGER`, `05_ERRATA_*`) | CORAL loop | absent — read order is prose in the README, so it is advisory rather than structural |
+| `00-HANDOFF-README.md` as a named entry point distinct from the landing README | HAN compendium | absent |
+| **md5 identity table** in the handoff document, verified on wake against the files it names | HAN compendium | absent — nothing here detects a file that was replaced rather than edited |
+| Three-region state: A immutable md5-pinned seed · B append-only data · C replaceable numbered rules carrying their own derivation and revocation records | metascience loop | absent — `docs/` is flat, and mutability is not marked |
+| `MANIFEST` checksums · `LINEAGE.txt` · `loop-history.bundle` for transport across container identity | metascience loop | absent; `git bundle` in particular crosses the boundary that a tar of a working tree crosses unsafely (see P8) |
+| Step-zero read cost *measured*, not just prescribed (~9,450 words ≈ 13% of corpus) | metascience loop | absent — the README states a reading order and never says what it costs |
+| `NEED-####` and `COR-####` ledgers separate from the problem ledger | metascience loop | absent — everything is a `P` |
+
+Not adopted wholesale: this repository is a public tool with outside readers,
+and the heavier apparatus was built for a private corpus with a different
+audience. The two worth taking regardless are the **md5 identity table** (P8
+showed working trees arrive from elsewhere with unknown provenance) and the
+**git bundle** transport (it carries history and refuses to carry `.git/config`
+credentials, which is exactly the P8 hazard).
