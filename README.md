@@ -98,6 +98,20 @@ All output (screenshots, server.log, one JSON line on stdout) lands in `out/`.
 > interpreter explicitly: `bash bin/emu smoke <artifact>`. Everything else —
 > reads, writes, nested dirs, screenshots — works normally there.
 
+## The explore seed (text backend, no Chromium)
+
+The explore layer's *mechanics* exist now on the cheapest page there is — a Markdown heading
+tree — with a test that turns red when the layer is missing (P-8c1e in `docs/OPEN-PROBLEMS.md`;
+P1 stays open for the browser half):
+
+```
+python3 -m pytest -q checks/test_explore_text.py     # 5 tests, < 1 s, no model call
+```
+
+`checks/explore_text.py`: bounded window, decaying memory, affordances parsed from the view,
+impairment knobs, pluggable policy. A scripted policy that *needs* affordances and memory passes;
+a stateless tapper fails. The browser backend is the same loop with different render/act.
+
 ## Layout
 
 ```

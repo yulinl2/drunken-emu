@@ -37,8 +37,10 @@ that is never executed is not a regeneration command.
 |   |-- blind_audit.py
 |   |-- ci_claims.py
 |   |-- explore_step.py
+|   |-- explore_text.py
 |   |-- region_shots.py
-|   `-- smoke.py
+|   |-- smoke.py
+|   `-- test_explore_text.py
 |-- docs/
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
@@ -63,5 +65,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-8 directories, 30 files tracked
+8 directories, 32 files tracked
 ```

@@ -13,6 +13,16 @@ jobs:
       - name: Assert docs/TREE.md matches the tracked file set
         run: python3 bin/gen_tree.py --check
 
+  explore-seed:
+    # The test that fails when the explore layer is absent (P-8c1e). No Chromium, no model.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install --quiet pytest
+      - run: python3 -m pytest -q checks/test_explore_text.py
+
   claims:
     runs-on: ubuntu-latest
     steps:
