@@ -291,3 +291,33 @@ genuinely cleared — that needs reading — but it turns "remember to re-check
 everything" into a short list, which is the part a session can actually do.
 Advisory by design: a hard CI failure would make every edit to `CONTRIBUTING.md`
 red, which trains people to ignore it.
+
+## P-8c1e — the explore layer had no test that fails when it is absent `OPEN`
+
+*ID allocated by CONTRIBUTING rule 6: `P-` + first four hex of `sha1("the explore layer had no test that fails when it is absent")`.*
+
+**The gap.** P1 explains *why* the explore layer stayed unbuilt across sessions: its requirement
+lived in prose, and each fresh session re-read it as the smoke layer. But the ledger recorded
+the cause without installing the mechanism that would have prevented it: nothing in CI turned
+red while the layer was missing. A rule that is not a failing test is a wish (the MetaProof
+case-study phrase: *will does not bind; mechanism binds*).
+
+**Seed installed 2026-09-23.** `checks/explore_text.py` is the explore loop's harness mechanics
+on a text page — a Markdown heading tree stands in for the rendered artifact; a window of `w`
+lines for the screen; headings, links and section references parsed from the view for
+affordances; a bounded, decaying memory; impairment knobs (`p_drop`, `eps_misnav`,
+`mem_capacity`); a pluggable policy. `checks/test_explore_text.py` asserts the three parts of
+the original requirement (recursion depth ≥ 3; a decision at step k+2 or later referencing a
+note from step k; every `open` drawn from visible affordances) with a *scripted* policy, and
+asserts that a stateless tapper fails. No model call; runs in CI in under a second (`claims.yml`
+job `explore-seed`). Its role and the bootstrap ladder it belongs to are in the MetaProof
+proposal §7 (https://github.com/yulinl2/MetaProof/pull/21 ).
+
+**What this does not close.** P1's browser half: the same loop over `checks/explore_step.py`
+with a decider, and the dose–response sweep that needs an API decider. The text backend is
+the cheapest place to make the loop's *mechanics* fail loudly; the browser backend inherits the
+loop and the test shape, not the fixture.
+
+**Closes when** the browser backend passes an equivalent of `test_explore_text.py` (same three
+assertions, a rendered fixture) in CI.
+
