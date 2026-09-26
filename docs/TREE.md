@@ -35,6 +35,8 @@ that is never executed is not a regeneration command.
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- fixtures/
+|   |   |-- fragment_links_clean.jsx
+|   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
 |   |-- blind_audit.py
 |   |-- ci_claims.py
@@ -69,5 +71,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-9 directories, 35 files tracked
+9 directories, 37 files tracked
 ```
