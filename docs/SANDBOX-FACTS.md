@@ -86,3 +86,11 @@ are not facts. Sample twice, or in two environments, before writing it down.
   prompt lists project files under it; `ls /mnt` shows no such directory and
   direct reads fail. Project knowledge is reachable only through the
   project-knowledge search tool. Re-confirms: disk mount state != project state.
+
+## Added 2026-09-26
+
+| Fact | Evidence |
+|---|---|
+| `page.set_content` with an inline `<svg>` inside a fixed-width `<div>` is enough to measure rendered type size — no file server, no `file://`, no screenshot. `getBoundingClientRect()` of the `<svg>` divided by `viewBox.baseVal.width` converts authored px to rendered px. | `checks/svg_legibility.py` |
+| `open(f,'w').write(open(f).read().replace(...))` **truncates before the read runs** and writes an empty file; it once made a positive control fail for "no `<svg>` element" instead of the induced fault. Read into a variable first. | observed while inducing a fault |
+| A positive control can fail to fire without the check being wrong: moving a label 2 authored units is 1.1 rendered px at scale 0.5588, under a 0.12 overlap tolerance. Induce the fault at a magnitude the check is specified to catch. | controls on the same figure |

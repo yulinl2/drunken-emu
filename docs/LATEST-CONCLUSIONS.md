@@ -96,3 +96,29 @@ mechanically checkable.
   guarded — sequence discipline (patch → verify → only then touch fixtures)
   is the transferable lesson.
 
+
+## Added 2026-09-26 — the kit extends past React artifacts (`checks/svg_legibility.py`)
+
+*Built and first used in the FLT-measurement line; the full record is `yulinl2/MetaProof`
+`experiments/testbeds/T6-flt-corpus/research/instrument/1-experiments/E23-…` (nine figures) and
+`…/E45-…` (the gate self-test that later certified it fires).*
+
+- `[FACT]` **A static SVG can pass every structural check its suite has and still be unreadable on
+  the surface it ships to.** The script renders an SVG in the same headless Chromium the React path
+  uses and reads back three things no XML-level check sees: rendered font size after `viewBox`
+  scaling, pairwise overlap of `<text>` bounding boxes, and ink outside the `viewBox`. On nine
+  figures that passed well-formedness, self-containedness and no-empty-text, the first run returned
+  **0 of 9** legible at a 380 px viewport with a 7 px floor, and **five real overlaps in one figure**
+  — a second 12 px line placed 3 units below the first.
+- `[FACT]` **The size fault was a token-scale problem.** A 680-unit `viewBox` with a 12 px secondary
+  label renders at 6.71 px on a 380 px phone; raising the two type tokens by one pixel each cleared
+  all nine at 7.26 px with no new overlaps, confirmed by re-running the same check.
+- `[JUDGMENT]` **Thresholds are arguments, not constants** (`--width`, `--min-px`, `--overlap-tol`):
+  the legible floor is a property of the delivery surface.
+- `[FACT]` **A check whose failure branch has never run is not a working check.** Its first
+  integration passed and then crashed on the first induced fault (a list where a string was
+  expected). `--quiet` now suppresses the per-figure log and never the reason for a non-zero exit.
+- `[FACT]` **archify's showcase gate enforces the same class.** `tt-a1i/archify` rejected six
+  candidates of a workflow diagram on a 6 px projected-text floor at a 930 px reading width, label
+  overlap and edge crossings before delivering the seventh — independent confirmation that
+  rendered legibility is a gate, not a style.
