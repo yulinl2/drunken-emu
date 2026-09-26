@@ -31,6 +31,7 @@ drunken-emu/
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
 │   ├── explore_step.py        P1: one stateless step; the calling session decides
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
+│   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
 ├── docs/
 │   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered

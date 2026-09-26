@@ -35,3 +35,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Assert README still tells the truth
         run: python3 checks/ci_claims.py
+      - name: Fragment-links check must fire on the planted fixture
+        run: |
+          pip install --quiet pytest
+          python3 -m pytest -q checks/test_fragment_links.py
