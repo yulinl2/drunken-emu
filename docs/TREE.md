@@ -34,13 +34,17 @@ that is never executed is not a regeneration command.
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
 |-- checks/
+|   |-- fixtures/
+|   |   `-- fragment_links_planted.jsx
 |   |-- blind_audit.py
 |   |-- ci_claims.py
 |   |-- explore_step.py
 |   |-- explore_text.py
+|   |-- fragment_links.py
 |   |-- region_shots.py
 |   |-- smoke.py
-|   `-- test_explore_text.py
+|   |-- test_explore_text.py
+|   `-- test_fragment_links.py
 |-- docs/
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
@@ -65,5 +69,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-8 directories, 32 files tracked
+9 directories, 35 files tracked
 ```
