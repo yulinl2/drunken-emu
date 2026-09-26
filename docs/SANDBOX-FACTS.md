@@ -94,3 +94,21 @@ are not facts. Sample twice, or in two environments, before writing it down.
 | `page.set_content` with an inline `<svg>` inside a fixed-width `<div>` is enough to measure rendered type size — no file server, no `file://`, no screenshot. `getBoundingClientRect()` of the `<svg>` divided by `viewBox.baseVal.width` converts authored px to rendered px. | `checks/svg_legibility.py` |
 | `open(f,'w').write(open(f).read().replace(...))` **truncates before the read runs** and writes an empty file; it once made a positive control fail for "no `<svg>` element" instead of the induced fault. Read into a variable first. | observed while inducing a fault |
 | A positive control can fail to fire without the check being wrong: moving a label 2 authored units is 1.1 rendered px at scale 0.5588, under a 0.12 overlap tolerance. Induce the fault at a magnitude the check is specified to catch. | controls on the same figure |
+
+## 2026-09-12 and 2026-09-26 (second environment, claude.ai project chat; appended by the WeChat-origin-corpus session)
+- **`/mnt/project` DOES exist and is readable in a claude.ai chat that belongs to a project.** The 2026-08-31
+  pass-4 note says it is not a mounted path; in this container `ls /mnt/project` listed 23 files on 2026-09-12
+  and again on 2026-09-26, and direct reads succeed. Both observations are presumably right for their own
+  container, which makes this a **per-container (project vs. non-project chat), not a platform, property**.
+  Do not branch on its absence; test for it.
+- Kernel moves between sessions within one series: `6.18.44-fc-v21` (pass 4), `-v32` (2026-09-12),
+  `-v42` (2026-09-26). Ubuntu 24.04.4 LTS, 1 vCPU, ~3.9 GiB, root, PID 1 `process_api` unchanged.
+- `/opt/pw-browsers/` also ships `chromium_headless_shell-1194` and `ffmpeg-1011` alongside `chromium-1194`.
+- `time` is **not** a shell builtin under `/bin/sh` here (`sh: 1: time: not found`); wrap the command in
+  `date +%s.%N` instead.
+- `cron`, `gh`, `gs` absent; `pandoc`, `pdflatex`, `node` present (unchanged from pass 4).
+- GitHub's anonymous **API** hits the 60/hour limit quickly, but `git clone --depth 1` over HTTPS is
+  unaffected; when the API is throttled, clone instead of scraping. (2026-09-12)
+
+Scope: two dates, one container type. By this file's own rule these are two points, not a settled fact, until a
+third environment of the *non-project* kind is sampled on the same day.
