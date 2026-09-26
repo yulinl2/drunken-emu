@@ -321,3 +321,11 @@ loop and the test shape, not the fixture.
 **Closes when** the browser backend passes an equivalent of `test_explore_text.py` (same three
 assertions, a rendered fixture) in CI.
 
+## P-246d — in-page fragment links have no check that fails on a dead or hidden target `OPEN`
+
+**The gap.** `blind_audit.py` is content-blind by design, so an `<a href="#x">` whose target does not exist, or exists with an empty box, passes every check in the kit. `region_shots.py`'s "anchors" are camera targets, not links. A dashboard artifact audited on 2026-09-06 (yulinl2/MetaProof `experiments/testbeds/T3-control/maintained/artifacts/`) carried a planted dead link that the audit did not see; a small Playwright check written there did.
+**Design.** `checks/fragment_links.py`: sync, serve, open at 390×844, collect `a[href^="#"]`, for each target check existence, non-empty box after click, in-viewport after click. Content-aware, intention-less. Calibrated by `checks/test_fragment_links.py` on `checks/fixtures/fragment_links_planted.jsx` (one live, one dead, one inside a closed `<details>`, one `display:none`).
+**Measured while calibrating (2026-09-26).** Chromium's fragment navigation opens a closed `<details>` ancestor, so a target folded in details is *live*; `display:none` is not undone. The fixture keeps both cases as the regression for that fact.
+**Done-when.** The check is on `main`, the must-fire test is in CI, and `README.md`'s checks list names it.
+**Consumer.** `bin/emu` users; the T3 dashboard in MetaProof.
+
