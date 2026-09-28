@@ -16,6 +16,7 @@ import { LIGHT } from './palette.js';
 import { layoutTree } from './treelayout.js';
 import { layoutSequence } from './sequencelayout.js';
 import { layoutLifecycle } from './lifecyclelayout.js';
+import { renderPlot } from './plot.js';
 import * as C from './components.js';
 
 function body(kind, r, p) {
@@ -157,6 +158,10 @@ export function renderFigure(spec, palette) {
       const need = { w: ox + layout.width, h: oy + layout.height };
       if (need.w > width + 0.5 || need.h > height + 0.5) errors.push(`lifecycle overflows the canvas (needs ${Math.ceil(need.w)}x${Math.ceil(need.h)}, canvas is ${width}x${height})`);
     }
+  }
+  if (spec.plot) {
+    const out = renderPlot(spec.plot, { p, color, width, height });
+    parts.push(...out.parts); runningText.push(...out.words); errors.push(...out.errors);
   }
   if (spec.legend) {
     const lg = C.legend({ x: spec.legend.x, y: spec.legend.y, anchor: spec.legend.anchor, entries: spec.legend.entries, p });
