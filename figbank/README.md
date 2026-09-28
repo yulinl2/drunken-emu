@@ -156,6 +156,26 @@ content — MetaProof's `bin/gen_ledger.py` is the first instance, following the
 `bin/kb_check.py --kb` already uses for reading a sibling repo best-effort. If MetaSci/HAN want the
 same, each gets its own, not a shared copy committed here.
 
+## Plots — axes, curves, scatter, computed (attempt A: figbank-native, drunken-emu #23)
+
+`spec.plot: {box, x_axis, y_axis, series, legend_position?}`; an axis is `{label (required), scale: linear|log,
+domain?, ticks?}`; a series is `{id, kind: curve|scatter, x[], y[], ids? (scatter: one data-id per point), label?
+(legend), color?, dashed?, dots?, end_label?}`. `plotlayout.js` computes each domain from the data's own extent,
+1-2-5 ticks (decades / 1-2-5 on log), and the data→pixel scale; `plot.js` measures the tick and axis labels and
+gives the plot whatever is left of `box`, then puts the legend in the first corner with no data under it (curve
+segments included, sampled every ~3 px) or, if every corner is covered, outside on the right. Deliberately small:
+no secondary axis, bars, error bars or subplots. Loud failures (each `plot: ...` in `report.errors`, nothing
+drawn): x/y length mismatch, empty data, non-finite values, non-positive value on a log axis, data outside a
+declared domain, duplicate series/point ids, a missing axis label, a box too small, a named legend corner that
+covers data, end labels that would overlap. Axis labels, legend labels and end labels count toward `word_budget`.
+
+First instance: `examples/majority-vote-curve.json` (from `gen_majority_vote.py`) — HAN's beta-binomial
+majority-vote panel (a), analytic, no research data; the generator self-checks its port (m = 1 gives p; rho → 0
+gives the binomial; the m → ∞ ceilings match HAN's own annotated 0.721 and 0.703). figpipe round 1 REJECTED
+(the reader named real faults: the lowest curves sat on the axis because the domain hugged the data, and an
+unlabelled dotted ceiling was mistaken for another curve's); round 2 ACCEPTED after an explicit probability
+domain and `end_label` direct labels on the ceilings. Both rows are in `examples/verdicts.jsonl`.
+
 ## Measured, 2026-09-28 (this container)
 
 - `claude -p` blind read of one PNG: 23–29 s, $0.06–0.08 per figure.

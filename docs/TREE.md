@@ -101,6 +101,11 @@ that is never executed is not a regeneration command.
 |   |   |-- figbank-file-tree.png
 |   |   |-- figbank-file-tree.svg
 |   |   |-- gen_file_tree.py
+|   |   |-- gen_majority_vote.py
+|   |   |-- majority-vote-curve.json
+|   |   |-- majority-vote-curve.pdf
+|   |   |-- majority-vote-curve.png
+|   |   |-- majority-vote-curve.svg
 |   |   |-- pipeline-sequence.json
 |   |   |-- pipeline-sequence.pdf
 |   |   |-- pipeline-sequence.png
@@ -120,6 +125,8 @@ that is never executed is not a regeneration command.
 |   |   |-- lifecyclelayout.js
 |   |   |-- palette.d.ts
 |   |   |-- palette.js
+|   |   |-- plot.js
+|   |   |-- plotlayout.js
 |   |   |-- sequencelayout.js
 |   |   |-- text.js
 |   |   |-- treelayout.js
@@ -133,6 +140,7 @@ that is never executed is not a regeneration command.
 |   |   |-- calibration.json
 |   |   |-- figure.test.js
 |   |   |-- fixture-two-regions.json
+|   |   |-- plot.test.js
 |   |   `-- text.test.js
 |   |-- README.md
 |   |-- package.json
@@ -155,5 +163,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 111 files tracked
+19 directories, 119 files tracked
 ```

@@ -308,3 +308,58 @@ export function legend({ x, y, entries, p, px = FONT.legend, anchor = 'start' })
     h('text', { x: cx + 14, y: y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.muted }, e.label)); cx += e.w; return g; });
   return { node: h('g', { class: 'legend' }, ...nodes), w: total, words: entries.map(e => e.label).join(' ') };
 }
+
+// ---- plot kind (drunken-emu #23): axes, curve, scatter — geometry from lib/plotlayout.js -------------
+export function plotAxes({ inner, xa, ya, sx, sy, p, px = 11, labelPx = 12.5 }) {
+  const { x, y, w, h: hh } = inner, nodes = [];
+  xa.ticks.forEach((t, i) => {
+    const X = sx(t);
+    nodes.push(h('line', { x1: X, y1: y, x2: X, y2: y + hh, stroke: p.line, 'stroke-width': 0.6, opacity: 0.6 }),
+      h('line', { x1: X, y1: y + hh, x2: X, y2: y + hh + 4, stroke: p.muted, 'stroke-width': 1 }),
+      h('text', { x: X, y: y + hh + 4 + px * 1.05, 'font-size': px, 'font-family': SANS, fill: p.muted, 'text-anchor': 'middle', 'data-tick': 'x' }, xa.labels[i]));
+  });
+  ya.ticks.forEach((t, i) => {
+    const Y = sy(t);
+    nodes.push(h('line', { x1: x, y1: Y, x2: x + w, y2: Y, stroke: p.line, 'stroke-width': 0.6, opacity: 0.6 }),
+      h('line', { x1: x - 4, y1: Y, x2: x, y2: Y, stroke: p.muted, 'stroke-width': 1 }),
+      h('text', { x: x - 7, y: Y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.muted, 'text-anchor': 'end', 'data-tick': 'y' }, ya.labels[i]));
+  });
+  nodes.push(h('path', { d: `M${x},${y} L${x},${y + hh} L${x + w},${y + hh}`, fill: 'none', stroke: p.ink, 'stroke-width': 1.2 }));
+  const ly = y + hh + 4 + px * 1.05 + 8 + labelPx;
+  nodes.push(h('text', { x: x + w / 2, y: ly, 'font-size': labelPx, 'font-family': SANS, fill: p.ink, 'text-anchor': 'middle', 'data-axis-label': 'x' }, xa.label));
+  return { node: h('g', { class: 'plot-axes' }, ...nodes) };
+}
+
+export function curveMark({ pts, color, id, dashed, dots, width = 1.7 }) {
+  const d = pts.map(([X, Y], i) => `${i ? 'L' : 'M'}${X.toFixed(2)},${Y.toFixed(2)}`).join(' ');
+  return h('g', { class: 'curve', 'data-id': id },
+    h('path', { d, fill: 'none', stroke: color, 'stroke-width': width, 'stroke-dasharray': dashed ? '2 3' : undefined, 'stroke-linejoin': 'round' }),
+    dots ? pts.map(([X, Y]) => h('circle', { cx: X.toFixed(2), cy: Y.toFixed(2), r: 2.4, fill: color })) : null);
+}
+
+export function scatterMark({ pts, ids, color, seriesId, r = 3.6, p }) {
+  return h('g', { class: 'scatter', 'data-id': seriesId },
+    pts.map(([X, Y], i) => h('circle', { class: 'point', cx: X.toFixed(2), cy: Y.toFixed(2), r, fill: color, 'fill-opacity': 0.75, stroke: p.paper, 'stroke-width': 0.8, 'data-id': ids ? ids[i] : undefined, tabindex: ids ? 0 : undefined })));
+}
+
+// one row per labelled series: swatch + label; returns its own measured size so the assembler can place it
+export function plotLegend({ entries, x, y, p, px = FONT.legend + 1 }) {
+  const rowH = px * 1.5, sw = 22;
+  const wLab = Math.max(...entries.map(e => measure(e.label, px)));
+  const w = 10 + sw + 6 + wLab + 10, hh = entries.length * rowH + 8;
+  const nodes = entries.map((e, i) => {
+    const cy = y + 4 + rowH * (i + 0.5);
+    return h('g', { class: 'plot-legend-entry', 'data-id': e.id },
+      e.kind === 'scatter' ? h('circle', { cx: x + 10 + sw / 2, cy, r: 3.6, fill: e.color }) : h('line', { x1: x + 10, y1: cy, x2: x + 10 + sw, y2: cy, stroke: e.color, 'stroke-width': 2, 'stroke-dasharray': e.dashed ? '2 3' : undefined }),
+      h('text', { x: x + 10 + sw + 6, y: cy + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.ink }, e.label));
+  });
+  return { node: h('g', { class: 'plot-legend' }, h('rect', { x, y, width: w, height: hh, rx: 3, fill: p.paper, 'fill-opacity': 0.9, stroke: p.line, 'stroke-width': 0.8 }), ...nodes), w, h: hh };
+}
+
+export function endLabel({ x, y, text, color, px, id }) {
+  return h('text', { x, y: y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: color, 'font-weight': 'bold', 'data-end-label': id }, text);
+}
+
+export function yAxisLabel({ x, y, text, p, px = 12.5 }) {
+  return h('text', { x, y, transform: `rotate(-90 ${x} ${y})`, 'font-size': px, 'font-family': SANS, fill: p.ink, 'text-anchor': 'middle', 'data-axis-label': 'y' }, text);
+}
