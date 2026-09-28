@@ -250,3 +250,61 @@ test('a sequence bigger than its declared canvas is a gate, same as a tree', () 
   const { report } = renderFigure(spec);
   assert.ok(report.errors.some(e => e.includes('sequence overflows the canvas')));
 });
+
+import { layoutLifecycle } from '../lib/lifecyclelayout.js';
+
+test('layoutLifecycle: states are placed by col/row, never a hand-authored pixel', () => {
+  const { positions, width } = layoutLifecycle(
+    [{ id: 'a', col: 0 }, { id: 'b', col: 1 }, { id: 'c', col: 1, row: 1 }],
+    { colW: 100, colGap: 20, rowH: 40, rowGap: 10 },
+  );
+  assert.equal(positions.a.x, 0);
+  assert.equal(positions.b.x, 120);
+  assert.equal(positions.b.x, positions.c.x, 'same column, same x');
+  assert.ok(positions.c.y > positions.b.y, 'row 1 sits below row 0');
+  assert.equal(width, 220);
+});
+
+test('layoutLifecycle: a state with no col is a thrown error', () => {
+  assert.throws(() => layoutLifecycle([{ id: 'a' }], {}), /needs a non-negative col/);
+});
+
+test('a well-formed lifecycle spec renders with no errors, including a backward transition', () => {
+  const spec = {
+    id: 'life-basic', message: 'x', canvas: { width: 650, height: 200 },
+    lifecycle: {
+      states: [{ id: 'draft', label: 'Draft', col: 0 }, { id: 'r1', label: 'Round 1', col: 1 }, { id: 'done', label: 'Accepted', col: 2, terminal: true, status: 'measured' }],
+      transitions: [{ from: 'draft', to: 'r1', label: 'submit' }, { from: 'r1', to: 'draft', label: 'FAIL, revise' }, { from: 'r1', to: 'done', label: 'PASS' }],
+    },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { svg, report } = renderFigure(spec);
+  assert.equal(report.errors.length, 0, report.errors.join('; '));
+  assert.ok(svg.includes('Draft') && svg.includes('Round 1') && svg.includes('Accepted') && svg.includes('FAIL, revise'));
+});
+
+test('a lifecycle transition to an unknown state is a gate, not a silent no-op', () => {
+  const spec = {
+    id: 'life-badref', message: 'x', canvas: { width: 500, height: 200 },
+    lifecycle: {
+      states: [{ id: 'a', label: 'A', col: 0 }],
+      transitions: [{ from: 'a', to: 'ghost' }],
+    },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('unknown state')));
+});
+
+test('a lifecycle bigger than its declared canvas is a gate, same as a tree or sequence', () => {
+  const spec = {
+    id: 'life-overflow', message: 'x', canvas: { width: 80, height: 50 },
+    lifecycle: {
+      states: [{ id: 'a', label: 'A', col: 0 }, { id: 'b', label: 'B', col: 1 }],
+      transitions: [{ from: 'a', to: 'b' }],
+    },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('lifecycle overflows the canvas')));
+});

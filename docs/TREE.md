@@ -108,11 +108,16 @@ that is never executed is not a regeneration command.
 |   |   |-- pipeline-workflow.json
 |   |   |-- pipeline-workflow.png
 |   |   |-- pipeline-workflow.svg
+|   |   |-- round-lifecycle.json
+|   |   |-- round-lifecycle.pdf
+|   |   |-- round-lifecycle.png
+|   |   |-- round-lifecycle.svg
 |   |   `-- verdicts.jsonl
 |   |-- lib/
 |   |   |-- components.js
 |   |   |-- figure.d.ts
 |   |   |-- figure.js
+|   |   |-- lifecyclelayout.js
 |   |   |-- palette.d.ts
 |   |   |-- palette.js
 |   |   |-- sequencelayout.js
@@ -150,5 +155,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 106 files tracked
+19 directories, 111 files tracked
 ```

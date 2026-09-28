@@ -228,6 +228,62 @@ export function treeEdge({ from, to, color, p, id, horizontal }) {
   return h('path', { class: 'treeedge', 'data-id': id, d, fill: 'none', stroke: color || p.dim, 'stroke-width': 1.2 });
 }
 
+// A lifecycle diagram's state: a box, an optional status mark, a short label. A terminal state gets a
+// second, inset border (the classic double-border convention) instead of a new colour or shape — the
+// bank already has a status vocabulary for "what weight does this carry", terminal-ness is a different
+// axis (can time leave this state) and does not need a second one.
+export function lifecycleState({ x, y, w, h: hh, label, status, terminal, color, p, id, px = 12.5 }) {
+  const pad = 8, markW = status ? 12 : 0;
+  const lines = wrap(label, w - 2 * pad - markW, px);
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px) > w - 2 * pad - markW + 0.5);
+  const cy = hh / 2 - ((lines.length - 1) * px * 1.15) / 2;
+  const stroke = color || p.line;
+  const node = h('g', { class: 'lifecyclestate', 'data-id': id, 'data-status': status },
+    h('rect', { x, y, width: w, height: hh, rx: 5, fill: p.card, stroke, 'stroke-width': 1.4 }),
+    terminal ? h('rect', { x: x + 4, y: y + 4, width: w - 8, height: hh - 8, rx: 3, fill: 'none', stroke, 'stroke-width': 1.1 }) : null,
+    status ? statusMark(x + pad + 3, y + hh / 2, status, p, 3) : null,
+    textLines(x + pad + markW, y + cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'start', id }));
+  return { node, w, h: hh, overflow };
+}
+
+// A transition between two states, anywhere on the diagram — unlike treeEdge (always parent-to-child,
+// one fixed direction) a lifecycle transition can go forward, backward, or within the same stage, so the
+// direction is chosen per edge from the two boxes' relative position rather than a single global flag.
+// Carries an arrowhead (a transition has a direction that matters); a tree edge does not.
+export function stateEdge({ from, to, color, p, id, label, labelW = 150, px = FONT.label }) {
+  const stroke = color || p.dim;
+  const mid = stroke.replace('#', '');
+  const fcx = from.x + from.w / 2, fcy = from.y + from.h / 2, tcx = to.x + to.w / 2, tcy = to.y + to.h / 2;
+  const dx = tcx - fcx, dy = tcy - fcy;
+  if (dx === 0 && dy === 0) throw new Error(`stateEdge: ${JSON.stringify(id)} connects a state to itself — not supported yet`);
+  let x1, y1, x2, y2, d, lx, ly;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    x1 = dx >= 0 ? from.x + from.w : from.x; y1 = fcy;
+    x2 = dx >= 0 ? to.x : to.x + to.w; y2 = tcy;
+    const midX = (x1 + x2) / 2;
+    d = `M${x1},${y1} C${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+    // the label sits above both boxes' top edge, not just above the connection point — the two
+    // boxes can be in the same row (y1 === y2, a same-stage edge), where "7px above the line" is
+    // still inside the box. Its wrap width is the actual gap between the two box edges, not the
+    // caller's default — a wider wrap would visually bridge into the neighbouring boxes, making it
+    // ambiguous which arrow the label belongs to (a real reader complaint, round 2 of this kind's
+    // own worked example, examples/round-lifecycle.json).
+    lx = (x1 + x2) / 2; ly = Math.min(from.y, to.y) - 8; labelW = Math.max(90, Math.abs(x2 - x1) - 8);
+  } else {
+    x1 = fcx; y1 = dy >= 0 ? from.y + from.h : from.y;
+    x2 = tcx; y2 = dy >= 0 ? to.y : to.y + to.h;
+    const midY = (y1 + y2) / 2;
+    d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+    lx = Math.max(from.x + from.w, to.x + to.w) + 8; ly = (y1 + y2) / 2;
+  }
+  const lines = label ? wrap(label, labelW, px) : [];
+  if (lines.length > 1 && Math.abs(dx) >= Math.abs(dy)) ly -= (lines.length - 1) * px * 1.25;   // grow upward, same fix as arrow()
+  const node = h('g', { class: 'stateedge', 'data-id': id },
+    h('path', { d, fill: 'none', stroke, 'stroke-width': 1.4, 'marker-end': `url(#ah-${mid})` }),
+    lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: Math.abs(dx) >= Math.abs(dy) ? 'middle' : 'start', lineHeight: px * 1.25 }) : null);
+  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '' };
+}
+
 // A sequence diagram's participant: a header box (auto-sized to its label, figbank/lib/sequencelayout.js
 // computes x/w) plus a dashed lifeline running down to the last message row. Messages themselves reuse
 // arrow() directly — a sequence message is exactly "an arrow between two known x positions at a known

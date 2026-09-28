@@ -104,6 +104,29 @@ offset its *first* line above the arrow, so a wrapped second line landed back on
 clear — fixed generically (any multi-line auto-positioned arrow label now clears correctly), not just for
 this instance.
 
+## Lifecycle diagrams — states, transitions that may point anywhere, terminal states marked
+
+`spec.lifecycle: {states: [{id, label, col, row?, status?, terminal?}], transitions: [{from, to, label?,
+guard?}], origin?, col_w?, col_gap?, row_h?, row_gap?, color?, edge_color?}`. `lifecyclelayout.js` places
+every state from its stage (`col`, 0-based — not a pixel x) and, optionally, its slot within that stage
+(`row`); a transition may point anywhere — forward, backward, or within a stage — unlike a tree's parent
+pointers, so `stateEdge()` (not `treeEdge()`) picks a direction per edge from the two boxes' relative
+position rather than one global orientation. A terminal state gets a second, inset border (the classic
+double-border convention) rather than a new colour — terminal-ness (can time leave this state) and status
+(what weight does it carry) are different axes, and get different visual channels. No self-transitions yet,
+refused loudly rather than drawn wrong; add support only if a real instance needs it (drunken-emu #15).
+
+First instance: `examples/round-lifecycle.json` — not an invented example, but `pipeline-sequence.json`'s
+*own* real acceptance history, read straight out of `examples/verdicts.jsonl`: draft → round 1 (FAIL, a
+coordinate bug) → round 2 (FAIL, the same fault — the fix tried between rounds didn't touch the actual
+bug) → round 3 (ACCEPTED). Through the full pipeline: 0 legibility faults on the accepted round. Building
+it found one more real bug, now covered by a test and fixed generically in `stateEdge()`: a same-row
+transition's label, wrapped at the caller's default width, was wide enough to visually bridge across both
+neighbouring boxes — the blind reader's own words were "arrow labels sit above the top edge... it is
+unclear which arrow each belongs to." Fixed by wrapping each label to the actual gap between its two box
+edges, not a fixed default, the same "measure the real space, don't guess a constant" fix `sequencelayout.js`
+already made for participant columns.
+
 ## The pipeline (`bin/figpipe SPEC.json --out DIR --reader auto`)
 
 | step | tool | what the record carries |

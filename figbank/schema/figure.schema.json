@@ -292,6 +292,68 @@
         "edge_color": { "type": "string" }
       }
     },
+    "lifecycle": {
+      "type": "object",
+      "description": "a lifecycle/state diagram: named states, transitions that may point anywhere (forward, backward, within a stage) unlike a tree's parent pointers. A state names its stage (`col`, 0-based — not a raw pixel x) and, optionally, its slot within that stage (`row`); figbank/lib/lifecyclelayout.js computes x/y from those, never from hand-authored coordinates. A transition may not connect a state to itself yet — refused loudly rather than drawn wrong (drunken-emu #15).",
+      "required": [
+        "states",
+        "transitions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "col"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string", "description": "short — this is a state box, not a region; wraps to at most 2 lines before it overflows" },
+              "col": { "type": "integer", "minimum": 0, "description": "which stage this state belongs to, left to right — not a pixel coordinate" },
+              "row": { "type": "integer", "minimum": 0, "description": "slot within its stage, top to bottom; states without one keep the array's order" },
+              "status": { "type": "string", "description": "not constrained to the shared five-value vocabulary — figbank/lib/palette.js statusStyle() resolves any caller's own words" },
+              "terminal": { "type": "boolean", "description": "draws a second, inset border (double-border convention) — a different axis from status: can time leave this state, not what weight it carries" }
+            }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string", "description": "a state id" },
+              "to": { "type": "string", "description": "a state id, different from `from`" },
+              "label": { "type": "string" },
+              "guard": { "type": "string", "description": "a condition, rendered after the label in brackets — kept as plain text, not a separate layout element, in this first version" }
+            }
+          }
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "col_w": { "type": "number", "minimum": 40 },
+        "col_gap": { "type": "number", "minimum": 0 },
+        "row_h": { "type": "number", "minimum": 20 },
+        "row_gap": { "type": "number", "minimum": 0 },
+        "color": { "type": "string" },
+        "edge_color": { "type": "string" }
+      }
+    },
     "boundaries": {
       "type": "array",
       "description": "a labelled group frame computed around a named set of regions/functionals (their own boxes, by id, plus `pad`) — the process-diagram grouping Archify calls a boundary (tt-a1i/archify): 'these four are mechanical, this one is judgment', not a data-model side. Drawn behind the regions it wraps, so it reads as a frame with a visible gap, not an overlap.",
