@@ -38,6 +38,9 @@ export function statusStyle(status, p) {
     case 'in-progress': return { fill: p.warn, stroke: p.warn, shape: 'dot' };
     case 'planned': return { fill: 'none', stroke: p.dim, shape: 'square' };
     case 'hypothesis': return { fill: 'none', stroke: p.dim, shape: 'dot' };
+    // 'unknown' is the frontier's most common status once an intake lands (1612 of 1688 nodes); as the default hollow dot it was
+    // indistinguishable from 'hypothesis' (a candidate answer exists), which is a different thing. A diamond keeps the dim weight.
+    case 'unknown': return { fill: 'none', stroke: p.dim, shape: 'diamond' };
     case 'killed': return { fill: p.accent, stroke: p.accent, shape: 'dot' };
     // MetaSci's claims-graph node vocabulary (kb/claims-graph, evidence tier where a node has one,
     // else its own status) — a claim's FACT tier is the ok weight for the same reason "measured" and

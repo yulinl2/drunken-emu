@@ -388,3 +388,11 @@ test('wrap: a long hyphenated identifier breaks after a hyphen, adds no space, l
   assert.deepEqual(wrap('short-token', 180, 11.5), ['short-token']);
   assert.deepEqual(wrap('before ' + id + ' after', 180, 11.5).join('').replace(/ /g, ''), ('before' + id + 'after'));
 });
+
+test('statusStyle: "unknown" is not the same mark as "hypothesis" (it was, by falling through to the default)', () => {
+  const u = statusStyle('unknown', PAL), hyp = statusStyle('hypothesis', PAL);
+  assert.notDeepEqual(u, hyp);
+  assert.equal(u.fill, hyp.fill, 'both keep the dim, hollow weight');
+  const spec = { id: 'st-unk', message: 'x', canvas: { width: 300, height: 100 }, tree: { nodes: [{ id: 'a', label: 'a', status: 'unknown' }], node_w: 80, node_h: 24 }, acceptance: { must_mention: [['x']] } };
+  assert.ok(renderFigure(spec).svg.includes('<polygon'), 'an unknown node draws a diamond');
+});

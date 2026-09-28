@@ -26,6 +26,7 @@ export const FONT = { title: 17, regionTitle: 14.5, symbol: 13, name: 11, chip: 
 export function statusMark(x, y, status, p, r = 3.4) {
   const s = statusStyle(status, p);
   if (s.shape === 'square') return h('rect', { x: x - r, y: y - r, width: 2 * r, height: 2 * r, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
+  if (s.shape === 'diamond') return h('polygon', { points: `${x},${y - r * 1.35} ${x + r * 1.35},${y} ${x},${y + r * 1.35} ${x - r * 1.35},${y}`, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
   return h('circle', { cx: x, cy: y, r, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
 }
 
