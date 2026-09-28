@@ -54,11 +54,16 @@ def overlap(a, b):
     small = min(a['w']*a['h'], b['w']*b['h'])
     return inter/small if small > 0 else 0.0
 
-def audit(page, path, width, min_px, overlap_tol):
+def audit(page, path, width, min_px, overlap_tol, fit=False):
     src = open(path, encoding='utf-8').read()
     page.set_viewport_size({'width': width, 'height': 900})
     page.set_content(f'<!doctype html><html><body style="margin:0">'
                      f'<div style="width:{width}px">{src}</div></body></html>')
+    if fit:
+        # An SVG with fixed width/height attributes (every bank figure, every matplotlib
+        # figure) ignores the delivery width and is measured at native size. --fit makes
+        # it shrink to the delivery width, i.e. what a phone reader actually gets.
+        page.evaluate("() => { const s = document.querySelector('svg'); s.style.width = '100%'; s.style.height = 'auto'; }")
     page.wait_for_timeout(60)
     d = page.evaluate(JS)
     faults = []
@@ -79,7 +84,7 @@ def audit(page, path, width, min_px, overlap_tol):
     if ink['maxX'] > R['w'] + 0.5:
         faults.append(dict(kind='ink_outside_viewbox', side='right', px=round(ink['maxX']-R['w'], 1)))
     return dict(file=os.path.basename(path), n_text=len(d['texts']),
-                rendered_width=round(R['w'], 1), scale=round(d['scale'], 4),
+                rendered_width=round(R['w'], 1), fit=fit, scale=round(d['scale'], 4),
                 min_font_px=round(min(([t['fontPx'] for t in d['texts']] or [0])), 2),
                 faults=faults)
 
@@ -90,13 +95,15 @@ def main():
     ap.add_argument('--min-px', type=float, default=7.0, help='smallest legible rendered font size')
     ap.add_argument('--overlap-tol', type=float, default=0.12,
                     help='fraction of the smaller label that may be covered before it is a fault')
+    ap.add_argument('--fit', action='store_true',
+                    help='scale fixed-size SVGs down to --width (default: measure at native size)')
     ap.add_argument('--json'); ap.add_argument('--quiet', action='store_true')
     a = ap.parse_args()
     rows = []
     with sync_playwright() as p:
         b = launch(p); pg = b.new_page()
         for s in a.svgs:
-            rows.append(audit(pg, s, a.width, a.min_px, a.overlap_tol))
+            rows.append(audit(pg, s, a.width, a.min_px, a.overlap_tol, a.fit))
         b.close()
     bad = 0
     for r in rows:
