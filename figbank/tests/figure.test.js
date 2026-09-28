@@ -189,6 +189,18 @@ test('statusStyle: the frontier ledger\'s own status words each get a distinct, 
   assert.notEqual(killed.fill, statusStyle('in-progress', PAL).fill);
 });
 
+test('statusStyle: MetaSci\'s claims-graph vocabulary (evidence tiers) resolves too, reusing "killed" verbatim', () => {
+  const fact = statusStyle('FACT', PAL), judgment = statusStyle('JUDGMENT', PAL), spec = statusStyle('SPECULATIVE', PAL);
+  assert.equal(fact.fill, PAL.ok);              // FACT weighs the same as measured/sealed: the strongest tier
+  assert.equal(judgment.fill, PAL.warn);
+  assert.equal(spec.fill, 'none');
+  assert.equal(statusStyle('provisional', PAL).fill, 'none');
+  assert.equal(statusStyle('ratified', PAL).fill, PAL.ok);
+  // no new case needed for "killed" here: a claims-graph node's own killed status hits the frontier
+  // vocabulary's existing case (asserted above) and gets the same accent mark — one word, one
+  // meaning, shared across vocabularies that happen to use it.
+});
+
 test('a tree node may carry a status word outside the shared 5-value vocabulary and still render', () => {
   const spec = {
     id: 'tree-frontier-status', message: 'x', canvas: { width: 500, height: 200 },

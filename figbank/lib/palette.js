@@ -39,6 +39,14 @@ export function statusStyle(status, p) {
     case 'planned': return { fill: 'none', stroke: p.dim, shape: 'square' };
     case 'hypothesis': return { fill: 'none', stroke: p.dim, shape: 'dot' };
     case 'killed': return { fill: p.accent, stroke: p.accent, shape: 'dot' };
+    // MetaSci's claims-graph node vocabulary (kb/claims-graph, evidence tier where a node has one,
+    // else its own status) — a claim's FACT tier is the ok weight for the same reason "measured" and
+    // "sealed" are: the strongest evidence a node in this graph can carry.
+    case 'FACT': return { fill: p.ok, stroke: p.ok, shape: 'dot' };
+    case 'JUDGMENT': return { fill: p.warn, stroke: p.warn, shape: 'dot' };
+    case 'SPECULATIVE': return { fill: 'none', stroke: p.dim, shape: 'dot' };
+    case 'provisional': return { fill: 'none', stroke: p.dim, shape: 'square' };
+    case 'ratified': return { fill: p.ok, stroke: p.ok, shape: 'square' };
     default: return { fill: 'none', stroke: p.dim, shape: 'dot' };   // defined, unknown, or unrecognised
   }
 }
