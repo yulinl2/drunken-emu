@@ -355,3 +355,12 @@ test('a lifecycle bigger than its declared canvas is a gate, same as a tree or s
   const { report } = renderFigure(spec);
   assert.ok(report.errors.some(e => e.includes('lifecycle overflows the canvas')));
 });
+
+test('arrow: solid, dashed and dotted are three different strokes (three statuses without colour)', () => {
+  const mkA = extra => ({ id: 'ar-x', message: 'x', canvas: { width: 300, height: 100 }, arrows: [{ id: 'a', points: [[10, 50], [200, 50]], ...extra }], acceptance: { must_mention: [['x']] } });
+  const dash = extra => (renderFigure(mkA(extra)).svg.match(/stroke-dasharray="([^"]*)"/) || [])[1];
+  assert.equal(dash({}), undefined);
+  assert.equal(dash({ dashed: true }), '5 4');
+  assert.equal(dash({ dotted: true }), '1.5 4.5');
+  assert.equal(dash({ dashed: true, dotted: true }), '1.5 4.5', 'dotted wins if both are set');
+});

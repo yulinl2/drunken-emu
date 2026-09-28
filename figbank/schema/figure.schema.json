@@ -574,7 +574,12 @@
             "type": "string"
           },
           "dashed": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "dashed line (5 4)"
+          },
+          "dotted": {
+            "type": "boolean",
+            "description": "dotted line with round caps; wins over `dashed` if both are set. Two line styles let one figure carry three statuses (solid / dashed / dotted) without colour."
           },
           "width": {
             "type": "number"
