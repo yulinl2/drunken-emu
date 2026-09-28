@@ -364,3 +364,9 @@ test('arrow: solid, dashed and dotted are three different strokes (three statuse
   assert.equal(dash({ dotted: true }), '1.5 4.5');
   assert.equal(dash({ dashed: true, dotted: true }), '1.5 4.5', 'dotted wins if both are set');
 });
+
+test('arrow: head:false draws no arrowhead, and by default there is one', () => {
+  const mkA = extra => ({ id: 'ar-h', message: 'x', canvas: { width: 300, height: 100 }, arrows: [{ id: 'a', points: [[10, 50], [200, 50]], ...extra }], acceptance: { must_mention: [['x']] } });
+  assert.ok(renderFigure(mkA({})).svg.includes('marker-end'));
+  assert.ok(!renderFigure(mkA({ head: false })).svg.includes('marker-end'));
+});

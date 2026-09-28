@@ -577,6 +577,11 @@
             "type": "boolean",
             "description": "dashed line (5 4)"
           },
+          "head": {
+            "type": "boolean",
+            "default": true,
+            "description": "false: no arrowhead (a stub that ends in a break, or a plain connector)"
+          },
           "dotted": {
             "type": "boolean",
             "description": "dotted line with round caps; wins over `dashed` if both are set. Two line styles let one figure carry three statuses (solid / dashed / dotted) without colour."

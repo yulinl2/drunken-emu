@@ -147,7 +147,7 @@ export function functional({ box, name, grain, status, formula, color, p, id, no
 // Arrow with a labelled channel. `points` is a polyline [[x,y],...] (2 = straight, 3+ = elbow);
 // `loop` draws a self-loop at (x, y) with radius r instead. The label sits at `labelAt`
 // ('mid', 'start', 'end') offset by `labelDy`, anchored `labelAnchor`. Marker colour = stroke.
-export function arrow({ points, loop, label, color, p, dashed, dotted, width = 1.6, labelDy = -6, labelAnchor = 'middle', labelAt = 'mid', labelX, labelY, labelW, id, px = FONT.label }) {
+export function arrow({ points, loop, label, color, p, dashed, dotted, head = true, width = 1.6, labelDy = -6, labelAnchor = 'middle', labelAt = 'mid', labelX, labelY, labelW, id, px = FONT.label }) {
   const stroke = color || p.ink;
   const mid = stroke.replace('#', '');
   let d;
@@ -164,7 +164,7 @@ export function arrow({ points, loop, label, color, p, dashed, dotted, width = 1
   // its LAST line, not its first, at the target offset, or a wrapped 2nd+ line lands back on the arrow.
   if (autoY && lines.length > 1 && labelDy < 0) ly -= (lines.length - 1) * px * 1.25;
   const node = h('g', { class: 'arrow', 'data-id': id },
-    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dotted ? '1.5 4.5' : dashed ? '5 4' : undefined, 'stroke-linecap': dotted ? 'round' : undefined, 'marker-end': `url(#ah-${mid})` }),
+    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dotted ? '1.5 4.5' : dashed ? '5 4' : undefined, 'stroke-linecap': dotted ? 'round' : undefined, 'marker-end': head === false ? undefined : `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: labelAnchor, lineHeight: px * 1.25 }) : null);
   return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length && ly !== undefined ? ly - px : null };
 }
