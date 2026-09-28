@@ -60,7 +60,7 @@ export function chipFlow({ x, y, w, items, p, gap = 6, rowGap = 6, px = FONT.chi
 }
 
 // symbol (mono) + name (sans, muted) per item, in `cols` columns, status mark before the symbol.
-export function itemList({ x, y, w, h: maxH, items, p, cols = 1, px = FONT.symbol, namePx = FONT.name, colGap = 14 }) {
+export function itemList({ x, y, w, h: maxH, items, p, cols = 1, px = FONT.symbol, namePx = FONT.name, colGap = 14, mono = true }) {
   const colW = (w - colGap * (cols - 1)) / cols;
   const per = Math.ceil(items.length / cols);
   const nodes = []; let usedH = 0, overflow = false;
@@ -69,15 +69,15 @@ export function itemList({ x, y, w, h: maxH, items, p, cols = 1, px = FONT.symbo
     const cx = x + col * (colW + colGap);
     for (const it of items.slice(col * per, (col + 1) * per)) {
       const markW = it.status ? 13 : 0;
-      const symLines = wrap(it.symbol, colW - markW, px, true);
+      const symLines = wrap(it.symbol, colW - markW, px, mono);
       const nameLines = it.name ? wrap(it.name, colW - markW, namePx, false) : [];
       const symH = symLines.length * px * 1.2, nameH = nameLines.length * namePx * 1.2;
       nodes.push(h('g', { class: 'item', 'data-id': it.id, 'data-status': it.status },
         it.status ? statusMark(cx + 4.5, cy + px * 0.62, it.status, p) : null,
-        textLines(cx + markW, cy + px * 0.95, symLines, px, { mono: true, fill: p.ink, lineHeight: px * 1.2, id: it.id }),
+        textLines(cx + markW, cy + px * 0.95, symLines, px, { mono, fill: p.ink, lineHeight: px * 1.2, id: it.id }),
         nameLines.length ? textLines(cx + markW, cy + symH + namePx * 0.95, nameLines, namePx, { fill: p.muted, lineHeight: namePx * 1.2 }) : null));
       cy += symH + nameH + 6;
-      overflow = overflow || symLines.some(l => measure(l, px, true) > colW - markW + 0.5);
+      overflow = overflow || symLines.some(l => measure(l, px, mono) > colW - markW + 0.5);
     }
     usedH = Math.max(usedH, cy - y - 6);
   }
@@ -85,14 +85,14 @@ export function itemList({ x, y, w, h: maxH, items, p, cols = 1, px = FONT.symbo
   return { node: h('g', { class: 'itemlist' }, ...nodes), w, h: usedH, overflow, needH: usedH };
 }
 
-export function region({ box, title, subtitle, color, status, p, body, id, dashed, titlePx = FONT.regionTitle }) {
+export function region({ box, title, subtitle, color, status, p, body, id, dashed, titlePx = FONT.regionTitle, padTop = 0 }) {
   const { x, y, w, h: hh } = box;
   const pad = 10;
   const titleLines = wrap(title, w - 2 * pad - (status ? 80 : 0), titlePx, false, true);
   const titleH = titleLines.length * titlePx * 1.2;
   const subLines = subtitle ? wrap(subtitle, w - 2 * pad, FONT.grain) : [];
   const subH = subLines.length * FONT.grain * 1.25;
-  const bodyY = y + pad + titleH + subH + 6;
+  const bodyY = y + pad + titleH + subH + 6 + padTop;
   const bodyBox = { x: x + pad, y: bodyY, w: w - 2 * pad, h: y + hh - pad - bodyY };
   const b = body ? body(bodyBox) : { node: null, h: 0, overflow: false };
   const node = h('g', { class: 'region', 'data-id': id },
@@ -116,26 +116,31 @@ export function statusTag({ x, y, status, p, anchor = 'start', px = FONT.grain }
 }
 
 // The stacked-functional column: what a loss functional looks like at one grain.
-export function functional({ box, name, grain, status, formula, color, p, id, note }) {
+export function functional({ box, name, grain, status, formula, color, p, id, note, terms = [] }) {
   const { x, y, w, h: hh } = box;
   const pad = 12;
   const nameLines = wrap(name, w - 2 * pad - 90, FONT.regionTitle, false, true);
   const nameH = nameLines.length * FONT.regionTitle * 1.2;
-  const grainLine = 'grain: ' + grain;
-  const fLines = wrap(formula, w - 2 * pad, FONT.formula, true);
+  const grainLine = grain ? 'grain: ' + grain : null;
+  const fLines = formula ? wrap(formula, w - 2 * pad, FONT.formula, true) : [];
   const fH = fLines.length * FONT.formula * 1.3;
+  const termLines = terms.map(t => wrap(t, w - 2 * pad - 10, FONT.note));
+  const termH = termLines.reduce((s, ls) => s + ls.length * FONT.note * 1.25, 0) + (terms.length ? 4 : 0);
   const noteLines = note ? wrap(note, w - 2 * pad, FONT.grain) : [];
   const noteH = noteLines.length * FONT.grain * 1.25;
-  const needH = pad + nameH + FONT.grain * 1.4 + 8 + fH + (note ? 6 + noteH : 0) + pad;
+  const needH = pad + nameH + (grainLine ? FONT.grain * 1.4 : 0) + (formula ? 8 + fH : 4) + termH + (note ? 6 + noteH : 0) + pad;
   const overflow = needH > hh + 0.5 || fLines.some(l => measure(l, FONT.formula, true) > w - 2 * pad + 0.5);
   let cy = y + pad;
-  const node = h('g', { class: 'functional', 'data-id': id, 'data-status': status },
+  const parts = [
     h('rect', { x, y, width: w, height: hh, rx: 4, fill: p.card, stroke: color, 'stroke-width': 2 }),
     textLines(x + pad, cy + FONT.regionTitle * 0.9, nameLines, FONT.regionTitle, { fill: color, weight: 'bold', lineHeight: FONT.regionTitle * 1.2 }),
-    statusTag({ x: x + w - pad, y: y + pad, status, p, anchor: 'end' }).node,
-    (cy += nameH + 3, h('text', { x: x + pad, y: cy + FONT.grain * 0.9, 'font-size': FONT.grain, 'font-family': SANS, fill: p.muted }, grainLine)),
-    (cy += FONT.grain * 1.4 + 6, textLines(x + pad, cy + FONT.formula * 0.9, fLines, FONT.formula, { mono: true, fill: p.ink, lineHeight: FONT.formula * 1.3 })),
-    noteLines.length ? (cy += fH + 6, textLines(x + pad, cy + FONT.grain * 0.9, noteLines, FONT.grain, { fill: p.muted, lineHeight: FONT.grain * 1.25 })) : null);
+    statusTag({ x: x + w - pad, y: y + pad, status, p, anchor: 'end' }).node];
+  cy += nameH + 3;
+  if (grainLine) { parts.push(h('text', { x: x + pad, y: cy + FONT.grain * 0.9, 'font-size': FONT.grain, 'font-family': SANS, fill: p.muted }, grainLine)); cy += FONT.grain * 1.4; }
+  if (formula) { cy += 6; parts.push(textLines(x + pad, cy + FONT.formula * 0.9, fLines, FONT.formula, { mono: true, fill: p.ink, lineHeight: FONT.formula * 1.3 })); cy += fH; }
+  if (terms.length) { cy += 4; for (const ls of termLines) { parts.push(textLines(x + pad + 10, cy + FONT.note * 0.9, ls.map((l, i) => (i ? '  ' : '· ') + l), FONT.note, { fill: p.ink, lineHeight: FONT.note * 1.25 })); cy += ls.length * FONT.note * 1.25; } }
+  if (noteLines.length) { cy += 6; parts.push(textLines(x + pad, cy + FONT.grain * 0.9, noteLines, FONT.grain, { fill: p.muted, lineHeight: FONT.grain * 1.25 })); }
+  const node = h('g', { class: 'functional', 'data-id': id, 'data-status': status }, ...parts);
   return { node, w, h: hh, overflow, needH };
 }
 

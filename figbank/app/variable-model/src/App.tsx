@@ -56,13 +56,13 @@ function Page({ data }: { data: Data }) {
     requestAnimationFrame(() => { const card = document.querySelector<HTMLElement>(`.card[data-id="${CSS.escape(id)}"]`); if (card && window.innerWidth > 860) card.scrollIntoView({ block: 'nearest' }) })
   }
   const e = data._episode
-  const fig4 = data._specs?.['fig4-agent-environment'], fig5 = data._specs?.['fig5-loss-stack']
+  const fig4 = data._specs?.['variable-map'] ?? data._specs?.['fig4-agent-environment'], fig5 = data._specs?.['fig5-loss-stack']
 
   return (
     <main className="py-6 pb-12" style={{ paddingInline: 'clamp(16px, 4vw, 48px)' }}>
       <header className="grid gap-2.5 mb-6">
         <h1>The unified variable model</h1>
-        <p className="lede">Every variable of MetaProof's agent–environment model on one page, grouped by which side of the loop it belongs to, with its name in the agentic / reinforcement-learning vocabulary, where the model defines it, and whether it has ever been measured. Click any item in a diagram or any card; the detail panel also shows what the variable does in one worked maintenance episode on testbed T0 and what its knock-out changes. Generated from <code>model/variables.json</code> and <code>experiments/results/one-episode-T0.json</code>; the table form is <code>model/VARIABLES.md</code>; the diagrams are the paper's fig. 4 and fig. 5, drawn from the same specs.</p>
+        <p className="lede">Every variable of MetaProof's agent–environment model on one page, grouped by which side of the loop it belongs to, with its name in the agentic / reinforcement-learning vocabulary, where the model defines it, and whether it has ever been measured. Click any item in a diagram or any card; the detail panel also shows what the variable does in one worked maintenance episode on testbed T0 and what its knock-out changes. Generated from <code>model/variables.json</code> and <code>experiments/results/one-episode-T0.json</code>; the table form is <code>model/VARIABLES.md</code>; the loop diagram is the variable map (every variable in the box of its side) and the loss stack is the paper's fig. 5, both drawn from the same spec bank as the paper's figures.</p>
         {e && <div id="episode-line" className="lede" style={{ fontSize: 13.5 }}>
           <b>One episode, every variable (T0, {e.seeds.length} seeds):</b> along-order front {e.front.hierarchical} vs {e.front.flat}; uncovered defects at the end {e.hierarchical.final_uncovered} vs {e.flat.final_uncovered}; constraints dropped from the open set {e.hierarchical.drops_total} vs {e.flat.drops_total}; accepted {e.hierarchical.accepted.toFixed(2)} vs {e.flat.accepted.toFixed(2)} (hierarchical vs flat).
         </div>}

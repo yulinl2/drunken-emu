@@ -61,6 +61,10 @@ added after the first fixture run, where the reader filed "what Φ stands for" a
 - fig4: round 1, unreadable empty; the reader wrote "terms" where the keyword proxy demanded
   "variable". The proxy was widened (`["variable", "term", "quantit", "symbol"]`) and the same blind
   read re-evaluated; both records are in MetaProof `figures/verdicts.jsonl`.
+- Round 2 against the theory session's own briefs (MetaProof #51, requirements at the briefs' feet): fig4 with
+  four named items a region and the channels drawn through the Interface, fig5 with J's three terms in words and no
+  other formula — both accepted at round 2, unreadable empty, $0.07 each; the all-variables map (kept as
+  `variable-map` for the page) accepted too. Three figures, one command, one record.
 - The page shell: 252 KB, React 19 + Tailwind, no other runtime dependency; `check_page.py` passes
   all ten functions of the hand-written page it replaced, in light and dark.
 

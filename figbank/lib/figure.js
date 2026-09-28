@@ -19,7 +19,7 @@ function body(kind, r, p) {
   return box => {
     const items = r.items || [];
     if (kind === 'chips') return C.chipFlow({ x: box.x, y: box.y, w: box.w, items, p });
-    if (kind === 'list') return C.itemList({ x: box.x, y: box.y, w: box.w, h: box.h, items, p, cols: r.columns || 1 });
+    if (kind === 'list') return C.itemList({ x: box.x, y: box.y, w: box.w, h: box.h, items, p, cols: r.columns || 1, mono: r.font !== 'sans' });
     if (kind === 'none') return { node: null, h: 0 };
     throw new Error(`unknown region layout: ${kind}`);
   };
@@ -45,10 +45,11 @@ export function renderFigure(spec, palette) {
   for (const r of spec.regions || []) {
     let out;
     if (r.kind === 'functional') {
-      out = C.functional({ box: r.box, name: r.title, grain: r.grain, status: r.status, formula: r.formula, note: r.note, color: color(r.color), p, id: r.id });
+      out = C.functional({ box: r.box, name: r.title, grain: r.grain, status: r.status, formula: r.formula, note: r.note, terms: r.terms, color: color(r.color), p, id: r.id });
       if (r.note) runningText.push(r.note);
+      for (const t of r.terms || []) runningText.push(t);
     } else {
-      out = C.region({ box: r.box, title: r.title, subtitle: r.subtitle, color: color(r.color), status: r.status, p, id: r.id, dashed: r.dashed, body: body(r.layout || 'list', r, p) });
+      out = C.region({ box: r.box, title: r.title, subtitle: r.subtitle, color: color(r.color), status: r.status, p, id: r.id, dashed: r.dashed, padTop: r.pad_top || 0, body: body(r.layout || 'list', r, p) });
     }
     parts.push(out.node);
     if (out.overflow) errors.push(`region ${r.id} overflows its box (needs ${Math.ceil(out.needH || 0)} px, has ${r.box.h})`);

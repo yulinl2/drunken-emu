@@ -57,9 +57,10 @@ def main(path, shots=None):
         items = pg.locator('#diag .figure [data-id][role="button"]')
         ids = set(items.evaluate_all('els => els.map(e => e.dataset.id)'))
         var_ids = {r['id'] for r in data['variables']}
-        must(var_ids <= ids, f'diagram lacks {sorted(var_ids - ids)[:5]}')
-        out['diagram_items'] = len(ids)
-        first = data['variables'][0]
+        must(ids and ids <= var_ids, f'diagram items are not variables: {sorted(ids - var_ids)[:5]}')
+        full = var_ids <= ids   # the variable map shows every variable; the brief's fig4 shows a few named groups
+        out['diagram_items'] = len(ids); out['diagram_shows_every_variable'] = full
+        first = next(r for r in data['variables'] if r['id'] in ids)
         pg.locator(f'#diag .figure [data-id="{first["id"]}"][role="button"]').first.click()
         must(first['name'] in pg.locator('#detail').inner_text(), 'detail did not show the clicked diagram item')
         must(pg.locator(f'#diag .figure .on[data-id="{first["id"]}"]').count() == 1, 'diagram item not marked selected')
@@ -82,7 +83,10 @@ def main(path, shots=None):
         narrowed = pg.locator('#list .card').count()
         must(0 < narrowed < total_cards, f'search did not narrow ({narrowed})')
         dim = pg.locator('#diag .figure .dim[data-id]').count()
-        must(dim == n_vars - narrowed, f'dimmed diagram items {dim} != {n_vars - narrowed}')
+        if full:
+            must(dim == n_vars - narrowed, f'dimmed diagram items {dim} != {n_vars - narrowed}')
+        else:
+            must(dim > 0, 'search did not dim any diagram item')
         pg.fill('#q', '')
         # 6 status filter + side buttons
         pg.select_option('#st', statuses[0])

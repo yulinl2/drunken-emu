@@ -4,107 +4,547 @@
   "title": "figbank figure spec",
   "description": "A figure, made machine-readable: the one sentence it must convey, the regions and symbols it shows, the arrows between them, the status tags, the word budget for running text, and the rule by which a blind cold reader's report accepts it. The renderer (figbank/lib/figure.js) draws exactly this and nothing else; the pipeline (bin/figpipe) checks the rendering against `acceptance`.",
   "type": "object",
-  "required": ["id", "message", "canvas", "regions", "acceptance"],
+  "required": [
+    "id",
+    "message",
+    "canvas",
+    "regions",
+    "acceptance"
+  ],
   "additionalProperties": false,
   "properties": {
-    "$schema": { "type": "string" },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "file stem: figures/<id>.svg" },
-    "message": { "type": "string", "minLength": 10, "description": "the one sentence a cold reader must be able to recover from the picture alone (the brief's message)" },
-    "brief": { "type": "string", "description": "path of the human brief this spec instantiates, relative to the caller's repository" },
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "file stem: figures/<id>.svg"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 10,
+      "description": "the one sentence a cold reader must be able to recover from the picture alone (the brief's message)"
+    },
+    "brief": {
+      "type": "string",
+      "description": "path of the human brief this spec instantiates, relative to the caller's repository"
+    },
     "provenance": {
       "type": "object",
-      "properties": { "generated_by": { "type": "string" }, "source": { "type": "string" }, "version": { "type": "string" } },
+      "properties": {
+        "generated_by": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
       "additionalProperties": true
     },
     "canvas": {
-      "type": "object", "required": ["width", "height"], "additionalProperties": false,
-      "properties": { "width": { "type": "number", "minimum": 100 }, "height": { "type": "number", "minimum": 100 } },
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "minimum": 100
+        },
+        "height": {
+          "type": "number",
+          "minimum": 100
+        }
+      },
       "description": "the viewBox in authored px; the delivery surface is named in acceptance.legibility"
     },
-    "palette": { "type": "object", "additionalProperties": { "type": "string" }, "description": "named colours overriding figbank/lib/palette.js LIGHT; region/arrow `color` may name a key" },
-    "word_budget": { "type": "integer", "minimum": 0, "description": "maximum words of running text: title + notes + arrow labels + legend; symbols, names and region titles are labels and do not count" },
-    "must_not_contain": { "type": "array", "items": { "type": "string" }, "description": "strings that must not appear in any text of the rendering (from the brief's must-not-contain)" },
+    "palette": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "named colours overriding figbank/lib/palette.js LIGHT; region/arrow `color` may name a key"
+    },
+    "word_budget": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "maximum words of running text: title + notes + arrow labels + legend; symbols, names and region titles are labels and do not count"
+    },
+    "must_not_contain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "strings that must not appear in any text of the rendering (from the brief's must-not-contain)"
+    },
     "title": {
-      "type": "object", "required": ["text"], "additionalProperties": false,
-      "properties": { "text": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" } }
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
     },
     "frame": {
-      "type": "object", "required": ["box"], "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "box"
+      ],
+      "additionalProperties": false,
       "description": "a dashed outer frame (MetaProof's meta layer) with an optional chip row inside it",
       "properties": {
-        "box": { "$ref": "#/$defs/box" }, "label": { "type": "string" }, "color": { "type": "string" },
-        "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
-        "items_at": { "type": "object", "required": ["x", "y", "w"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" } } }
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "items_at": {
+          "type": "object",
+          "required": [
+            "x",
+            "y",
+            "w"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "w": {
+              "type": "number"
+            }
+          }
+        }
       }
     },
     "regions": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "required": ["id", "title", "box"], "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "box"
+        ],
+        "additionalProperties": false,
         "properties": {
-          "id": { "type": "string" },
-          "kind": { "type": "string", "enum": ["region", "functional"], "default": "region" },
-          "title": { "type": "string" },
-          "subtitle": { "type": "string" },
-          "color": { "type": "string" },
-          "status": { "$ref": "#/$defs/status" },
-          "box": { "$ref": "#/$defs/box" },
-          "dashed": { "type": "boolean" },
-          "layout": { "type": "string", "enum": ["list", "chips", "none"], "description": "region body: symbol+name list in columns, a chip flow, or nothing" },
-          "columns": { "type": "integer", "minimum": 1, "maximum": 4 },
-          "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
-          "grain": { "type": "string", "description": "functional only: the grain it prices at" },
-          "formula": { "type": "string", "description": "functional only: one formula line, monospace" },
-          "note": { "type": "string", "description": "functional only: one short running-text line (counts toward the budget)" }
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "region",
+              "functional"
+            ],
+            "default": "region"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/status"
+          },
+          "box": {
+            "$ref": "#/$defs/box"
+          },
+          "dashed": {
+            "type": "boolean"
+          },
+          "layout": {
+            "type": "string",
+            "enum": [
+              "list",
+              "chips",
+              "none"
+            ],
+            "description": "region body: symbol+name list in columns, a chip flow, or nothing"
+          },
+          "columns": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/item"
+            }
+          },
+          "grain": {
+            "type": "string",
+            "description": "functional only: the grain it prices at; optional"
+          },
+          "formula": {
+            "type": "string",
+            "description": "functional only: one formula line, monospace; optional"
+          },
+          "note": {
+            "type": "string",
+            "description": "functional only: one short running-text line (counts toward the budget)"
+          },
+          "font": {
+            "type": "string",
+            "enum": [
+              "mono",
+              "sans"
+            ],
+            "description": "list/chips: symbols in monospace (default) or, for name-only items, the sans face"
+          },
+          "pad_top": {
+            "type": "number",
+            "description": "extra space between the title and the body, e.g. to let a channel arrow pass through the box"
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "functional only: short lines under the formula (each counts toward the budget)"
+          }
         }
       }
     },
     "arrows": {
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
+        "type": "object",
+        "additionalProperties": false,
         "properties": {
-          "id": { "type": "string" },
-          "points": { "type": "array", "minItems": 2, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } } },
-          "loop": { "type": "object", "required": ["x", "y", "r"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "r": { "type": "number" } } },
-          "label": { "type": "string" },
-          "color": { "type": "string" },
-          "dashed": { "type": "boolean" },
-          "width": { "type": "number" },
-          "label_at": { "type": "string", "enum": ["start", "mid", "end"] },
-          "label_dy": { "type": "number" },
-          "label_x": { "type": "number" }, "label_y": { "type": "number" }, "label_w": { "type": "number" },
-          "label_anchor": { "type": "string", "enum": ["start", "middle", "end"] }
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "loop": {
+            "type": "object",
+            "required": [
+              "x",
+              "y",
+              "r"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "r": {
+                "type": "number"
+              }
+            }
+          },
+          "label": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dashed": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "number"
+          },
+          "label_at": {
+            "type": "string",
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ]
+          },
+          "label_dy": {
+            "type": "number"
+          },
+          "label_x": {
+            "type": "number"
+          },
+          "label_y": {
+            "type": "number"
+          },
+          "label_w": {
+            "type": "number"
+          },
+          "label_anchor": {
+            "type": "string",
+            "enum": [
+              "start",
+              "middle",
+              "end"
+            ]
+          }
         },
-        "oneOf": [{ "required": ["points"] }, { "required": ["loop"] }]
+        "oneOf": [
+          {
+            "required": [
+              "points"
+            ]
+          },
+          {
+            "required": [
+              "loop"
+            ]
+          }
+        ]
       }
     },
     "notes": {
       "type": "array",
-      "items": { "type": "object", "required": ["x", "y", "w", "text"], "additionalProperties": false,
-        "properties": { "id": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "text": { "type": "string" }, "color": { "type": "string" }, "anchor": { "type": "string", "enum": ["start", "middle", "end"] } } }
+      "items": {
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "w",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "w": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": [
+              "start",
+              "middle",
+              "end"
+            ]
+          }
+        }
+      }
     },
     "legend": {
-      "type": "object", "required": ["x", "y", "entries"], "additionalProperties": false,
-      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "anchor": { "type": "string", "enum": ["start", "end"] },
-        "entries": { "type": "array", "items": { "type": "object", "required": ["status", "label"], "properties": { "status": { "$ref": "#/$defs/status" }, "label": { "type": "string" } } } } }
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "status",
+              "label"
+            ],
+            "properties": {
+              "status": {
+                "$ref": "#/$defs/status"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     },
     "acceptance": {
-      "type": "object", "required": ["must_mention"], "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "must_mention"
+      ],
+      "additionalProperties": false,
       "description": "the mechanical form of the brief's acceptance rule: the cold reader's claim+structure must contain the message (as keyword groups), its unreadable list must be empty, and the rendering must pass the legibility audit at the named surface",
       "properties": {
-        "must_mention": { "type": "array", "minItems": 1, "items": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "description": "groups of alternatives; every group must have at least one member present (case-insensitive substring) in the reader's claim + structure" },
-        "must_not_mention": { "type": "array", "items": { "type": "string" }, "description": "a reading that contains one of these has misread the figure (e.g. 'competing' for a nested stack)" },
-        "unreadable_max": { "type": "integer", "minimum": 0, "default": 0 },
-        "legibility": { "type": "object", "additionalProperties": false, "properties": { "width": { "type": "integer", "description": "delivery viewport in px for checks/svg_legibility.py" }, "min_px": { "type": "number" }, "overlap_tol": { "type": "number" }, "surface": { "type": "string", "description": "prose: what the width and floor stand for (e.g. 'textwidth 6.5 in, 4.5 pt floor')" } } },
-        "rounds_max": { "type": "integer", "minimum": 1, "default": 3, "description": "a brief that needs more than this many rounds is a bad brief (MetaProof #51)" }
+        "must_mention": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "groups of alternatives; every group must have at least one member present (case-insensitive substring) in the reader's claim + structure"
+        },
+        "must_not_mention": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "a reading that contains one of these has misread the figure (e.g. 'competing' for a nested stack)"
+        },
+        "unreadable_max": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "legibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "description": "delivery viewport in px for checks/svg_legibility.py"
+            },
+            "min_px": {
+              "type": "number"
+            },
+            "overlap_tol": {
+              "type": "number"
+            },
+            "surface": {
+              "type": "string",
+              "description": "prose: what the width and floor stand for (e.g. 'textwidth 6.5 in, 4.5 pt floor')"
+            }
+          }
+        },
+        "rounds_max": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "a brief that needs more than this many rounds is a bad brief (MetaProof #51)"
+        }
       }
     }
   },
   "$defs": {
-    "box": { "type": "object", "required": ["x", "y", "w", "h"], "additionalProperties": false, "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } },
-    "status": { "type": "string", "enum": ["defined", "estimated", "measured", "spec", "implemented"] },
-    "item": { "type": "object", "required": ["symbol"], "additionalProperties": false,
-      "properties": { "id": { "type": "string" }, "symbol": { "type": "string", "description": "what is drawn (a short display form, never a truncation)" }, "name": { "type": "string" }, "status": { "$ref": "#/$defs/status" } } }
+    "box": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "defined",
+        "estimated",
+        "measured",
+        "spec",
+        "implemented"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "symbol"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "what is drawn (a short display form, never a truncation)"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "when one drawn item stands for several model variables: their ids (id is the first)"
+        }
+      }
+    }
   }
 }
