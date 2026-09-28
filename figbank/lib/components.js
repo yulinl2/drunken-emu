@@ -189,6 +189,41 @@ export function frame({ box, label, color, p, labelPx = FONT.grain }) {
     label ? h('text', { x: x + 12, y: y + labelPx * 1.5, 'font-size': labelPx, 'font-family': SANS, fill: color, 'font-weight': 'bold', 'letter-spacing': 0.6 }, label) : null) };
 }
 
+// A tree node: a small box, an optional status mark, a short label (wraps to at most 2 lines; a
+// third-line label is an overflow, same rule as everywhere else — shorten it in the spec, never
+// truncate here). Position comes from treelayout.js, never authored by hand.
+export function treeNode({ x, y, w, h: hh, label, sublabel, status, color, p, id, px = 11.5, subPx = 9.5 }) {
+  const pad = 6, markW = status ? 12 : 0;
+  const lines = wrap(label, w - 2 * pad - markW, px);
+  const subLines = sublabel ? wrap(sublabel, w - 2 * pad - markW, subPx) : [];
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px) > w - 2 * pad - markW + 0.5);
+  const cy = hh / 2 - ((lines.length - 1) * px * 1.15) / 2 - (subLines.length ? subPx * 0.7 : 0);
+  const node = h('g', { class: 'treenode', 'data-id': id, 'data-status': status },
+    h('rect', { x, y, width: w, height: hh, rx: 4, fill: p.card, stroke: color || p.line, 'stroke-width': 1.3 }),
+    status ? statusMark(x + pad + 3, y + hh / 2, status, p, 3) : null,
+    textLines(x + pad + markW, y + cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'start', id }),
+    subLines.length ? textLines(x + pad + markW, y + cy + lines.length * px * 1.15 + subPx * 0.85, subLines, subPx, { fill: p.muted, lineHeight: subPx * 1.2, anchor: 'start' }) : null);
+  return { node, w, h: hh, overflow };
+}
+
+// The edge from a node to its child, a gentle S-curve (no routing around siblings needed:
+// layoutTree already guarantees no two subtrees overlap). `horizontal` connects right-edge-centre
+// to left-edge-centre (depth grows rightward); the default connects bottom-centre to top-centre
+// (depth grows downward) — matching whichever orientation layoutTree was given.
+export function treeEdge({ from, to, color, p, id, horizontal }) {
+  let x1, y1, x2, y2, d;
+  if (horizontal) {
+    x1 = from.x + from.w; y1 = from.y + from.h / 2; x2 = to.x; y2 = to.y + to.h / 2;
+    const midX = (x1 + x2) / 2;
+    d = `M${x1},${y1} C${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+  } else {
+    x1 = from.x + from.w / 2; y1 = from.y + from.h; x2 = to.x + to.w / 2; y2 = to.y;
+    const midY = (y1 + y2) / 2;
+    d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+  }
+  return h('path', { class: 'treeedge', 'data-id': id, d, fill: 'none', stroke: color || p.dim, 'stroke-width': 1.2 });
+}
+
 export function legend({ x, y, entries, p, px = FONT.legend, anchor = 'start' }) {
   // entries: [{status, label}] laid out in one row, right-to-left when anchor = 'end'
   const parts = entries.map(e => ({ ...e, w: 16 + measure(e.label, px) + 16 }));

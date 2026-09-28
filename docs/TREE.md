@@ -76,7 +76,13 @@ that is never executed is not a regeneration command.
 |   |   |   `-- vite.config.ts
 |   |   `-- bundle.sh
 |   |-- examples/
+|   |   |-- figbank-file-tree.json
+|   |   |-- figbank-file-tree.pdf
+|   |   |-- figbank-file-tree.png
+|   |   |-- figbank-file-tree.svg
+|   |   |-- gen_file_tree.py
 |   |   |-- pipeline-workflow.json
+|   |   |-- pipeline-workflow.png
 |   |   |-- pipeline-workflow.svg
 |   |   `-- verdicts.jsonl
 |   |-- lib/
@@ -86,6 +92,7 @@ that is never executed is not a regeneration command.
 |   |   |-- palette.d.ts
 |   |   |-- palette.js
 |   |   |-- text.js
+|   |   |-- treelayout.js
 |   |   |-- vnode.d.ts
 |   |   `-- vnode.js
 |   |-- reader/
@@ -118,5 +125,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-17 directories, 76 files tracked
+17 directories, 83 files tracked
 ```

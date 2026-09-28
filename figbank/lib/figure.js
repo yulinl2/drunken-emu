@@ -13,6 +13,7 @@
 import { h, toSvg, texts } from './vnode.js';
 import { words } from './text.js';
 import { LIGHT } from './palette.js';
+import { layoutTree } from './treelayout.js';
 import * as C from './components.js';
 
 function body(kind, r, p) {
@@ -72,6 +73,31 @@ export function renderFigure(spec, palette) {
   for (const n of spec.notes || []) {
     const out = C.note({ x: n.x, y: n.y, w: n.w, text: n.text, color: n.color ? color(n.color) : undefined, p, anchor: n.anchor, id: n.id });
     parts.push(out.node); runningText.push(n.text);
+  }
+  if (spec.tree) {
+    const t = spec.tree;
+    const ox = t.origin?.x ?? 0, oy = t.origin?.y ?? 0;
+    const optsL = { nodeW: t.node_w, nodeH: t.node_h, gapX: t.gap_x, gapY: t.gap_y, orientation: t.orientation };
+    let layout;
+    try { layout = layoutTree(t.nodes, Object.fromEntries(Object.entries(optsL).filter(([, v]) => v !== undefined))); }
+    catch (e) { errors.push(`tree: ${e.message}`); layout = null; }
+    if (layout) {
+      const byId = Object.fromEntries(t.nodes.map(n => [n.id, n]));
+      const posOf = id => { const pp = layout.positions[id]; return { x: pp.x + ox, y: pp.y + oy, w: pp.w, h: pp.h }; };
+      for (const n of t.nodes) {
+        if (n.parent != null && layout.positions[n.parent]) {
+          parts.push(C.treeEdge({ from: posOf(n.parent), to: posOf(n.id), color: color(t.edge_color), p, id: `${n.parent}->${n.id}`, horizontal: t.orientation === 'horizontal' }));
+        }
+      }
+      for (const n of t.nodes) {
+        const box = posOf(n.id);
+        const out = C.treeNode({ ...box, label: n.label, sublabel: n.sublabel, status: n.status, color: color(t.color), p, id: n.id });
+        parts.push(out.node);
+        if (out.overflow) errors.push(`tree node ${JSON.stringify(n.id)} label overflows its box (shorten it or widen node_w)`);
+      }
+      const need = { w: ox + layout.width, h: oy + layout.height };
+      if (need.w > width + 0.5 || need.h > height + 0.5) errors.push(`tree overflows the canvas (needs ${Math.ceil(need.w)}x${Math.ceil(need.h)}, canvas is ${width}x${height})`);
+    }
   }
   if (spec.legend) {
     const lg = C.legend({ x: spec.legend.x, y: spec.legend.y, anchor: spec.legend.anchor, entries: spec.legend.entries, p });

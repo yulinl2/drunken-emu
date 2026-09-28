@@ -101,3 +101,75 @@ test('render_svg.js CLI: --report is genuinely optional, not just when present',
   assert.ok(svg.startsWith('<svg '), 'without --report, the positional args must still resolve to spec and out paths');
   assert.ok(svg.includes('Left side'), 'the fixture content, not a blank/wrong file, was written');
 });
+
+// ---------------------------------------------------------------------------------- tree/DAG layout
+import { layoutTree } from '../lib/treelayout.js';
+
+test('layoutTree: children never overlap and sit one row below their parent', () => {
+  const nodes = [{ id: 'root' }, { id: 'a', parent: 'root' }, { id: 'b', parent: 'root' }, { id: 'c', parent: 'root' }];
+  const { positions } = layoutTree(nodes, { nodeW: 100, nodeH: 30, gapX: 10, gapY: 40 });
+  const kids = ['a', 'b', 'c'].map(id => positions[id]).sort((x, y) => x.x - y.x);
+  for (let i = 1; i < kids.length; i++) assert.ok(kids[i].x >= kids[i - 1].x + kids[i - 1].w + 10 - 0.01, 'siblings must not overlap');
+  assert.equal(positions.root.y, 0);
+  assert.equal(positions.a.y, 70);   // one row: nodeH(30) + gapY(40)
+});
+
+test('layoutTree: a parent centres over the span of its first and last child', () => {
+  const nodes = [{ id: 'root' }, { id: 'a', parent: 'root' }, { id: 'b', parent: 'root' }];
+  const { positions } = layoutTree(nodes, { nodeW: 60 });
+  const midKids = (positions.a.x + positions.a.w / 2 + positions.b.x + positions.b.w / 2) / 2;
+  assert.ok(Math.abs(positions.root.x + positions.root.w / 2 - midKids) < 0.01);
+});
+
+test('layoutTree: several roots lay out left to right, a single node is trivial', () => {
+  const { positions, roots } = layoutTree([{ id: 'x' }, { id: 'y' }], { nodeW: 50, gapX: 20 });
+  assert.deepEqual(roots, ['x', 'y']);
+  assert.equal(positions.y.x, positions.x.x + 50 + 20);
+  const one = layoutTree([{ id: 'solo' }], {});
+  assert.deepEqual(one.roots, ['solo']);
+});
+
+test('layoutTree: a cycle is a thrown error, not an infinite loop', () => {
+  assert.throws(() => layoutTree([{ id: 'a', parent: 'b' }, { id: 'b', parent: 'a' }], {}), /cycle/);
+});
+
+test('a tree-only spec (no regions) renders with no errors', () => {
+  const spec = {
+    id: 'tree-only', message: 'a tree with no regions still renders on its own.',
+    canvas: { width: 400, height: 200 },
+    tree: { nodes: [{ id: 'root', label: 'root' }, { id: 'a', parent: 'root', label: 'a' }, { id: 'b', parent: 'root', label: 'b' }],
+            node_w: 80, node_h: 30, origin: { x: 20, y: 20 } },
+    acceptance: { must_mention: [['tree']] },
+  };
+  const { svg, report } = renderFigure(spec);
+  assert.equal(report.errors.length, 0, report.errors.join('; '));
+  assert.ok(svg.includes('treenode') && svg.includes('treeedge'));
+});
+
+test('a tree node whose label cannot fit its box is an overflow, not a truncation', () => {
+  const spec = {
+    id: 'tree-overflow', message: 'x', canvas: { width: 300, height: 200 },
+    tree: { nodes: [{ id: 'a', label: 'a genuinely much too long label for a thirty pixel wide node box' }], node_w: 30, node_h: 20 },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('overflows its box')));
+});
+
+test('a tree bigger than its declared canvas is a gate too', () => {
+  const spec = {
+    id: 'tree-canvas', message: 'x', canvas: { width: 100, height: 100 },
+    tree: { nodes: [{ id: 'a' , label: 'a'}, { id: 'b', parent: 'a', label: 'b' }, { id: 'c', parent: 'a', label: 'c' }], node_w: 100, node_h: 40, gap_x: 20, gap_y: 40 },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('overflows the canvas')));
+});
+
+test('layoutTree: horizontal orientation grows depth rightward, siblings stack vertically', () => {
+  const nodes = [{ id: 'root' }, { id: 'a', parent: 'root' }, { id: 'b', parent: 'root' }];
+  const { positions } = layoutTree(nodes, { nodeW: 100, nodeH: 24, gapX: 10, gapY: 8, orientation: 'horizontal' });
+  assert.equal(positions.root.x, 0);
+  assert.equal(positions.a.x, 110);   // one column: nodeW(100) + gapX(10)
+  assert.ok(positions.b.y >= positions.a.y + positions.a.h + 8 - 0.01, 'siblings stack without overlap');
+});
