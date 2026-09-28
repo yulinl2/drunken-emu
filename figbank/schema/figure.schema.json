@@ -185,7 +185,8 @@
                 "description": "one short line under the label, muted (e.g. a count, a short status word)"
               },
               "status": {
-                "$ref": "#/$defs/status"
+                "type": "string",
+                "description": "not constrained to the shared five-value model-variable vocabulary (#/$defs/status) — a tree's own data may have its own status words (e.g. the frontier ledger's sealed/in-progress/planned/hypothesis/killed). figbank/lib/palette.js statusStyle() recognises both sets by name; an unrecognised word gets the same neutral hollow-dot fallback as an unset status, which is a real answer (\"this bank doesn't know what this status weighs\"), not a schema error."
               }
             }
           }
@@ -536,7 +537,8 @@
             ],
             "properties": {
               "status": {
-                "$ref": "#/$defs/status"
+                "type": "string",
+                "description": "same rule as tree.nodes[].status: not constrained to the shared five-value vocabulary — a legend for a tree with its own status words names them here directly."
               },
               "label": {
                 "type": "string"

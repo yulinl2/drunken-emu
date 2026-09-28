@@ -173,3 +173,29 @@ test('layoutTree: horizontal orientation grows depth rightward, siblings stack v
   assert.equal(positions.a.x, 110);   // one column: nodeW(100) + gapX(10)
   assert.ok(positions.b.y >= positions.a.y + positions.a.h + 8 - 0.01, 'siblings stack without overlap');
 });
+
+// ---------------------------------------------------------------------- status vocabularies (#12)
+import { statusStyle, LIGHT as PAL } from '../lib/palette.js';
+
+test('statusStyle: the frontier ledger\'s own status words each get a distinct, sensible mark', () => {
+  const sealed = statusStyle('sealed', PAL), measured = statusStyle('measured', PAL);
+  assert.equal(sealed.fill, PAL.ok);           // sealed weighs the same as implemented: done, confirmed
+  assert.equal(sealed.shape, 'square');
+  assert.equal(measured.fill, PAL.ok);
+  assert.notEqual(sealed.shape, measured.shape, 'sealed and measured are both "ok" weight but distinguishable by shape');
+  const killed = statusStyle('killed', PAL);
+  assert.equal(killed.fill, PAL.accent);        // killed is the one weight the model-variable vocabulary never needed
+  assert.notEqual(killed.fill, statusStyle('hypothesis', PAL).fill);
+  assert.notEqual(killed.fill, statusStyle('in-progress', PAL).fill);
+});
+
+test('a tree node may carry a status word outside the shared 5-value vocabulary and still render', () => {
+  const spec = {
+    id: 'tree-frontier-status', message: 'x', canvas: { width: 500, height: 200 },
+    tree: { nodes: [{ id: 'a', label: 'a', status: 'sealed' }, { id: 'b', parent: 'a', label: 'b', status: 'killed' }], node_w: 80, node_h: 24 },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { svg, report } = renderFigure(spec);
+  assert.equal(report.errors.length, 0, report.errors.join('; '));
+  assert.ok(svg.includes(`fill="${PAL.ok}"`) && svg.includes(`fill="${PAL.accent}"`));
+});
