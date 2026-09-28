@@ -370,3 +370,11 @@ test('arrow: head:false draws no arrowhead, and by default there is one', () => 
   assert.ok(renderFigure(mkA({})).svg.includes('marker-end'));
   assert.ok(!renderFigure(mkA({ head: false })).svg.includes('marker-end'));
 });
+
+test('arrow: dash-dot is a fourth stroke, distinct from solid, dashed and dotted', () => {
+  const mkA = extra => ({ id: 'ar-dd', message: 'x', canvas: { width: 300, height: 100 }, arrows: [{ id: 'a', points: [[10, 50], [200, 50]], ...extra }], acceptance: { must_mention: [['x']] } });
+  const dash = extra => (renderFigure(mkA(extra)).svg.match(/stroke-dasharray="([^"]*)"/) || [])[1];
+  const all = [dash({}), dash({ dashed: true }), dash({ dotted: true }), dash({ dashdot: true })];
+  assert.equal(new Set(all).size, 4, all.join(' | '));
+  assert.equal(dash({ dashdot: true, dashed: true }), dash({ dashdot: true }), 'dashdot wins over dashed');
+});

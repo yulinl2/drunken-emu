@@ -577,6 +577,10 @@
             "type": "boolean",
             "description": "dashed line (5 4)"
           },
+          "dashdot": {
+            "type": "boolean",
+            "description": "dash-dot line: a fourth stroke (after solid, dashed, dotted), for a status that is none of the other three; `dotted` wins over `dashdot`, `dashdot` over `dashed`"
+          },
           "head": {
             "type": "boolean",
             "default": true,
