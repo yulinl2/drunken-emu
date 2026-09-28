@@ -1,0 +1,98 @@
+{
+ "entries": [
+  {
+   "repo": "MetaProof",
+   "id": "fig4-agent-environment",
+   "status": "accepted",
+   "verdict": "partly",
+   "verified_round": 2,
+   "verified_ts": "2026-09-28T10:52:00+00:00",
+   "stale": true,
+   "round": 4,
+   "attempts": 9,
+   "ts": "2026-09-28T17:46:02+00:00",
+   "spec": "specs/fig4-agent-environment.json",
+   "png": "fig4-agent-environment.png",
+   "message": "The model is one loop — an environment (the artifact and its constraints) and an agent (a bounded language model) joined by two channels, observation and action, through the interface — with an objective and dynamics below and a meta layer around everything saying how any reading is trusted."
+  },
+  {
+   "repo": "MetaProof",
+   "id": "fig5-loss-stack",
+   "status": "accepted",
+   "verdict": "partly",
+   "verified_round": 2,
+   "verified_ts": "2026-09-28T10:52:19+00:00",
+   "stale": true,
+   "round": 4,
+   "attempts": 10,
+   "ts": "2026-09-28T17:46:04+00:00",
+   "spec": "specs/fig5-loss-stack.json",
+   "png": "fig5-loss-stack.png",
+   "message": "The loop minimises one loss, a count of defects; that count's reader term is priced at three finer grains — per claim, per token, per rendering — and, for proof libraries, by a corpus functional; each finer functional prices the one above it."
+  },
+  {
+   "repo": "MetaProof",
+   "id": "frontier-tree",
+   "status": "accepted",
+   "verdict": "clear",
+   "verified_round": 1,
+   "verified_ts": "2026-09-28T17:44:11+00:00",
+   "stale": false,
+   "round": 1,
+   "attempts": 1,
+   "ts": "2026-09-28T17:44:11+00:00",
+   "spec": "specs/frontier-tree.json",
+   "png": "frontier-tree.png",
+   "message": "MetaProof's exploration frontier, 71 nodes, coloured by status: 38 measured, 11 in-progress, 16 hypothesis, 5 planned, 1 killed. Zero sealed against 38 measured is the gap bin/frontier_refactor.py already found by counting; this is the same fact, seen instead of computed."
+  },
+  {
+   "repo": "MetaProof",
+   "id": "variable-map",
+   "status": "rejected",
+   "verdict": null,
+   "verified_round": null,
+   "verified_ts": "2026-09-28T12:32:28+00:00",
+   "stale": true,
+   "round": 3,
+   "attempts": 7,
+   "ts": "2026-09-28T17:45:59+00:00",
+   "spec": "specs/variable-map.json",
+   "png": "variable-map.png",
+   "message": "One loop: the environment on the left and the agent on the right exchange observations and actions through an interface; below, the objective, the dynamics, and how problems become tasks; every variable of the model has exactly one home, with its measurement status on it."
+  },
+  {
+   "repo": "drunken-emu",
+   "id": "figbank-file-tree",
+   "status": "accepted",
+   "verdict": "clear",
+   "verified_round": 1,
+   "verified_ts": "2026-09-28T17:37:11+00:00",
+   "stale": false,
+   "round": 1,
+   "attempts": 1,
+   "ts": "2026-09-28T17:37:11+00:00",
+   "spec": "figbank-file-tree.json",
+   "png": "figbank-file-tree.png",
+   "message": "figbank's own tracked files, as a tree: the bank visualizing its own toolkit, laid out by treelayout.js from nothing but each file's directory."
+  },
+  {
+   "repo": "drunken-emu",
+   "id": "pipeline-workflow",
+   "status": "accepted",
+   "verdict": "clear",
+   "verified_round": 1,
+   "verified_ts": "2026-09-28T13:05:00+00:00",
+   "stale": false,
+   "round": 1,
+   "attempts": 1,
+   "ts": "2026-09-28T13:05:00+00:00",
+   "spec": null,
+   "png": null,
+   "message": "owner suggested reviewing tt-a1i/archify; this spec demonstrates the one pattern taken from it (boundaries) on the bank's own pipeline, not a consumer's model"
+  }
+ ],
+ "missing": [
+  "MetaSci",
+  "HAN"
+ ]
+}
