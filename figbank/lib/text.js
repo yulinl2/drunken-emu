@@ -35,7 +35,9 @@ export function measure(text, px, mono = false, bold = false) {
   return w * px * (bold && !mono ? BOLD : 1);
 }
 
-// Greedy word wrap; long unbreakable tokens are split at "·", ",", ";" or "/" before giving up.
+// Greedy word wrap; long unbreakable tokens are split at "·", ",", ";" or "/" before giving up. A token with none of those
+// (a long hyphenated identifier such as "F-intake-metaproof-three-decoders-md") is split after "-", "_" or "." and its
+// pieces are packed with NO space inserted, so the text is unchanged — only where it breaks.
 export function wrap(text, maxWidth, px, mono = false, bold = false) {
   const words = String(text).split(/\s+/).filter(Boolean);
   const lines = [];
@@ -49,6 +51,16 @@ export function wrap(text, maxWidth, px, mono = false, bold = false) {
     if (measure(w, px, mono, bold) > maxWidth) {
       const parts = w.split(/(?<=[·,;/])/);
       if (parts.length > 1) { parts.forEach(push); continue; }
+      const pieces = w.split(/(?<=[-_.])/);
+      if (pieces.length > 1) {
+        if (cur) { lines.push(cur); cur = ''; }
+        for (const piece of pieces) {
+          const trial = cur + piece;
+          if (measure(trial, px, mono, bold) <= maxWidth || !cur) cur = trial;
+          else { lines.push(cur); cur = piece; }
+        }
+        continue;
+      }
     }
     push(w);
   }

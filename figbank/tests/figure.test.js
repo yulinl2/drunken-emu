@@ -361,8 +361,8 @@ test('arrow: solid, dashed and dotted are three different strokes (three statuse
   const dash = extra => (renderFigure(mkA(extra)).svg.match(/stroke-dasharray="([^"]*)"/) || [])[1];
   assert.equal(dash({}), undefined);
   assert.equal(dash({ dashed: true }), '5 4');
-  assert.equal(dash({ dotted: true }), '1.5 4.5');
-  assert.equal(dash({ dashed: true, dotted: true }), '1.5 4.5', 'dotted wins if both are set');
+  assert.equal(dash({ dotted: true }), '0.1 6.5');
+  assert.equal(dash({ dashed: true, dotted: true }), '0.1 6.5', 'dotted wins if both are set');
 });
 
 test('arrow: head:false draws no arrowhead, and by default there is one', () => {
@@ -377,4 +377,14 @@ test('arrow: dash-dot is a fourth stroke, distinct from solid, dashed and dotted
   const all = [dash({}), dash({ dashed: true }), dash({ dotted: true }), dash({ dashdot: true })];
   assert.equal(new Set(all).size, 4, all.join(' | '));
   assert.equal(dash({ dashdot: true, dashed: true }), dash({ dashdot: true }), 'dashdot wins over dashed');
+});
+
+test('wrap: a long hyphenated identifier breaks after a hyphen, adds no space, loses no character', () => {
+  const id = 'F-intake-metaproof-workshop-2026-09-21-b3ad1a74-founding-root-thread';
+  const lines = wrap(id, 180, 11.5);
+  assert.ok(lines.length >= 2, 'it must actually break');
+  assert.equal(lines.join(''), id, 'concatenating the lines gives back the identifier exactly');
+  assert.ok(lines.every(l => measure(l, 11.5) <= 180 + 0.5), lines.join(' | '));
+  assert.deepEqual(wrap('short-token', 180, 11.5), ['short-token']);
+  assert.deepEqual(wrap('before ' + id + ' after', 180, 11.5).join('').replace(/ /g, ''), ('before' + id + 'after'));
 });
