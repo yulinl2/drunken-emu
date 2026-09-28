@@ -154,11 +154,15 @@ export function arrow({ points, loop, label, color, p, dashed, width = 1.6, labe
   if (loop) { const { x, y, r } = loop; d = `M${x},${y} C${x + r * 1.4},${y - r * 1.6} ${x + r * 2.2},${y + r * 0.2} ${x + r * 0.35},${y + r * 0.35}`; }
   else d = points.map((pt, i) => (i ? 'L' : 'M') + pt[0] + ',' + pt[1]).join(' ');
   let lx = labelX, ly = labelY;
+  const autoY = lx === undefined && labelY === undefined;
   if (lx === undefined && points) {
     const [a, b] = labelAt === 'start' ? [points[0], points[0]] : labelAt === 'end' ? [points[points.length - 1], points[points.length - 1]] : [points[0], points[points.length - 1]];
     lx = (a[0] + b[0]) / 2; ly = (a[1] + b[1]) / 2 + labelDy;
   }
   const lines = label ? wrap(label, labelW || 9999, px) : [];
+  // textLines grows downward from `ly`; a label meant to sit above the line (labelDy < 0) must have
+  // its LAST line, not its first, at the target offset, or a wrapped 2nd+ line lands back on the arrow.
+  if (autoY && lines.length > 1 && labelDy < 0) ly -= (lines.length - 1) * px * 1.25;
   const node = h('g', { class: 'arrow', 'data-id': id },
     h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dashed ? '5 4' : undefined, 'marker-end': `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: labelAnchor, lineHeight: px * 1.25 }) : null);
@@ -222,6 +226,21 @@ export function treeEdge({ from, to, color, p, id, horizontal }) {
     d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
   }
   return h('path', { class: 'treeedge', 'data-id': id, d, fill: 'none', stroke: color || p.dim, 'stroke-width': 1.2 });
+}
+
+// A sequence diagram's participant: a header box (auto-sized to its label, figbank/lib/sequencelayout.js
+// computes x/w) plus a dashed lifeline running down to the last message row. Messages themselves reuse
+// arrow() directly — a sequence message is exactly "an arrow between two known x positions at a known
+// y", the same shape arrow() already draws for every other figure, so no separate message component.
+export function participant({ x, y: y0 = 0, w, headerH, lifelineTo, label, p, id, px = FONT.regionTitle }) {
+  const lines = wrap(label, w - 16, px, false, true);
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px, false, true) > w - 16 + 0.5);
+  const cy = y0 + headerH / 2 - ((lines.length - 1) * px * 1.15) / 2;
+  const node = h('g', { class: 'participant', 'data-id': id },
+    h('rect', { x, y: y0, width: w, height: headerH, rx: 4, fill: p.card, stroke: p.line, 'stroke-width': 1.3 }),
+    textLines(x + w / 2, cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'middle', weight: 'bold' }),
+    h('line', { x1: x + w / 2, y1: y0 + headerH, x2: x + w / 2, y2: lifelineTo, stroke: p.dim, 'stroke-width': 1.1, 'stroke-dasharray': '4 4' }));
+  return { node, w, overflow };
 }
 
 export function legend({ x, y, entries, p, px = FONT.legend, anchor = 'start' }) {

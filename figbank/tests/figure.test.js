@@ -199,3 +199,54 @@ test('a tree node may carry a status word outside the shared 5-value vocabulary 
   assert.equal(report.errors.length, 0, report.errors.join('; '));
   assert.ok(svg.includes(`fill="${PAL.ok}"`) && svg.includes(`fill="${PAL.accent}"`));
 });
+
+import { layoutSequence } from '../lib/sequencelayout.js';
+
+test('layoutSequence: participant columns are ordered left to right, widths computed from labels', () => {
+  const { widths, xById, rows, totalWidth } = layoutSequence(
+    [{ id: 'a', label: 'a' }, { id: 'bb', label: 'a much longer participant label' }],
+    [{ from: 'a', to: 'bb', label: 'go' }],
+    { gapX: 20, minW: 40 },
+  );
+  assert.ok(widths.bb > widths.a, 'a longer label gets a wider column');
+  assert.ok(xById.a < xById.bb, 'columns keep participant order left to right');
+  assert.equal(rows.length, 1);
+  assert.ok(rows[0].x1 < rows[0].x2);
+  assert.equal(totalWidth, widths.a + 20 + widths.bb);
+});
+
+test('layoutSequence: a message naming an unknown participant is a thrown error', () => {
+  assert.throws(() => layoutSequence([{ id: 'a', label: 'a' }], [{ from: 'a', to: 'ghost' }]), /unknown participant/);
+});
+
+test('layoutSequence: a self-message is refused, not silently drawn wrong', () => {
+  assert.throws(() => layoutSequence([{ id: 'a', label: 'a' }], [{ from: 'a', to: 'a' }]), /self-message/);
+});
+
+test('a well-formed sequence spec renders with no errors, participants and messages both present', () => {
+  const spec = {
+    id: 'seq-basic', message: 'x', canvas: { width: 400, height: 200 },
+    sequence: {
+      origin: { x: 10, y: 40 },
+      participants: [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }],
+      messages: [{ from: 'a', to: 'b', label: 'hello' }],
+    },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { svg, report } = renderFigure(spec);
+  assert.equal(report.errors.length, 0, report.errors.join('; '));
+  assert.ok(svg.includes('Alpha') && svg.includes('Beta') && svg.includes('hello'));
+});
+
+test('a sequence bigger than its declared canvas is a gate, same as a tree', () => {
+  const spec = {
+    id: 'seq-overflow', message: 'x', canvas: { width: 100, height: 60 },
+    sequence: {
+      participants: [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }, { id: 'c', label: 'Gamma' }],
+      messages: [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }],
+    },
+    acceptance: { must_mention: [['x']] },
+  };
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('sequence overflows the canvas')));
+});

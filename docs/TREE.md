@@ -65,6 +65,7 @@ that is never executed is not a regeneration command.
 |   |   |   |-- .parcelrc
 |   |   |   |-- .postcssrc
 |   |   |   |-- README.md
+|   |   |   |-- check_page.py
 |   |   |   |-- index.html
 |   |   |   |-- package.json
 |   |   |   |-- pnpm-lock.yaml
@@ -100,6 +101,10 @@ that is never executed is not a regeneration command.
 |   |   |-- figbank-file-tree.png
 |   |   |-- figbank-file-tree.svg
 |   |   |-- gen_file_tree.py
+|   |   |-- pipeline-sequence.json
+|   |   |-- pipeline-sequence.pdf
+|   |   |-- pipeline-sequence.png
+|   |   |-- pipeline-sequence.svg
 |   |   |-- pipeline-workflow.json
 |   |   |-- pipeline-workflow.png
 |   |   |-- pipeline-workflow.svg
@@ -110,6 +115,7 @@ that is never executed is not a regeneration command.
 |   |   |-- figure.js
 |   |   |-- palette.d.ts
 |   |   |-- palette.js
+|   |   |-- sequencelayout.js
 |   |   |-- text.js
 |   |   |-- treelayout.js
 |   |   |-- vnode.d.ts
@@ -144,5 +150,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 100 files tracked
+19 directories, 106 files tracked
 ```

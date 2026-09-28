@@ -14,6 +14,7 @@ import { h, toSvg, texts } from './vnode.js';
 import { words } from './text.js';
 import { LIGHT } from './palette.js';
 import { layoutTree } from './treelayout.js';
+import { layoutSequence } from './sequencelayout.js';
 import * as C from './components.js';
 
 function body(kind, r, p) {
@@ -97,6 +98,34 @@ export function renderFigure(spec, palette) {
       }
       const need = { w: ox + layout.width, h: oy + layout.height };
       if (need.w > width + 0.5 || need.h > height + 0.5) errors.push(`tree overflows the canvas (needs ${Math.ceil(need.w)}x${Math.ceil(need.h)}, canvas is ${width}x${height})`);
+    }
+  }
+  if (spec.sequence) {
+    const s = spec.sequence;
+    const ox = s.origin?.x ?? 0, oy = s.origin?.y ?? 0;
+    const optsL = { gapX: s.gap_x, minW: s.min_w, px: s.label_px, headerH: s.header_h, rowGap: s.row_gap };
+    let layout;
+    try { layout = layoutSequence(s.participants, s.messages, Object.fromEntries(Object.entries(optsL).filter(([, v]) => v !== undefined))); }
+    catch (e) { errors.push(`sequence: ${e.message}`); layout = null; }
+    if (layout) {
+      for (const pt of s.participants) {
+        const w = layout.widths[pt.id], x = ox + layout.xById[pt.id] - w / 2;
+        const lastY = oy + layout.totalHeight - 12;   // a visible margin below the last message, not a lifeline that stops exactly on it
+        const out = C.participant({ x, y: oy, w, headerH: layout.headerH, lifelineTo: lastY, label: pt.label, p, id: pt.id });
+        parts.push(out.node);
+        if (out.overflow) errors.push(`sequence participant ${JSON.stringify(pt.id)} label overflows its header (shorten it or widen min_w)`);
+      }
+      s.messages.forEach((m, i) => {
+        const row = layout.rows[i];
+        const out = C.arrow({
+          points: [[ox + row.x1, oy + row.y], [ox + row.x2, oy + row.y]],
+          label: m.label, color: color(s.edge_color), p, id: `msg-${i}`, labelAt: 'mid', labelDy: -6,
+          labelW: Math.abs(row.x2 - row.x1) - 12, dashed: m.dashed,
+        });
+        parts.push(out.node); markers.push(out.marker); if (m.label) runningText.push(m.label);
+      });
+      const need = { w: ox + layout.totalWidth, h: oy + layout.totalHeight };
+      if (need.w > width + 0.5 || need.h > height + 0.5) errors.push(`sequence overflows the canvas (needs ${Math.ceil(need.w)}x${Math.ceil(need.h)}, canvas is ${width}x${height})`);
     }
   }
   if (spec.legend) {

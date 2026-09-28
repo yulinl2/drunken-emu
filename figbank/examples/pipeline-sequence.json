@@ -1,0 +1,36 @@
+{
+  "id": "pipeline-sequence",
+  "message": "bin/figpipe's seven steps as a handoff chain: each stage passes its output to the next, ending in one logged record — the same process figbank/examples/pipeline-workflow.json shows grouped by boundary instead.",
+  "provenance": {"generated_by": "figbank/examples/pipeline-sequence.json (hand-authored, the sequence diagram kind's first instance, drunken-emu #14)", "source": "bin/figpipe"},
+  "canvas": {"width": 1040, "height": 380},
+  "word_budget": 40,
+  "must_not_contain": ["…"],
+  "title": {"text": "bin/figpipe, as a handoff chain: each step passes on what the next one needs.", "x": 16, "y": 14, "w": 1000},
+  "sequence": {
+    "origin": {"x": 20, "y": 100},
+    "participants": [
+      {"id": "validate", "label": "validate"},
+      {"id": "render", "label": "render"},
+      {"id": "rasterize", "label": "rasterize"},
+      {"id": "legibility", "label": "legibility"},
+      {"id": "coldread", "label": "cold read"},
+      {"id": "accept", "label": "accept"},
+      {"id": "log", "label": "log"}
+    ],
+    "messages": [
+      {"from": "validate", "to": "render", "label": "spec passes the schema"},
+      {"from": "render", "to": "rasterize", "label": "SVG, nothing truncated"},
+      {"from": "rasterize", "to": "legibility", "label": "PNG and PDF"},
+      {"from": "legibility", "to": "coldread", "label": "font size and overlap pass"},
+      {"from": "coldread", "to": "accept", "label": "blind claim and verdict"},
+      {"from": "accept", "to": "log", "label": "accepted"}
+    ],
+    "edge_color": "dyn"
+  },
+  "acceptance": {
+    "must_mention": [["validate"], ["render"], ["legibility"], ["cold read", "reader", "judgment"], ["accept"], ["log"]],
+    "unreadable_max": 0,
+    "legibility": {"width": 1040, "min_px": 10, "surface": "documentation width, not a paper column"},
+    "rounds_max": 3
+  }
+}

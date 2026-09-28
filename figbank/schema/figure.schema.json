@@ -235,6 +235,63 @@
         }
       }
     },
+    "sequence": {
+      "type": "object",
+      "description": "a sequence diagram: participants as columns, a lifeline down from each, messages as horizontal arrows in time order (figbank/lib/sequencelayout.js — column x and message y are computed from the data, never hand-placed, same rule as `tree`/`boundaries`). No activation bars in this first version (drunken-emu #14): add them only if a real instance needs them. A message may not go from a participant to itself yet — the layout function refuses it loudly rather than drawing something wrong.",
+      "required": [
+        "participants",
+        "messages"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string", "description": "short — this is a header box, not a region; wraps to at most 2 lines before it overflows" }
+            }
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string", "description": "a participant id" },
+              "to": { "type": "string", "description": "a participant id, different from `from`" },
+              "label": { "type": "string" },
+              "dashed": { "type": "boolean" }
+            }
+          }
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "gap_x": { "type": "number", "minimum": 0, "description": "horizontal gap between participant columns" },
+        "min_w": { "type": "number", "minimum": 20, "description": "minimum participant header width; the actual width is computed from the label" },
+        "header_h": { "type": "number", "minimum": 16 },
+        "row_gap": { "type": "number", "minimum": 8, "description": "vertical spacing between message rows" },
+        "label_px": { "type": "number", "minimum": 6 },
+        "edge_color": { "type": "string" }
+      }
+    },
     "boundaries": {
       "type": "array",
       "description": "a labelled group frame computed around a named set of regions/functionals (their own boxes, by id, plus `pad`) — the process-diagram grouping Archify calls a boundary (tt-a1i/archify): 'these four are mechanical, this one is judgment', not a data-model side. Drawn behind the regions it wraps, so it reads as a frame with a visible gap, not an overlap.",
