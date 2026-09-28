@@ -44,7 +44,9 @@ that is never executed is not a regeneration command.
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- svg_legibility.py
-|   `-- test_explore_text.py
+|   |-- svg_text_gates.py
+|   |-- test_explore_text.py
+|   `-- test_external_svg.py
 |-- docs/
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
@@ -96,6 +98,11 @@ that is never executed is not a regeneration command.
 |   |   |   `-- vite.config.ts
 |   |   `-- bundle.sh
 |   |-- examples/
+|   |   |-- external/
+|   |   |   |-- han-fig1-amplification.json
+|   |   |   |-- han-fig1-amplification.png
+|   |   |   |-- han-fig1-amplification.svg
+|   |   |   `-- verdicts.jsonl
 |   |   |-- figbank-file-tree.json
 |   |   |-- figbank-file-tree.pdf
 |   |   |-- figbank-file-tree.png
@@ -155,5 +162,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 111 files tracked
+20 directories, 117 files tracked
 ```

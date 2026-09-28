@@ -1,0 +1,13 @@
+{
+  "id": "han-fig1-amplification",
+  "message": "Four analytic curves: correlated voters' majority vote saturates below 1 as voters are added, best-of-m selection bias grows only like the square root of two ln m, evidence retention decays geometrically with chain depth, and an irrecoverability rule is a cliff versus graceful degradation.",
+  "provenance": {"generated_by": "matplotlib 3.10.8 via han paper/figures/make_figures.py fig1 (SVG copied byte-for-byte)", "source": "yulinl2/han paper/figures/fig1_amplification_predictions.svg; analytic curves, no data"},
+  "canvas": {"width": 624, "height": 470.4},
+  "word_budget": 400,
+  "must_not_contain": ["…", "TODO", "lorem"],
+  "acceptance": {
+    "must_mention": [["majority", "voter"], ["saturat", "ceiling", "plateau"], ["best-of", "selection", "winner"], ["retention", "retained", "propagat", "chain"], ["cliff", "irrecoverab", "graceful"]],
+    "unreadable_max": 0,
+    "legibility": {"width": 624, "min_px": 7, "overlap_tol": 0.12, "surface": "paper column at native size (468pt)"}
+  }
+}
