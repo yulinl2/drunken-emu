@@ -1,7 +1,7 @@
 // src/data.ts — the page's data contract with MetaProof's model/variables.json (+ what bin/variables.py adds).
 
 export type Status = 'defined' | 'estimated' | 'measured' | 'spec' | 'implemented'
-export type Side = 'environment' | 'agent' | 'interface' | 'objective' | 'dynamics' | 'meta'
+export type Side = 'environment' | 'agent' | 'interface' | 'objective' | 'dynamics' | 'organisation' | 'meta'
 
 export interface Episode { value: string; role: string; knockout?: string | null; hierarchical?: string; flat?: string; watch: string }
 export interface Variable {
@@ -29,9 +29,12 @@ export interface Data {
   _specs?: Record<string, unknown>   // figure specs (drunken-emu figbank schema), keyed by figure id
 }
 
-export const SIDES: Side[] = ['environment', 'agent', 'interface', 'objective', 'dynamics', 'meta']
-export const SIDE_TITLE: Record<Side, string> = { environment: 'Environment', agent: 'Agent', interface: 'Interface', objective: 'Objective', dynamics: 'Dynamics', meta: 'Meta' }
-export const SIDE_VAR: Record<Side, string> = { environment: 'var(--env)', agent: 'var(--agent)', interface: 'var(--iface)', objective: 'var(--obj)', dynamics: 'var(--dyn)', meta: 'var(--meta)' }
+// This list must cover every key of model/variables.json's `_provenance.sides` — figures/specs.py asserts the
+// same thing on the Python side (variable_map()) and refuses to render if a side is missing there. If a page
+// build ever silently drops a side's cards, this array is stale; check `_provenance.sides` in the injected data.
+export const SIDES: Side[] = ['environment', 'agent', 'interface', 'objective', 'dynamics', 'organisation', 'meta']
+export const SIDE_TITLE: Record<Side, string> = { environment: 'Environment', agent: 'Agent', interface: 'Interface', objective: 'Objective', dynamics: 'Dynamics', organisation: 'Organisation', meta: 'Meta' }
+export const SIDE_VAR: Record<Side, string> = { environment: 'var(--env)', agent: 'var(--agent)', interface: 'var(--iface)', objective: 'var(--obj)', dynamics: 'var(--dyn)', organisation: 'var(--org)', meta: 'var(--meta)' }
 export const LOSS_VAR: Record<string, string> = { J: 'var(--obj)', gaps: 'var(--obj)', decoder_load: 'var(--dyn)', tree_score: 'var(--agent)', corpus: 'var(--meta)' }
 
 export function loadData(): Data | null {
