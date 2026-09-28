@@ -54,6 +54,25 @@ that is never executed is not a regeneration command.
 |   `-- ZENODO-RUNBOOK.md
 |-- figbank/
 |   |-- app/
+|   |   |-- frontier-tree/
+|   |   |   |-- src/
+|   |   |   |   |-- App.tsx
+|   |   |   |   |-- Figure.tsx
+|   |   |   |   |-- data.ts
+|   |   |   |   |-- index.css
+|   |   |   |   `-- main.tsx
+|   |   |   |-- .gitignore
+|   |   |   |-- .parcelrc
+|   |   |   |-- .postcssrc
+|   |   |   |-- README.md
+|   |   |   |-- index.html
+|   |   |   |-- package.json
+|   |   |   |-- pnpm-lock.yaml
+|   |   |   |-- tailwind.config.js
+|   |   |   |-- tsconfig.app.json
+|   |   |   |-- tsconfig.json
+|   |   |   |-- tsconfig.node.json
+|   |   |   `-- vite.config.ts
 |   |   |-- variable-model/
 |   |   |   |-- src/
 |   |   |   |   |-- App.tsx
@@ -125,5 +144,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-17 directories, 83 files tracked
+19 directories, 100 files tracked
 ```

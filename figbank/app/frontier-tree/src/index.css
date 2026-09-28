@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Generic tokens — no per-dataset colours (this app is a template, drunken-emu #12): paper/ink plus the same
+   four status weights figbank/lib/palette.js's statusStyle() resolves every vocabulary to (ok/warn/dim/accent).
+   The figure SVG gets the bank's DARK/LIGHT palette from React (src/Figure.tsx) directly. */
+:root {
+  --paper: #f6f4ee; --ink: #1d2126; --muted: #5e6570; --line: #d9d4c8; --card: #fbfaf6; --chip: #eeeae0;
+  --ok: #2f7d4f; --warn: #b07d12; --dim: #7d8590; --accent: #b23a48; --focus: #1e6b7a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181c; --ink: #e8e4da; --muted: #a6adb6; --line: #2f353c; --card: #1c2025; --chip: #262b31;
+    --ok: #6fcf8f; --warn: #e2b04a; --dim: #8a929c; --accent: #e0788a; --focus: #6cc3d4; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181c; --ink: #e8e4da; --muted: #a6adb6; --line: #2f353c; --card: #1c2025; --chip: #262b31;
+  --ok: #6fcf8f; --warn: #e2b04a; --dim: #8a929c; --accent: #e0788a; --focus: #6cc3d4; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+h1, h2, h3 { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.15; }
+h2 { font-size: 20px; }
+h3 { font-size: 18px; }
+.mono, code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .92em; }
+.lede { color: var(--muted); max-width: 78ch; }
+.tile { border: 1px solid var(--line); background: var(--card); padding: 8px 12px; min-width: 110px; }
+.tile b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; font-family: "Source Serif 4", serif; }
+.tile span { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.diagram { border: 1px solid var(--line); background: var(--card); overflow-x: auto; }
+.figure svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.figure .treenode { cursor: pointer; }
+.figure .treenode:hover rect, .figure .treenode:focus-visible rect, .figure .treenode.on rect { stroke: var(--focus); stroke-width: 2.4; }
+.figure .treenode.dim { opacity: .3; }
+.figure [tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.field { font: inherit; padding: 6px 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 3px; }
+.field:focus-visible, .card:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.detail { position: sticky; top: 12px; border: 1px solid var(--line); background: var(--card); padding: 14px 16px; }
+@media (max-width: 860px) { .detail { position: static; } }
+.detail dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 10px 0 0; font-size: 13.5px; }
+.detail dt { color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 11px; padding-top: 2px; }
+.detail dd { margin: 0; }
+.card { border: 1px solid var(--line); background: var(--card); padding: 10px 12px; cursor: pointer; display: grid; gap: 4px; text-align: left; font: inherit; color: inherit; }
+.card.on { background: var(--chip); }
+.card .sym { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--muted); }
+.card .nm { font-weight: 600; }
+.status { display: inline-block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 2px; border: 1px solid currentColor; width: max-content; }
+/* the model-variable vocabulary and the claim-lifecycle vocabulary, mapped to the same four weights
+   figbank/lib/palette.js's statusStyle() uses — kept in sync with that function's comment by hand */
+.s-measured, .s-implemented, .s-sealed { color: var(--ok); }
+.s-estimated, .s-in-progress { color: var(--warn); }
+.s-defined, .s-spec, .s-planned, .s-hypothesis, .s-unknown { color: var(--dim); }
+.s-killed { color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { .card, .treenode rect { transition: background .15s, stroke-width .1s; } }
