@@ -145,6 +145,24 @@ The reader's "unreadable" is physical or structural only; unfamiliar terms go to
 are logged and never counted, because a blind reader by construction has no context. This split was
 added after the first fixture run, where the reader filed "what Φ stands for" as unreadable.
 
+### External SVGs (`bin/figpipe SPEC.json --svg FILE.svg`) — drunken-emu #23, attempt B
+
+For figures the bank cannot draw (a matplotlib plot). The spec still carries id/message/acceptance/canvas
+(canvas must equal the SVG's px size); step 2 reads the SVG's `<text>` instead of rendering. Kept: word
+count/budget, forbidden strings, ellipsis, legibility audit, blind reader, mechanical acceptance, log.
+Not applicable, printed on every run and logged as `gates_not_applied`: box overflow, wrap-to-gap,
+running-text vs label split, layout-derived geometry, one-spec-two-surfaces. Blind spot even in the audit:
+text-over-mark collisions (a legend on a curve) are invisible to it; only the reader can see those.
+`legibility.fit: true` measures the SVG shrunk to `legibility.width`; without it a fixed-size SVG (bank and
+matplotlib alike) is measured at native size whatever `width` says. Tests: `python3 -m unittest
+checks.test_external_svg`, run against the bank's own analytic `majority-vote-curve.svg`.
+
+Measured on a real matplotlib figure (HAN's fig1, run in a separate attempt, not committed here because it
+is research content and this repo is public): the text gates found nothing, the legibility audit flagged one
+real collision (`r*` under a legend, 65% overlap), and the blind reader independently found the same one plus
+two the audit cannot see (a legend over curves; small labels). The maker cannot fix such a collision through
+a spec, only by editing the plotting script — which is the case for the native `spec.plot` above.
+
 ## Ledger — lives in each research repo, not here
 
 A ledger of everything the pipeline has produced (which figure ids exist, their latest verdict, a
