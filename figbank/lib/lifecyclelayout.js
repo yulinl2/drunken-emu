@@ -10,7 +10,7 @@ export function layoutLifecycle(states, opts = {}) {
   for (const s of states) {
     if (seen.has(s.id)) throw new Error(`layoutLifecycle: duplicate state id ${JSON.stringify(s.id)}`);
     seen.add(s.id);
-    if (s.col == null || s.col < 0) throw new Error(`layoutLifecycle: state ${JSON.stringify(s.id)} needs a non-negative col`);
+    if (!Number.isInteger(s.col) || s.col < 0) throw new Error(`layoutLifecycle: state ${JSON.stringify(s.id)} needs a non-negative integer col (got ${JSON.stringify(s.col)})`);
   }
   const byCol = new Map();
   states.forEach((s, i) => { const arr = byCol.get(s.col) || []; arr.push({ ...s, _i: i }); byCol.set(s.col, arr); });

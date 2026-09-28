@@ -166,7 +166,7 @@ export function arrow({ points, loop, label, color, p, dashed, width = 1.6, labe
   const node = h('g', { class: 'arrow', 'data-id': id },
     h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dashed ? '5 4' : undefined, 'marker-end': `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: labelAnchor, lineHeight: px * 1.25 }) : null);
-  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '' };
+  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length && ly !== undefined ? ly - px : null };
 }
 
 export function markerDefs(markers) {
@@ -281,7 +281,7 @@ export function stateEdge({ from, to, color, p, id, label, labelW = 150, px = FO
   const node = h('g', { class: 'stateedge', 'data-id': id },
     h('path', { d, fill: 'none', stroke, 'stroke-width': 1.4, 'marker-end': `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: Math.abs(dx) >= Math.abs(dy) ? 'middle' : 'start', lineHeight: px * 1.25 }) : null);
-  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '' };
+  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length ? ly - px : null };
 }
 
 // A sequence diagram's participant: a header box (auto-sized to its label, figbank/lib/sequencelayout.js

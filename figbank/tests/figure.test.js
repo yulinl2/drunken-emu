@@ -278,21 +278,56 @@ test('layoutLifecycle: states are placed by col/row, never a hand-authored pixel
 });
 
 test('layoutLifecycle: a state with no col is a thrown error', () => {
-  assert.throws(() => layoutLifecycle([{ id: 'a' }], {}), /needs a non-negative col/);
+  assert.throws(() => layoutLifecycle([{ id: 'a' }], {}), /non-negative integer col/);
 });
 
 test('a well-formed lifecycle spec renders with no errors, including a backward transition', () => {
   const spec = {
     id: 'life-basic', message: 'x', canvas: { width: 650, height: 200 },
     lifecycle: {
+      origin: { x: 0, y: 40 },
       states: [{ id: 'draft', label: 'Draft', col: 0 }, { id: 'r1', label: 'Round 1', col: 1 }, { id: 'done', label: 'Accepted', col: 2, terminal: true, status: 'measured' }],
-      transitions: [{ from: 'draft', to: 'r1', label: 'submit' }, { from: 'r1', to: 'draft', label: 'FAIL, revise' }, { from: 'r1', to: 'done', label: 'PASS' }],
+      transitions: [{ from: 'draft', to: 'r1', label: 'submit' }, { from: 'r1', to: 'done', label: 'PASS' }, { from: 'done', to: 'draft', label: 'FAIL, revise' }],
     },
     acceptance: { must_mention: [['x']] },
   };
   const { svg, report } = renderFigure(spec);
   assert.equal(report.errors.length, 0, report.errors.join('; '));
   assert.ok(svg.includes('Draft') && svg.includes('Round 1') && svg.includes('Accepted') && svg.includes('FAIL, revise'));
+});
+
+const life = (states, transitions, origin = { x: 0, y: 60 }) => ({ id: 'life-x', message: 'x', canvas: { width: 700, height: 400 }, lifecycle: { origin, states, transitions }, acceptance: { must_mention: [['x']] } });
+
+test('lifecycle: a reverse or duplicate transition between one pair is refused, not overlaid', () => {
+  const st = [{ id: 'a', label: 'A', col: 0 }, { id: 'b', label: 'B', col: 1 }];
+  assert.ok(renderFigure(life(st, [{ from: 'a', to: 'b' }, { from: 'b', to: 'a' }])).report.errors.some(e => e.includes('overlay')));
+  assert.ok(renderFigure(life(st, [{ from: 'a', to: 'b' }, { from: 'a', to: 'b' }])).report.errors.some(e => e.includes('overlay')));
+});
+
+test('lifecycle: a same-column edge that would run behind another state is refused', () => {
+  const st = [{ id: 'a', label: 'A', col: 0 }, { id: 'b', label: 'B', col: 0 }, { id: 'c', label: 'C', col: 0 }];
+  assert.ok(renderFigure(life(st, [{ from: 'a', to: 'c' }])).report.errors.some(e => e.includes('behind state')));
+  assert.equal(renderFigure(life(st, [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }])).report.errors.length, 0);
+});
+
+test('lifecycle: prototype-property names are not states, and a non-integer col is refused', () => {
+  const st = [{ id: 'a', label: 'A', col: 0 }];
+  assert.ok(renderFigure(life(st, [{ from: 'a', to: 'constructor' }])).report.errors.some(e => e.includes('unknown state')));
+  assert.ok(renderFigure(life([{ id: 'a', label: 'A', col: '1' }], [])).report.errors.some(e => e.includes('integer col')));
+});
+
+test('lifecycle: a label pushed above the canvas by a small origin is an error, not a lost label', () => {
+  const st = [{ id: 'a', label: 'A', col: 0 }, { id: 'b', label: 'B', col: 1 }];
+  const { report } = renderFigure(life(st, [{ from: 'a', to: 'b', label: 'go now please' }], { x: 0, y: 0 }));
+  assert.ok(report.errors.some(e => e.includes('above the canvas')));
+});
+
+test('sequence: prototype-property names are not participants; an over-long label is an error, not an overlap', () => {
+  const base = { id: 'seq-x', message: 'x', canvas: { width: 700, height: 400 }, acceptance: { must_mention: [['x']] } };
+  const bad = renderFigure({ ...base, sequence: { origin: { x: 0, y: 40 }, participants: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }], messages: [{ from: 'a', to: 'toString' }] } });
+  assert.ok(bad.report.errors.some(e => e.includes('unknown participant')));
+  const long = renderFigure({ ...base, sequence: { origin: { x: 0, y: 40 }, participants: [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }], messages: [{ from: 'a', to: 'b', label: Array(40).fill('word').join(' ') }] } });
+  assert.ok(long.report.errors.some(e => e.includes('runs into')));
 });
 
 test('a lifecycle transition to an unknown state is a gate, not a silent no-op', () => {

@@ -36,7 +36,8 @@ h3 { font-size: 18px; }
 .diagram { border: 1px solid var(--line); background: var(--card); overflow-x: auto; }
 .figure svg { display: block; min-width: 760px; width: 100%; height: auto; }
 .figure .treenode { cursor: pointer; }
-.figure .treenode:hover rect, .figure .treenode:focus-visible rect, .figure .treenode.on rect { stroke: var(--focus); stroke-width: 2.4; }
+.figure .treenode:hover rect, .figure .treenode:focus-visible rect { stroke: var(--focus); stroke-width: 2.4; }
+.figure .treenode.on rect { stroke: var(--focus); stroke-width: 4; fill: var(--chip); }
 .figure .treenode.dim { opacity: .3; }
 .figure [tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .field { font: inherit; padding: 6px 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 3px; }

@@ -124,6 +124,9 @@ export function renderFigure(spec, palette) {
           labelW: Math.abs(row.x2 - row.x1) - 12, dashed: m.dashed,
         });
         parts.push(out.node); markers.push(out.marker); if (m.label) runningText.push(m.label);
+        // a wrapped label grows upward: it must stay below the previous arrow (or the header row)
+        const floor = i === 0 ? oy + layout.headerH : oy + layout.rows[i - 1].y;
+        if (out.labelTop !== null && out.labelTop < floor - 0.5) errors.push(`sequence message ${i} label runs into the ${i === 0 ? 'participant headers' : 'previous message'} (label top y=${Math.round(out.labelTop)}, floor y=${Math.round(floor)}) — shorten it or raise row_gap`);
       });
       const need = { w: ox + layout.totalWidth, h: oy + layout.totalHeight };
       if (need.w > width + 0.5 || need.h > height + 0.5) errors.push(`sequence overflows the canvas (needs ${Math.ceil(need.w)}x${Math.ceil(need.h)}, canvas is ${width}x${height})`);
@@ -139,13 +142,27 @@ export function renderFigure(spec, palette) {
     if (layout) {
       const posOf = id => { const pp = layout.positions[id]; return { x: pp.x + ox, y: pp.y + oy, w: pp.w, h: pp.h }; };
       const byId = Object.fromEntries(s.states.map(st => [st.id, st]));
+      const seenPair = new Set();
       (s.transitions || []).forEach((t, i) => {
-        if (!byId[t.from]) { errors.push(`lifecycle transition ${i} references unknown state ${JSON.stringify(t.from)}`); return; }
-        if (!byId[t.to]) { errors.push(`lifecycle transition ${i} references unknown state ${JSON.stringify(t.to)}`); return; }
+        if (!Object.hasOwn(byId, t.from)) { errors.push(`lifecycle transition ${i} references unknown state ${JSON.stringify(t.from)}`); return; }
+        if (!Object.hasOwn(byId, t.to)) { errors.push(`lifecycle transition ${i} references unknown state ${JSON.stringify(t.to)}`); return; }
+        // two edges between one pair of states (a duplicate, or a and b transitioning to each other) draw on
+        // top of each other with today's edge geometry: refuse loudly rather than paint one over the other
+        const pair = [t.from, t.to].sort().join('\u0000');
+        if (seenPair.has(pair)) { errors.push(`lifecycle transition ${i} (${JSON.stringify(t.from)} -> ${JSON.stringify(t.to)}) shares a state pair with an earlier transition — duplicate/reverse edges would overlay each other; not supported yet`); return; }
+        seenPair.add(pair);
+        // a straight same-column edge passes behind any state box lying between its two ends
+        const A = posOf(t.from), B = posOf(t.to);
+        if (Math.abs((A.x + A.w / 2) - (B.x + B.w / 2)) < 1) {
+          const lo = Math.min(A.y, B.y), hi = Math.max(A.y, B.y);
+          const hidden = s.states.filter(st => st.id !== t.from && st.id !== t.to).filter(st => { const c = posOf(st.id); return Math.abs(c.x - A.x) < 1 && c.y > lo && c.y < hi; });
+          if (hidden.length) { errors.push(`lifecycle transition ${i} (${JSON.stringify(t.from)} -> ${JSON.stringify(t.to)}) would run behind state(s) ${hidden.map(h => JSON.stringify(h.id)).join(', ')} in the same column — not supported yet, move a state to another col`); return; }
+        }
         const label = t.label ? (t.guard ? `${t.label} [${t.guard}]` : t.label) : (t.guard ? `[${t.guard}]` : undefined);
         try {
           const out = C.stateEdge({ from: posOf(t.from), to: posOf(t.to), color: color(s.edge_color), p, id: `${t.from}->${t.to}`, label, labelW: s.col_w || 150 });
           parts.push(out.node); markers.push(out.marker); if (label) runningText.push(label);
+          if (out.labelTop !== null && out.labelTop < 0) errors.push(`lifecycle transition ${i} label runs above the canvas (top at y=${Math.round(out.labelTop)}) — increase origin.y or shorten the label`);
         } catch (e) { errors.push(`lifecycle: ${e.message}`); }
       });
       for (const st of s.states) {

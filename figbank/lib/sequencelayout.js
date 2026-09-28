@@ -23,8 +23,8 @@ export function layoutSequence(participants, messages, opts = {}) {
   }
   const totalWidth = cursor - gapX;
   const rows = messages.map((m, i) => {
-    if (!(m.from in xById)) throw new Error(`layoutSequence: message ${i} references unknown participant ${JSON.stringify(m.from)}`);
-    if (!(m.to in xById)) throw new Error(`layoutSequence: message ${i} references unknown participant ${JSON.stringify(m.to)}`);
+    if (!Object.hasOwn(xById, m.from)) throw new Error(`layoutSequence: message ${i} references unknown participant ${JSON.stringify(m.from)}`);
+    if (!Object.hasOwn(xById, m.to)) throw new Error(`layoutSequence: message ${i} references unknown participant ${JSON.stringify(m.to)}`);
     if (m.from === m.to) throw new Error(`layoutSequence: message ${i} is a self-message (${JSON.stringify(m.from)} -> itself) — not supported yet, no participant may message itself`);
     return { y: headerH + marginY + (i + 0.5) * rowGap, x1: xById[m.from], x2: xById[m.to] };
   });

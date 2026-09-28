@@ -39,7 +39,7 @@ export default function Figure({ spec, dark, selected, dimmed, onPick, label }: 
   }, [spec, dark])
   const element = useMemo(() => toReact(React, decorate(tree, selected, dimmed)) as React.ReactElement, [tree, selected, dimmed])
   const pick = (target: EventTarget | null) => {
-    const g = (target as Element | null)?.closest?.('[data-id]') as (Element & { dataset: DOMStringMap }) | null
+    const g = (target as Element | null)?.closest?.('[role="button"][data-id]') as (Element & { dataset: DOMStringMap }) | null
     if (g?.dataset.id && PICKABLE.some(c => g.classList.contains(c))) onPick(g.dataset.id)
   }
   return (
