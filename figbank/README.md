@@ -1,0 +1,72 @@
+# figbank — a figure is composed from a spec, not drawn; accepted by a blind reader, not by its author
+
+*v0.1.0 · 2026-09-28 · the visual-instruments track (issue #5); first instances MetaProof fig4 and fig5*
+
+The kit's contract, extended from React artifacts and static SVGs to *making* figures: the brief is
+machine-readable, the picture is composed from reusable pieces, the same pieces render to SVG for
+LaTeX and to React for pages, and a figure is accepted only when a reader who has seen nothing but
+the PNG can say what it claims. The acceptance is a record (`verdicts.jsonl`), not a chat.
+
+```
+figbank/
+├── schema/figure.schema.json   one JSON schema for "a figure": message, regions, symbols, arrows,
+│                               status tags, word budget, acceptance rule
+├── lib/                        the component bank (plain ES modules, no dependencies)
+│   ├── vnode.js                one tree, two hosts: h() → toSvg() | toReact()
+│   ├── text.js                 width estimate calibrated against Chromium (tests/calibration.json), wrap()
+│   ├── palette.js              LIGHT / DARK palettes; status → mark (dot, square, hollow)
+│   ├── components.js           region · itemList · chipFlow · functional · arrow · note · frame · legend
+│   └── figure.js               renderFigure(spec) → {node, svg, report}; the gates live here
+├── render_svg.js               node CLI: spec.json → figure.svg (+ report)
+├── reader/cold-reader.md       the blind reader's prompt; its hash is in every verdict
+├── app/
+│   ├── bundle.sh               Parcel + html-inline → one HTML shell with a __JSON__ data slot
+│   └── variable-model/         the MetaProof variable-model page (React + TS + Tailwind); imports lib/
+│       └── check_page.py       the page's function checklist, run by a script reader in Chromium
+└── tests/                      node --test: gates, React host, calibration
+bin/figpipe                     the pipeline: validate → render → rasterise → legibility → cold read → accept → log
+```
+
+## The gates (what the renderer refuses)
+
+A figure fails before any reader sees it when: a box's items do not fit (nothing truncates — a symbol
+wraps, and if it still does not fit the region reports overflow); the running text (title, arrow
+labels, legend, notes) exceeds `word_budget`; a `must_not_contain` string is present; an ellipsis is
+present anywhere. Symbols, names and region titles are labels and are not counted.
+
+## The pipeline (`bin/figpipe SPEC.json --out DIR --reader auto`)
+
+| step | tool | what the record carries |
+|---|---|---|
+| validate | jsonschema (or a structural subset) | errors |
+| render | `render_svg.js` | words, budget, n_texts, render errors, SVG hash |
+| rasterise | headless Chromium (`checks/browser.py` finds the installed one) | PNG at `--png-scale`, vector PDF sized to the viewBox |
+| legibility | `checks/svg_legibility.py` at `acceptance.legibility` | min rendered font, faults |
+| cold read | `claude -p --allowedTools Read`, the prompt file + the PNG path, nothing else | the report verbatim, cost, prompt hash |
+| accept | `acceptance.must_mention` groups in claim+structure; `must_not_mention` absent; `unreadable` ≤ max; legibility passed | accepted, reasons, round |
+
+`--reader none` stops after legibility (what a consumer's `make figures` runs); `--reader FILE` takes a
+verdict produced elsewhere (a human, a subagent) so the acceptance is still mechanical.
+
+The reader's "unreadable" is physical or structural only; unfamiliar terms go to "questions", which
+are logged and never counted, because a blind reader by construction has no context. This split was
+added after the first fixture run, where the reader filed "what Φ stands for" as unreadable.
+
+## Measured, 2026-09-28 (this container)
+
+- `claude -p` blind read of one PNG: 23–29 s, $0.06–0.08 per figure.
+- fig5 of MetaProof: the matplotlib version (five equal boxes, 130 words of running text) got verdict
+  *partly* with five unreadable items; the composed version (indented stack, 40 words) got *partly*
+  with none, and the reader's claim was the brief's message in its own words. Round 1.
+- fig4: round 1, unreadable empty; the reader wrote "terms" where the keyword proxy demanded
+  "variable". The proxy was widened (`["variable", "term", "quantit", "symbol"]`) and the same blind
+  read re-evaluated; both records are in MetaProof `figures/verdicts.jsonl`.
+- The page shell: 252 KB, React 19 + Tailwind, no other runtime dependency; `check_page.py` passes
+  all ten functions of the hand-written page it replaced, in light and dark.
+
+## What is not done
+
+fig1–fig3 of MetaProof are still matplotlib (no brief, no reader); talk frames and MetaSci / HAN figures
+are not in the bank; a figure spec has explicit box coordinates, so a layout engine that places regions
+from constraints is the next piece of leverage; the width estimate is per-character, not per-font, so a
+figure that asks for a different face than DejaVu Sans should re-calibrate `tests/calibration.json`.

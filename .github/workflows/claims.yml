@@ -23,6 +23,15 @@ jobs:
       - run: pip install --quiet pytest
       - run: python3 -m pytest -q checks/test_explore_text.py
 
+  figbank:
+    # the figure bank's own gates: renderer, budget/overflow/ellipsis, React host, text calibration. No browser.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: node --test figbank/tests/*.test.js
+
   claims:
     runs-on: ubuntu-latest
     steps:

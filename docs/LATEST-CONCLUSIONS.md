@@ -122,3 +122,29 @@ mechanically checkable.
   candidates of a workflow diagram on a 6 px projected-text floor at a 930 px reading width, label
   overlap and edge crossings before delivering the seventh — independent confirmation that
   rendered legibility is a gate, not a style.
+
+
+## Added 2026-09-28 — the kit makes figures, not only judges them (`figbank/`, `bin/figpipe`; issue #5)
+
+- `[FACT]` **A blind cold reader recovers a figure's message or does not, and the difference is measurable
+  in one call.** MetaProof's rejected loss-stack figure (five equal boxes, 130 words of running text) read
+  blind: verdict *partly*, five items it could not place. The same content composed from the bank as an
+  indented stack with 40 words: verdict *partly*, nothing unreadable, and the claim was the brief's message
+  in the reader's own words. One `claude -p` call, 23–29 s, $0.06–0.08 (MetaProof `figures/verdicts.jsonl`).
+- `[FACT]` **"Unreadable" and "unfamiliar" must be separate output fields or the reader conflates them.** On the
+  first fixture run the reader filed "what Φ stands for" as unreadable although it read and placed it. The
+  prompt now defines unreadable as physical or structural and gives jargon its own `questions` list, logged
+  and never counted.
+- `[JUDGMENT]` **A keyword proxy for "the claim contains the message" will be too narrow on first contact;
+  widen it in the log, not in the dark.** fig4's reader wrote "terms" where the proxy demanded "variable";
+  the group was widened and the same blind read re-evaluated, both records kept.
+- `[FACT]` **A per-character width table calibrated once against Chromium is within 8 % for DejaVu Sans and
+  exact for its mono face**; bold is 1.13 × regular. That is enough for wrapping, not for legibility, which
+  `svg_legibility.py` still measures on the rendering (`figbank/tests/calibration.json`).
+- `[FACT]` **Nothing in the bank truncates.** An ellipsis, an overflowing box, a budget overrun or a forbidden
+  string is a render error before any reader sees the figure. The previous fig4 had five symbols cut mid-word.
+- `[FACT]` **The same vnode tree mounts in React with the same data-* ids**, so the page's diagrams are the
+  paper's figures and the page is checked by a script reader that clicks every function
+  (`figbank/app/variable-model/check_page.py`: ten functions, light and dark, no JS errors).
+- `[FACT]` **`pip install playwright` pins a Chromium revision the container does not ship** (1243 wanted,
+  1194 present); `checks/browser.py` tries the default, then `/opt/pw-browsers/chromium`, then `PW_CHROMIUM`.

@@ -31,10 +31,13 @@ that is never executed is not a regeneration command.
 |   |-- apply_doi.sh
 |   |-- blocker_check.py
 |   |-- emu
+|   |-- figpipe
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
 |-- checks/
+|   |-- __init__.py
 |   |-- blind_audit.py
+|   |-- browser.py
 |   |-- ci_claims.py
 |   |-- explore_step.py
 |   |-- explore_text.py
@@ -49,6 +52,50 @@ that is never executed is not a regeneration command.
 |   |-- SANDBOX-FACTS.md
 |   |-- TREE.md
 |   `-- ZENODO-RUNBOOK.md
+|-- figbank/
+|   |-- app/
+|   |   |-- variable-model/
+|   |   |   |-- src/
+|   |   |   |   |-- App.tsx
+|   |   |   |   |-- Figure.tsx
+|   |   |   |   |-- data.ts
+|   |   |   |   |-- index.css
+|   |   |   |   `-- main.tsx
+|   |   |   |-- .gitignore
+|   |   |   |-- .parcelrc
+|   |   |   |-- .postcssrc
+|   |   |   |-- README.md
+|   |   |   |-- check_page.py
+|   |   |   |-- index.html
+|   |   |   |-- package.json
+|   |   |   |-- pnpm-lock.yaml
+|   |   |   |-- tailwind.config.js
+|   |   |   |-- tsconfig.app.json
+|   |   |   |-- tsconfig.json
+|   |   |   |-- tsconfig.node.json
+|   |   |   `-- vite.config.ts
+|   |   `-- bundle.sh
+|   |-- lib/
+|   |   |-- components.js
+|   |   |-- figure.d.ts
+|   |   |-- figure.js
+|   |   |-- palette.d.ts
+|   |   |-- palette.js
+|   |   |-- text.js
+|   |   |-- vnode.d.ts
+|   |   `-- vnode.js
+|   |-- reader/
+|   |   `-- cold-reader.md
+|   |-- schema/
+|   |   `-- figure.schema.json
+|   |-- tests/
+|   |   |-- calibration.json
+|   |   |-- figure.test.js
+|   |   |-- fixture-two-regions.json
+|   |   `-- text.test.js
+|   |-- README.md
+|   |-- package.json
+|   `-- render_svg.js
 |-- harness/
 |   `-- harness.html
 |-- out/
@@ -62,9 +109,10 @@ that is never executed is not a regeneration command.
 |-- CITATION.cff
 |-- CONTRIBUTING.md
 |-- LICENSE
+|-- Makefile
 |-- NOTICE
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-8 directories, 33 files tracked
+16 directories, 73 files tracked
 ```

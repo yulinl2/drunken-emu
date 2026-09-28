@@ -18,6 +18,8 @@ because the right floor depends on the delivery surface.
 """
 import argparse, json, os, sys
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from checks.browser import launch  # noqa: E402
 
 JS = """() => {
   const svg = document.querySelector('svg');
@@ -92,7 +94,7 @@ def main():
     a = ap.parse_args()
     rows = []
     with sync_playwright() as p:
-        b = p.chromium.launch(); pg = b.new_page()
+        b = launch(p); pg = b.new_page()
         for s in a.svgs:
             rows.append(audit(pg, s, a.width, a.min_px, a.overlap_tol))
         b.close()
