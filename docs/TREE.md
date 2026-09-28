@@ -32,7 +32,6 @@ that is never executed is not a regeneration command.
 |   |-- blocker_check.py
 |   |-- emu
 |   |-- figpipe
-|   |-- gen_ledger.py
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
 |-- checks/
@@ -47,8 +46,6 @@ that is never executed is not a regeneration command.
 |   |-- svg_legibility.py
 |   `-- test_explore_text.py
 |-- docs/
-|   |-- tutorial/
-|   |   `-- SPINE.md
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -107,9 +104,7 @@ that is never executed is not a regeneration command.
 |   |   |-- figure.test.js
 |   |   |-- fixture-two-regions.json
 |   |   `-- text.test.js
-|   |-- LEDGER.md
 |   |-- README.md
-|   |-- ledger.json
 |   |-- package.json
 |   `-- render_svg.js
 |-- harness/
@@ -130,5 +125,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-18 directories, 87 files tracked
+17 directories, 83 files tracked
 ```
