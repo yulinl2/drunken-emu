@@ -165,7 +165,7 @@ export function arrow({ points, loop, label, color, p, dashed, dotted, dashdot, 
   // its LAST line, not its first, at the target offset, or a wrapped 2nd+ line lands back on the arrow.
   if (autoY && lines.length > 1 && labelDy < 0) ly -= (lines.length - 1) * px * 1.25;
   const node = h('g', { class: 'arrow', 'data-id': id },
-    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dotted ? '0.1 6.5' : dashdot ? '9 3.5 1.5 3.5' : dashed ? '5 4' : undefined, 'stroke-linecap': dotted ? 'round' : undefined, 'marker-end': head === false ? undefined : `url(#ah-${mid})` }),
+    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dotted ? '0.1 6.5' : dashdot ? '13 4 3.5 4' : dashed ? '5 4' : undefined, 'stroke-linecap': dotted ? 'round' : undefined, 'marker-end': head === false ? undefined : `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: labelAnchor, lineHeight: px * 1.25 }) : null);
   return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length && ly !== undefined ? ly - px : null };
 }
