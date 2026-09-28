@@ -30,9 +30,13 @@ JS = """() => {
   for (const t of svg.querySelectorAll('text')) {
     const r = t.getBoundingClientRect();
     const cs = getComputedStyle(t);
+    // rendered size = font-size x the element's own screen scale (its transforms and the viewBox), not the
+    // viewBox scale alone: <g transform="scale(0.1)"><text font-size="12"> is 1.2 px on screen, not 12
+    const m = t.getScreenCTM();
+    const k = m ? Math.hypot(m.a, m.b) : scale;
     out.push({text: (t.textContent||'').trim(),
               x: r.x - box.x, y: r.y - box.y, w: r.width, h: r.height,
-              fontPx: parseFloat(cs.fontSize) * scale,
+              fontPx: parseFloat(cs.fontSize) * k,
               fill: cs.fill, opacity: parseFloat(cs.fillOpacity || '1')});
   }
   let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;

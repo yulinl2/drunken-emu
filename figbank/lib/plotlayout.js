@@ -24,12 +24,20 @@ export function fmtTick(v, step) {
 
 // Linear ticks. With no explicit domain the domain is the data extent widened to whole steps;
 // with one, ticks are those steps that fall inside it and the domain is honoured exactly.
+export const MAX_TICKS = 60;   // beyond this a tick label row is unreadable; also stops a runaway loop (a near-equal domain once froze the renderer for 40 s)
+
 function linearAxis(lo, hi, given, target) {
   if (lo === hi) { const pad = lo === 0 ? 1 : Math.abs(lo) * 0.1; lo -= pad; hi += pad; }
-  const step = niceStep(hi - lo, target);
+  const span = hi - lo, mag = Math.max(Math.abs(lo), Math.abs(hi));
+  if (!(span > 0) || !Number.isFinite(span) || span < mag * 1e-9) throw new Error(`the data spans ${span} around magnitude ${mag}: too narrow (or too wide) for computed ticks — give an explicit x/y domain, or check the data`);
+  const step = niceStep(span, target);
+  if (!(step > 0) || !Number.isFinite(step)) throw new Error(`cannot compute a tick step for span ${span}`);
   const d = decimals(step);
   let dom = given ? [...given] : [Math.floor(lo / step + 1e-9) * step, Math.ceil(hi / step - 1e-9) * step];
   dom = dom.map(v => clean(v, d));
+  const nTicks = (dom[1] - dom[0]) / step + 1;
+  if (!Number.isFinite(nTicks) || dom.some(v => !Number.isFinite(v))) throw new Error(`domain [${dom}] is not finite at this scale`);
+  if (nTicks > MAX_TICKS) throw new Error(`domain [${dom}] would need ${Math.round(nTicks)} ticks of step ${step} (max ${MAX_TICKS}) — the data spans ${span}; narrow the domain or check the data`);
   const ticks = [];
   for (let k = Math.ceil(dom[0] / step - 1e-9); k * step <= dom[1] + step * 1e-9; k++) ticks.push(clean(k * step, d));
   return { domain: dom, ticks, step, labels: ticks.map(t => fmtTick(t, step)) };
@@ -39,7 +47,9 @@ function linearAxis(lo, hi, given, target) {
 function logAxis(lo, hi, given) {
   const dom = given ? [...given] : [10 ** Math.floor(Math.log10(lo) + 1e-9), 10 ** Math.ceil(Math.log10(hi) - 1e-9)];
   if (dom[0] === dom[1]) dom[1] = dom[0] * 10;
+  if (!dom.every(v => Number.isFinite(v) && v > 0)) throw new Error(`log domain [${dom}] is not a finite positive range`);
   const k0 = Math.floor(Math.log10(dom[0])), k1 = Math.ceil(Math.log10(dom[1]));
+  if (k1 - k0 > 40) throw new Error(`log domain [${dom}] spans ${k1 - k0} decades (max 40) — narrow it or check the data`);
   const build = mults => {
     const t = [];
     for (let k = k0; k <= k1; k++) for (const m of mults) {
@@ -51,6 +61,7 @@ function logAxis(lo, hi, given) {
   let ticks = build([1, 2, 5]);
   if (ticks.length > 9) ticks = build([1]);
   if (ticks.length < 2) ticks = build([1, 2, 3, 5, 7]);
+  if (ticks.length < 2) throw new Error(`log domain [${dom}] is too narrow to place two ticks — widen it to at least one 1-2-5 step`);
   const lab = t => (t >= 1e5 || t < 1e-3) ? t.toExponential(0).replace('e+', 'e') : String(t);
   return { domain: dom, ticks, step: null, labels: ticks.map(lab) };
 }
@@ -64,8 +75,10 @@ export function checkSeries(s, i, xa, ya) {
   if (s.x.length !== s.y.length) throw new Error(`${nm}: x has ${s.x.length} values but y has ${s.y.length}`);
   if (s.x.length === 0) throw new Error(`${nm}: empty data`);
   if (s.kind === 'curve' && s.x.length < 2) throw new Error(`${nm}: a curve needs at least 2 points`);
-  s.x.forEach((v, j) => { if (!isNum(v)) throw new Error(`${nm}: x[${j}] is not a finite number (${JSON.stringify(v)})`); });
-  s.y.forEach((v, j) => { if (!isNum(v)) throw new Error(`${nm}: y[${j}] is not a finite number (${JSON.stringify(v)})`); });
+  for (let j = 0; j < s.x.length; j++) if (!isNum(s.x[j])) throw new Error(`${nm}: x[${j}] is not a finite number (${JSON.stringify(s.x[j])})`);   // indexed, not forEach: forEach skips holes in a sparse array
+  for (let j = 0; j < s.y.length; j++) if (!isNum(s.y[j])) throw new Error(`${nm}: y[${j}] is not a finite number (${JSON.stringify(s.y[j])})`);
+  if (s.label !== undefined && typeof s.label !== 'string') throw new Error(`${nm}: label must be a string`);
+  if (s.kind === 'scatter' && (s.dashed !== undefined || s.dots !== undefined)) throw new Error(`${nm}: dashed/dots only apply to a curve`);
   if (xa.scale === 'log') s.x.forEach((v, j) => { if (v <= 0) throw new Error(`${nm}: x[${j}]=${v} is not positive but the x axis is log`); });
   if (ya.scale === 'log') s.y.forEach((v, j) => { if (v <= 0) throw new Error(`${nm}: y[${j}]=${v} is not positive but the y axis is log`); });
   if (s.ids !== undefined) {
@@ -77,16 +90,18 @@ export function checkSeries(s, i, xa, ya) {
 
 export function makeAxis(spec, values, which) {
   const scale = spec.scale || 'linear';
+  if (spec.ticks !== undefined && !(Number.isInteger(spec.ticks) && spec.ticks >= 2 && spec.ticks <= 20)) throw new Error(`${which} axis: ticks must be an integer 2..20 (a target count), got ${JSON.stringify(spec.ticks)}`);
   if (!['linear', 'log'].includes(scale)) throw new Error(`${which} axis: unknown scale ${JSON.stringify(scale)}`);
   if (!spec.label) throw new Error(`${which} axis: a label is required (an unlabelled axis says nothing)`);
-  const lo = Math.min(...values), hi = Math.max(...values);
+  let lo = Infinity, hi = -Infinity;   // a loop, not Math.min(...values): spreading 200k points overflows the stack
+  for (const v of values) { if (v < lo) lo = v; if (v > hi) hi = v; }
   const given = spec.domain;
   if (given) {
     if (!Array.isArray(given) || given.length !== 2 || !(given[0] < given[1])) throw new Error(`${which} axis: domain must be [min, max] with min < max`);
     if (scale === 'log' && given[0] <= 0) throw new Error(`${which} axis: log domain must be positive`);
     if (lo < given[0] - 1e-12 || hi > given[1] + 1e-12) throw new Error(`${which} axis: data [${lo}, ${hi}] falls outside the declared domain [${given}] (nothing is clipped)`);
   }
-  const ax = scale === 'log' ? logAxis(lo, hi, given) : linearAxis(lo, hi, given, spec.ticks || 5);
+  const ax = scale === 'log' ? logAxis(lo, hi, given) : linearAxis(lo, hi, given, spec.ticks === undefined ? 5 : spec.ticks);
   return { ...ax, scale, label: spec.label };
 }
 

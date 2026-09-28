@@ -22,7 +22,8 @@ function build(pl, sers, xa, ya, p, color, reserveRight) {
   const marks = [], hitPts = [], ends = [];
   for (const s of sers) {
     const pts = s.x.map((v, i) => [sx(v), sy(s.y[i])]);
-    hitPts.push(...pts);
+    if (pts.some(q => !Number.isFinite(q[0]) || !Number.isFinite(q[1]))) throw new Error(`series ${JSON.stringify(s.id)}: a point maps to a non-finite pixel (values too extreme for this domain)`);
+    for (const q of pts) hitPts.push(q);   // not push(...pts): spreading a large series overflows the stack
     if (s.kind === 'curve') for (let i = 1; i < pts.length; i++) {   // a legend must not sit on a segment either: test every ~3 px along it
       const n = Math.ceil(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) / 3);
       for (let k = 1; k < n; k++) hitPts.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k / n, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k / n]);
@@ -30,7 +31,7 @@ function build(pl, sers, xa, ya, p, color, reserveRight) {
     const col = color(s.color);
     marks.push(s.kind === 'curve' ? C.curveMark({ pts, color: col, id: s.id, dashed: s.dashed, dots: s.dots }) : C.scatterMark({ pts, ids: s.ids, color: col, seriesId: s.id, p }));
     if (s.end_label) {   // direct label at the series' right-most point, in the margin the plot reserved for it
-      const j = s.x.indexOf(Math.max(...s.x));
+      let j = 0; s.x.forEach((v, i) => { if (v > s.x[j]) j = i; });   // right-most point, without spreading a large array
       ends.push({ y: pts[j][1], x: pts[j][0], text: s.end_label, color: col, id: s.id });
     }
   }
@@ -43,9 +44,12 @@ function build(pl, sers, xa, ya, p, color, reserveRight) {
 export function renderPlot(pl, { p, color, width, height }) {
   const errors = [], parts = [], words = [];
   try {
-    const sers = pl.series || [];
+    const sers = pl.series === undefined ? [] : pl.series;
+    if (!Array.isArray(sers)) throw new Error('series must be an array');
     if (!sers.length) throw new Error('no series');
     const B = pl.box;
+    if (!B || typeof B !== 'object' || !['x', 'y', 'w', 'h'].every(k => typeof B[k] === 'number' && Number.isFinite(B[k]))) throw new Error('box must be {x, y, w, h}, all finite numbers');
+    if (pl.legend_position !== undefined && !['auto', 'outside', 'upper-left', 'upper-right', 'lower-left', 'lower-right'].includes(pl.legend_position)) throw new Error(`legend_position ${JSON.stringify(pl.legend_position)} is not one of auto | outside | upper-left | upper-right | lower-left | lower-right`);
     const xa0 = { scale: pl.x_axis?.scale || 'linear' }, ya0 = { scale: pl.y_axis?.scale || 'linear' };
     const seen = new Set();
     sers.forEach((s, i) => { checkSeries(s, i, xa0, ya0); if (seen.has(s.id)) throw new Error(`duplicate series id ${JSON.stringify(s.id)}`); seen.add(s.id); });

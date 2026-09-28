@@ -75,6 +75,38 @@ class FigpipeExternal(unittest.TestCase):
             r = self.run_pipe(SPEC, os.path.join(d, "nope.svg"), d)
             self.assertEqual(r.returncode, 2)
 
+    def test_malformed_svg_is_exit_2_not_a_traceback(self):
+        with tempfile.TemporaryDirectory() as d:
+            bad = write(d, "bad.svg", "<svg><text>oops")
+            r = self.run_pipe(SPEC, bad, d)
+            self.assertEqual(r.returncode, 2)
+            self.assertNotIn("Traceback", r.stderr)
+
+
+class Review(unittest.TestCase):
+    def test_hidden_text_is_refused_not_counted(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(d, "h.svg", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+                                  '<text>shown</text><text display="none">secret words</text></svg>')
+            errs = " | ".join(tg.gates(p)["errors"])
+            self.assertIn("hidden", errs)
+
+    def test_transform_scale_shrinks_the_measured_font(self):
+        # <g transform="scale(0.1)"><text font-size="12"> is 1.2 px on screen; the audit must say so
+        sys.path.insert(0, KIT)
+        from checks import svg_legibility as sl
+        with tempfile.TemporaryDirectory() as d:
+            p = write(d, "t.svg", '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">'
+                                  '<g transform="scale(0.1)"><text x="10" y="200" font-size="12">tiny on screen</text></g></svg>')
+            from playwright.sync_api import sync_playwright
+            from checks.browser import launch
+            with sync_playwright() as pw:
+                br = launch(pw)
+                r = sl.audit(br.new_page(), p, 200, 8, 0.12)
+                br.close()
+            self.assertTrue(any(f["kind"] == "too_small" for f in r["faults"]), r)
+            self.assertLess(r["min_font_px"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

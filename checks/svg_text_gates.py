@@ -24,25 +24,37 @@ NOT_APPLICABLE = [
 ]
 
 
-def texts(path):
+def _hidden(el):
+    st = el.get('style', '') or ''
+    return el.get('display') == 'none' or 'display:none' in st.replace(' ', '') or el.get('visibility') == 'hidden'
+
+
+def texts(path, hidden=None):
     root = ET.parse(path).getroot()
     out = []
     for el in root.iter():
         if el.tag.split('}')[-1] == 'text':
             t = re.sub(r'\s+', ' ', ''.join(el.itertext())).strip()
-            if t:
+            if t and _hidden(el):
+                if hidden is not None:
+                    hidden.append(t)
+            elif t:
                 out.append(t)
     return out
 
 
 def gates(path, budget=None, forbid=()):
-    ts = texts(path)
+    hid = []
+    ts = texts(path, hid)
     toks = [w for t in ts for w in t.split()]
     numeric = [w for w in toks if re.fullmatch(r'[−\-+]?[\d.,]+(e[−\-+]?\d+)?%?', w)]
     errors = []
     if not ts:
         errors.append("no <text> elements: the figure's labels are outlines (e.g. matplotlib svg.fonttype=path), "
                       "so no text gate, legibility audit or word count can see them")
+    if hid:
+        errors.append(f"{len(hid)} hidden <text> element(s) (display:none / visibility:hidden), e.g. {hid[0][:40]!r}: "
+                      "no reader sees them, so they are refused rather than counted or ignored")
     if budget is not None and len(toks) > budget:
         errors.append(f"word budget: {len(toks)} words of <text> (numeric tokens included), budget {budget}")
     for t in ts:

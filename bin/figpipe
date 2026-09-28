@@ -217,7 +217,11 @@ def main():
         return 2
     # 2
     if a.svg:
-        report = external_gates(a, spec, fid, rec)
+        try:
+            report = external_gates(a, spec, fid, rec)
+        except Exception as e:   # a malformed SVG (ParseError) or an unreadable size is invalid INPUT, exit 2 — exit 1 means "rejected"
+            say(a, f"[figpipe] {fid}: cannot read --svg {a.svg}: {type(e).__name__}: {e}")
+            return 2
         if report is None:
             return 2
         svg_path = os.path.abspath(a.svg)

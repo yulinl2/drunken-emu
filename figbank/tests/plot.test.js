@@ -140,3 +140,43 @@ test('a log-x scatter with ids renders clean and places equal ratios equal dista
   const cx = [...svg.matchAll(/class="point" cx="([\d.]+)"/g)].map(m => +m[1]);
   assert.ok(Math.abs((cx[1] - cx[0]) - (cx[2] - cx[1])) < 0.02);
 });
+
+// ---- found by an independent review (2026-09-28): specs that hung or rendered NaN with errors=[] ----
+const mkRev = (over = {}, ser = {}) => ({
+  id: 'p-rev', message: 'x', canvas: { width: 700, height: 420 }, acceptance: { must_mention: [['x']] },
+  plot: { box: { x: 10, y: 10, w: 660, h: 380 }, x_axis: { label: 'x' }, y_axis: { label: 'y' },
+    series: [{ id: 's', kind: 'curve', x: [0, 1, 2], y: [1, 2, 3], ...ser }], ...over },
+});
+const rev = spec => renderFigure(spec).report.errors.join(' | ');
+const fast = (spec, re, why) => { const t = Date.now(); const e = rev(spec); assert.ok(Date.now() - t < 2000, `${why}: took ${Date.now() - t} ms`); assert.match(e, re, why); };
+
+test('plot: a near-equal domain, an enormous domain or a huge tick target errors fast, never hangs', () => {
+  fast(mkRev({}, { x: [1, 1 + 2e-16, 1 + 4e-16] }), /too narrow/, 'near-equal x');
+  fast(mkRev({ x_axis: { label: 'x', domain: [0, 1e9] } }), /ticks/, 'domain 0..1e9 with small data');
+  fast(mkRev({ x_axis: { label: 'x', ticks: 1e9 } }), /ticks must be an integer 2\.\.20/, 'ticks 1e9');
+  fast(mkRev({ x_axis: { label: 'x', ticks: 1000 } }), /ticks must be an integer 2\.\.20/, 'ticks 1000');
+});
+
+test('plot: extreme finite values and a malformed box are errors, not NaN geometry', () => {
+  fast(mkRev({}, { x: [-1e308, 0, 1e308] }), /not finite|too narrow|too wide|non-finite/, 'huge span');
+  fast(mkRev({}, { x: [1e-320, 2e-320, 3e-320] }), /too narrow|cannot compute|non-finite pixel/, 'subnormals');
+  fast(mkRev({ box: { y: 10, w: 660, h: 380 } }), /box must be/, 'box missing x');
+  fast(mkRev({ box: { x: '0', y: 10, w: 660, h: 380 } }), /box must be/, 'box x as string');
+  fast(mkRev({ box: { x: 0, y: 10, w: NaN, h: 380 } }), /box must be/, 'box w NaN');
+});
+
+test('plot: structural garbage gets a message that names the problem', () => {
+  fast(mkRev({ series: 'abc' }), /series must be an array/, 'series string');
+  fast(mkRev({}, { x: [1, , 3] }), /x\[1\] is not a finite number/, 'sparse x');
+  fast(mkRev({ legend_position: 'middle' }, { label: 'L' }), /legend_position/, 'bad legend_position');
+  fast(mkRev({}, { label: 5 }), /label must be a string/, 'numeric label');
+  fast(mkRev({}, { kind: 'scatter', dashed: true, x: [0, 1], y: [0, 1] }), /only apply to a curve/, 'dashed scatter');
+});
+
+test('plot: a 200000-point series does not overflow the stack; a degenerate log axis is refused', () => {
+  const n = 200000, x = Array.from({ length: n }, (_, i) => i), y = x.map(v => v % 7);
+  const e = rev(mkRev({}, { x, y }));
+  assert.ok(!/call stack/.test(e), e);
+  fast(mkRev({ x_axis: { label: 'x', scale: 'log', domain: [1, 1.0001] } }, { x: [1, 1.00005], y: [1, 2] }), /too narrow to place two ticks/, 'log narrow');
+  fast(mkRev({ x_axis: { label: 'x', scale: 'log' } }, { x: [1e-300, 1e300], y: [1, 2] }), /decades/, 'log 600 decades');
+});
