@@ -16,13 +16,16 @@ figbank/
 │   ├── text.js                 width estimate calibrated against Chromium (tests/calibration.json), wrap()
 │   ├── palette.js              LIGHT / DARK palettes; status → mark (dot, square, hollow)
 │   ├── components.js           region · itemList · chipFlow · functional · arrow · note · frame · legend
-│   └── figure.js               renderFigure(spec) → {node, svg, report}; the gates live here
+│   └── figure.js               renderFigure(spec) → {node, svg, report}; the gates live here; `boundaries`
+│                               (a labelled group computed around named region ids, not hand-placed) too
 ├── render_svg.js               node CLI: spec.json → figure.svg (+ report)
 ├── reader/cold-reader.md       the blind reader's prompt; its hash is in every verdict
 ├── app/
 │   ├── bundle.sh               Parcel + html-inline → one HTML shell with a __JSON__ data slot
 │   └── variable-model/         the MetaProof variable-model page (React + TS + Tailwind); imports lib/
 │       └── check_page.py       the page's function checklist, run by a script reader in Chromium
+├── examples/                   specs that document the bank's own tooling, not a consumer's model
+│   └── pipeline-workflow.json  bin/figpipe's own seven steps, as a `boundaries` demo
 └── tests/                      node --test: gates, React host, calibration
 bin/figpipe                     the pipeline: validate → render → rasterise → legibility → cold read → accept → log
 ```
@@ -33,6 +36,25 @@ A figure fails before any reader sees it when: a box's items do not fit (nothing
 wraps, and if it still does not fit the region reports overflow); the running text (title, arrow
 labels, legend, notes) exceeds `word_budget`; a `must_not_contain` string is present; an ellipsis is
 present anywhere. Symbols, names and region titles are labels and are not counted.
+
+## Boundaries — grouping regions for a *process*, not a data model
+
+`spec.boundaries: [{label, wraps: [region-ids], color, pad}]` draws a labelled dashed frame behind the
+regions it names, sized to their union plus `pad` — the box is computed, never hand-placed, so it can't
+drift from the regions it groups. This is the one pattern worth taking from `tt-a1i/archify` (a
+schema-validated, explicit-coordinate diagramming skill with the same "layout judgment over
+auto-layout" stance): a figure that explains a *process* — these steps are mechanical, this one is
+judgment — needs grouping that a plain region/arrow figure (built for "every variable has one box")
+does not. `figbank/examples/pipeline-workflow.json` demonstrates it on the bank's own pipeline and
+passed the blind reader clear on the first round: "a tool ... runs it through four automatic technical
+checks, then a separate blind human-like judgment step, with the outcome recorded in a log."
+
+Archify's five diagram kinds (architecture, workflow, sequence, dataflow, lifecycle) are otherwise a
+different tool for a different job — an ad-hoc CLI that authors a fresh diagram per request from a
+description, not a bank that regenerates the same figure from the same versioned source every time —
+so it is not a dependency here. A `sequence` kind (participants + a timeline of messages) and a
+`lifecycle` kind (states + transitions) would be the next genuinely new component types if a consumer
+needs them; nothing in the schema or renderer assumes them yet.
 
 ## The pipeline (`bin/figpipe SPEC.json --out DIR --reader auto`)
 

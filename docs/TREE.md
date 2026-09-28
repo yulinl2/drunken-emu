@@ -75,6 +75,10 @@ that is never executed is not a regeneration command.
 |   |   |   |-- tsconfig.node.json
 |   |   |   `-- vite.config.ts
 |   |   `-- bundle.sh
+|   |-- examples/
+|   |   |-- pipeline-workflow.json
+|   |   |-- pipeline-workflow.svg
+|   |   `-- verdicts.jsonl
 |   |-- lib/
 |   |   |-- components.js
 |   |   |-- figure.d.ts
@@ -114,5 +118,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-16 directories, 73 files tracked
+17 directories, 76 files tracked
 ```

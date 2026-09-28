@@ -11,9 +11,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { renderFigure } from './lib/figure.js';
 
 const args = process.argv.slice(2);
-const [specPath, outPath] = args.filter(a => !a.startsWith('--') && a !== args[args.indexOf('--report') + 1]);
 const reportIdx = args.indexOf('--report');
 const reportPath = reportIdx >= 0 ? args[reportIdx + 1] : null;
+const [specPath, outPath] = args.filter((a, i) => !a.startsWith('--') && !(reportIdx >= 0 && i === reportIdx + 1));
 if (!specPath || !outPath) { console.error('usage: render_svg.js SPEC.json OUT.svg [--report OUT.json] [--lenient]'); process.exit(64); }
 
 const spec = JSON.parse(readFileSync(specPath, 'utf8'));

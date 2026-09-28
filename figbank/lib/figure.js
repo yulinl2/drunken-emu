@@ -42,6 +42,17 @@ export function renderFigure(spec, palette) {
     const t = C.heading({ x: spec.title.x ?? 20, y: spec.title.y ?? 14, w: spec.title.w ?? width - 40, text: spec.title.text, p });
     parts.push(t.node); runningText.push(t.words);
   }
+  const boxById = Object.fromEntries((spec.regions || []).map(r => [r.id, r.box]));
+  for (const b of spec.boundaries || []) {
+    const boxes = b.wraps.map(id => boxById[id]).filter(Boolean);
+    const missing = b.wraps.filter(id => !boxById[id]);
+    if (missing.length) { errors.push(`boundary ${JSON.stringify(b.label)} wraps unknown region id(s): ${missing.join(', ')}`); continue; }
+    const pad = b.pad ?? 14;
+    const x = Math.min(...boxes.map(bx => bx.x)) - pad, y = Math.min(...boxes.map(bx => bx.y)) - pad;
+    const x2 = Math.max(...boxes.map(bx => bx.x + bx.w)) + pad, y2 = Math.max(...boxes.map(bx => bx.y + bx.h)) + pad;
+    const out = C.frame({ box: { x, y, w: x2 - x, h: y2 - y }, label: b.label, color: color(b.color), p });
+    parts.push(out.node); if (b.label) runningText.push(b.label);
+  }
   for (const r of spec.regions || []) {
     let out;
     if (r.kind === 'functional') {

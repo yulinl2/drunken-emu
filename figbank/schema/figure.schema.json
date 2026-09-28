@@ -148,6 +148,45 @@
         }
       }
     },
+    "boundaries": {
+      "type": "array",
+      "description": "a labelled group frame computed around a named set of regions/functionals (their own boxes, by id, plus `pad`) — the process-diagram grouping Archify calls a boundary (tt-a1i/archify): 'these four are mechanical, this one is judgment', not a data-model side. Drawn behind the regions it wraps, so it reads as a frame with a visible gap, not an overlap.",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "wraps"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dashed": {
+            "type": "boolean",
+            "default": true
+          },
+          "pad": {
+            "type": "number",
+            "default": 14
+          },
+          "wraps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "ids of regions/functionals already placed in `regions`; the boundary's box is their bounding box plus `pad`, never authored by hand"
+          }
+        }
+      }
+    },
     "regions": {
       "type": "array",
       "minItems": 1,

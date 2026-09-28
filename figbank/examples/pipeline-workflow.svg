@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 460" width="980" height="460" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" data-figure="pipeline-workflow" role="img" aria-label="bin/figpipe runs seven steps in order: four mechanical gates a spec must pass before any reader sees it, then one blind judgment, then a logged record.">
+ <defs>
+  <marker id="ah-3f5f8a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+   <path d="M0,0 L10,5 L0,10 z" fill="#3f5f8a"/>
+  </marker>
+  <marker id="ah-6b3d7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+   <path d="M0,0 L10,5 L0,10 z" fill="#6b3d7a"/>
+  </marker>
+  <marker id="ah-5b6b5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+   <path d="M0,0 L10,5 L0,10 z" fill="#5b6b5a"/>
+  </marker>
+ </defs>
+ <rect x="0" y="0" width="980" height="460" fill="#ffffff"/>
+ <text x="16" y="27.3" font-size="17" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" data-id="title"><tspan x="16" dy="0">bin/figpipe: four mechanical gates, then one blind judgment, logged.</tspan></text>
+ <g class="frame">
+  <rect x="12" y="82" width="926" height="166" rx="6" fill="none" stroke="#3f5f8a" stroke-width="1.3" stroke-dasharray="7 5"/>
+  <text x="24" y="98.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" font-weight="bold" letter-spacing="0.6">MECHANICAL — a spec must pass these before any reader sees it</text>
+ </g>
+ <g class="frame">
+  <rect x="177" y="302" width="511" height="146" rx="6" fill="none" stroke="#6b3d7a" stroke-width="1.3" stroke-dasharray="7 5"/>
+  <text x="189" y="318.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" font-weight="bold" letter-spacing="0.6">JUDGMENT — never by the maker</text>
+ </g>
+ <g class="region" data-id="validate">
+  <rect x="30" y="100" width="200" height="130" rx="4" fill="#fbfaf6" stroke="#3f5f8a" stroke-width="1.8"/>
+  <text x="40" y="123.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" font-weight="bold"><tspan x="40" dy="0">1 · validate</tspan></text>
+  <text x="40" y="137.85" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="40" dy="0">spec vs the bank's schema</tspan></text>
+ </g>
+ <g class="region" data-id="render">
+  <rect x="260" y="100" width="200" height="130" rx="4" fill="#fbfaf6" stroke="#3f5f8a" stroke-width="1.8"/>
+  <text x="270" y="123.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" font-weight="bold"><tspan x="270" dy="0">2 · render</tspan></text>
+  <text x="270" y="137.85" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="270" dy="0">SVG; refuses ellipsis, overflow,</tspan><tspan x="270" dy="13.75">budget</tspan></text>
+ </g>
+ <g class="region" data-id="rasterize">
+  <rect x="490" y="100" width="200" height="130" rx="4" fill="#fbfaf6" stroke="#3f5f8a" stroke-width="1.8"/>
+  <text x="500" y="123.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" font-weight="bold"><tspan x="500" dy="0">3 · rasterize</tspan></text>
+  <text x="500" y="137.85" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="500" dy="0">headless Chromium — PNG and</tspan><tspan x="500" dy="13.75">PDF</tspan></text>
+ </g>
+ <g class="region" data-id="legibility">
+  <rect x="720" y="100" width="200" height="130" rx="4" fill="#fbfaf6" stroke="#3f5f8a" stroke-width="1.8"/>
+  <text x="730" y="123.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" font-weight="bold"><tspan x="730" dy="0">4 · legibility</tspan></text>
+  <text x="730" y="137.85" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="730" dy="0">rendered font size, label overlap</tspan></text>
+ </g>
+ <g class="region" data-id="coldread">
+  <rect x="195" y="320" width="220" height="110" rx="4" fill="#fbfaf6" stroke="#6b3d7a" stroke-width="1.8"/>
+  <text x="205" y="343.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" font-weight="bold"><tspan x="205" dy="0">5 · cold read</tspan></text>
+  <text x="205" y="357.84999999999997" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="205" dy="0">claude -p, the PNG only, blind</tspan></text>
+ </g>
+ <g class="region" data-id="accept">
+  <rect x="450" y="320" width="220" height="110" rx="4" fill="#fbfaf6" stroke="#6b3d7a" stroke-width="1.8"/>
+  <text x="460" y="343.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" font-weight="bold"><tspan x="460" dy="0">6 · accept</tspan></text>
+  <text x="460" y="357.84999999999997" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="460" dy="0">the brief's rule, mechanically</tspan></text>
+ </g>
+ <g class="region" data-id="log">
+  <rect x="705" y="320" width="215" height="110" rx="4" fill="#fbfaf6" stroke="#5b6b5a" stroke-width="1.8"/>
+  <text x="715" y="343.05" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5b6b5a" font-weight="bold"><tspan x="715" dy="0">7 · log</tspan></text>
+  <text x="715" y="357.84999999999997" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570"><tspan x="715" dy="0">one JSON line, verdicts.jsonl</tspan></text>
+ </g>
+ <g class="arrow" data-id="a1">
+  <path d="M230,165 L260,165" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+ </g>
+ <g class="arrow" data-id="a2">
+  <path d="M460,165 L490,165" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+ </g>
+ <g class="arrow" data-id="a3">
+  <path d="M690,165 L720,165" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+ </g>
+ <g class="arrow" data-id="a4">
+  <path d="M820,230 L820,290 L150,290 L150,380 L195,380" fill="none" stroke="#6b3d7a" stroke-width="1.6" marker-end="url(#ah-6b3d7a)"/>
+ </g>
+ <g class="arrow" data-id="a5">
+  <path d="M415,375 L450,375" fill="none" stroke="#6b3d7a" stroke-width="1.6" marker-end="url(#ah-6b3d7a)"/>
+ </g>
+ <g class="arrow" data-id="a6">
+  <path d="M670,375 L705,375" fill="none" stroke="#5b6b5a" stroke-width="1.6" marker-end="url(#ah-5b6b5a)"/>
+ </g>
+</svg>

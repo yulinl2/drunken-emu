@@ -69,3 +69,35 @@ test('texts() enumerates every text run so the must-not-contain gate sees all of
   assert.ok(all.includes('measured'));
   assert.ok(all.some(t => t.includes('Left side')));
 });
+
+test('a boundary computes its box from the regions it wraps, plus pad, and draws behind them', () => {
+  const spec = JSON.parse(JSON.stringify(fixture));
+  spec.boundaries = [{ label: 'both sides', wraps: ['left', 'right'], pad: 10 }];
+  const { node, report } = renderFigure(spec);
+  assert.equal(report.errors.length, 0, report.errors.join('; '));
+  const rects = [];
+  (function walk(n) { if (typeof n !== 'object') return; if (n.t === 'rect') rects.push(n); (n.c || []).forEach(walk); })(node);
+  // left region box: x20,y60,w240; right region box: x340,y60,w240 -> union x20..580,y60..260, pad 10 -> x10,y50,w580,h220
+  const boundary = rects.find(r => r.a.x === 10 && r.a.y === 50 && r.a.width === 580 && r.a.height === 220);
+  assert.ok(boundary, 'boundary rect not found at the expected computed box');
+  const boundaryIdx = rects.indexOf(boundary);
+  const regionIdx = rects.findIndex(r => r.a.stroke === '#a8492f');   // "env" colour, the left region's own rect
+  assert.ok(boundaryIdx < regionIdx, 'boundary must be drawn before (behind) the regions it wraps');
+});
+
+test('a boundary wrapping an unknown region id is a gate, not a silent no-op', () => {
+  const spec = JSON.parse(JSON.stringify(fixture));
+  spec.boundaries = [{ label: 'ghost', wraps: ['does-not-exist'] }];
+  const { report } = renderFigure(spec);
+  assert.ok(report.errors.some(e => e.includes('unknown region id')));
+});
+
+test('render_svg.js CLI: --report is genuinely optional, not just when present', async () => {
+  const { execFileSync } = await import('node:child_process');
+  // render_svg.js reports on stderr (console.error) and writes the SVG regardless; stdout is empty.
+  const out = execFileSync('node', [new URL('../render_svg.js', import.meta.url).pathname,
+    new URL('./fixture-two-regions.json', import.meta.url).pathname, '/tmp/figbank-cli-test.svg'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const svg = readFileSync('/tmp/figbank-cli-test.svg', 'utf8');
+  assert.ok(svg.startsWith('<svg '), 'without --report, the positional args must still resolve to spec and out paths');
+  assert.ok(svg.includes('Left side'), 'the fixture content, not a blank/wrong file, was written');
+});
