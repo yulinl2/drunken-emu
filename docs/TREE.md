@@ -166,5 +166,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 124 files tracked
+19 directories, 122 files tracked
 ```
