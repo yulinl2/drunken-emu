@@ -14,14 +14,42 @@ export const DARK = {
   ok: '#6fcf8f', warn: '#e2b04a', dim: '#8a929c', accent: '#e0788a',
 };
 
-// Status → (fill, stroke, shape). Three visual classes, not five: a cold reader needs to tell
-// "measured" from "only defined"; the finer vocabulary lives in the table and the page.
+// Status → (fill, stroke, shape). Three visual weights, not five or seven: "done/confirmed" (solid,
+// ok green), "partial/in motion" (solid, warn amber), "not yet/only stated" (hollow, dim grey) — plus
+// one weight nothing in the original five-value model-variable vocabulary needed, "abandoned" (solid,
+// accent red), added for a caller whose own status word means that.
+//
+// This function is shared by every spec's status marks — the five-value vocabulary
+// (defined/estimated/measured/spec/implemented, MetaProof's model-variable maturity) and any other
+// caller's own words (a tree's `nodes[].status` is a free string, drunken-emu #12) both resolve here.
+// A caller with a genuinely new status adds one case, mapped to the nearest of the four weights above
+// by what the word *means*, not by inventing a fifth colour — "sealed" (a research claim's terminal,
+// confirmed state) is the ok weight for the same reason "implemented" is, even though the two
+// vocabularies describe different things.
 export function statusStyle(status, p) {
   switch (status) {
+    // the five-value model-variable vocabulary (bin/variables.py, MetaProof)
     case 'measured': return { fill: p.ok, stroke: p.ok, shape: 'dot' };
     case 'implemented': return { fill: p.ok, stroke: p.ok, shape: 'square' };
     case 'estimated': return { fill: p.warn, stroke: p.warn, shape: 'dot' };
     case 'spec': return { fill: 'none', stroke: p.dim, shape: 'square' };
-    default: return { fill: 'none', stroke: p.dim, shape: 'dot' };   // defined, or unknown
+    // the frontier ledger's seven-value claim-lifecycle vocabulary (ledgers/frontier.jsonl, MetaProof)
+    case 'sealed': return { fill: p.ok, stroke: p.ok, shape: 'square' };
+    case 'in-progress': return { fill: p.warn, stroke: p.warn, shape: 'dot' };
+    case 'planned': return { fill: 'none', stroke: p.dim, shape: 'square' };
+    case 'hypothesis': return { fill: 'none', stroke: p.dim, shape: 'dot' };
+    // 'unknown' is the frontier's most common status once an intake lands (1612 of 1688 nodes); as the default hollow dot it was
+    // indistinguishable from 'hypothesis' (a candidate answer exists), which is a different thing. A diamond keeps the dim weight.
+    case 'unknown': return { fill: 'none', stroke: p.dim, shape: 'diamond' };
+    case 'killed': return { fill: p.accent, stroke: p.accent, shape: 'dot' };
+    // MetaSci's claims-graph node vocabulary (kb/claims-graph, evidence tier where a node has one,
+    // else its own status) — a claim's FACT tier is the ok weight for the same reason "measured" and
+    // "sealed" are: the strongest evidence a node in this graph can carry.
+    case 'FACT': return { fill: p.ok, stroke: p.ok, shape: 'dot' };
+    case 'JUDGMENT': return { fill: p.warn, stroke: p.warn, shape: 'dot' };
+    case 'SPECULATIVE': return { fill: 'none', stroke: p.dim, shape: 'dot' };
+    case 'provisional': return { fill: 'none', stroke: p.dim, shape: 'square' };
+    case 'ratified': return { fill: p.ok, stroke: p.ok, shape: 'square' };
+    default: return { fill: 'none', stroke: p.dim, shape: 'dot' };   // defined, unknown, or unrecognised
   }
 }

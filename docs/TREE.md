@@ -44,7 +44,9 @@ that is never executed is not a regeneration command.
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- svg_legibility.py
-|   `-- test_explore_text.py
+|   |-- svg_text_gates.py
+|   |-- test_explore_text.py
+|   `-- test_external_svg.py
 |-- docs/
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
@@ -54,6 +56,26 @@ that is never executed is not a regeneration command.
 |   `-- ZENODO-RUNBOOK.md
 |-- figbank/
 |   |-- app/
+|   |   |-- frontier-tree/
+|   |   |   |-- src/
+|   |   |   |   |-- App.tsx
+|   |   |   |   |-- Figure.tsx
+|   |   |   |   |-- data.ts
+|   |   |   |   |-- index.css
+|   |   |   |   `-- main.tsx
+|   |   |   |-- .gitignore
+|   |   |   |-- .parcelrc
+|   |   |   |-- .postcssrc
+|   |   |   |-- README.md
+|   |   |   |-- check_page.py
+|   |   |   |-- index.html
+|   |   |   |-- package.json
+|   |   |   |-- pnpm-lock.yaml
+|   |   |   |-- tailwind.config.js
+|   |   |   |-- tsconfig.app.json
+|   |   |   |-- tsconfig.json
+|   |   |   |-- tsconfig.node.json
+|   |   |   `-- vite.config.ts
 |   |   |-- variable-model/
 |   |   |   |-- src/
 |   |   |   |   |-- App.tsx
@@ -75,13 +97,41 @@ that is never executed is not a regeneration command.
 |   |   |   |-- tsconfig.node.json
 |   |   |   `-- vite.config.ts
 |   |   `-- bundle.sh
+|   |-- examples/
+|   |   |-- figbank-file-tree.json
+|   |   |-- figbank-file-tree.pdf
+|   |   |-- figbank-file-tree.png
+|   |   |-- figbank-file-tree.svg
+|   |   |-- gen_file_tree.py
+|   |   |-- gen_majority_vote.py
+|   |   |-- majority-vote-curve.json
+|   |   |-- majority-vote-curve.pdf
+|   |   |-- majority-vote-curve.png
+|   |   |-- majority-vote-curve.svg
+|   |   |-- pipeline-sequence.json
+|   |   |-- pipeline-sequence.pdf
+|   |   |-- pipeline-sequence.png
+|   |   |-- pipeline-sequence.svg
+|   |   |-- pipeline-workflow.json
+|   |   |-- pipeline-workflow.png
+|   |   |-- pipeline-workflow.svg
+|   |   |-- round-lifecycle.json
+|   |   |-- round-lifecycle.pdf
+|   |   |-- round-lifecycle.png
+|   |   |-- round-lifecycle.svg
+|   |   `-- verdicts.jsonl
 |   |-- lib/
 |   |   |-- components.js
 |   |   |-- figure.d.ts
 |   |   |-- figure.js
+|   |   |-- lifecyclelayout.js
 |   |   |-- palette.d.ts
 |   |   |-- palette.js
+|   |   |-- plot.js
+|   |   |-- plotlayout.js
+|   |   |-- sequencelayout.js
 |   |   |-- text.js
+|   |   |-- treelayout.js
 |   |   |-- vnode.d.ts
 |   |   `-- vnode.js
 |   |-- reader/
@@ -92,6 +142,7 @@ that is never executed is not a regeneration command.
 |   |   |-- calibration.json
 |   |   |-- figure.test.js
 |   |   |-- fixture-two-regions.json
+|   |   |-- plot.test.js
 |   |   `-- text.test.js
 |   |-- README.md
 |   |-- package.json
@@ -115,5 +166,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-16 directories, 74 files tracked
+19 directories, 124 files tracked
 ```

@@ -15,15 +15,21 @@ figbank/
 │   ├── vnode.js                one tree, two hosts: h() → toSvg() | toReact()
 │   ├── text.js                 width estimate calibrated against Chromium (tests/calibration.json), wrap()
 │   ├── palette.js              LIGHT / DARK palettes; status → mark (dot, square, hollow)
-│   ├── components.js           region · itemList · chipFlow · functional · arrow · note · frame · legend
-│   └── figure.js               renderFigure(spec) → {node, svg, report}; the gates live here
+│   ├── components.js           region · itemList · chipFlow · functional · arrow · note · frame · legend ·
+│   │                           treeNode · treeEdge
+│   ├── treelayout.js           a tree's x/y from nothing but parent pointers; vertical or horizontal
+│   └── figure.js               renderFigure(spec) → {node, svg, report}; the gates live here; `boundaries`
+│                               (a labelled group computed around named region ids) and `tree` too
 ├── render_svg.js               node CLI: spec.json → figure.svg (+ report)
 ├── reader/cold-reader.md       the blind reader's prompt; its hash is in every verdict
 ├── app/
 │   ├── bundle.sh               Parcel + html-inline → one HTML shell with a __JSON__ data slot
 │   └── variable-model/         the MetaProof variable-model page (React + TS + Tailwind); imports lib/
 │       └── check_page.py       the page's function checklist, run by a script reader in Chromium
-└── tests/                      node --test: gates, React host, calibration
+├── examples/                   specs that document the bank's own tooling, not a consumer's model
+│   ├── pipeline-workflow.json  bin/figpipe's own seven steps, as a `boundaries` demo
+│   └── figbank-file-tree.json  figbank/'s own tracked files, as a `tree` demo (gen_file_tree.py)
+└── tests/                      node --test: gates, React host, calibration, tree layout
 bin/figpipe                     the pipeline: validate → render → rasterise → legibility → cold read → accept → log
 ```
 
@@ -33,6 +39,93 @@ A figure fails before any reader sees it when: a box's items do not fit (nothing
 wraps, and if it still does not fit the region reports overflow); the running text (title, arrow
 labels, legend, notes) exceeds `word_budget`; a `must_not_contain` string is present; an ellipsis is
 present anywhere. Symbols, names and region titles are labels and are not counted.
+
+## Boundaries — grouping regions for a *process*, not a data model
+
+`spec.boundaries: [{label, wraps: [region-ids], color, pad}]` draws a labelled dashed frame behind the
+regions it names, sized to their union plus `pad` — the box is computed, never hand-placed, so it can't
+drift from the regions it groups. This is the one pattern worth taking from `tt-a1i/archify` (a
+schema-validated, explicit-coordinate diagramming skill with the same "layout judgment over
+auto-layout" stance): a figure that explains a *process* — these steps are mechanical, this one is
+judgment — needs grouping that a plain region/arrow figure (built for "every variable has one box")
+does not. `figbank/examples/pipeline-workflow.json` demonstrates it on the bank's own pipeline and
+passed the blind reader clear on the first round: "a tool ... runs it through four automatic technical
+checks, then a separate blind human-like judgment step, with the outcome recorded in a log."
+
+Archify's five diagram kinds (architecture, workflow, sequence, dataflow, lifecycle) are otherwise a
+different tool for a different job — an ad-hoc CLI that authors a fresh diagram per request from a
+description, not a bank that regenerates the same figure from the same versioned source every time —
+so it is not a dependency here. A `sequence` kind (participants + a timeline of messages) and a
+`lifecycle` kind (states + transitions) would be the next genuinely new component types if a consumer
+needs them; nothing in the schema or renderer assumes them yet.
+
+## Trees — visualizing structure that already exists in the repos, not just illustrating a model
+
+`spec.tree: {nodes: [{id, parent, label, status?}], origin, node_w, node_h, gap_x, gap_y, orientation}`.
+`treelayout.js` computes every position from nothing but each node's `parent` (bottom-up subtree size,
+a node centred over its own children — overlap-free for any tree, not full Reingold–Tilford tidying);
+`orientation: "horizontal"` grows depth rightward and stacks siblings top-to-bottom, which almost every
+real tree in these repos wants (a directory tree, MetaProof's problem tree) because they are wide-but-
+shallow, not deep-but-narrow — `vertical` is the other shape, depth downward, siblings side by side.
+An unreachable node (a parent cycle) is a thrown error, never a silently vanished node.
+
+Owner's prompt for this (2026-09-28 chat, drunken-emu #11): every tree/DAG already in these repos is a
+visualization candidate, and the picture might show something a reader — human or agent — had not
+noticed, the way MetaProof treats reader/builder/user as one loop. First instance, proof before spending
+the primitive on a harder one: `figbank-file-tree.json`, the bank visualizing its own 49 tracked files,
+regenerated by `examples/gen_file_tree.py`, accepted blind on the first round, verdict *clear*. Second,
+closed (#12): MetaProof's `ledgers/frontier.jsonl`, both halves — the static print tree (id + status
+mark only, 71 nodes, accepted blind, verdict *clear*) and the click-for-detail companion page
+(`figbank/app/frontier-tree`, a deliberately generic template — any tree, not just frontier's — verified
+against the real page with a `check_page.py`-style function checklist in headless Chromium). Real
+finding: the legend only lists statuses with a nonzero count, so "sealed" does not appear at all next to
+38 "measured" — the *absence* of a legend entry is what makes the imbalance `bin/frontier_refactor.py`
+already found numerically (C-722, OP-32) perceptually obvious, more strikingly than a zero would have.
+Still open (#13): MetaSci's `kb/claims-graph` (a real DAG — multi-parent, needs cross-link routing this
+primitive does not attempt yet).
+
+## Sequence diagrams — a handoff chain, not a data-model diagram
+
+`spec.sequence: {participants: [{id, label}], messages: [{from, to, label?, dashed?}], origin?, gap_x?,
+min_w?, header_h?, row_gap?, label_px?, edge_color?}`. `sequencelayout.js` computes every column's x
+(auto-sized to its label's measured width) and every message's y (one row per message, in array order —
+no explicit timestamps needed) — same "computed, never hand-placed" rule as `boundaries`/`treelayout.js`.
+Messages reuse `arrow()` directly (a sequence message is exactly "an arrow between two known x positions
+at a known y"), so no separate message component exists. No activation bars, and a participant may not
+message itself yet — both refused loudly if a spec tries, not silently drawn wrong; add either only if a
+real instance needs it (drunken-emu #14).
+
+First instance: `examples/pipeline-sequence.json`, `bin/figpipe`'s own seven steps redrawn as a handoff
+chain (compare with `pipeline-workflow.json`'s `boundaries` version of the same process) — accepted blind
+on round 3, verdict *clear*, 0 legibility faults. Two real bugs found and fixed building it, both now
+covered by tests: `participant()` ignored its y-origin entirely (every header rendered at canvas y=0
+regardless of `spec.sequence.origin.y`, overlapping the title); and `arrow()`'s auto-positioned label only
+offset its *first* line above the arrow, so a wrapped second line landed back on the line it was meant to
+clear — fixed generically (any multi-line auto-positioned arrow label now clears correctly), not just for
+this instance.
+
+## Lifecycle diagrams — states, transitions that may point anywhere, terminal states marked
+
+`spec.lifecycle: {states: [{id, label, col, row?, status?, terminal?}], transitions: [{from, to, label?,
+guard?}], origin?, col_w?, col_gap?, row_h?, row_gap?, color?, edge_color?}`. `lifecyclelayout.js` places
+every state from its stage (`col`, 0-based — not a pixel x) and, optionally, its slot within that stage
+(`row`); a transition may point anywhere — forward, backward, or within a stage — unlike a tree's parent
+pointers, so `stateEdge()` (not `treeEdge()`) picks a direction per edge from the two boxes' relative
+position rather than one global orientation. A terminal state gets a second, inset border (the classic
+double-border convention) rather than a new colour — terminal-ness (can time leave this state) and status
+(what weight does it carry) are different axes, and get different visual channels. No self-transitions yet,
+refused loudly rather than drawn wrong; add support only if a real instance needs it (drunken-emu #15).
+
+First instance: `examples/round-lifecycle.json` — not an invented example, but `pipeline-sequence.json`'s
+*own* real acceptance history, read straight out of `examples/verdicts.jsonl`: draft → round 1 (FAIL, a
+coordinate bug) → round 2 (FAIL, the same fault — the fix tried between rounds didn't touch the actual
+bug) → round 3 (ACCEPTED). Through the full pipeline: 0 legibility faults on the accepted round. Building
+it found one more real bug, now covered by a test and fixed generically in `stateEdge()`: a same-row
+transition's label, wrapped at the caller's default width, was wide enough to visually bridge across both
+neighbouring boxes — the blind reader's own words were "arrow labels sit above the top edge... it is
+unclear which arrow each belongs to." Fixed by wrapping each label to the actual gap between its two box
+edges, not a fixed default, the same "measure the real space, don't guess a constant" fix `sequencelayout.js`
+already made for participant columns.
 
 ## The pipeline (`bin/figpipe SPEC.json --out DIR --reader auto`)
 
@@ -51,6 +144,55 @@ verdict produced elsewhere (a human, a subagent) so the acceptance is still mech
 The reader's "unreadable" is physical or structural only; unfamiliar terms go to "questions", which
 are logged and never counted, because a blind reader by construction has no context. This split was
 added after the first fixture run, where the reader filed "what Φ stands for" as unreadable.
+
+### External SVGs (`bin/figpipe SPEC.json --svg FILE.svg`) — drunken-emu #23, attempt B
+
+For figures the bank cannot draw (a matplotlib plot). The spec still carries id/message/acceptance/canvas
+(canvas must equal the SVG's px size); step 2 reads the SVG's `<text>` instead of rendering. Kept: word
+count/budget, forbidden strings, ellipsis, legibility audit, blind reader, mechanical acceptance, log.
+Not applicable, printed on every run and logged as `gates_not_applied`: box overflow, wrap-to-gap,
+running-text vs label split, layout-derived geometry, one-spec-two-surfaces. Blind spot even in the audit:
+text-over-mark collisions (a legend on a curve) are invisible to it; only the reader can see those.
+`legibility.fit: true` measures the SVG shrunk to `legibility.width`; without it a fixed-size SVG (bank and
+matplotlib alike) is measured at native size whatever `width` says. Tests: `python3 -m unittest
+checks.test_external_svg`, run against the bank's own analytic `majority-vote-curve.svg`.
+
+Measured on a real matplotlib figure (HAN's fig1, run in a separate attempt, not committed here because it
+is research content and this repo is public): the text gates found nothing, the legibility audit flagged one
+real collision (`r*` under a legend, 65% overlap), and the blind reader independently found the same one plus
+two the audit cannot see (a legend over curves; small labels). The maker cannot fix such a collision through
+a spec, only by editing the plotting script — which is the case for the native `spec.plot` above.
+
+## Ledger — lives in each research repo, not here
+
+A ledger of everything the pipeline has produced (which figure ids exist, their latest verdict, a
+`stale` flag when a render has changed since a reader last verified it) is genuinely useful — but its
+content is research output (MetaProof's figure messages, MetaSci's, HAN's), and this repo is the
+public, generic toolkit those repos consume, not a place for their content to live. So the ledger
+generator and its generated `LEDGER.md`/`ledger.json` live in the research repo that owns the
+content — MetaProof's `bin/gen_ledger.py` is the first instance, following the same shape
+`bin/kb_check.py --kb` already uses for reading a sibling repo best-effort. If MetaSci/HAN want the
+same, each gets its own, not a shared copy committed here.
+
+## Plots — axes, curves, scatter, computed (attempt A: figbank-native, drunken-emu #23)
+
+`spec.plot: {box, x_axis, y_axis, series, legend_position?}`; an axis is `{label (required), scale: linear|log,
+domain?, ticks?}`; a series is `{id, kind: curve|scatter, x[], y[], ids? (scatter: one data-id per point), label?
+(legend), color?, dashed?, dots?, end_label?}`. `plotlayout.js` computes each domain from the data's own extent,
+1-2-5 ticks (decades / 1-2-5 on log), and the data→pixel scale; `plot.js` measures the tick and axis labels and
+gives the plot whatever is left of `box`, then puts the legend in the first corner with no data under it (curve
+segments included, sampled every ~3 px) or, if every corner is covered, outside on the right. Deliberately small:
+no secondary axis, bars, error bars or subplots. Loud failures (each `plot: ...` in `report.errors`, nothing
+drawn): x/y length mismatch, empty data, non-finite values, non-positive value on a log axis, data outside a
+declared domain, duplicate series/point ids, a missing axis label, a box too small, a named legend corner that
+covers data, end labels that would overlap. Axis labels, legend labels and end labels count toward `word_budget`.
+
+First instance: `examples/majority-vote-curve.json` (from `gen_majority_vote.py`) — HAN's beta-binomial
+majority-vote panel (a), analytic, no research data; the generator self-checks its port (m = 1 gives p; rho → 0
+gives the binomial; the m → ∞ ceilings match HAN's own annotated 0.721 and 0.703). figpipe round 1 REJECTED
+(the reader named real faults: the lowest curves sat on the axis because the domain hugged the data, and an
+unlabelled dotted ceiling was mistaken for another curve's); round 2 ACCEPTED after an explicit probability
+domain and `end_label` direct labels on the ceilings. Both rows are in `examples/verdicts.jsonl`.
 
 ## Measured, 2026-09-28 (this container)
 

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tree, click for detail</title>
+    <meta name="description" content="A compact status-coloured tree (drunken-emu figbank/lib/treelayout.js) with a click-for-detail panel: the picture stays legible with id + status mark only, the full record (title, confidence, sensor, refs) appears on selection. First instance: MetaProof's exploration frontier (drunken-emu issue #12)." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The data slot. The consuming repo's own script replaces the token below with its tree's nodes (each
+         needs at least id, parent, status; any other fields the caller wants in the detail panel) plus the
+         render spec for the picture itself, when it renders its own page; the React app reads it at start-up.
+         Nothing is fetched. -->
+    <script id="vars" type="application/json">__JSON__</script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 380" width="1040" height="380" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" data-figure="pipeline-sequence" role="img" aria-label="bin/figpipe's seven steps as a handoff chain: each stage passes its output to the next, ending in one logged record — the same process figbank/examples/pipeline-workflow.json shows grouped by boundary instead.">
+ <defs>
+  <marker id="ah-3f5f8a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+   <path d="M0,0 L10,5 L0,10 z" fill="#3f5f8a"/>
+  </marker>
+ </defs>
+ <rect x="0" y="0" width="1040" height="380" fill="#ffffff"/>
+ <text x="16" y="29.3" font-size="17" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" data-id="title"><tspan x="16" dy="0">bin/figpipe, as a handoff chain: each step passes on what the next one needs.</tspan></text>
+ <g class="participant" data-id="validate">
+  <rect x="20" y="100" width="90.90689999999998" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="65.45344999999999" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="65.45344999999999" dy="0">validate</tspan></text>
+  <line x1="65.45344999999999" y1="134" x2="65.45344999999999" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="render">
+  <rect x="146.90689999999998" y="100" width="90" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="191.90689999999998" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="191.90689999999998" dy="0">render</tspan></text>
+  <line x1="191.90689999999998" y1="134" x2="191.90689999999998" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="rasterize">
+  <rect x="272.90689999999995" y="100" width="95.6077" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="320.71074999999996" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="320.71074999999996" dy="0">rasterize</tspan></text>
+  <line x1="320.71074999999996" y1="134" x2="320.71074999999996" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="legibility">
+  <rect x="404.5146" y="100" width="96.04839999999999" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="452.5388" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="452.5388" dy="0">legibility</tspan></text>
+  <line x1="452.5388" y1="134" x2="452.5388" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="coldread">
+  <rect x="536.563" y="100" width="99.8678" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="586.4969" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="586.4969" dy="0">cold read</tspan></text>
+  <line x1="586.4969" y1="134" x2="586.4969" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="accept">
+  <rect x="672.4308" y="100" width="90" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="717.4308" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="717.4308" dy="0">accept</tspan></text>
+  <line x1="717.4308" y1="134" x2="717.4308" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="participant" data-id="log">
+  <rect x="798.4308" y="100" width="90" height="34" rx="4" fill="#fbfaf6" stroke="#c9c4b8" stroke-width="1.3"/>
+  <text x="843.4308" y="122.22" font-size="14.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" text-anchor="middle"><tspan x="843.4308" dy="0">log</tspan></text>
+  <line x1="843.4308" y1="134" x2="843.4308" y2="358" stroke="#7d8590" stroke-width="1.1" stroke-dasharray="4 4"/>
+ </g>
+ <g class="arrow" data-id="msg-0">
+  <path d="M65.45344999999999,167 L191.90689999999998,167" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="128.680175" y="146" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="128.680175" dy="0">spec passes the</tspan><tspan x="128.680175" dy="15">schema</tspan></text>
+ </g>
+ <g class="arrow" data-id="msg-1">
+  <path d="M191.90689999999998,201 L320.71074999999996,201" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="256.30882499999996" y="180" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="256.30882499999996" dy="0">SVG, nothing</tspan><tspan x="256.30882499999996" dy="15">truncated</tspan></text>
+ </g>
+ <g class="arrow" data-id="msg-2">
+  <path d="M320.71074999999996,235 L452.5388,235" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="386.624775" y="229" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="386.624775" dy="0">PNG and PDF</tspan></text>
+ </g>
+ <g class="arrow" data-id="msg-3">
+  <path d="M452.5388,269 L586.4969,269" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="519.51785" y="248" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="519.51785" dy="0">font size and</tspan><tspan x="519.51785" dy="15">overlap pass</tspan></text>
+ </g>
+ <g class="arrow" data-id="msg-4">
+  <path d="M586.4969,303 L717.4308,303" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="651.96385" y="282" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="651.96385" dy="0">blind claim and</tspan><tspan x="651.96385" dy="15">verdict</tspan></text>
+ </g>
+ <g class="arrow" data-id="msg-5">
+  <path d="M717.4308,337 L843.4308,337" fill="none" stroke="#3f5f8a" stroke-width="1.6" marker-end="url(#ah-3f5f8a)"/>
+  <text x="780.4308" y="331" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#3f5f8a" text-anchor="middle"><tspan x="780.4308" dy="0">accepted</tspan></text>
+ </g>
+</svg>

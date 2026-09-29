@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """bin/figpipe — the maker → render → cold reader → acceptance pipeline, as one command.
 
+    bin/figpipe SPEC.json --svg EXTERNAL.svg   (no render: audit an SVG made elsewhere; see below)
     bin/figpipe SPEC.json [--out DIR] [--log VERDICTS.jsonl] [--reader auto|none|FILE]
                           [--png-scale 2] [--no-pdf] [--round N] [--model NAME] [--quiet]
 
@@ -20,6 +21,13 @@ Steps, in order; every step's result goes into the verdict record:
                 render errors none
   7 log         one JSON line appended to --log: spec/svg/reader-prompt hashes, word count,
                 legibility faults, the reader's report verbatim, the acceptance reasons, cost
+
+--svg FILE (external mode, drunken-emu #23 attempt B): step 2 does not render. The spec still supplies
+id / message / acceptance / canvas (canvas must equal the SVG's own size in px — mismatch is an error).
+Text gates are re-implemented on the SVG's <text> (words, forbidden, ellipsis, checks/svg_text_gates.py);
+box overflow, wrap-to-gap, running-text/label split, layout-derived geometry and one-spec-two-surfaces
+do NOT apply and are printed and logged (`gates_not_applied`). acceptance.legibility.fit:true measures
+the SVG scaled to legibility.width (default: native size, which for fixed-size SVGs ignores the width).
 
 Exit 0 accepted (or --reader none and everything before the reader passed); 1 rejected;
 2 the spec is invalid or the render failed; 3 the reader could not be run.
@@ -107,12 +115,13 @@ def legibility(svg_path, acc, out_dir):
     import tempfile
     rep = os.path.join(tempfile.gettempdir(), f"figpipe-legibility-{os.getpid()}.json")
     r = subprocess.run([sys.executable, LEGIBILITY, svg_path, "--width", str(width), "--min-px", str(min_px),
-                        "--overlap-tol", str(tol), "--json", rep, "--quiet"], capture_output=True, text=True)
+                        "--overlap-tol", str(tol), "--json", rep, "--quiet"] + (["--fit"] if leg.get("fit") else []),
+                       capture_output=True, text=True)
     if r.returncode not in (0, 1):
         return {"error": (r.stderr or r.stdout)[-800:], "passed": False, "width": width, "min_px": min_px}
     rows = json.load(open(rep)); os.remove(rep)
     row = rows[0] if rows else {"faults": [{"kind": "no_result"}]}
-    return {"passed": r.returncode == 0, "width": width, "min_px": min_px, "overlap_tol": tol,
+    return {"passed": r.returncode == 0, "width": width, "min_px": min_px, "overlap_tol": tol, "fit": bool(leg.get("fit")),
             "surface": leg.get("surface"), "min_font_px": row.get("min_font_px"), "n_text": row.get("n_text"),
             "faults": row.get("faults", [])}
 
@@ -185,6 +194,8 @@ def main():
     ap.add_argument("--no-pdf", action="store_true")
     ap.add_argument("--round", type=int, default=None, help="maker round number for the record (default: 1 + rounds already logged for this id)")
     ap.add_argument("--model", default=None, help="model for the cold reader (default: the CLI's default)")
+    ap.add_argument("--svg", default=None, metavar="FILE",
+                    help="audit this pre-existing (external, e.g. matplotlib) SVG instead of rendering the spec")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
@@ -205,14 +216,19 @@ def main():
         say(a, f"[figpipe] {fid}: INVALID spec ({how})\n  " + "\n  ".join(errs))
         return 2
     # 2
-    rep_path = os.path.join(out_dir, f".{fid}.render.json")
-    r = subprocess.run(["node", RENDER, a.spec, svg_path, "--report", rep_path, "--lenient"], capture_output=True, text=True)
-    if r.returncode != 0 or not os.path.exists(rep_path):
-        say(a, f"[figpipe] {fid}: render FAILED\n{r.stderr[-1200:]}")
-        return 2
-    report = json.load(open(rep_path)); os.remove(rep_path)
-    rec["render"] = {"words": report["words"], "word_budget": report.get("word_budget"), "n_texts": report["n_texts"], "errors": report["errors"], "svg_sha": sha(svg_path)}
-    say(a, f"[figpipe] {fid}: rendered {os.path.relpath(svg_path)} — {report['words']} words of running text (budget {report.get('word_budget')}), {len(report['errors'])} render error(s)")
+    if a.svg:
+        try:
+            report = external_gates(a, spec, fid, rec)
+        except Exception as e:   # a malformed SVG (ParseError) or an unreadable size is invalid INPUT, exit 2 — exit 1 means "rejected"
+            say(a, f"[figpipe] {fid}: cannot read --svg {a.svg}: {type(e).__name__}: {e}")
+            return 2
+        if report is None:
+            return 2
+        svg_path = os.path.abspath(a.svg)
+    else:
+        report = render_spec(a, fid, out_dir, svg_path, rec)
+        if report is None:
+            return 2
     for e in report["errors"]:
         say(a, "  render: " + e)
     if report["errors"]:
@@ -264,6 +280,61 @@ def main():
     # 7
     _log(log_path, rec, a)
     return 0 if ok else 1
+
+
+def render_spec(a, fid, out_dir, svg_path, rec):
+    rep_path = os.path.join(out_dir, f".{fid}.render.json")
+    r = subprocess.run(["node", RENDER, a.spec, svg_path, "--report", rep_path, "--lenient"], capture_output=True, text=True)
+    if r.returncode != 0 or not os.path.exists(rep_path):
+        say(a, f"[figpipe] {fid}: render FAILED\n{r.stderr[-1200:]}")
+        return None
+    report = json.load(open(rep_path)); os.remove(rep_path)
+    rec["render"] = {"words": report["words"], "word_budget": report.get("word_budget"), "n_texts": report["n_texts"], "errors": report["errors"], "svg_sha": sha(svg_path)}
+    say(a, f"[figpipe] {fid}: rendered {os.path.relpath(svg_path)} — {report['words']} words of running text (budget {report.get('word_budget')}), {len(report['errors'])} render error(s)")
+    return report
+
+
+def svg_px_size(path):
+    """(width, height) in CSS px of the root <svg>, from width/height attrs (pt/px/in/cm/mm) else viewBox."""
+    import re
+    import xml.etree.ElementTree as ET
+    root = ET.parse(path).getroot()
+    unit = {"pt": 96 / 72, "px": 1, "": 1, "in": 96, "cm": 96 / 2.54, "mm": 96 / 25.4}
+    def one(attr, vb_i):
+        m = re.fullmatch(r"\s*([\d.]+)\s*([a-z%]*)\s*", root.get(attr, ""))
+        if m and m.group(2) in unit:
+            return float(m.group(1)) * unit[m.group(2)]
+        vb = root.get("viewBox")
+        return float(vb.replace(",", " ").split()[vb_i]) if vb else None
+    return one("width", 2), one("height", 3)
+
+
+def external_gates(a, spec, fid, rec):
+    """Step 2 for --svg: no rendering. Re-implement what can be re-implemented on the SVG's text,
+    and state, in the output and in the record, everything that cannot."""
+    sys.path.insert(0, KIT)
+    from checks import svg_text_gates as tg
+    if not os.path.exists(a.svg):
+        say(a, f"[figpipe] {fid}: --svg file not found: {a.svg}")
+        return None
+    w, h = svg_px_size(a.svg)
+    cw, ch = spec["canvas"]["width"], spec["canvas"]["height"]
+    if w is None or abs(w - cw) > 1 or abs(h - ch) > 1:
+        say(a, f"[figpipe] {fid}: spec.canvas is {cw}x{ch} but the SVG is {w}x{h} px — fix the spec (loud, not silently rescaled)")
+        return None
+    g = tg.gates(a.svg, spec.get("word_budget"), spec.get("must_not_contain", []))
+    rec["mode"] = "external-svg"
+    rec["render"] = {"external": True, "svg": a.svg, "svg_sha": sha(a.svg), "words": g["words"],
+                     "words_non_numeric": g["words_non_numeric"], "word_budget": spec.get("word_budget"),
+                     "n_texts": g["n_text"], "errors": g["errors"]}
+    rec["gates_not_applied"] = g["not_applicable"]
+    say(a, f"[figpipe] {fid}: EXTERNAL SVG {a.svg} — not rendered by figbank. Re-implemented on its <text>: "
+           f"word count ({g['words']} words, {g['words_non_numeric']} non-numeric; budget {spec.get('word_budget')}), "
+           f"forbidden strings, ellipsis; plus the legibility audit and blind reader below.")
+    say(a, "[figpipe] GATES THAT DO NOT APPLY to an external SVG (the bank's renderer never saw it):")
+    for n in g["not_applicable"]:
+        say(a, "  - " + n)
+    return {"errors": g["errors"], "words": g["words"]}
 
 
 def _rounds(log_path, fid):

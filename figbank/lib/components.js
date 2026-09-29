@@ -26,6 +26,7 @@ export const FONT = { title: 17, regionTitle: 14.5, symbol: 13, name: 11, chip: 
 export function statusMark(x, y, status, p, r = 3.4) {
   const s = statusStyle(status, p);
   if (s.shape === 'square') return h('rect', { x: x - r, y: y - r, width: 2 * r, height: 2 * r, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
+  if (s.shape === 'diamond') return h('polygon', { points: `${x},${y - r * 1.35} ${x + r * 1.35},${y} ${x},${y + r * 1.35} ${x - r * 1.35},${y}`, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
   return h('circle', { cx: x, cy: y, r, fill: s.fill, stroke: s.stroke, 'stroke-width': 1.2, 'data-status': status });
 }
 
@@ -147,22 +148,26 @@ export function functional({ box, name, grain, status, formula, color, p, id, no
 // Arrow with a labelled channel. `points` is a polyline [[x,y],...] (2 = straight, 3+ = elbow);
 // `loop` draws a self-loop at (x, y) with radius r instead. The label sits at `labelAt`
 // ('mid', 'start', 'end') offset by `labelDy`, anchored `labelAnchor`. Marker colour = stroke.
-export function arrow({ points, loop, label, color, p, dashed, width = 1.6, labelDy = -6, labelAnchor = 'middle', labelAt = 'mid', labelX, labelY, labelW, id, px = FONT.label }) {
+export function arrow({ points, loop, label, color, p, dashed, dotted, dashdot, head = true, width = 1.6, labelDy = -6, labelAnchor = 'middle', labelAt = 'mid', labelX, labelY, labelW, id, px = FONT.label }) {
   const stroke = color || p.ink;
   const mid = stroke.replace('#', '');
   let d;
   if (loop) { const { x, y, r } = loop; d = `M${x},${y} C${x + r * 1.4},${y - r * 1.6} ${x + r * 2.2},${y + r * 0.2} ${x + r * 0.35},${y + r * 0.35}`; }
   else d = points.map((pt, i) => (i ? 'L' : 'M') + pt[0] + ',' + pt[1]).join(' ');
   let lx = labelX, ly = labelY;
+  const autoY = lx === undefined && labelY === undefined;
   if (lx === undefined && points) {
     const [a, b] = labelAt === 'start' ? [points[0], points[0]] : labelAt === 'end' ? [points[points.length - 1], points[points.length - 1]] : [points[0], points[points.length - 1]];
     lx = (a[0] + b[0]) / 2; ly = (a[1] + b[1]) / 2 + labelDy;
   }
   const lines = label ? wrap(label, labelW || 9999, px) : [];
+  // textLines grows downward from `ly`; a label meant to sit above the line (labelDy < 0) must have
+  // its LAST line, not its first, at the target offset, or a wrapped 2nd+ line lands back on the arrow.
+  if (autoY && lines.length > 1 && labelDy < 0) ly -= (lines.length - 1) * px * 1.25;
   const node = h('g', { class: 'arrow', 'data-id': id },
-    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dashed ? '5 4' : undefined, 'marker-end': `url(#ah-${mid})` }),
+    h('path', { d, fill: 'none', stroke, 'stroke-width': width, 'stroke-dasharray': dotted ? '0.1 6.5' : dashdot ? '13 4 3.5 4' : dashed ? '5 4' : undefined, 'stroke-linecap': dotted ? 'round' : undefined, 'marker-end': head === false ? undefined : `url(#ah-${mid})` }),
     lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: labelAnchor, lineHeight: px * 1.25 }) : null);
-  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '' };
+  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length && ly !== undefined ? ly - px : null };
 }
 
 export function markerDefs(markers) {
@@ -189,6 +194,112 @@ export function frame({ box, label, color, p, labelPx = FONT.grain }) {
     label ? h('text', { x: x + 12, y: y + labelPx * 1.5, 'font-size': labelPx, 'font-family': SANS, fill: color, 'font-weight': 'bold', 'letter-spacing': 0.6 }, label) : null) };
 }
 
+// A tree node: a small box, an optional status mark, a short label (wraps to at most 2 lines; a
+// third-line label is an overflow, same rule as everywhere else — shorten it in the spec, never
+// truncate here). Position comes from treelayout.js, never authored by hand.
+export function treeNode({ x, y, w, h: hh, label, sublabel, status, color, p, id, px = 11.5, subPx = 9.5 }) {
+  const pad = 6, markW = status ? 12 : 0;
+  const lines = wrap(label, w - 2 * pad - markW, px);
+  const subLines = sublabel ? wrap(sublabel, w - 2 * pad - markW, subPx) : [];
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px) > w - 2 * pad - markW + 0.5);
+  const cy = hh / 2 - ((lines.length - 1) * px * 1.15) / 2 - (subLines.length ? subPx * 0.7 : 0);
+  const node = h('g', { class: 'treenode', 'data-id': id, 'data-status': status },
+    h('rect', { x, y, width: w, height: hh, rx: 4, fill: p.card, stroke: color || p.line, 'stroke-width': 1.3 }),
+    status ? statusMark(x + pad + 3, y + hh / 2, status, p, 3) : null,
+    textLines(x + pad + markW, y + cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'start', id }),
+    subLines.length ? textLines(x + pad + markW, y + cy + lines.length * px * 1.15 + subPx * 0.85, subLines, subPx, { fill: p.muted, lineHeight: subPx * 1.2, anchor: 'start' }) : null);
+  return { node, w, h: hh, overflow };
+}
+
+// The edge from a node to its child, a gentle S-curve (no routing around siblings needed:
+// layoutTree already guarantees no two subtrees overlap). `horizontal` connects right-edge-centre
+// to left-edge-centre (depth grows rightward); the default connects bottom-centre to top-centre
+// (depth grows downward) — matching whichever orientation layoutTree was given.
+export function treeEdge({ from, to, color, p, id, horizontal }) {
+  let x1, y1, x2, y2, d;
+  if (horizontal) {
+    x1 = from.x + from.w; y1 = from.y + from.h / 2; x2 = to.x; y2 = to.y + to.h / 2;
+    const midX = (x1 + x2) / 2;
+    d = `M${x1},${y1} C${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+  } else {
+    x1 = from.x + from.w / 2; y1 = from.y + from.h; x2 = to.x + to.w / 2; y2 = to.y;
+    const midY = (y1 + y2) / 2;
+    d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+  }
+  return h('path', { class: 'treeedge', 'data-id': id, d, fill: 'none', stroke: color || p.dim, 'stroke-width': 1.2 });
+}
+
+// A lifecycle diagram's state: a box, an optional status mark, a short label. A terminal state gets a
+// second, inset border (the classic double-border convention) instead of a new colour or shape — the
+// bank already has a status vocabulary for "what weight does this carry", terminal-ness is a different
+// axis (can time leave this state) and does not need a second one.
+export function lifecycleState({ x, y, w, h: hh, label, status, terminal, color, p, id, px = 12.5 }) {
+  const pad = 8, markW = status ? 12 : 0;
+  const lines = wrap(label, w - 2 * pad - markW, px);
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px) > w - 2 * pad - markW + 0.5);
+  const cy = hh / 2 - ((lines.length - 1) * px * 1.15) / 2;
+  const stroke = color || p.line;
+  const node = h('g', { class: 'lifecyclestate', 'data-id': id, 'data-status': status },
+    h('rect', { x, y, width: w, height: hh, rx: 5, fill: p.card, stroke, 'stroke-width': 1.4 }),
+    terminal ? h('rect', { x: x + 4, y: y + 4, width: w - 8, height: hh - 8, rx: 3, fill: 'none', stroke, 'stroke-width': 1.1 }) : null,
+    status ? statusMark(x + pad + 3, y + hh / 2, status, p, 3) : null,
+    textLines(x + pad + markW, y + cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'start', id }));
+  return { node, w, h: hh, overflow };
+}
+
+// A transition between two states, anywhere on the diagram — unlike treeEdge (always parent-to-child,
+// one fixed direction) a lifecycle transition can go forward, backward, or within the same stage, so the
+// direction is chosen per edge from the two boxes' relative position rather than a single global flag.
+// Carries an arrowhead (a transition has a direction that matters); a tree edge does not.
+export function stateEdge({ from, to, color, p, id, label, labelW = 150, px = FONT.label }) {
+  const stroke = color || p.dim;
+  const mid = stroke.replace('#', '');
+  const fcx = from.x + from.w / 2, fcy = from.y + from.h / 2, tcx = to.x + to.w / 2, tcy = to.y + to.h / 2;
+  const dx = tcx - fcx, dy = tcy - fcy;
+  if (dx === 0 && dy === 0) throw new Error(`stateEdge: ${JSON.stringify(id)} connects a state to itself — not supported yet`);
+  let x1, y1, x2, y2, d, lx, ly;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    x1 = dx >= 0 ? from.x + from.w : from.x; y1 = fcy;
+    x2 = dx >= 0 ? to.x : to.x + to.w; y2 = tcy;
+    const midX = (x1 + x2) / 2;
+    d = `M${x1},${y1} C${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+    // the label sits above both boxes' top edge, not just above the connection point — the two
+    // boxes can be in the same row (y1 === y2, a same-stage edge), where "7px above the line" is
+    // still inside the box. Its wrap width is the actual gap between the two box edges, not the
+    // caller's default — a wider wrap would visually bridge into the neighbouring boxes, making it
+    // ambiguous which arrow the label belongs to (a real reader complaint, round 2 of this kind's
+    // own worked example, examples/round-lifecycle.json).
+    lx = (x1 + x2) / 2; ly = Math.min(from.y, to.y) - 8; labelW = Math.max(90, Math.abs(x2 - x1) - 8);
+  } else {
+    x1 = fcx; y1 = dy >= 0 ? from.y + from.h : from.y;
+    x2 = tcx; y2 = dy >= 0 ? to.y : to.y + to.h;
+    const midY = (y1 + y2) / 2;
+    d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+    lx = Math.max(from.x + from.w, to.x + to.w) + 8; ly = (y1 + y2) / 2;
+  }
+  const lines = label ? wrap(label, labelW, px) : [];
+  if (lines.length > 1 && Math.abs(dx) >= Math.abs(dy)) ly -= (lines.length - 1) * px * 1.25;   // grow upward, same fix as arrow()
+  const node = h('g', { class: 'stateedge', 'data-id': id },
+    h('path', { d, fill: 'none', stroke, 'stroke-width': 1.4, 'marker-end': `url(#ah-${mid})` }),
+    lines.length ? textLines(lx, ly, lines, px, { fill: stroke, anchor: Math.abs(dx) >= Math.abs(dy) ? 'middle' : 'start', lineHeight: px * 1.25 }) : null);
+  return { node, marker: { id: `ah-${mid}`, color: stroke }, words: label || '', labelTop: lines.length ? ly - px : null };
+}
+
+// A sequence diagram's participant: a header box (auto-sized to its label, figbank/lib/sequencelayout.js
+// computes x/w) plus a dashed lifeline running down to the last message row. Messages themselves reuse
+// arrow() directly — a sequence message is exactly "an arrow between two known x positions at a known
+// y", the same shape arrow() already draws for every other figure, so no separate message component.
+export function participant({ x, y: y0 = 0, w, headerH, lifelineTo, label, p, id, px = FONT.regionTitle }) {
+  const lines = wrap(label, w - 16, px, false, true);
+  const overflow = lines.length > 2 || lines.some(l => measure(l, px, false, true) > w - 16 + 0.5);
+  const cy = y0 + headerH / 2 - ((lines.length - 1) * px * 1.15) / 2;
+  const node = h('g', { class: 'participant', 'data-id': id },
+    h('rect', { x, y: y0, width: w, height: headerH, rx: 4, fill: p.card, stroke: p.line, 'stroke-width': 1.3 }),
+    textLines(x + w / 2, cy + px * 0.36, lines, px, { fill: p.ink, lineHeight: px * 1.15, anchor: 'middle', weight: 'bold' }),
+    h('line', { x1: x + w / 2, y1: y0 + headerH, x2: x + w / 2, y2: lifelineTo, stroke: p.dim, 'stroke-width': 1.1, 'stroke-dasharray': '4 4' }));
+  return { node, w, overflow };
+}
+
 export function legend({ x, y, entries, p, px = FONT.legend, anchor = 'start' }) {
   // entries: [{status, label}] laid out in one row, right-to-left when anchor = 'end'
   const parts = entries.map(e => ({ ...e, w: 16 + measure(e.label, px) + 16 }));
@@ -197,4 +308,59 @@ export function legend({ x, y, entries, p, px = FONT.legend, anchor = 'start' })
   const nodes = parts.map(e => { const g = h('g', { class: 'legend-entry' }, statusMark(cx + 5, y, e.status, p, 3.2),
     h('text', { x: cx + 14, y: y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.muted }, e.label)); cx += e.w; return g; });
   return { node: h('g', { class: 'legend' }, ...nodes), w: total, words: entries.map(e => e.label).join(' ') };
+}
+
+// ---- plot kind (drunken-emu #23): axes, curve, scatter — geometry from lib/plotlayout.js -------------
+export function plotAxes({ inner, xa, ya, sx, sy, p, px = 11, labelPx = 12.5 }) {
+  const { x, y, w, h: hh } = inner, nodes = [];
+  xa.ticks.forEach((t, i) => {
+    const X = sx(t);
+    nodes.push(h('line', { x1: X, y1: y, x2: X, y2: y + hh, stroke: p.line, 'stroke-width': 0.6, opacity: 0.6 }),
+      h('line', { x1: X, y1: y + hh, x2: X, y2: y + hh + 4, stroke: p.muted, 'stroke-width': 1 }),
+      h('text', { x: X, y: y + hh + 4 + px * 1.05, 'font-size': px, 'font-family': SANS, fill: p.muted, 'text-anchor': 'middle', 'data-tick': 'x' }, xa.labels[i]));
+  });
+  ya.ticks.forEach((t, i) => {
+    const Y = sy(t);
+    nodes.push(h('line', { x1: x, y1: Y, x2: x + w, y2: Y, stroke: p.line, 'stroke-width': 0.6, opacity: 0.6 }),
+      h('line', { x1: x - 4, y1: Y, x2: x, y2: Y, stroke: p.muted, 'stroke-width': 1 }),
+      h('text', { x: x - 7, y: Y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.muted, 'text-anchor': 'end', 'data-tick': 'y' }, ya.labels[i]));
+  });
+  nodes.push(h('path', { d: `M${x},${y} L${x},${y + hh} L${x + w},${y + hh}`, fill: 'none', stroke: p.ink, 'stroke-width': 1.2 }));
+  const ly = y + hh + 4 + px * 1.05 + 8 + labelPx;
+  nodes.push(h('text', { x: x + w / 2, y: ly, 'font-size': labelPx, 'font-family': SANS, fill: p.ink, 'text-anchor': 'middle', 'data-axis-label': 'x' }, xa.label));
+  return { node: h('g', { class: 'plot-axes' }, ...nodes) };
+}
+
+export function curveMark({ pts, color, id, dashed, dots, width = 1.7 }) {
+  const d = pts.map(([X, Y], i) => `${i ? 'L' : 'M'}${X.toFixed(2)},${Y.toFixed(2)}`).join(' ');
+  return h('g', { class: 'curve', 'data-id': id },
+    h('path', { d, fill: 'none', stroke: color, 'stroke-width': width, 'stroke-dasharray': dashed ? '2 3' : undefined, 'stroke-linejoin': 'round' }),
+    dots ? pts.map(([X, Y]) => h('circle', { cx: X.toFixed(2), cy: Y.toFixed(2), r: 2.4, fill: color })) : null);
+}
+
+export function scatterMark({ pts, ids, color, seriesId, r = 3.6, p }) {
+  return h('g', { class: 'scatter', 'data-id': seriesId },
+    pts.map(([X, Y], i) => h('circle', { class: 'point', cx: X.toFixed(2), cy: Y.toFixed(2), r, fill: color, 'fill-opacity': 0.75, stroke: p.paper, 'stroke-width': 0.8, 'data-id': ids ? ids[i] : undefined, tabindex: ids ? 0 : undefined })));
+}
+
+// one row per labelled series: swatch + label; returns its own measured size so the assembler can place it
+export function plotLegend({ entries, x, y, p, px = FONT.legend + 1 }) {
+  const rowH = px * 1.5, sw = 22;
+  const wLab = Math.max(...entries.map(e => measure(e.label, px)));
+  const w = 10 + sw + 6 + wLab + 10, hh = entries.length * rowH + 8;
+  const nodes = entries.map((e, i) => {
+    const cy = y + 4 + rowH * (i + 0.5);
+    return h('g', { class: 'plot-legend-entry', 'data-id': e.id },
+      e.kind === 'scatter' ? h('circle', { cx: x + 10 + sw / 2, cy, r: 3.6, fill: e.color }) : h('line', { x1: x + 10, y1: cy, x2: x + 10 + sw, y2: cy, stroke: e.color, 'stroke-width': 2, 'stroke-dasharray': e.dashed ? '2 3' : undefined }),
+      h('text', { x: x + 10 + sw + 6, y: cy + px * 0.36, 'font-size': px, 'font-family': SANS, fill: p.ink }, e.label));
+  });
+  return { node: h('g', { class: 'plot-legend' }, h('rect', { x, y, width: w, height: hh, rx: 3, fill: p.paper, 'fill-opacity': 0.9, stroke: p.line, 'stroke-width': 0.8 }), ...nodes), w, h: hh };
+}
+
+export function endLabel({ x, y, text, color, px, id }) {
+  return h('text', { x, y: y + px * 0.36, 'font-size': px, 'font-family': SANS, fill: color, 'font-weight': 'bold', 'data-end-label': id }, text);
+}
+
+export function yAxisLabel({ x, y, text, p, px = 12.5 }) {
+  return h('text', { x, y, transform: `rotate(-90 ${x} ${y})`, 'font-size': px, 'font-family': SANS, fill: p.ink, 'text-anchor': 'middle', 'data-axis-label': 'y' }, text);
 }
