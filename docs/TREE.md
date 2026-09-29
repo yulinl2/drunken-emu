@@ -158,6 +158,7 @@ that is never executed is not a regeneration command.
 |   `-- tailwind.js
 |-- .gitignore
 |-- CITATION.cff
+|-- CLAUDE.md
 |-- CONTRIBUTING.md
 |-- LICENSE
 |-- Makefile
@@ -165,5 +166,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 121 files tracked
+19 directories, 122 files tracked
 ```
