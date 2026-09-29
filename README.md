@@ -31,6 +31,7 @@ drunken-emu/
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
 │   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
+│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox

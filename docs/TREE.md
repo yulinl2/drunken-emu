@@ -47,6 +47,7 @@ that is never executed is not a regeneration command.
 |   |-- smoke.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
+|   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   `-- test_external_svg.py
 |-- docs/
@@ -168,5 +169,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 124 files tracked
+19 directories, 125 files tracked
 ```
