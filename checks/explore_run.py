@@ -18,7 +18,8 @@ POLICY.py (plain module) defines:
         view = affordances ordered loudest-first (checks/affordances.py); return one decision record:
         {"intention": str, "rationale": str,                       # BOTH required: EXPLORE-SPEC keeps intention, action, target, rationale
          "kind": "click"|"triple"|"key"|"type"|"scroll"|"wait", x,y | key | text | dy | ms}     # the action ("triple" is mouse-only)
-        The runner adds the `target` (the affordance under the point, or the focused element) and stores the whole record per step.
+        The runner adds the `target` (the element the browser would deliver the click to at that point, so an overlay on top wins; or the focused
+        element for keys) and stores the whole record per step.
 
 The runner owns the impairment (the policy cannot opt out of it):
     distractibility p   per step, with probability p the intended action is replaced by a click on the MOST SALIENT affordance
@@ -85,9 +86,19 @@ def contract(d):
         if not isinstance(d.get(f), str) or not d[f].strip(): raise PolicyError(f"decision record needs a non-empty {f!r}: {d}")
 
 
+HIT_JS = """([x,y])=>{let e=document.elementFromPoint(x,y); if(!e) return null;
+  const op=e.closest('button,a,input,select,textarea,summary,[role=button],[role=link],[role=checkbox],[role=tab]')||e;
+  return op.tagName.toLowerCase()+': '+(op.getAttribute('aria-label')||op.textContent||op.value||op.placeholder||'').trim().replace(/\\s+/g,' ').slice(0,48)}"""
+
+
 async def target_of(page, view, a):
-    """What the action was aimed at: the smallest visible affordance containing the point; for keys and typing, the focused element."""
+    """What the action was aimed at: for a point, the element the browser would actually deliver the click to (elementFromPoint: a sticky bar or a
+    popover on top wins over the control drawn under it), falling back to the smallest visible affordance containing it; for keys and typing, the focused element."""
     if "x" in a and a["kind"] in ("click", "triple", "scroll"):
+        try:
+            hit = await page.evaluate(HIT_JS, [a["x"], a["y"]])
+            if hit: return hit
+        except Exception: pass
         hit = [v for v in view if abs(v["x"] - a["x"]) <= v["w"] / 2 + 1 and abs(v["y"] - a["y"]) <= v["h"] / 2 + 1]
         if hit: v = min(hit, key=lambda v: v["w"] * v["h"]); return f"{v['tag']}: {v['text']}"
         return f"(nothing operable at {a['x']},{a['y']})"
