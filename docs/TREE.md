@@ -36,9 +36,11 @@ that is never executed is not a regeneration command.
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- __init__.py
+|   |-- affordances.py
 |   |-- blind_audit.py
 |   |-- browser.py
 |   |-- ci_claims.py
+|   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
 |   |-- region_shots.py
@@ -166,5 +168,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 122 files tracked
+19 directories, 124 files tracked
 ```

@@ -29,7 +29,9 @@ drunken-emu/
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
-│   ├── explore_step.py        P1: one stateless step; the calling session decides
+│   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
+│   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
+│   ├── affordances.py         what a reader could act on, extracted from the rendered page
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
