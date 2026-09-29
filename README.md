@@ -29,7 +29,10 @@ drunken-emu/
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
-│   ├── explore_step.py        P1: one stateless step; the calling session decides
+│   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
+│   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
+│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium)
+│   ├── affordances.py         what a reader could act on, extracted from the rendered page
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
@@ -66,8 +69,9 @@ A cold `bin/emu smoke` on a 4-node artifact measured 2.5 s wall clock, of which
 
 ## Authored surface
 
-638 lines across `bin/` (131), `checks/` (491), `harness/` (16), plus this
-README (133). `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed,
+About 2.6 k lines, measured 2026-09-29 with `wc -l`: `bin/` (717), `checks/*.py` (1,573), `harness/`
+(22), plus this README (277). The number drifts with every edit — re-measure before quoting it (the earlier "638" was
+true once and stale for weeks). `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed,
 not written here; see `THIRD_PARTY_NOTICES.md`.
 
 ## Falsified
@@ -154,6 +158,13 @@ emu-kit/
 │   │                       control-cluster taps, toggle, N-stop read-through
 │   ├── region_shots.py     content-AWARE camera: text anchors decide only where
 │   │                       to look, never what counts as correct
+│   ├── explore_step.py     P1: one stateless step, the calling session decides (any page, desktop or phone)
+│   ├── explore_run.py      P1: scripted decider + impairment sweep (dose–response, no API key)
+│   ├── affordances.py      what a reader could act on, from the rendered page (visible part, semantic vs pointer-only)
+│   ├── explore_text.py     the explore loop on a text page (no Chromium); test_explore_text.py asserts it
+│   ├── test_explore_run.py positive control for the sweep: impairment bites at p=1, not at p=0; contract errors stop the run
+│   ├── svg_legibility.py · svg_text_gates.py · test_external_svg.py   figure gates (see figbank/)
+│   ├── browser.py          launches the Chromium that is actually installed
 │   └── ci_claims.py        asserts this README is still true; runs in CI
 └── out/                    screenshots + logs (gitignore-able)
 ```
