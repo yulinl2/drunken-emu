@@ -15,8 +15,10 @@ POLICY.py (plain module) defines:
     async def done(page) -> bool             the reader believes the goal is met (visible predicate)
     def success() -> bool                    ground truth, may look anywhere (files, API); reported next to `done`
     async def decide(view, page, rng) -> dict | None
-        view = affordances ordered loudest-first (checks/affordances.py); return one action:
-        {"kind": "click"|"triple"|"key"|"type"|"scroll"|"wait", x,y | key | text | dy, "intention": str}
+        view = affordances ordered loudest-first (checks/affordances.py); return one decision record:
+        {"intention": str, "rationale": str,                       # BOTH required: EXPLORE-SPEC keeps intention, action, target, rationale
+         "kind": "click"|"triple"|"key"|"type"|"scroll"|"wait", x,y | key | text | dy | ms}     # the action ("triple" is mouse-only)
+        The runner adds the `target` (the affordance under the point, or the focused element) and stores the whole record per step.
 
 The runner owns the impairment (the policy cannot opt out of it):
     distractibility p   per step, with probability p the intended action is replaced by a click on the MOST SALIENT affordance
@@ -26,13 +28,23 @@ The runner owns the impairment (the policy cannot opt out of it):
 NOT implemented here: working-memory limits. They need decider-side memory, and these policies read the page instead of
 remembering; claiming otherwise would be the kind of wrong justification README `## Falsified` row 3 is about.
 
+A policy that omits `intention` or `rationale`, asks for `triple` on a touch device, or invents an action kind stops the run with a
+PolicyError: an action the runner silently downgraded or ignored would make the sweep report something the reader never did.
+
 Output: one table per run (rate of TRUE success per level, Wilson 95% interval, mean steps, hijacks, false completions)
 and OUT/sweep_<label>.json with every trial. `false completion` = the reader believed it was done but ground truth says no.
 """
 import argparse, asyncio, glob, importlib.util, json, math, os, random, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from affordances import AFF_JS
+from affordances import AFF_JS, settle
 from playwright.async_api import async_playwright
+
+
+class PolicyError(Exception):
+    """The policy broke the decision-record contract (or asked for an action the device cannot do)."""
+
+
+KINDS = {"click", "triple", "key", "type", "scroll", "wait"}
 
 
 def wilson(k, n, z=1.96):
@@ -54,10 +66,11 @@ async def observe(page, impulsive):
 
 async def perform(page, a, touch):
     k = a["kind"]
+    if k not in KINDS: raise PolicyError(f"unknown action kind {k!r}")
+    if k == "triple" and touch: raise PolicyError("'triple' has no touch equivalent; a touch policy must not ask for it")
     if k == "click":
         await (page.touchscreen.tap(a["x"], a["y"]) if touch else page.mouse.click(a["x"], a["y"]))
-    elif k == "triple":
-        await (page.touchscreen.tap(a["x"], a["y"]) if touch else page.mouse.click(a["x"], a["y"], click_count=3))
+    elif k == "triple": await page.mouse.click(a["x"], a["y"], click_count=3)
     elif k == "key": await page.keyboard.press(a["key"])
     elif k == "type": await page.keyboard.type(a["text"], delay=10)
     elif k == "scroll":
@@ -67,34 +80,55 @@ async def perform(page, a, touch):
     await page.wait_for_timeout(160)
 
 
+def contract(d):
+    for f in ("intention", "rationale"):
+        if not isinstance(d.get(f), str) or not d[f].strip(): raise PolicyError(f"decision record needs a non-empty {f!r}: {d}")
+
+
+async def target_of(page, view, a):
+    """What the action was aimed at: the smallest visible affordance containing the point; for keys and typing, the focused element."""
+    if "x" in a and a["kind"] in ("click", "triple", "scroll"):
+        hit = [v for v in view if abs(v["x"] - a["x"]) <= v["w"] / 2 + 1 and abs(v["y"] - a["y"]) <= v["h"] / 2 + 1]
+        if hit: v = min(hit, key=lambda v: v["w"] * v["h"]); return f"{v['tag']}: {v['text']}"
+        return f"(nothing operable at {a['x']},{a['y']})"
+    if a["kind"] in ("key", "type"):
+        return await page.evaluate("(()=>{const e=document.activeElement;return e&&e!==document.body?e.tagName.toLowerCase()+(e.id?'#'+e.id:'')+': '+((e.getAttribute('aria-label')||e.textContent||e.value||'').trim().slice(0,40)):'(page)'})()")
+    return ""
+
+
 async def trial(browser, pol, url, vp, touch, p, seed, args, shot=None):
     rng = random.Random(seed)
     if hasattr(pol, "reset"): pol.reset()
     ctx = await browser.new_context(viewport={"width": vp[0], "height": vp[1]}, has_touch=touch, device_scale_factor=1)
     page = await ctx.new_page(); errors = []
     page.on("pageerror", lambda e: errors.append(str(e)[:120]))
-    await page.goto(url, wait_until="networkidle"); await page.wait_for_timeout(250)
+    await page.goto(url, wait_until="domcontentloaded"); await settle(page); await page.wait_for_timeout(250)
     best, stall, hijacks, steps, why, believed = await pol.progress(page), 0, 0, 0, "budget", False
     log = []
     while steps < args.budget:
         view = await observe(page, args.impulsivity)
         d = await pol.decide(view, page, rng)
         hij = rng.random() < p and bool(view)
-        if hij: a, note = {"kind": "click", "x": view[0]["x"], "y": view[0]["y"]}, "HIJACK " + view[0]["text"][:24]; hijacks += 1
-        elif d is None: a, note = {"kind": "wait", "ms": 300}, "no idea what to do next"
-        else: a, note = d, d.get("intention", "")
-        try: await perform(page, a, touch)
-        except Exception as e: note += f" [act failed: {type(e).__name__}]"
-        steps += 1; log.append(note)
+        if hij:
+            rec = {"intention": "HIJACK", "rationale": "impairment: the most salient affordance took the tap", "kind": "click", "x": view[0]["x"], "y": view[0]["y"]}; hijacks += 1
+        elif d is None: rec = {"intention": "no idea what to do next", "rationale": "the policy found nothing to act on", "kind": "wait", "ms": 300}
+        else: contract(d); rec = d
+        action = {k: v for k, v in rec.items() if k not in ("intention", "rationale")}
+        target = await target_of(page, view, action)
+        try: await perform(page, action, touch)
+        except PolicyError: raise
+        except Exception as e: target += f" [action failed: {type(e).__name__}]"
+        steps += 1
         prog = await pol.progress(page)
+        log.append({"step": steps, "hijacked": bool(hij), "intention": rec["intention"], "rationale": rec["rationale"], "action": action, "target": target, "progress": prog})
         if prog > best: best, stall = prog, 0
         else: stall += 1
         if await pol.done(page): believed = True; why = "believed-done"; break
         if stall >= args.patience: why = "abandoned"; break
-    ok = bool(pol.success());
+    ok = bool(pol.success())
     if not ok and shot: await page.screenshot(path=shot)
     await ctx.close()
-    return {"seed": seed, "p": p, "steps": steps, "hijacks": hijacks, "end": why, "believed_done": believed, "success": ok, "errors": errors[:2], "log": log[-8:]}
+    return {"seed": seed, "p": p, "steps": steps, "hijacks": hijacks, "end": why, "believed_done": believed, "success": ok, "errors": errors[:2], "log": log}
 
 
 async def main():
@@ -125,4 +159,7 @@ async def main():
     json.dump({"goal": pol.GOAL, "args": vars(args), "trials": results}, open(f"{args.out}/sweep_{args.label}.json", "w"), indent=1)
 
 
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except PolicyError as e:
+    sys.exit(f"policy error: {e}")

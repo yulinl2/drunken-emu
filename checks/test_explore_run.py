@@ -26,18 +26,38 @@ async def progress(page):
 async def done(page): return await page.title() == "goal"
 async def decide(view, page, rng):
     b = next((a for a in view if a["text"] == "Go"), None)
-    return {"kind": "click", "x": b["x"], "y": b["y"], "intention": "press Go"} if b else None
+    return {"kind": "click", "x": b["x"], "y": b["y"], "intention": "press Go", "rationale": "the small button is the goal"} if b else None
 '''
 
 
 class T(unittest.TestCase):
-    def run_sweep(self, levels, trials=4):
-        d = Path(tempfile.mkdtemp()); (d / "page.html").write_text(PAGE); (d / "pol.py").write_text(POLICY)
+    def run_sweep(self, levels, trials=4, policy=POLICY, mouse=True, expect_ok=True):
+        d = Path(tempfile.mkdtemp()); (d / "page.html").write_text(PAGE); (d / "pol.py").write_text(policy)
         r = subprocess.run([sys.executable, str(KIT / "checks/explore_run.py"), str(d / "pol.py"), (d / "page.html").as_uri(), str(d / "out"),
-                            "--levels", levels, "--trials", str(trials), "--mouse", "--budget", "6", "--patience", "6", "--label", "t"],
+                            "--levels", levels, "--trials", str(trials), *(["--mouse"] if mouse else []), "--budget", "6", "--patience", "6", "--label", "t"],
                            capture_output=True, text=True, timeout=120)
+        if not expect_ok: return r
         self.assertEqual(r.returncode, 0, r.stderr[-400:])
         return json.load(open(d / "out/sweep_t.json"))["trials"]
+
+    def test_every_step_keeps_intention_action_target_rationale(self):
+        t = self.run_sweep("0,1", trials=2)
+        for trial in t:
+            for st in trial["log"]:
+                self.assertTrue(st["intention"] and st["rationale"] and st["action"]["kind"] and st["target"] is not None, st)
+        clean = [s for x in t if x["p"] == 0 for s in x["log"]]; drunk = [s for x in t if x["p"] == 1 for s in x["log"]]
+        self.assertTrue(all("Go" in s["target"] for s in clean), clean)                     # aimed at the goal button
+        self.assertTrue(all(s["hijacked"] and "DECOY" in s["target"] for s in drunk), drunk)  # the hijack landed on the loud decoy
+
+    def test_a_policy_that_breaks_the_contract_stops_the_run(self):
+        no_rationale = POLICY.replace(', "rationale": "the small button is the goal"', "")
+        r = self.run_sweep("0", trials=1, policy=no_rationale, expect_ok=False)
+        self.assertNotEqual(r.returncode, 0); self.assertIn("rationale", r.stderr)
+        triple = POLICY.replace('"kind": "click"', '"kind": "triple"')
+        r = self.run_sweep("0", trials=1, policy=triple, mouse=False, expect_ok=False)      # touch device: triple must be refused, not downgraded to a tap
+        self.assertNotEqual(r.returncode, 0); self.assertIn("touch", r.stderr)
+        bogus = POLICY.replace('"kind": "click"', '"kind": "teleport"')
+        r = self.run_sweep("0", trials=1, policy=bogus, expect_ok=False); self.assertNotEqual(r.returncode, 0); self.assertIn("unknown action kind", r.stderr)
 
     def test_impairment_bites_only_when_on(self):
         t = self.run_sweep("0,1")

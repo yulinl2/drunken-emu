@@ -26,7 +26,7 @@ Output: one JSON line {step, screenshot, affordances:[{text,x,y,w,h,salience,via
 """
 import asyncio, json, os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from affordances import AFF_JS
+from affordances import AFF_JS, settle
 from playwright.async_api import async_playwright
 
 URL, OUT, TRACE = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -53,7 +53,7 @@ async def main():
         errors = []
         pg.on("pageerror", lambda e: errors.append(str(e)[:200]))
         pg.on("console", lambda m: m.type == "error" and errors.append(m.text[:200]))
-        await pg.goto(URL, wait_until="networkidle")             # pages that fetch their data are not "loaded" at DOMContentLoaded
+        await pg.goto(URL, wait_until="domcontentloaded"); await settle(pg)   # data-fetching pages are not ready at DOMContentLoaded; polling pages never idle
         # React artifacts mount into #root; plain pages have no #root, so wait for any body content instead.
         await pg.wait_for_function("(document.getElementById('root')||document.body).children.length>0", timeout=15000)
         await pg.wait_for_timeout(250)                            # let the first render settle; the trace replays from a settled page
@@ -77,7 +77,7 @@ async def main():
         if MAXAFF: aff = aff[:MAXAFF]
         json.dump(tr, open(TRACE,"w"))
         focus = await pg.evaluate("(()=>{const e=document.activeElement;return e&&e!==document.body?(e.tagName.toLowerCase()+(e.id?'#'+e.id:'')):null})()")
-        print(json.dumps({"step":n,"screenshot":shot,"goal":tr["goal"],"viewport":tr["viewport"],"touch":touch,"focus":focus,
+        print(json.dumps({"step":n,"screenshot":shot,"goal":tr["goal"],"url":pg.url,"viewport":tr["viewport"],"touch":touch,"focus":focus,
                           "errors":errors,"affordances":aff,"h":await pg.evaluate("document.body.scrollHeight")}))
         await b.close()
 asyncio.run(main())

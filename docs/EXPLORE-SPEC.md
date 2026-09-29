@@ -131,18 +131,23 @@ tap throws (cost one debugging round).
 
 Two additions, both driven by using the stepper on a page that was not a React artifact (the speeds-kit grading GUI).
 
-**`explore_step.py` now works on any page.** It waits for network idle before the first action (see P-0a86), no longer
-requires `#root`, takes `--viewport WxH` and `--mouse` (desktop, no touch; the TRACE owns both after the first call so replay
-stays deterministic), understands `click`, `key`, `type`, `wait` next to `tap` and `scroll`, returns page errors and the focused
-element, and labels each affordance `semantic` or `pointer-only` (cursor:pointer with no role: findable by eye, invisible to a
-keyboard). Affordance extraction moved to `checks/affordances.py` so both drivers share it.
+**`explore_step.py` now works on any page.** It navigates at DOMContentLoaded and then waits, *bounded* (5 s), for network idle (see
+P-0a86), no longer requires `#root`, takes `--viewport WxH` and `--mouse` (desktop, no touch; the TRACE owns both after the first
+call so replay stays deterministic), understands `click`, `key`, `type` and `wait` next to `tap` and `scroll`, and returns the final
+`url`, page errors and the focused element. Each affordance is labelled `semantic` (native controls and interactive ARIA roles) or
+`pointer-only` (cursor:pointer with neither: findable by eye, invisible to a keyboard), and its rectangle is the *visible* part, so a
+half-hidden element is aimed at where it can be hit and is as loud as the half that shows. Extraction lives in
+`checks/affordances.py` for both drivers.
 
 **`explore_run.py` is a scripted decider and the sweep.** The session-as-decider loop cannot be repeated a hundred times, so a
 small policy script holds the goal, reads the rendered page, and forms each intention from it; the runner owns the impairment
-(distractibility p, patience k, impulsivity, salience order, step budget) and the policy cannot opt out. Per level it reports
-TRUE success (ground truth from outside the page), Wilson 95% intervals, mean steps, hijacks, and *false completions* — runs in
-which the reader believed the goal was met and it was not. That last column is the dose–response deliverable this spec asked for,
-minus the model call: it needs no API key. What it does not do: working-memory limits (they need decider-side memory; the policies
-read the page instead of remembering), and it is only as good as the policy's common sense — a policy that knows too much makes
-the app look better than it is, so policies look at positions, visible text and focus, never at app internals.
+(distractibility p, patience k, impulsivity, salience order, step budget) and the policy cannot opt out. Every step is stored as a
+decision record with the four fields this spec requires: **intention, action, target, rationale** (the policy supplies intention
+and rationale; a policy that omits either, asks for a mouse-only action on a touch device, or invents an action kind stops the run
+with an error instead of being silently downgraded). Per level it reports TRUE success (ground truth from outside the page), Wilson
+95% intervals, mean steps, hijacks, and *false completions*: runs in which the reader believed the goal was met and it was not. That
+last column is the dose–response deliverable this spec asked for, minus the model call: it needs no API key. What it does not do:
+working-memory limits (they need decider-side memory; the policies read the page instead of remembering), and it is only as good as
+the policy's common sense: a policy that knows too much makes the app look better than it is, so policies look at positions,
+visible text and focus, never at app internals.
 First use: `speeds-kit/tests/emu_policies/` (old GUI versus redesign; results in that repository's `docs/GUI-DESIGN.md`).

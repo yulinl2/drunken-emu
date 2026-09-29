@@ -335,17 +335,19 @@ student list, so the first replayed click landed on an empty list. Symptom: a cl
 to the previous step, no error. The wrong first diagnosis was a slow server (measured 2 ms) — the fix was in the
 stepper, not the page.
 
-**Closed 2026-09-29:** `goto(..., wait_until="networkidle")` plus a 250 ms settle, and readiness no longer assumes `#root`.
-The React path was re-run on a fixture artifact (unchanged output). Not covered: pages that keep polling forever never reach
-network idle; the `wait` action exists for the session to handle those by hand.
+**Closed 2026-09-29:** navigate at DOMContentLoaded, then a *bounded* (5 s) best-effort wait for network idle plus a 250 ms settle;
+readiness no longer assumes `#root`. The React path was re-run on a fixture artifact (unchanged output). A page that polls or
+streams forever never reaches idle, so the wait may not be an error: checked on a page that fetches every 50 ms, which steps
+normally after the 5 s bound. (First version used an unbounded `networkidle` and a review pointed out it would hang on exactly
+those pages.)
 
-## P-b279 — a scripted decider makes the impairment sweep runnable without an API key `SPEC'D` → partly built
+## P-b279 — a scripted decider makes the impairment sweep runnable without an API key `OPEN`
 
 *ID: `P-` + first four hex of `sha1("a scripted decider makes the impairment sweep runnable without an API key")`.*
 
 P1 said the dose–response sweep is blocked on a paid API key. That was true of a *model* decider and false of the sweep:
 a policy script that holds a goal and reads the rendered page is a decider, and it is free, deterministic per seed and about
-2 s per trial. `checks/explore_run.py` runs it (README of `EXPLORE-SPEC.md`, "Implemented layer v1"). What stays open: a model
+2 s per trial. `checks/explore_run.py` runs it (README of `EXPLORE-SPEC.md`, "Implemented layer v1"). Status is `OPEN`, not `SPEC'D`, because part of it is now built. What stays open: a model
 decider would bring common sense the scripts lack (a script that only knows how to find Q1c-ii cannot be surprised by a page it
 was not written for), and working-memory limits are not modelled. Treat script-decider curves as a lower bound on how *findable*
 a goal is for a reader who already knows what the app is; a first-time reader does worse.
