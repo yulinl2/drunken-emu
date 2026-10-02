@@ -21,13 +21,20 @@ Checks, in order:
   F. read-through: screenshot at N evenly spaced scroll positions
 
 Usage: blind_audit.py <url> <out_dir> [n_read_stops=8] [min_px=38]
+Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness)
+Every query walks open shadow roots too (window.__emuDeep): userscripts and web components draw inside them, and a
+check that cannot see a control must not report it as fine. The report says how many shadow roots it walked.
 Prints one JSON line; screenshots land in <out_dir> as A_*.png ... F_*.png.
 """
 import asyncio
 import json
+import os
 import sys
 
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -38,10 +45,17 @@ R = {"js_errors": [], "checks": {}}
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(
+        b = await alaunch(p,
             args=["--ignore-certificate-errors", "--no-sandbox", "--disable-dev-shm-usage"])
         c = await b.new_context(viewport={"width": 390, "height": 844},
                                 has_touch=True, is_mobile=True, device_scale_factor=2)
+        # one query that sees inside open shadow roots; every check below uses it instead of document.querySelectorAll
+        await c.add_init_script("""window.__emuDeep = (sel) => { const out = [];
+          const walk = (root) => { out.push(...root.querySelectorAll(sel));
+            for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot); };
+          walk(document); return out; };
+          window.__emuShadowRoots = () => { let n = 0; const walk = (root) => { for (const el of root.querySelectorAll('*'))
+            if (el.shadowRoot) { n++; walk(el.shadowRoot); } }; walk(document); return n; };""")
         pg = await c.new_page()
         pg.on("pageerror", lambda e: R["js_errors"].append(str(e)[:160]))
         pg.on("console", lambda x: R["js_errors"].append("console: " + x.text[:120])
@@ -49,19 +63,21 @@ async def main():
         await pg.goto(URL, timeout=20000)
         try:
             await pg.wait_for_function(
-                "document.getElementById('root').children.length > 0", timeout=15000)
+                "(s) => { const el = document.querySelector(s); return !!el && (el.children.length > 0 || !!el.shadowRoot); }",
+                arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         except Exception:
             R["checks"]["mounted"] = False
             print(json.dumps(R, ensure_ascii=False))
             await b.close()
             return 1
         R["checks"]["mounted"] = True
+        R["checks"]["mount_selector"] = os.environ.get("EMU_MOUNT", "#root")
         await pg.wait_for_timeout(800)
         await pg.screenshot(path=f"{OUT}/A_00_landing.png")
 
         async def scroll_to(frac=None, delta=None):
             await pg.evaluate("""(a)=>{
-              const sc=[...document.querySelectorAll('*')]
+              const sc=[...__emuDeep('*')]
                 .filter(e=>e.scrollHeight>e.clientHeight+1000)
                 .sort((x,y)=>y.scrollHeight-x.scrollHeight)[0] || document.scrollingElement;
               if(a.frac!=null) sc.scrollTop=(sc.scrollHeight-sc.clientHeight)*a.frac;
@@ -72,11 +88,11 @@ async def main():
         # B. ergonomics
         R["checks"]["ergonomics"] = await pg.evaluate("""(MIN)=>{
           const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
-          const btns=[...document.querySelectorAll('button')]
+          const btns=[...__emuDeep('button')]
             .filter(b=>!b.hasAttribute('data-term')).filter(vis);
           const small=btns.map(b=>Math.round(b.getBoundingClientRect().height))
                           .filter(h=>h<MIN);
-          const hits=[...document.querySelectorAll('[data-term] > span[aria-hidden]')]
+          const hits=[...__emuDeep('[data-term] > span[aria-hidden]')]
             .map(s=>Math.round(s.getBoundingClientRect().height)).filter(h=>h>0);
           return {buttons: btns.length, buttons_under_min: small.length,
                   term_hits: hits.length,
@@ -88,7 +104,7 @@ async def main():
         # C. dashed-element tap -> sheet open -> outside tap -> closed
         await scroll_to(delta=700)
         pt = await pg.evaluate("""()=>{
-          for(const el of document.querySelectorAll('span,button,a')){
+          for(const el of __emuDeep('span,button,a')){
             const cs=getComputedStyle(el), r=el.getBoundingClientRect();
             if(r.top>110&&r.bottom<790&&r.width>4&&
                (cs.textDecorationStyle==='dashed'||cs.borderBottomStyle==='dashed'))
@@ -97,13 +113,13 @@ async def main():
         if pt:
             await pg.touchscreen.tap(pt["x"], pt["y"])
             await pg.wait_for_timeout(500)
-            opened = await pg.evaluate("""()=>[...document.querySelectorAll('div')].some(d=>{
+            opened = await pg.evaluate("""()=>[...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
               return cs.position==='fixed'&&r.bottom>800&&r.height>110;})""")
             await pg.screenshot(path=f"{OUT}/C_01_after_dashed_tap.png")
             await pg.touchscreen.tap(195, 140)
             await pg.wait_for_timeout(420)
-            closed = await pg.evaluate("""()=>![...document.querySelectorAll('div')].some(d=>{
+            closed = await pg.evaluate("""()=>![...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
               return cs.position==='fixed'&&r.bottom>800&&r.height>110;})""")
             await pg.screenshot(path=f"{OUT}/C_02_after_outside_tap.png")
@@ -113,7 +129,7 @@ async def main():
 
         # D. control cluster (3-6 sibling buttons): tap 3rd x6
         got = await pg.evaluate("""()=>{
-          for(const d of document.querySelectorAll('div')){
+          for(const d of __emuDeep('div')){
             const bs=[...d.children].filter(c=>c.tagName==='BUTTON'&&!c.hasAttribute('data-term'));
             if(bs.length>=3&&bs.length<=6){
               d.scrollIntoView({block:'center'});
@@ -133,7 +149,7 @@ async def main():
 
         # E. 2-button toggle (excluding term buttons and rows that contain terms)
         got2 = await pg.evaluate("""()=>{
-          for(const d of document.querySelectorAll('div')){
+          for(const d of __emuDeep('div')){
             const kids=[...d.children];
             const bs=kids.filter(c=>c.tagName==='BUTTON'&&!c.hasAttribute('data-term'));
             const terms=kids.filter(c=>c.hasAttribute&&c.hasAttribute('data-term'));
@@ -157,6 +173,7 @@ async def main():
             await scroll_to(frac=f)
             await pg.screenshot(path=f"{OUT}/F_read_{i:02d}_{int(f*100)}.png")
 
+        R["checks"]["shadow_roots_walked"] = await pg.evaluate("window.__emuShadowRoots()")
         R["checks"]["h_overflow_px"] = await pg.evaluate(
             "document.documentElement.scrollWidth - window.innerWidth")
         await b.close()

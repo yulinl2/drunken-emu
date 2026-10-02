@@ -148,3 +148,37 @@ mechanically checkable.
   (`figbank/app/variable-model/check_page.py`: ten functions, light and dark, no JS errors).
 - `[FACT]` **`pip install playwright` pins a Chromium revision the container does not ship** (1243 wanted,
   1194 present); `checks/browser.py` tries the default, then `/opt/pw-browsers/chromium`, then `PW_CHROMIUM`.
+
+## Added 2026-10-02 — from TapGrade, a userscript graded with on a phone (yulinl2/speeds-kit, PRs #3–#18)
+
+Two weeks of building a grading sheet inside Canvas SpeedGrader, used live on 68 real submissions. What generalizes:
+
+- `[FACT]` **`blind_audit` could not see anything drawn in a shadow root.** On a userscript page it failed to mount
+  (`Cannot read properties of null`); with every query walking open shadow roots (`window.__emuDeep`) it found the 18
+  controls, all ≥ 44 px, no overflow, and reports `shadow_roots_walked`. A check that cannot see a control must not report it
+  as fine; the count makes "saw nothing" distinguishable from "saw it, and it passed". `EMU_MOUNT` names the mount point for
+  pages that are not the harness.
+- `[FACT]` **Every new check gets a negative control: run it on the previous build.** A check that also passes there tests
+  nothing. TapGrade kept this up for every release (e.g. 0.1.0 scored 37/45 on the 0.1.1 suite; 0.2.0 failed KIT-1…4).
+- `[FACT]` **Safety rules get mutation tests: break each rule once, exactly one test turns red.** `speedkit.canvas`: removing the
+  stale-plan check, the plan binding, the no-submission-comment rule, or index-keyed rubric criteria each failed one test.
+- `[FACT]` **Two content-blind geometry rules earned their place:** a horizontal strip must never clip its children vertically
+  (it caught flex children shrunk at `max-height: 52vh`, invisible to size checks), and every control must pass
+  `elementFromPoint` at the centre of its *visible* rectangle (clipped by its scroller), not of its box.
+- `[JUDGMENT]` **Silent fallbacks are bugs.** A list that failed to load made "Save and next" fall through to "everyone is
+  graded" and stall; the fix was to wait, say so, and degrade visibly. Absence of data must never read as a result.
+- `[FACT]` **An error must name its request.** A bare "404" cost a round trip; "(this student's submission: GET
+  …/anonymous_submissions/531568)" located the bug from one phone screenshot.
+- `[FACT]` **Text the program derives inside an artifact the user also edits must be regenerated, never read back as content.**
+  Answer keys written into comments doubled up until the parser dropped them by marker; the test is read → write → read
+  with nothing changing.
+- `[FACT]` **Tie-breaks over a `set` change from process to process** (`PYTHONHASHSEED`): the same input gave 205 and 193
+  bank items in two runs. A count that moves without an input change is a bug; the test runs the CLI under six seeds.
+- `[JUDGMENT]` **Model the domain's tree in the data, not in string conventions parsed back with regexes.** A flat code table
+  (`Q1a-var.SETUP-3`) grew look-alike labels, value history and prefix parsing before the tree (question → sub-question →
+  point → entry, kinds as an independent dimension) replaced it at the source.
+- `[JUDGMENT]` **What the end reader sees is a contract with its own check.** Internal codes, jargon ("adjustment") and derived
+  arithmetic leaked into student comments until one check scanned everything written out for them.
+- `[FACT]` **Real use finds what mocks do not, and the page must say which build is running.** One evening on a phone found a
+  stalled list, a mute 404, mislabelled full marks and a stale script version; the sheet now shows its version and build
+  time, and every generated file carries `generated_at`.
