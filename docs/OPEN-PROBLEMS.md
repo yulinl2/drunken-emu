@@ -321,3 +321,11 @@ loop and the test shape, not the fixture.
 **Closes when** the browser backend passes an equivalent of `test_explore_text.py` (same three
 assertions, a rendered fixture) in CI.
 
+
+## Harness conventions misfire on pages that are not the harness (2026-10-02)
+
+On TapGrade, `blind_audit`'s "row of exactly 2 buttons = a toggle" matched *Add deduction | Full credit* and tapped the
+second; mechanically fine, semantically not a toggle. The checks still only assert mechanics, so nothing failed, but the
+screenshot reader has to know which control was chosen. **Closes when** each interaction check records the matched
+element's role, text length and geometry (not its text) next to its screenshot. Closed shadow roots stay invisible by
+design; the report's `shadow_roots_walked` makes that visible.

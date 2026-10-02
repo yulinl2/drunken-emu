@@ -8,6 +8,9 @@ per run. So: try the default, then the paths we know, then whatever PW_CHROMIUM 
     from checks.browser import launch
     with sync_playwright() as p:
         b = launch(p)
+
+Async callers use `await alaunch(p)`: with async_playwright, `p.chromium.launch()` returns a coroutine and only fails
+when awaited, so the sync fallback above never triggers there.
 """
 import glob
 import os
@@ -28,6 +31,20 @@ def launch(p, **kw):
             if exe and os.path.exists(exe):
                 try:
                     return p.chromium.launch(executable_path=exe, **kw)
+                except Exception:  # noqa: BLE001
+                    continue
+        raise first
+
+
+async def alaunch(p, **kw):
+    """`launch` for async_playwright: same candidates, failures caught where they actually happen (at await)."""
+    try:
+        return await p.chromium.launch(**kw)
+    except Exception as first:  # noqa: BLE001
+        for exe in CANDIDATES:
+            if exe and os.path.exists(exe):
+                try:
+                    return await p.chromium.launch(executable_path=exe, **kw)
                 except Exception:  # noqa: BLE001
                     continue
         raise first
