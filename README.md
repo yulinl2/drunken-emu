@@ -1,6 +1,6 @@
 # drunken-emu — attention-deficit emulator for claude.ai artifacts
 
-> New session, no instructions? Start at MetaProof `ledgers/ROOT-SEED.md` (first screen), then this file (the owner, 2026-10-04; MetaProof #263).
+> New session, no instructions? Start at MetaProof `ledgers/ROOT-SEED.md` ( https://github.com/yulinl2/MetaProof/blob/main/ledgers/ROOT-SEED.md ), first screen, then this file (the owner, 2026-10-04; MetaProof #263).
 
 [![README claims](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml/badge.svg)](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml)
 
