@@ -1,0 +1,9 @@
+{
+  "name": "figbank",
+  "version": "0.1.0",
+  "description": "drunken-emu figure bank: a spec schema, vnode components that render to SVG (for LaTeX) and React (for pages), and the maker–cold-reader pipeline",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": { "test": "node --test tests/" }
+}

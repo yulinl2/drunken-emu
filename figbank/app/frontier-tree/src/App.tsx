@@ -1,0 +1,105 @@
+// src/App.tsx — a compact status-coloured tree + click-for-detail panel, one page.
+// drunken-emu #12: the picture stays legible (id + status mark only, no full titles — figbank's "nothing
+// truncates, everything fits" gates would refuse a print figure with 70-odd sentence-length labels), and the
+// full record for a node appears here on click, same pattern as figbank/app/variable-model's diagram+cards.
+
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import Figure from './Figure'
+import { loadData } from './data'
+import type { Data, Node } from './data'
+
+function useDark(): boolean {
+  const get = () => {
+    const forced = document.documentElement.getAttribute('data-theme')
+    if (forced) return forced === 'dark'
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+  }
+  const [dark, setDark] = useState(get)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)')
+    const on = () => setDark(get())
+    mq?.addEventListener?.('change', on)
+    const mo = new MutationObserver(on); mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => { mq?.removeEventListener?.('change', on); mo.disconnect() }
+  }, [])
+  return dark
+}
+
+const StatusTag = ({ s }: { s: string }) => <span className={`status s-${s}`}>{s}</span>
+
+export default function App() {
+  const data = useMemo(loadData, [])
+  if (!data) return <main className="p-6"><h1>No data</h1><p className="lede">This shell has no tree injected. The consuming repo's own script fills the <span className="mono">#vars</span> slot from its own source.</p></main>
+  return <Page data={data} />
+}
+
+function Page({ data }: { data: Data }) {
+  const dark = useDark()
+  const nodes = data.nodes, prov = data._provenance
+  const [status, setStatus] = useState('')
+  const [query, setQuery] = useState('')
+  const [selected, setSelected] = useState<string | null>(null)
+
+  const counts = useMemo(() => { const c: Record<string, number> = {}; nodes.forEach(n => { c[n.status] = (c[n.status] || 0) + 1 }); return c }, [nodes])
+  const q = query.toLowerCase()
+  const byId = useMemo(() => Object.fromEntries(nodes.map(n => [n.id, n])), [nodes])
+  const visible = (n: Node) => (!status || n.status === status) &&
+    (!q || [n.id, n.label, ...n.detail.map(([, v]) => v)].join(' ').toLowerCase().includes(q))
+  const dimmed = useMemo(() => (id: string) => { const n = byId[id]; return !!n && !visible(n) }, [byId, status, q])  // eslint-disable-line react-hooks/exhaustive-deps
+  const sel = selected ? byId[selected] : null
+
+  return (
+    <main className="py-6 pb-12" style={{ paddingInline: 'clamp(16px, 4vw, 48px)' }}>
+      <header className="grid gap-2.5 mb-6">
+        <h1>{prov.title}</h1>
+        <p className="lede">{prov.description}</p>
+        <div id="tiles" className="flex flex-wrap gap-2.5 mt-1.5">
+          <div className="tile"><b>{nodes.length}</b><span>nodes</span></div>
+          {Object.keys(counts).sort().map(k => <div className="tile" key={k}><b>{counts[k]}</b><span>{k}</span></div>)}
+        </div>
+      </header>
+
+      <div className="controls flex flex-wrap gap-2 items-center my-2 mb-3.5" role="group" aria-label="filters">
+        <input id="q" type="search" className="field" style={{ minWidth: 220 }} placeholder="search id, label, detail" aria-label="search" value={query} onChange={ev => setQuery(ev.target.value)} />
+        <select id="st" className="field" aria-label="status filter" value={status} onChange={ev => setStatus(ev.target.value)}>
+          <option value="">every status</option>
+          {Object.keys(counts).sort().map(k => <option key={k} value={k}>{k} ({counts[k]})</option>)}
+        </select>
+      </div>
+
+      <div className="diagram my-2.5 mb-5" id="diag">
+        <Figure spec={data._spec} dark={dark} selected={selected} dimmed={dimmed} onPick={setSelected} label={prov.title} />
+      </div>
+
+      <aside className="detail" id="detail" aria-live="polite">
+        {sel ? <NodeDetail n={sel} /> : <><h3>Pick a node</h3><p className="rl text-[13px]" style={{ color: 'var(--muted)' }}>Click any node in the tree, or a card below, to see its full record.</p></>}
+      </aside>
+
+      <div id="list" className="cards grid gap-2.5 mt-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+        {nodes.filter(visible).map(n => (
+          <button type="button" key={n.id} className={'card' + (selected === n.id ? ' on' : '')} data-id={n.id} onClick={() => setSelected(n.id)}>
+            <span className="sym">{n.id}</span><span className="nm">{n.label}</span><StatusTag s={n.status} />
+          </button>
+        ))}
+      </div>
+
+      <footer className="mt-7 text-[13px]" style={{ color: 'var(--muted)' }}>
+        {prov.source && <>source <span className="mono">{prov.source}</span> · </>}
+        {prov.generated_by && <>generated by <span className="mono">{prov.generated_by}</span> · </>}
+        this page is a drunken-emu <span className="mono">figbank/app/frontier-tree</span> shell; a stale copy fails the local checks.
+      </footer>
+    </main>
+  )
+}
+
+function NodeDetail({ n }: { n: Node }) {
+  return <>
+    <h3>{n.label}</h3>
+    <div className="mono mt-1">{n.id}</div>
+    <dl>
+      <dt>status</dt><dd><StatusTag s={n.status} /></dd>
+      <dt>parent</dt><dd>{n.parent ?? '— (root)'}</dd>
+      {n.detail.map(([k, v]) => <Fragment key={k}><dt>{k}</dt><dd>{v}</dd></Fragment>)}
+    </dl>
+  </>
+}

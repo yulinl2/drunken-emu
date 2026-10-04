@@ -1,0 +1,36 @@
+{
+  "id": "pipeline-workflow",
+  "message": "bin/figpipe runs seven steps in order: four mechanical gates a spec must pass before any reader sees it, then one blind judgment, then a logged record.",
+  "provenance": {"generated_by": "figbank/examples/pipeline-workflow.json (hand-authored, demonstrating the boundary primitive on the bank's own pipeline)", "source": "bin/figpipe"},
+  "canvas": {"width": 980, "height": 460},
+  "word_budget": 30,
+  "must_not_contain": ["…"],
+  "title": {"text": "bin/figpipe: four mechanical gates, then one blind judgment, logged.", "x": 16, "y": 12, "w": 950},
+  "boundaries": [
+    {"label": "MECHANICAL — a spec must pass these before any reader sees it", "color": "dyn", "wraps": ["validate", "render", "rasterize", "legibility"], "pad": 18},
+    {"label": "JUDGMENT — never by the maker", "color": "obj", "wraps": ["coldread", "accept"], "pad": 18}
+  ],
+  "regions": [
+    {"id": "validate", "title": "1 · validate", "subtitle": "spec vs the bank's schema", "color": "dyn", "box": {"x": 30, "y": 100, "w": 200, "h": 130}, "layout": "none"},
+    {"id": "render", "title": "2 · render", "subtitle": "SVG; refuses ellipsis, overflow, budget", "color": "dyn", "box": {"x": 260, "y": 100, "w": 200, "h": 130}, "layout": "none"},
+    {"id": "rasterize", "title": "3 · rasterize", "subtitle": "headless Chromium — PNG and PDF", "color": "dyn", "box": {"x": 490, "y": 100, "w": 200, "h": 130}, "layout": "none"},
+    {"id": "legibility", "title": "4 · legibility", "subtitle": "rendered font size, label overlap", "color": "dyn", "box": {"x": 720, "y": 100, "w": 200, "h": 130}, "layout": "none"},
+    {"id": "coldread", "title": "5 · cold read", "subtitle": "claude -p, the PNG only, blind", "color": "obj", "box": {"x": 195, "y": 320, "w": 220, "h": 110}, "layout": "none"},
+    {"id": "accept", "title": "6 · accept", "subtitle": "the brief's rule, mechanically", "color": "obj", "box": {"x": 450, "y": 320, "w": 220, "h": 110}, "layout": "none"},
+    {"id": "log", "title": "7 · log", "subtitle": "one JSON line, verdicts.jsonl", "color": "meta", "box": {"x": 705, "y": 320, "w": 215, "h": 110}, "layout": "none"}
+  ],
+  "arrows": [
+    {"id": "a1", "points": [[230, 165], [260, 165]], "color": "dyn"},
+    {"id": "a2", "points": [[460, 165], [490, 165]], "color": "dyn"},
+    {"id": "a3", "points": [[690, 165], [720, 165]], "color": "dyn"},
+    {"id": "a4", "points": [[820, 230], [820, 290], [150, 290], [150, 380], [195, 380]], "color": "obj"},
+    {"id": "a5", "points": [[415, 375], [450, 375]], "color": "obj"},
+    {"id": "a6", "points": [[670, 375], [705, 375]], "color": "meta"}
+  ],
+  "acceptance": {
+    "must_mention": [["validate"], ["render"], ["legibility"], ["cold read", "reader", "judgment"], ["accept"], ["log"]],
+    "unreadable_max": 0,
+    "legibility": {"width": 980, "min_px": 10, "surface": "documentation width, not a paper column"},
+    "rounds_max": 3
+  }
+}

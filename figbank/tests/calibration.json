@@ -1,0 +1,72 @@
+{
+ "One loop: environment and agent trade observations and actions; every variable has one box.": {
+  "sans": 47.31203125,
+  "bold": 53.2975,
+  "mono": 54.78671875
+ },
+ "Environment — the world": {
+  "sans": 12.7334375,
+  "bold": 14.2671875,
+  "mono": 13.8471875
+ },
+ "Interface — what crosses between them": {
+  "sans": 20.19140625,
+  "bold": 22.65484375,
+  "mono": 22.2759375
+ },
+ "observation: sensors, retrieved text, verifier returns": {
+  "sans": 25.958125,
+  "bold": 29.70125,
+  "mono": 32.51078125
+ },
+ "repair front width (cutwidth)": {
+  "sans": 14.1421875,
+  "bold": 16.2890625,
+  "mono": 17.45953125
+ },
+ "internal notes (chain of thought)": {
+  "sans": 16.26671875,
+  "bold": 18.5415625,
+  "mono": 19.8678125
+ },
+ "the oracle (kernel, tests, link checker)": {
+  "sans": 18.93265625,
+  "bold": 21.56640625,
+  "mono": 24.08203125
+ },
+ "grain: one rendering (a tree) against a window w̄": {
+  "sans": 24.47125,
+  "bold": 27.75546875,
+  "mono": 28.8984375
+ },
+ "measured / implemented": {
+  "sans": 12.61390625,
+  "bold": 14.07671875,
+  "mono": 13.24515625
+ },
+ "META — how any reading is trusted": {
+  "sans": 17.71828125,
+  "bold": 19.9278125,
+  "mono": 19.8678125
+ },
+ "a_t: 11 types — open, scroll, lookup, edit, move, verify, propose_seal, defer, spawn, note, done": {
+  "sans": 47.6171875,
+  "bold": 53.5284375,
+  "mono": 57.796875
+ },
+ "J(A) = |D_unc(A)| + λ_cov·|D_cov(A)| + 0·|A|": {
+  "sans": 22.0425,
+  "bold": 24.13234375,
+  "mono": 26.4903125
+ },
+ "Δ_w(c) = H_p(c | window) − H_p(c | A) ≥ 0": {
+  "sans": 21.24609375,
+  "bold": 23.32421875,
+  "mono": 24.68421875
+ },
+ "FACT / JUDGMENT / SPECULATIVE": {
+  "sans": 16.53765625,
+  "bold": 18.44046875,
+  "mono": 17.45953125
+ }
+}

@@ -1,0 +1,860 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/yulinl2/drunken-emu/figbank/schema/figure.schema.json",
+  "title": "figbank figure spec",
+  "description": "A figure, made machine-readable: the one sentence it must convey, the regions and symbols it shows, the arrows between them, the status tags, the word budget for running text, and the rule by which a blind cold reader's report accepts it. The renderer (figbank/lib/figure.js) draws exactly this and nothing else; the pipeline (bin/figpipe) checks the rendering against `acceptance`.",
+  "type": "object",
+  "required": [
+    "id",
+    "message",
+    "canvas",
+    "acceptance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "file stem: figures/<id>.svg"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 10,
+      "description": "the one sentence a cold reader must be able to recover from the picture alone (the brief's message)"
+    },
+    "brief": {
+      "type": "string",
+      "description": "path of the human brief this spec instantiates, relative to the caller's repository"
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "generated_by": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "canvas": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "minimum": 100
+        },
+        "height": {
+          "type": "number",
+          "minimum": 100
+        }
+      },
+      "description": "the viewBox in authored px; the delivery surface is named in acceptance.legibility"
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "named colours overriding figbank/lib/palette.js LIGHT; region/arrow `color` may name a key"
+    },
+    "word_budget": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "maximum words of running text: title + notes + arrow labels + legend; symbols, names and region titles are labels and do not count"
+    },
+    "must_not_contain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "strings that must not appear in any text of the rendering (from the brief's must-not-contain)"
+    },
+    "title": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "required": [
+        "box"
+      ],
+      "additionalProperties": false,
+      "description": "a dashed outer frame (MetaProof's meta layer) with an optional chip row inside it",
+      "properties": {
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item"
+          }
+        },
+        "items_at": {
+          "type": "object",
+          "required": [
+            "x",
+            "y",
+            "w"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "w": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "tree": {
+      "type": "object",
+      "description": "a tree laid out by figbank/lib/treelayout.js from nothing but parent pointers — positions are computed, never authored, same rule as `boundaries`. A figure has `regions` or `tree` or both; a tree this size does not fit hand-placed boxes.",
+      "required": [
+        "nodes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "parent": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "an id not present in `nodes`, or null/absent, makes this a root"
+              },
+              "label": {
+                "type": "string",
+                "description": "short — this is a node box, not a region; wraps to at most 2 lines before it overflows"
+              },
+              "sublabel": {
+                "type": "string",
+                "description": "one short line under the label, muted (e.g. a count, a short status word)"
+              },
+              "status": {
+                "type": "string",
+                "description": "not constrained to the shared five-value model-variable vocabulary (#/$defs/status) — a tree's own data may have its own status words (e.g. the frontier ledger's sealed/in-progress/planned/hypothesis/killed). figbank/lib/palette.js statusStyle() recognises both sets by name; an unrecognised word gets the same neutral hollow-dot fallback as an unset status, which is a real answer (\"this bank doesn't know what this status weighs\"), not a schema error."
+              }
+            }
+          }
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          }
+        },
+        "node_w": {
+          "type": "number",
+          "minimum": 20
+        },
+        "node_h": {
+          "type": "number",
+          "minimum": 16
+        },
+        "gap_x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "gap_y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "color": {
+          "type": "string"
+        },
+        "edge_color": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ],
+          "default": "vertical",
+          "description": "vertical: depth grows downward, siblings side by side (a shallow-but-wide tree). horizontal: depth grows rightward, siblings stacked top to bottom (a deep-but-narrow one, or any tree with many siblings at one level — a directory tree, almost always)."
+        }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "description": "a sequence diagram: participants as columns, a lifeline down from each, messages as horizontal arrows in time order (figbank/lib/sequencelayout.js — column x and message y are computed from the data, never hand-placed, same rule as `tree`/`boundaries`). No activation bars in this first version (drunken-emu #14): add them only if a real instance needs them. A message may not go from a participant to itself yet — the layout function refuses it loudly rather than drawing something wrong.",
+      "required": [
+        "participants",
+        "messages"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string", "description": "short — this is a header box, not a region; wraps to at most 2 lines before it overflows" }
+            }
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string", "description": "a participant id" },
+              "to": { "type": "string", "description": "a participant id, different from `from`" },
+              "label": { "type": "string" },
+              "dashed": { "type": "boolean" }
+            }
+          }
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "gap_x": { "type": "number", "minimum": 0, "description": "horizontal gap between participant columns" },
+        "min_w": { "type": "number", "minimum": 20, "description": "minimum participant header width; the actual width is computed from the label" },
+        "header_h": { "type": "number", "minimum": 16 },
+        "row_gap": { "type": "number", "minimum": 8, "description": "vertical spacing between message rows" },
+        "label_px": { "type": "number", "minimum": 6 },
+        "edge_color": { "type": "string" }
+      }
+    },
+    "plot": {
+      "type": "object",
+      "description": "a statistical plot: one pair of axes (linear or log), curve series (a polyline through sampled x/y arrays) and scatter series (points, each optionally carrying an id that becomes its data-id). Ticks and the plot area are computed from the data's own range (figbank/lib/plotlayout.js), never hand-placed; mismatched array lengths, empty data, non-finite values, a non-positive value on a log axis, data outside a declared domain, and a legend that would cover data are refused loudly, never clamped or dropped (drunken-emu #23). Deliberately small: no secondary axis, bars, error bars or subplots.",
+      "required": ["box", "x_axis", "y_axis", "series"],
+      "additionalProperties": false,
+      "properties": {
+        "box": {
+          "type": "object",
+          "description": "the outer box, axes and labels included; the inner plot area is what is left after the tick labels are measured",
+          "required": ["x", "y", "w", "h"],
+          "additionalProperties": false,
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number", "minimum": 120 }, "h": { "type": "number", "minimum": 120 } }
+        },
+        "x_axis": { "$ref": "#/$defs/plotAxis" },
+        "y_axis": { "$ref": "#/$defs/plotAxis" },
+        "series": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "x", "y"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "description": "unique; the series group's data-id" },
+              "kind": { "enum": ["curve", "scatter"] },
+              "x": { "type": "array", "items": { "type": "number" } },
+              "y": { "type": "array", "items": { "type": "number" }, "description": "same length as x (checked by the renderer, which names the series)" },
+              "ids": { "type": "array", "items": { "type": "string" }, "description": "scatter only: one unique id per point, rendered as that point's data-id (a React page can make it clickable)" },
+              "label": { "type": "string", "description": "legend entry; a series without one is not in the legend (e.g. a reference line)" },
+              "color": { "type": "string" },
+              "end_label": { "type": "string", "description": "a direct label just right of the series' right-most point, in a margin the plot reserves; two end labels closer than a text line are an error" },
+              "dashed": { "type": "boolean", "description": "curve only: dotted line" },
+              "dots": { "type": "boolean", "description": "curve only: mark each sampled point" }
+            }
+          }
+        },
+        "legend_position": { "enum": ["auto", "outside", "upper-left", "upper-right", "lower-left", "lower-right"], "default": "auto", "description": "auto: the corner with no data beneath it, else outside on the right (the plot narrows). A named corner that covers data is an error, not silently moved." }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "description": "a lifecycle/state diagram: named states, transitions that may point anywhere (forward, backward, within a stage) unlike a tree's parent pointers. A state names its stage (`col`, 0-based — not a raw pixel x) and, optionally, its slot within that stage (`row`); figbank/lib/lifecyclelayout.js computes x/y from those, never from hand-authored coordinates. A transition may not connect a state to itself yet — refused loudly rather than drawn wrong (drunken-emu #15).",
+      "required": [
+        "states",
+        "transitions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "col"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string", "description": "short — this is a state box, not a region; wraps to at most 2 lines before it overflows" },
+              "col": { "type": "integer", "minimum": 0, "description": "which stage this state belongs to, left to right — not a pixel coordinate" },
+              "row": { "type": "integer", "minimum": 0, "description": "slot within its stage, top to bottom; states without one keep the array's order" },
+              "status": { "type": "string", "description": "not constrained to the shared five-value vocabulary — figbank/lib/palette.js statusStyle() resolves any caller's own words" },
+              "terminal": { "type": "boolean", "description": "draws a second, inset border (double-border convention) — a different axis from status: can time leave this state, not what weight it carries" }
+            }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string", "description": "a state id" },
+              "to": { "type": "string", "description": "a state id, different from `from`" },
+              "label": { "type": "string" },
+              "guard": { "type": "string", "description": "a condition, rendered after the label in brackets — kept as plain text, not a separate layout element, in this first version" }
+            }
+          }
+        },
+        "origin": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "col_w": { "type": "number", "minimum": 40 },
+        "col_gap": { "type": "number", "minimum": 0 },
+        "row_h": { "type": "number", "minimum": 20 },
+        "row_gap": { "type": "number", "minimum": 0 },
+        "color": { "type": "string" },
+        "edge_color": { "type": "string" }
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "description": "a labelled group frame computed around a named set of regions/functionals (their own boxes, by id, plus `pad`) — the process-diagram grouping Archify calls a boundary (tt-a1i/archify): 'these four are mechanical, this one is judgment', not a data-model side. Drawn behind the regions it wraps, so it reads as a frame with a visible gap, not an overlap.",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "wraps"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dashed": {
+            "type": "boolean",
+            "default": true
+          },
+          "pad": {
+            "type": "number",
+            "default": 14
+          },
+          "wraps": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "description": "ids of regions/functionals already placed in `regions`; the boundary's box is their bounding box plus `pad`, never authored by hand"
+          }
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "box"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "region",
+              "functional"
+            ],
+            "default": "region"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/status"
+          },
+          "box": {
+            "$ref": "#/$defs/box"
+          },
+          "dashed": {
+            "type": "boolean"
+          },
+          "layout": {
+            "type": "string",
+            "enum": [
+              "list",
+              "chips",
+              "none"
+            ],
+            "description": "region body: symbol+name list in columns, a chip flow, or nothing"
+          },
+          "columns": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/item"
+            }
+          },
+          "grain": {
+            "type": "string",
+            "description": "functional only: the grain it prices at; optional"
+          },
+          "formula": {
+            "type": "string",
+            "description": "functional only: one formula line, monospace; optional"
+          },
+          "note": {
+            "type": "string",
+            "description": "functional only: one short running-text line (counts toward the budget)"
+          },
+          "font": {
+            "type": "string",
+            "enum": [
+              "mono",
+              "sans"
+            ],
+            "description": "list/chips: symbols in monospace (default) or, for name-only items, the sans face"
+          },
+          "pad_top": {
+            "type": "number",
+            "description": "extra space between the title and the body, e.g. to let a channel arrow pass through the box"
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "functional only: short lines under the formula (each counts toward the budget)"
+          }
+        }
+      }
+    },
+    "arrows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "loop": {
+            "type": "object",
+            "required": [
+              "x",
+              "y",
+              "r"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "r": {
+                "type": "number"
+              }
+            }
+          },
+          "label": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "dashed": {
+            "type": "boolean",
+            "description": "dashed line (5 4)"
+          },
+          "dashdot": {
+            "type": "boolean",
+            "description": "dash-dot line: a fourth stroke (after solid, dashed, dotted), for a status that is none of the other three; `dotted` wins over `dashdot`, `dashdot` over `dashed`"
+          },
+          "head": {
+            "type": "boolean",
+            "default": true,
+            "description": "false: no arrowhead (a stub that ends in a break, or a plain connector)"
+          },
+          "dotted": {
+            "type": "boolean",
+            "description": "dotted line with round caps; wins over `dashed` if both are set. Two line styles let one figure carry three statuses (solid / dashed / dotted) without colour."
+          },
+          "width": {
+            "type": "number"
+          },
+          "label_at": {
+            "type": "string",
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ]
+          },
+          "label_dy": {
+            "type": "number"
+          },
+          "label_x": {
+            "type": "number"
+          },
+          "label_y": {
+            "type": "number"
+          },
+          "label_w": {
+            "type": "number"
+          },
+          "label_anchor": {
+            "type": "string",
+            "enum": [
+              "start",
+              "middle",
+              "end"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "points"
+            ]
+          },
+          {
+            "required": [
+              "loop"
+            ]
+          }
+        ]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "w",
+          "text"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "w": {
+            "type": "number"
+          },
+          "text": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": [
+              "start",
+              "middle",
+              "end"
+            ]
+          }
+        }
+      }
+    },
+    "legend": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "anchor": {
+          "type": "string",
+          "enum": [
+            "start",
+            "end"
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "status",
+              "label"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "same rule as tree.nodes[].status: not constrained to the shared five-value vocabulary — a legend for a tree with its own status words names them here directly."
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "required": [
+        "must_mention"
+      ],
+      "additionalProperties": false,
+      "description": "the mechanical form of the brief's acceptance rule: the cold reader's claim+structure must contain the message (as keyword groups), its unreadable list must be empty, and the rendering must pass the legibility audit at the named surface",
+      "properties": {
+        "must_mention": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "groups of alternatives; every group must have at least one member present (case-insensitive substring) in the reader's claim + structure"
+        },
+        "must_not_mention": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "a reading that contains one of these has misread the figure (e.g. 'competing' for a nested stack)"
+        },
+        "unreadable_max": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "legibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "description": "delivery viewport in px for checks/svg_legibility.py"
+            },
+            "min_px": {
+              "type": "number"
+            },
+            "overlap_tol": {
+              "type": "number"
+            },
+            "surface": {
+              "type": "string",
+              "description": "prose: what the width and floor stand for (e.g. 'textwidth 6.5 in, 4.5 pt floor')"
+            }
+          }
+        },
+        "rounds_max": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "a brief that needs more than this many rounds is a bad brief (MetaProof #51)"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "plotAxis": {
+      "type": "object",
+      "required": ["label"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "minLength": 1, "description": "required: an unlabelled axis says nothing. Counts toward word_budget." },
+        "scale": { "enum": ["linear", "log"], "default": "linear" },
+        "domain": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" }, "description": "optional [min, max]; omitted, the domain is the data's own extent widened to the nearest tick. Data outside a declared domain is an error, not clipped." },
+        "ticks": { "type": "integer", "minimum": 2, "description": "target tick count for a linear axis (default 5); the actual ticks are 1-2-5 multiples" }
+      }
+    },
+    "box": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "defined",
+        "estimated",
+        "measured",
+        "spec",
+        "implemented"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "symbol"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "what is drawn (a short display form, never a truncation)"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "when one drawn item stands for several model variables: their ids (id is the first)"
+        }
+      }
+    }
+  }
+}

@@ -32,7 +32,11 @@ drunken-emu/
 │   ├── explore_step.py        P1: one stateless step; the calling session decides
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
+│   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
+│   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
+├── figbank/                   the figure bank: schema, components (SVG + React), reader prompt, page app
+├── bin/figpipe                maker → render → cold reader → acceptance, one command, verdicts logged
 ├── docs/
 │   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered
 │   ├── LATEST-CONCLUSIONS.md  one line per settled conclusion, tagged
@@ -98,6 +102,24 @@ All output (screenshots, server.log, one JSON line on stdout) lands in `out/`.
 > `/mnt/user-data/outputs`, where `chmod +x` silently no-ops), call the
 > interpreter explicitly: `bash bin/emu smoke <artifact>`. Everything else —
 > reads, writes, nested dirs, screenshots — works normally there.
+
+## The figure bank (`figbank/`, `bin/figpipe`) — since 2026-09-28
+
+The kit's contract applied to *making* figures (issue #5): a figure is a JSON spec
+(`figbank/schema/figure.schema.json` — message, regions, symbols, arrows, status tags, word budget,
+acceptance rule), composed from a component bank whose one vnode tree renders to SVG for LaTeX and
+to React for pages, and accepted only when a blind cold reader (`claude -p`, the PNG and a fixed
+prompt, nothing else) can state its message. The verdict is a record, not a chat:
+
+```
+bin/figpipe SPEC.json --out figures/ --reader auto   # validate → render → png/pdf → legibility → cold read → accept → verdicts.jsonl
+node --test figbank/tests/                            # the bank's gates, no browser
+make page-variable-model OUT=DIR                      # the React shell of MetaProof's variable-model page (node + pnpm)
+```
+
+First instances: MetaProof fig4 and fig5, both accepted at round 1; the variable-model page ported
+to React from that repository's hand-written HTML with a scripted function checklist
+(`figbank/app/variable-model/check_page.py`). Details: `figbank/README.md`.
 
 ## The explore seed (text backend, no Chromium)
 

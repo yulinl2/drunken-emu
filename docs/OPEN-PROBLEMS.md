@@ -330,3 +330,11 @@ assertions, a rendered fixture) in CI.
 **Hardened after review of PR #3 (2026-09-26).** The automated review found five real defects, all fixed with a test each: (1) a fixed 1.5 s sleep let a render error or a slow mount leave zero links and report PASS — now the check waits for the root to mount, collects page errors, and returns `ERROR`, or `EMPTY` (exit 3) when there is nothing to check (fixture `fragment_links_nolinks.jsx`); (2) the CI test skipped when Chromium failed to launch, turning a broken browser into a green job — now it fails under `CI=true`; (3) fragments were not percent-decoded (`#section%202` → id `section 2`); (4) the href was interpolated into a CSS selector, so a quote broke it — anchors are now selected by element handle (fixture `fragment_links_clean.jsx` covers both); (5) only the FAIL path was tested — a must-hold test on the clean fixture now asserts PASS with all three targets.
 **Consumer.** `bin/emu` users; the T3 dashboard in MetaProof.
 
+
+## Harness conventions misfire on pages that are not the harness (2026-10-02)
+
+On TapGrade, `blind_audit`'s "row of exactly 2 buttons = a toggle" matched *Add deduction | Full credit* and tapped the
+second; mechanically fine, semantically not a toggle. The checks still only assert mechanics, so nothing failed, but the
+screenshot reader has to know which control was chosen. **Closes when** each interaction check records the matched
+element's role, text length and geometry (not its text) next to its screenshot. Closed shadow roots stay invisible by
+design; the report's `shadow_roots_walked` makes that visible.

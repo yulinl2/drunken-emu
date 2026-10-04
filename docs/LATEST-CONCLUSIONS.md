@@ -96,3 +96,89 @@ mechanically checkable.
   guarded — sequence discipline (patch → verify → only then touch fixtures)
   is the transferable lesson.
 
+
+## Added 2026-09-26 — the kit extends past React artifacts (`checks/svg_legibility.py`)
+
+*Built and first used in the FLT-measurement line; the full record is `yulinl2/MetaProof`
+`experiments/testbeds/T6-flt-corpus/research/instrument/1-experiments/E23-…` (nine figures) and
+`…/E45-…` (the gate self-test that later certified it fires).*
+
+- `[FACT]` **A static SVG can pass every structural check its suite has and still be unreadable on
+  the surface it ships to.** The script renders an SVG in the same headless Chromium the React path
+  uses and reads back three things no XML-level check sees: rendered font size after `viewBox`
+  scaling, pairwise overlap of `<text>` bounding boxes, and ink outside the `viewBox`. On nine
+  figures that passed well-formedness, self-containedness and no-empty-text, the first run returned
+  **0 of 9** legible at a 380 px viewport with a 7 px floor, and **five real overlaps in one figure**
+  — a second 12 px line placed 3 units below the first.
+- `[FACT]` **The size fault was a token-scale problem.** A 680-unit `viewBox` with a 12 px secondary
+  label renders at 6.71 px on a 380 px phone; raising the two type tokens by one pixel each cleared
+  all nine at 7.26 px with no new overlaps, confirmed by re-running the same check.
+- `[JUDGMENT]` **Thresholds are arguments, not constants** (`--width`, `--min-px`, `--overlap-tol`):
+  the legible floor is a property of the delivery surface.
+- `[FACT]` **A check whose failure branch has never run is not a working check.** Its first
+  integration passed and then crashed on the first induced fault (a list where a string was
+  expected). `--quiet` now suppresses the per-figure log and never the reason for a non-zero exit.
+- `[FACT]` **archify's showcase gate enforces the same class.** `tt-a1i/archify` rejected six
+  candidates of a workflow diagram on a 6 px projected-text floor at a 930 px reading width, label
+  overlap and edge crossings before delivering the seventh — independent confirmation that
+  rendered legibility is a gate, not a style.
+
+
+## Added 2026-09-28 — the kit makes figures, not only judges them (`figbank/`, `bin/figpipe`; issue #5)
+
+- `[FACT]` **A blind cold reader recovers a figure's message or does not, and the difference is measurable
+  in one call.** MetaProof's rejected loss-stack figure (five equal boxes, 130 words of running text) read
+  blind: verdict *partly*, five items it could not place. The same content composed from the bank as an
+  indented stack with 40 words: verdict *partly*, nothing unreadable, and the claim was the brief's message
+  in the reader's own words. One `claude -p` call, 23–29 s, $0.06–0.08 (MetaProof `figures/verdicts.jsonl`).
+- `[FACT]` **"Unreadable" and "unfamiliar" must be separate output fields or the reader conflates them.** On the
+  first fixture run the reader filed "what Φ stands for" as unreadable although it read and placed it. The
+  prompt now defines unreadable as physical or structural and gives jargon its own `questions` list, logged
+  and never counted.
+- `[JUDGMENT]` **A keyword proxy for "the claim contains the message" will be too narrow on first contact;
+  widen it in the log, not in the dark.** fig4's reader wrote "terms" where the proxy demanded "variable";
+  the group was widened and the same blind read re-evaluated, both records kept.
+- `[FACT]` **A per-character width table calibrated once against Chromium is within 8 % for DejaVu Sans and
+  exact for its mono face**; bold is 1.13 × regular. That is enough for wrapping, not for legibility, which
+  `svg_legibility.py` still measures on the rendering (`figbank/tests/calibration.json`).
+- `[FACT]` **Nothing in the bank truncates.** An ellipsis, an overflowing box, a budget overrun or a forbidden
+  string is a render error before any reader sees the figure. The previous fig4 had five symbols cut mid-word.
+- `[FACT]` **The same vnode tree mounts in React with the same data-* ids**, so the page's diagrams are the
+  paper's figures and the page is checked by a script reader that clicks every function
+  (`figbank/app/variable-model/check_page.py`: ten functions, light and dark, no JS errors).
+- `[FACT]` **`pip install playwright` pins a Chromium revision the container does not ship** (1243 wanted,
+  1194 present); `checks/browser.py` tries the default, then `/opt/pw-browsers/chromium`, then `PW_CHROMIUM`.
+
+## Added 2026-10-02 — from TapGrade, a userscript graded with on a phone (yulinl2/speeds-kit, PRs #3–#18)
+
+Two weeks of building a grading sheet inside Canvas SpeedGrader, used live on 68 real submissions. What generalizes:
+
+- `[FACT]` **`blind_audit` could not see anything drawn in a shadow root.** On a userscript page it failed to mount
+  (`Cannot read properties of null`); with every query walking open shadow roots (`window.__emuDeep`) it found the 18
+  controls, all ≥ 44 px, no overflow, and reports `shadow_roots_walked`. A check that cannot see a control must not report it
+  as fine; the count makes "saw nothing" distinguishable from "saw it, and it passed". `EMU_MOUNT` names the mount point for
+  pages that are not the harness.
+- `[FACT]` **Every new check gets a negative control: run it on the previous build.** A check that also passes there tests
+  nothing. TapGrade kept this up for every release (e.g. 0.1.0 scored 37/45 on the 0.1.1 suite; 0.2.0 failed KIT-1…4).
+- `[FACT]` **Safety rules get mutation tests: break each rule once, exactly one test turns red.** `speedkit.canvas`: removing the
+  stale-plan check, the plan binding, the no-submission-comment rule, or index-keyed rubric criteria each failed one test.
+- `[FACT]` **Two content-blind geometry rules earned their place:** a horizontal strip must never clip its children vertically
+  (it caught flex children shrunk at `max-height: 52vh`, invisible to size checks), and every control must pass
+  `elementFromPoint` at the centre of its *visible* rectangle (clipped by its scroller), not of its box.
+- `[JUDGMENT]` **Silent fallbacks are bugs.** A list that failed to load made "Save and next" fall through to "everyone is
+  graded" and stall; the fix was to wait, say so, and degrade visibly. Absence of data must never read as a result.
+- `[FACT]` **An error must name its request.** A bare "404" cost a round trip; "(this student's submission: GET
+  …/anonymous_submissions/531568)" located the bug from one phone screenshot.
+- `[FACT]` **Text the program derives inside an artifact the user also edits must be regenerated, never read back as content.**
+  Answer keys written into comments doubled up until the parser dropped them by marker; the test is read → write → read
+  with nothing changing.
+- `[FACT]` **Tie-breaks over a `set` change from process to process** (`PYTHONHASHSEED`): the same input gave 205 and 193
+  bank items in two runs. A count that moves without an input change is a bug; the test runs the CLI under six seeds.
+- `[JUDGMENT]` **Model the domain's tree in the data, not in string conventions parsed back with regexes.** A flat code table
+  (`Q1a-var.SETUP-3`) grew look-alike labels, value history and prefix parsing before the tree (question → sub-question →
+  point → entry, kinds as an independent dimension) replaced it at the source.
+- `[JUDGMENT]` **What the end reader sees is a contract with its own check.** Internal codes, jargon ("adjustment") and derived
+  arithmetic leaked into student comments until one check scanned everything written out for them.
+- `[FACT]` **Real use finds what mocks do not, and the page must say which build is running.** One evening on a phone found a
+  stalled list, a mute 404, mislabelled full marks and a stale script version; the sheet now shows its version and build
+  time, and every generated file carries `generated_at`.

@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+"""bin/figpipe — the maker → render → cold reader → acceptance pipeline, as one command.
+
+    bin/figpipe SPEC.json --svg EXTERNAL.svg   (no render: audit an SVG made elsewhere; see below)
+    bin/figpipe SPEC.json [--out DIR] [--log VERDICTS.jsonl] [--reader auto|none|FILE]
+                          [--png-scale 2] [--no-pdf] [--round N] [--model NAME] [--quiet]
+
+Steps, in order; every step's result goes into the verdict record:
+  1 validate    the spec against figbank/schema/figure.schema.json (python-jsonschema if present,
+                else the structural subset checked here)
+  2 render      node figbank/render_svg.js → DIR/<id>.svg, plus the assembler's report: running-text
+                word count, overflow, forbidden strings, truncation. Any error stops the pipeline.
+  3 rasterise   headless Chromium → DIR/<id>.png (device scale --png-scale) and DIR/<id>.pdf (vector,
+                page = the viewBox). Loud skip when playwright is absent: SVG is still written.
+  4 legibility  checks/svg_legibility.py at the surface named in spec.acceptance.legibility
+  5 cold read   `claude -p` with figbank/reader/cold-reader.md and ONLY the PNG path (--reader auto);
+                --reader FILE takes a verdict JSON written by someone else (a human, a subagent);
+                --reader none stops after step 4 (what `make figures` uses: regenerate, do not judge)
+  6 accept      spec.acceptance: every must_mention group present in claim+structure; no
+                must_not_mention present; len(unreadable) ≤ unreadable_max; legibility passed;
+                render errors none
+  7 log         one JSON line appended to --log: spec/svg/reader-prompt hashes, word count,
+                legibility faults, the reader's report verbatim, the acceptance reasons, cost
+
+--svg FILE (external mode, drunken-emu #23 attempt B): step 2 does not render. The spec still supplies
+id / message / acceptance / canvas (canvas must equal the SVG's own size in px — mismatch is an error).
+Text gates are re-implemented on the SVG's <text> (words, forbidden, ellipsis, checks/svg_text_gates.py);
+box overflow, wrap-to-gap, running-text/label split, layout-derived geometry and one-spec-two-surfaces
+do NOT apply and are printed and logged (`gates_not_applied`). acceptance.legibility.fit:true measures
+the SVG scaled to legibility.width (default: native size, which for fixed-size SVGs ignores the width).
+
+Exit 0 accepted (or --reader none and everything before the reader passed); 1 rejected;
+2 the spec is invalid or the render failed; 3 the reader could not be run.
+The reader is blind by construction: this script passes it the prompt file and the PNG path
+and nothing else, and the prompt file's hash is in the record, so a verdict is reproducible
+as "this reader, this prompt, this picture".
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+KIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SCHEMA = os.path.join(KIT, "figbank", "schema", "figure.schema.json")
+RENDER = os.path.join(KIT, "figbank", "render_svg.js")
+READER_PROMPT = os.path.join(KIT, "figbank", "reader", "cold-reader.md")
+LEGIBILITY = os.path.join(KIT, "checks", "svg_legibility.py")
+
+
+def sha(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest()[:12]
+
+
+def say(a, msg):
+    if not a.quiet:
+        print(msg, flush=True)
+
+
+# ---------------------------------------------------------------- 1 validate
+def validate(spec):
+    schema = json.load(open(SCHEMA, encoding="utf-8"))
+    try:
+        import jsonschema  # type: ignore
+        v = jsonschema.Draft202012Validator(schema)
+        errs = [f"{'/'.join(str(p) for p in e.path) or '<root>'}: {e.message}" for e in v.iter_errors(spec)]
+        return errs, "jsonschema"
+    except ImportError:
+        errs = []
+        for k in schema["required"]:
+            if k not in spec:
+                errs.append(f"missing required key: {k}")
+        for r in spec.get("regions", []):
+            for k in ("id", "title", "box"):
+                if k not in r:
+                    errs.append(f"region without {k}: {r}")
+        if "must_mention" not in spec.get("acceptance", {}):
+            errs.append("acceptance.must_mention missing")
+        return errs, "structural-subset (pip install jsonschema for the full check)"
+
+
+# ---------------------------------------------------------------- 3 rasterise
+def rasterise(svg_path, png_path, pdf_path, scale, spec):
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return {"skipped": "playwright not installed — SVG written, PNG/PDF not regenerated"}
+    sys.path.insert(0, KIT)
+    from checks.browser import launch
+    W, H = spec["canvas"]["width"], spec["canvas"]["height"]
+    src = open(svg_path, encoding="utf-8").read()
+    html = f'<!doctype html><html><head><meta charset="utf-8"><style>html,body{{margin:0;padding:0;background:#fff}}svg{{display:block}}</style></head><body>{src}</body></html>'
+    with sync_playwright() as p:
+        b = launch(p)
+        pg = b.new_page(viewport={"width": int(W), "height": int(H)}, device_scale_factor=scale)
+        pg.set_content(html)
+        pg.wait_for_timeout(80)
+        pg.screenshot(path=png_path, full_page=False)
+        if pdf_path:
+            pg.pdf(path=pdf_path, width=f"{W}px", height=f"{H}px", print_background=True,
+                   margin={"top": "0", "right": "0", "bottom": "0", "left": "0"})
+        b.close()
+    return {"png": os.path.basename(png_path), "pdf": os.path.basename(pdf_path) if pdf_path else None, "scale": scale}
+
+
+# ---------------------------------------------------------------- 4 legibility
+def legibility(svg_path, acc, out_dir):
+    leg = acc.get("legibility", {})
+    width, min_px, tol = int(leg.get("width", 380)), float(leg.get("min_px", 7.0)), float(leg.get("overlap_tol", 0.12))
+    import tempfile
+    rep = os.path.join(tempfile.gettempdir(), f"figpipe-legibility-{os.getpid()}.json")
+    r = subprocess.run([sys.executable, LEGIBILITY, svg_path, "--width", str(width), "--min-px", str(min_px),
+                        "--overlap-tol", str(tol), "--json", rep, "--quiet"] + (["--fit"] if leg.get("fit") else []),
+                       capture_output=True, text=True)
+    if r.returncode not in (0, 1):
+        return {"error": (r.stderr or r.stdout)[-800:], "passed": False, "width": width, "min_px": min_px}
+    rows = json.load(open(rep)); os.remove(rep)
+    row = rows[0] if rows else {"faults": [{"kind": "no_result"}]}
+    return {"passed": r.returncode == 0, "width": width, "min_px": min_px, "overlap_tol": tol, "fit": bool(leg.get("fit")),
+            "surface": leg.get("surface"), "min_font_px": row.get("min_font_px"), "n_text": row.get("n_text"),
+            "faults": row.get("faults", [])}
+
+
+# ---------------------------------------------------------------- 5 cold read
+def cold_read(png_path, model, timeout=300):
+    if not shutil.which("claude"):
+        return None, "claude CLI not on PATH; run with --reader FILE after a blind read elsewhere"
+    prompt = open(READER_PROMPT, encoding="utf-8").read().rstrip() + " " + os.path.abspath(png_path) + "\n"
+    cmd = ["claude", "-p", prompt, "--allowedTools", "Read", "--output-format", "json"]
+    if model:
+        cmd += ["--model", model]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=os.path.dirname(os.path.abspath(png_path)))
+    except subprocess.TimeoutExpired:
+        return None, f"claude -p timed out after {timeout}s"
+    if r.returncode != 0:
+        return None, f"claude -p exit {r.returncode}: {(r.stderr or r.stdout)[-600:]}"
+    try:
+        env = json.loads(r.stdout, strict=False)
+    except json.JSONDecodeError:
+        return None, "claude -p returned non-JSON: " + r.stdout[-400:]
+    text = env.get("result", "")
+    body = text.strip()
+    if body.startswith("```"):
+        body = body.strip("`")
+        body = body[body.find("{"):body.rfind("}") + 1]
+    try:
+        verdict = json.loads(body[body.find("{"):body.rfind("}") + 1], strict=False)
+    except (json.JSONDecodeError, ValueError):
+        return None, "reader did not return a JSON object: " + text[-400:]
+    meta = {"cost_usd": env.get("total_cost_usd"), "duration_ms": env.get("duration_ms"),
+            "model": (list((env.get("modelUsage") or {}).keys()) or [None])[0], "session_id": env.get("session_id")}
+    return verdict, meta
+
+
+# ---------------------------------------------------------------- 6 accept
+def accept(spec, verdict, leg, render_errors):
+    acc = spec["acceptance"]
+    reasons = []
+    if render_errors:
+        reasons += [f"render: {e}" for e in render_errors]
+    if leg is not None and not leg.get("passed"):
+        reasons.append(f"legibility failed at {leg.get('width')}px / {leg.get('min_px')}px floor: {leg.get('faults', leg.get('error'))}")
+    if verdict is not None:
+        text = (str(verdict.get("claim", "")) + " " + str(verdict.get("structure", ""))).lower()
+        for group in acc["must_mention"]:
+            if not any(alt.lower() in text for alt in group):
+                reasons.append(f"reader's claim/structure mentions none of {group}")
+        for bad in acc.get("must_not_mention", []):
+            if bad.lower() in text:
+                reasons.append(f"reader's claim/structure contains {bad!r}")
+        unread = verdict.get("unreadable") or []
+        if not isinstance(unread, list):
+            unread = [str(unread)]
+        if len(unread) > int(acc.get("unreadable_max", 0)):
+            reasons.append(f"reader lists {len(unread)} unreadable item(s): " + " | ".join(map(str, unread))[:600])
+        if verdict.get("verdict") == "lost":
+            reasons.append("reader verdict: lost")
+    return not reasons, reasons
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("spec")
+    ap.add_argument("--out", default=None, help="output directory (default: the spec's directory's parent, i.e. figures/)")
+    ap.add_argument("--log", default=None, help="JSONL verdict log (default: OUT/verdicts.jsonl)")
+    ap.add_argument("--reader", default="auto", help="auto (claude -p) | none | path to a verdict JSON")
+    ap.add_argument("--png-scale", type=int, default=2)
+    ap.add_argument("--no-pdf", action="store_true")
+    ap.add_argument("--round", type=int, default=None, help="maker round number for the record (default: 1 + rounds already logged for this id)")
+    ap.add_argument("--model", default=None, help="model for the cold reader (default: the CLI's default)")
+    ap.add_argument("--svg", default=None, metavar="FILE",
+                    help="audit this pre-existing (external, e.g. matplotlib) SVG instead of rendering the spec")
+    ap.add_argument("--quiet", action="store_true")
+    a = ap.parse_args()
+
+    spec = json.load(open(a.spec, encoding="utf-8"))
+    fid = spec.get("id", os.path.splitext(os.path.basename(a.spec))[0])
+    out_dir = a.out or os.path.dirname(os.path.dirname(os.path.abspath(a.spec)))
+    os.makedirs(out_dir, exist_ok=True)
+    log_path = a.log or os.path.join(out_dir, "verdicts.jsonl")
+    svg_path, png_path = os.path.join(out_dir, fid + ".svg"), os.path.join(out_dir, fid + ".png")
+    pdf_path = None if a.no_pdf else os.path.join(out_dir, fid + ".pdf")
+    rec = {"ts": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "id": fid,
+           "spec": os.path.relpath(a.spec, out_dir), "spec_sha": sha(a.spec), "message": spec.get("message")}
+
+    # 1
+    errs, how = validate(spec)
+    rec["validate"] = {"by": how, "errors": errs}
+    if errs:
+        say(a, f"[figpipe] {fid}: INVALID spec ({how})\n  " + "\n  ".join(errs))
+        return 2
+    # 2
+    if a.svg:
+        try:
+            report = external_gates(a, spec, fid, rec)
+        except Exception as e:   # a malformed SVG (ParseError) or an unreadable size is invalid INPUT, exit 2 — exit 1 means "rejected"
+            say(a, f"[figpipe] {fid}: cannot read --svg {a.svg}: {type(e).__name__}: {e}")
+            return 2
+        if report is None:
+            return 2
+        svg_path = os.path.abspath(a.svg)
+    else:
+        report = render_spec(a, fid, out_dir, svg_path, rec)
+        if report is None:
+            return 2
+    for e in report["errors"]:
+        say(a, "  render: " + e)
+    if report["errors"]:
+        rec["accepted"] = False; rec["reasons"] = [f"render: {e}" for e in report["errors"]]
+        _log(log_path, rec, a)
+        return 2
+    # 3
+    rec["raster"] = rasterise(svg_path, png_path, pdf_path, a.png_scale, spec)
+    if "skipped" in rec["raster"]:
+        say(a, f"[figpipe] {fid}: RASTER SKIPPED — {rec['raster']['skipped']}")
+    else:
+        say(a, f"[figpipe] {fid}: wrote {os.path.basename(png_path)} (x{a.png_scale})" + (f" and {os.path.basename(pdf_path)}" if pdf_path else ""))
+    # 4
+    leg = None
+    if "skipped" not in rec["raster"]:
+        leg = legibility(svg_path, spec["acceptance"], out_dir)
+        rec["legibility"] = leg
+        say(a, f"[figpipe] {fid}: legibility {'PASS' if leg.get('passed') else 'FAIL'} at {leg.get('width')}px, floor {leg.get('min_px')}px, min font {leg.get('min_font_px')}px, {len(leg.get('faults', []))} fault(s)")
+        for f in leg.get("faults", [])[:8]:
+            say(a, "  " + json.dumps(f, ensure_ascii=False))
+    # 5
+    verdict, meta = None, None
+    if a.reader == "none":
+        rec["reader"] = None
+    elif a.reader == "auto":
+        if "skipped" in rec["raster"]:
+            say(a, f"[figpipe] {fid}: no PNG, so no cold read"); rec["reader"] = {"error": "no png"}
+        else:
+            say(a, f"[figpipe] {fid}: cold reader running (claude -p, blind: the PNG only)…")
+            verdict, meta = cold_read(png_path, a.model)
+            if verdict is None:
+                say(a, f"[figpipe] {fid}: READER FAILED — {meta}"); rec["reader"] = {"error": meta}
+                _log(log_path, rec, a)
+                return 3
+            rec["reader"] = {"prompt_sha": sha(READER_PROMPT), "how": "claude -p --allowedTools Read", **meta, "report": verdict}
+    else:
+        verdict = json.load(open(a.reader, encoding="utf-8"))
+        rec["reader"] = {"prompt_sha": sha(READER_PROMPT), "how": f"file {os.path.basename(a.reader)}", "report": verdict}
+    # 6
+    ok, reasons = accept(spec, verdict, leg, report["errors"])
+    rec["accepted"] = ok if verdict is not None else None
+    rec["reasons"] = reasons
+    rec["round"] = a.round if a.round is not None else 1 + _rounds(log_path, fid)
+    if verdict is not None:
+        say(a, f"[figpipe] {fid}: reader verdict {verdict.get('verdict')!r}; claim: {verdict.get('claim')}")
+        say(a, f"[figpipe] {fid}: {'ACCEPTED' if ok else 'REJECTED'} (round {rec['round']})" + ("" if ok else "\n  " + "\n  ".join(reasons)))
+    else:
+        say(a, f"[figpipe] {fid}: no reader this run; {'pre-reader checks pass' if ok else 'pre-reader checks FAIL: ' + '; '.join(reasons)}")
+    # 7
+    _log(log_path, rec, a)
+    return 0 if ok else 1
+
+
+def render_spec(a, fid, out_dir, svg_path, rec):
+    rep_path = os.path.join(out_dir, f".{fid}.render.json")
+    r = subprocess.run(["node", RENDER, a.spec, svg_path, "--report", rep_path, "--lenient"], capture_output=True, text=True)
+    if r.returncode != 0 or not os.path.exists(rep_path):
+        say(a, f"[figpipe] {fid}: render FAILED\n{r.stderr[-1200:]}")
+        return None
+    report = json.load(open(rep_path)); os.remove(rep_path)
+    rec["render"] = {"words": report["words"], "word_budget": report.get("word_budget"), "n_texts": report["n_texts"], "errors": report["errors"], "svg_sha": sha(svg_path)}
+    say(a, f"[figpipe] {fid}: rendered {os.path.relpath(svg_path)} — {report['words']} words of running text (budget {report.get('word_budget')}), {len(report['errors'])} render error(s)")
+    return report
+
+
+def svg_px_size(path):
+    """(width, height) in CSS px of the root <svg>, from width/height attrs (pt/px/in/cm/mm) else viewBox."""
+    import re
+    import xml.etree.ElementTree as ET
+    root = ET.parse(path).getroot()
+    unit = {"pt": 96 / 72, "px": 1, "": 1, "in": 96, "cm": 96 / 2.54, "mm": 96 / 25.4}
+    def one(attr, vb_i):
+        m = re.fullmatch(r"\s*([\d.]+)\s*([a-z%]*)\s*", root.get(attr, ""))
+        if m and m.group(2) in unit:
+            return float(m.group(1)) * unit[m.group(2)]
+        vb = root.get("viewBox")
+        return float(vb.replace(",", " ").split()[vb_i]) if vb else None
+    return one("width", 2), one("height", 3)
+
+
+def external_gates(a, spec, fid, rec):
+    """Step 2 for --svg: no rendering. Re-implement what can be re-implemented on the SVG's text,
+    and state, in the output and in the record, everything that cannot."""
+    sys.path.insert(0, KIT)
+    from checks import svg_text_gates as tg
+    if not os.path.exists(a.svg):
+        say(a, f"[figpipe] {fid}: --svg file not found: {a.svg}")
+        return None
+    w, h = svg_px_size(a.svg)
+    cw, ch = spec["canvas"]["width"], spec["canvas"]["height"]
+    if w is None or abs(w - cw) > 1 or abs(h - ch) > 1:
+        say(a, f"[figpipe] {fid}: spec.canvas is {cw}x{ch} but the SVG is {w}x{h} px — fix the spec (loud, not silently rescaled)")
+        return None
+    g = tg.gates(a.svg, spec.get("word_budget"), spec.get("must_not_contain", []))
+    rec["mode"] = "external-svg"
+    rec["render"] = {"external": True, "svg": a.svg, "svg_sha": sha(a.svg), "words": g["words"],
+                     "words_non_numeric": g["words_non_numeric"], "word_budget": spec.get("word_budget"),
+                     "n_texts": g["n_text"], "errors": g["errors"]}
+    rec["gates_not_applied"] = g["not_applicable"]
+    say(a, f"[figpipe] {fid}: EXTERNAL SVG {a.svg} — not rendered by figbank. Re-implemented on its <text>: "
+           f"word count ({g['words']} words, {g['words_non_numeric']} non-numeric; budget {spec.get('word_budget')}), "
+           f"forbidden strings, ellipsis; plus the legibility audit and blind reader below.")
+    say(a, "[figpipe] GATES THAT DO NOT APPLY to an external SVG (the bank's renderer never saw it):")
+    for n in g["not_applicable"]:
+        say(a, "  - " + n)
+    return {"errors": g["errors"], "words": g["words"]}
+
+
+def _rounds(log_path, fid):
+    if not os.path.exists(log_path):
+        return 0
+    n = 0
+    for line in open(log_path, encoding="utf-8"):
+        try:
+            if json.loads(line).get("id") == fid and json.loads(line).get("reader") is not None:
+                n += 1
+        except json.JSONDecodeError:
+            pass
+    return n
+
+
+def _log(log_path, rec, a):
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    say(a, f"[figpipe] logged → {os.path.relpath(log_path)}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
