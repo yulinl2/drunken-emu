@@ -41,6 +41,7 @@ that is never executed is not a regeneration command.
 |   |   |-- chains/
 |   |   |   |-- hw1_correction_pass.json
 |   |   |   |-- hw1_correction_pass_fixed.json
+|   |   |   |-- tapgrade_0_6_6.json
 |   |   |   `-- worked_example.json
 |   |   |-- fragment_links_clean.jsx
 |   |   |-- fragment_links_nolinks.jsx
@@ -188,5 +189,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-22 directories, 141 files tracked
+22 directories, 142 files tracked
 ```

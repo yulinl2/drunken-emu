@@ -490,7 +490,7 @@ def test_held_is_inherited_until_changed_and_an_empty_list_clears_it():
 
 
 def test_round_trip_is_idempotent():
-    for name in ("hw1_correction_pass.json", "hw1_correction_pass_fixed.json"):
+    for name in ("hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json"):
         d = C.load(FIX / name)
         assert C.parse(json.loads(C.dumps(d))) == d
     every_key = chain1({"op": "HOLD", "held": ["g"], "intent": "i", "view": "v", "target": "t", "note": "n"},
@@ -570,7 +570,7 @@ def _scramble(raw, rng):
     return raw
 
 
-@pytest.mark.parametrize("name", ["hw1_correction_pass.json", "hw1_correction_pass_fixed.json"])
+@pytest.mark.parametrize("name", ["hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json"])
 def test_findings_and_load_do_not_depend_on_any_free_text(name):
     raw = json.loads((FIX / name).read_text())
     before = V.check_doc(C.parse(copy.deepcopy(raw)))
@@ -918,3 +918,79 @@ def test_readme_tree_and_ci_point_at_the_layer():
     cmds = [l for l in seg.splitlines() if l.strip().startswith("- ")]
     assert any("pytest -q checks/test_chain.py" in l for l in cmds)
     assert not any("playwright" in l.lower() or "chromium" in l.lower() for l in cmds)        # no browser in this job
+
+
+# --- 9. the chains the code implements: TapGrade 0.6.6 -----------------------------------------------------------------
+# docs/OPERATION-CHAINS.md, "TapGrade 0.6.6: the chains the code implements". Written from speeds-kit's docs/TAPGRADE.md and its
+# userscript, not from a person on a phone (provenance: designed). `fixed` is what the code was built toward; this is what was built.
+TAPGRADE = "tapgrade_0_6_6.json"
+TAPGRADE_FINDINGS = {"tapgrade-0.6.6": {}, "tapgrade-0.6.6-interrupted": {"interruption": [9]}, "tapgrade-0.6.6-failures": {}}
+
+
+@pytest.fixture(scope="module")
+def tapgrade():
+    return {c["id"]: c for c in C.load(FIX / TAPGRADE)["chains"]}
+
+
+def raw_tapgrade_repaired():
+    """The interrupted chain with the known gap closed (the page comes back on Update Canvas): one chain, silent."""
+    raw = json.loads((FIX / TAPGRADE).read_text())
+    ch = next(c for c in raw["chains"] if c["id"] == "tapgrade-0.6.6-interrupted")
+    next(s for s in ch["steps"] if s["op"] == "REFRESH")["restores"] = ["position", "goal", "partial"]
+    return {**raw, "chains": [ch]}
+
+
+def test_tapgrade_chains_have_exactly_the_one_known_finding(tapgrade):
+    """After a refresh in the middle of Apply the page loads on the Grade view: goal and partial work survive, position does not."""
+    assert {cid: fired(ch) for cid, ch in tapgrade.items()} == TAPGRADE_FINDINGS
+    found = V.run_chain(tapgrade["tapgrade-0.6.6-interrupted"])["findings"]
+    assert [(f["step"], f["verifier"], f["message"]) for f in found] == [(9, "interruption", "after REFRESH not restored: position")]
+
+
+def test_tapgrade_silence_is_not_omission(tapgrade):
+    """A verifier reads only what a step declares (P-02be), so the silent chains must declare it."""
+    for cid, ch in tapgrade.items():
+        steps = ch["steps"]
+        commits = [s for s in steps if s["op"] == "COMMIT"]
+        assert commits and all(s["preview_before"] and s["everything_on_screen"] and s["verify_after"] == "correctness" for s in commits), cid
+        assert commits[0]["reversibility"] == "irreversible", cid                       # TapGrade has no undo
+        assert any(s["op"] == "ANCHOR" and s["anchor"] in ("edge", "fixed-position", "unique-visual") for s in steps), cid
+        waits = [s for s in steps if s["op"] == "WAIT"]
+        assert waits and all(s["progress_visible"] and s["view_stable"] for s in waits), cid
+        assert any(s["op"] == "VERIFY" and s["kind"] == "correctness" for s in steps[steps.index(commits[0]):]), cid
+        assert any("origin_stated" in s for s in steps) and any("boundary_visible" in s for s in steps), cid
+    refresh = next(s for s in tapgrade["tapgrade-0.6.6-interrupted"]["steps"] if s["op"] == "REFRESH")
+    assert refresh["restores"] == ["goal", "partial"]                                    # the probe stays, and says what is lost
+
+
+def test_tapgrade_working_set_sits_exactly_at_the_budget_and_nothing_is_reloaded(tapgrade):
+    for cid, ch in tapgrade.items():
+        res = V.run_chain(ch)
+        assert (res["budget"], res["load"]["peak_slots"], res["load"]["counts"]["reloads"]) == (3, 3, 0), cid
+
+
+def test_closing_the_known_gap_silences_the_interrupted_chain():
+    assert fired(C.parse(raw_tapgrade_repaired())["chains"][0]) == {}
+
+
+@pytest.mark.parametrize("mutate", MUTATIONS, ids=[m.__name__[4:] for m in MUTATIONS])
+def test_breaking_one_property_of_the_repaired_tapgrade_chain_fires_exactly_the_matching_verifier(mutate):
+    raw = raw_tapgrade_repaired()
+    expected = mutate(raw)
+    assert fired(C.parse(raw)["chains"][0]) == expected
+
+
+def test_tapgrade_mutation_controls_cover_every_verifier():
+    covered = set()
+    for m in MUTATIONS:
+        covered |= set(m(raw_tapgrade_repaired()))
+    assert covered == set(V.VERIFIERS)
+
+
+def test_docs_numbers_for_the_tapgrade_chains_match_the_run(tapgrade):
+    for cid, ch in tapgrade.items():
+        m = re.search(rf"^\| `{re.escape(cid)}` \| (\d+) \| ([0-9.]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", DOC, re.M)
+        assert m, f"no numbers row for {cid} in the docs"
+        ld, n = L.chain_load(ch), len(V.run_chain(ch)["findings"])
+        assert (int(m[1]), float(m[2]), int(m[3]), int(m[4]), int(m[5]), int(m[6])) == (
+            ld["steps"], round(ld["load"], 2), ld["peak_slots"], ld["counts"]["reloads"], ld["counts"]["reorients"], n), cid

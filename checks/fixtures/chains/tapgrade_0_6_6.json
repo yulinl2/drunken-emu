@@ -1,0 +1,70 @@
+{
+  "format": "emu-chain/1",
+  "provenance": {
+    "source": "designed",
+    "date": "2026-10-04",
+    "who": "a coding-agent session (coordinator), from speeds-kit docs/TAPGRADE.md ('the chain') and userscripts/tapgrade.user.js, TapGrade 0.6.6",
+    "note": "Written from what the 0.6.6 code and its mock-Canvas audit do, not from a person using it on a phone: nobody has run this on real Canvas yet. Amounts and similarities are guesses. Judgments: (1) a before/after that is one tap away counts as on screen for the Apply COMMIT; (2) Apply is irreversible (TapGrade has no undo; the text from before stays on the phone), Resume and Retry failed are idempotent (they write only what still differs); (3) docs/TAPGRADE.md calls the tap on Update Canvas after a refresh a RE-ORIENT, kept here. The hand-designed target that the code was built toward is hw1_correction_pass_fixed.json; this file is what was built."
+  },
+  "chains": [
+    {
+      "id": "tapgrade-0.6.6",
+      "task": "The HW1 correction pass with TapGrade 0.6.6, nothing goes wrong: apply 66 updates to Canvas and see them verified",
+      "setup": "Once, on a computer: `python3 -m speedkit.tapgrade <hw> --userscript --corrections <file> --out hw-data.user.js`, the file put next to TapGrade. Not part of the chain: nothing on the phone is picked by hand.",
+      "notes": "Step 6 is optional in the app; the chain is the careful path. Peak working set is 3 (the step's own need plus 2 held), which is exactly B.",
+      "steps": [
+        {"op": "NAVIGATE", "anchor": "edge", "feedback": "immediate", "held": ["goal: update Canvas with the corrections"], "target": "open SpeedGrader for the assignment (any student); the data script loads the corrections by itself; a toast says how many wait; after about a second a number appears on the Update Canvas button"},
+        {"op": "ANCHOR", "anchor": "unique-visual", "confusables": [3, 0.2], "target": "Update Canvas: second of four bar buttons, the only red one, with the number; the first line of the view says 'Changes Canvas'"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "the scan starts by itself and writes nothing: 'Scanning Canvas...', then '66 students would change'"},
+        {"op": "READ", "reading": "fine", "amount": 5, "origin_stated": true, "exclusions_stated": true, "held": ["goal: update Canvas with the corrections", "what to expect: 212 rows, 66 students"], "target": "'Where these changes come from': five lines, each loaded or NOT LOADED, with counts, file name and times"},
+        {"op": "SCAN", "amount": 66, "anchor": "text-keyword", "target": "one short row per student, each change with its source word (correction, answer key, bank, layout, summary)"},
+        {"op": "READ", "reading": "fine", "amount": 2, "boundary_visible": true, "target": "(optional) one student opened: points and whole comment before and after, summary old and new"},
+        {"op": "COMMIT", "anchor": "fixed-position", "reversibility": "irreversible", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "'Apply 66 updates': foot, right side, the only primary button; overwrites with no undo, the text from before stays on the phone"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "held": ["goal: update Canvas with the corrections"], "target": "one line 'Updating 17 of 66 - 0 failed', replaced in place; the view does not move; the number on the bar counts down"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "'Checking 17 of 66 on Canvas', then 'Reading Canvas again...'"},
+        {"op": "VERIFY", "kind": "correctness", "reading": "fine", "amount": 2, "origin_stated": true, "exclusions_stated": true, "target": "'Done 66 of 66 - Failed 0 - Left 0' and '66 students verified against the intended grades at 14:12 EDT'"}
+      ]
+    },
+    {
+      "id": "tapgrade-0.6.6-interrupted",
+      "task": "The same pass, the page is refreshed in the middle of Apply (a refresh, a locked phone, a lost connection)",
+      "notes": "After the reload the page shows the Grade view: the person has to open Update Canvas again. The bar's number still says how many students are left.",
+      "steps": [
+        {"op": "NAVIGATE", "anchor": "edge", "feedback": "immediate", "held": ["goal: update Canvas with the corrections"], "target": "open SpeedGrader for the assignment (any student); the corrections load by themselves; a number appears on the Update Canvas button"},
+        {"op": "ANCHOR", "anchor": "unique-visual", "confusables": [3, 0.2], "target": "Update Canvas: second of four bar buttons, the only red one, with the number"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "the scan starts by itself and writes nothing"},
+        {"op": "READ", "reading": "fine", "amount": 5, "origin_stated": true, "exclusions_stated": true, "held": ["goal: update Canvas with the corrections", "what to expect: 212 rows, 66 students"], "target": "'Where these changes come from': five lines"},
+        {"op": "SCAN", "amount": 66, "anchor": "text-keyword", "target": "one short row per student, each change with its source word"},
+        {"op": "READ", "reading": "fine", "amount": 2, "boundary_visible": true, "target": "(optional) one student opened: before and after"},
+        {"op": "COMMIT", "anchor": "fixed-position", "reversibility": "irreversible", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "'Apply 66 updates'; the intended end state is stored on the phone before the first request"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "held": ["goal: update Canvas with the corrections"], "target": "'Updating 24 of 66 - 0 failed', replaced in place"},
+        {"op": "REFRESH", "restores": ["goal", "partial"], "feedback": "immediate", "target": "the page reloads on the Grade view; the record of the update is on the phone; after about a second the bar's number is the count still different on Canvas"},
+        {"op": "RE-ORIENT", "target": "tap Update Canvas again, same bar button: the view opens with 'Interrupted: 42 of 66 left - Resume'"},
+        {"op": "COMMIT", "anchor": "fixed-position", "reversibility": "idempotent", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "'Resume': foot, same place; writes only what still differs on Canvas, applying twice changes nothing"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "target": "'Updating 25 of 66 - 0 failed', replaced in place"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "'Checking 17 of 66 on Canvas'"},
+        {"op": "VERIFY", "kind": "correctness", "reading": "fine", "amount": 2, "origin_stated": true, "exclusions_stated": true, "target": "'Done 66 of 66 - Failed 0 - Left 0' and '66 students verified against the intended grades'"}
+      ]
+    },
+    {
+      "id": "tapgrade-0.6.6-failures",
+      "task": "The same pass, 36 of the 66 students fail (the 'Removed 18 of 54' case of HW1 had no reasons for the rest)",
+      "notes": "The report lists every failed request with the student, the request, the HTTP status and Canvas' own message.",
+      "steps": [
+        {"op": "NAVIGATE", "anchor": "edge", "feedback": "immediate", "held": ["goal: update Canvas with the corrections"], "target": "open SpeedGrader for the assignment (any student); the corrections load by themselves"},
+        {"op": "ANCHOR", "anchor": "unique-visual", "confusables": [3, 0.2], "target": "Update Canvas: second of four bar buttons, the only red one, with the number"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "the scan starts by itself and writes nothing"},
+        {"op": "READ", "reading": "fine", "amount": 5, "origin_stated": true, "exclusions_stated": true, "held": ["goal: update Canvas with the corrections", "what to expect: 212 rows, 66 students"], "target": "'Where these changes come from': five lines"},
+        {"op": "SCAN", "amount": 66, "anchor": "text-keyword", "target": "one short row per student, each change with its source word"},
+        {"op": "READ", "reading": "fine", "amount": 2, "boundary_visible": true, "target": "(optional) one student opened: before and after"},
+        {"op": "COMMIT", "anchor": "fixed-position", "reversibility": "irreversible", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "'Apply 66 updates'"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "held": ["goal: update Canvas with the corrections"], "target": "'Updating 40 of 66 - 18 failed', replaced in place"},
+        {"op": "READ", "reading": "fine", "amount": 3, "origin_stated": true, "exclusions_stated": true, "target": "the report 'Done 30 of 66 - Failed 36 - Left 36' and the list of failures: student, request, HTTP status, Canvas' own message"},
+        {"op": "COMMIT", "anchor": "fixed-position", "reversibility": "idempotent", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "'Retry failed': foot, same place; writes only the failed requests"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "target": "'Updating 20 of 36 - 0 failed', replaced in place"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "target": "'Checking 17 of 66 on Canvas'"},
+        {"op": "VERIFY", "kind": "correctness", "reading": "fine", "amount": 2, "origin_stated": true, "exclusions_stated": true, "target": "'Done 66 of 66 - Failed 0 - Left 0' and '66 students verified against the intended grades'"}
+      ]
+    }
+  ]
+}

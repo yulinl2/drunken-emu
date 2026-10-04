@@ -45,7 +45,7 @@ python3 -m pytest -q checks/test_chain.py                                   # CI
 | `checks/chain_load.py` | the load and the working-memory budget | #33 |
 | `checks/chain_verifiers.py` | the ten verifiers | #33–#39, §5.10 |
 | `checks/chain_check.py` | the CLI behind `bin/emu chain check` | #31 |
-| `checks/fixtures/chains/` | the HW1 chains (recorded, fixed) and the worked example | #40 |
+| `checks/fixtures/chains/` | the HW1 chains (recorded, fixed), the TapGrade 0.6.6 chains (what was built) and the worked example | #40 |
 | `checks/test_chain.py` | must-fire, must-hold, mutation controls | all |
 
 ## The format
@@ -275,7 +275,7 @@ The HW1 chains, measured by `bin/emu chain check` on 2026-10-04:
 | `fixed` | 10 | 15.00 | 2 | 0 | 0 | 0 |
 | `expensive` | 34 | 160.40 | 5 | 1 | 6 | 26 |
 
-`test_chain.py` asserts the order (cheap < fixed < expensive) and the exact `cheap` and `expensive` numbers (a transcription). The `fixed` numbers move when that file is synced to the real flow.
+`test_chain.py` asserts the order (cheap < fixed < expensive) and the exact `cheap` and `expensive` numbers (a transcription). `fixed` is the designed target and stays as it is; the flow as built is measured in "TapGrade 0.6.6: the chains the code implements" below.
 
 ## The ten verifiers
 
@@ -316,6 +316,9 @@ Each is a content-blind function over the blind chain. It returns `{verifier, st
 | `cheap` | `hw1_correction_pass.json` | 6 | no findings |
 | `expensive` | `hw1_correction_pass.json` | 34 | all ten verifiers fire (26 findings) |
 | `fixed` | `hw1_correction_pass_fixed.json` | 10 | no findings; peak 2 slots; no RELOAD; no RE-ORIENT |
+| `tapgrade-0.6.6` | `tapgrade_0_6_6.json` | 10 | no findings; peak 3 slots; no RELOAD; no RE-ORIENT |
+| `tapgrade-0.6.6-interrupted` | `tapgrade_0_6_6.json` | 14 | 1 finding: step 9, a REFRESH that does not restore position |
+| `tapgrade-0.6.6-failures` | `tapgrade_0_6_6.json` | 13 | no findings |
 
 Exact steps flagged on `expensive` (asserted by `test_chain.py`; worked out by hand from the file before the code ran):
 
@@ -340,12 +343,45 @@ Where the transcriber interpreted OPERATION-MODEL §4 (also in the file's `notes
 - Steps 31–33 are the narration's "loop ×3". The body (refresh, re-orient, consistency check) is assumed.
 - Amounts and similarities are estimates. The only numbers from the source are 66 students and 212 rows.
 
-The fixed flow (`fixed`) is **designed**, not observed: from the issue texts of speeds-kit #25–#31. The real flow is being built in speeds-kit and documented in its `docs/TAPGRADE.md`; sync the file to that. Edit steps freely. Keep these, or the tests fail on purpose:
+The fixed flow (`fixed`) is **designed**, not observed: from the issue texts of speeds-kit #25–#31. It stays as the target the code was built toward; the flow as built is in `tapgrade_0_6_6.json` (next section). Edit steps freely. Keep these, or the tests fail on purpose:
 
 - one REFRESH whose `restores` lists position, goal and partial (the interruption probe);
 - COMMITs with a preview, everything on screen and `verify_after: correctness`;
 - WAITs with visible progress and a stable view;
 - a closing VERIFY of kind correctness.
+
+## TapGrade 0.6.6: the chains the code implements
+
+**Point.**
+
+- `fixed` was designed before TapGrade 0.6.6 existed. `tapgrade_0_6_6.json` is what was built.
+- Source: speeds-kit `docs/TAPGRADE.md` ("Applying a correction to many students — the chain") and the userscript, speeds-kit PR #33.
+- Provenance says `designed`: nobody has run it on real Canvas or on a phone. Amounts and similarities are guesses.
+
+| Chain | Steps | Load | Peak slots | RELOAD | RE-ORIENT | Findings |
+|---|---|---|---|---|---|---|
+| `tapgrade-0.6.6` | 10 | 39.50 | 3 | 0 | 0 | 0 |
+| `tapgrade-0.6.6-interrupted` | 14 | 48.75 | 3 | 0 | 1 | 1 |
+| `tapgrade-0.6.6-failures` | 13 | 45.50 | 3 | 0 | 0 | 0 |
+
+What each chain is:
+
+- `tapgrade-0.6.6`: nothing goes wrong. Open SpeedGrader, tap Update Canvas, read where the changes come from, scan the list, (optionally) open a student, Apply, watch, read the verified line.
+- `tapgrade-0.6.6-interrupted`: the page is refreshed in the middle of Apply; the person opens Update Canvas again and taps Resume.
+- `tapgrade-0.6.6-failures`: 36 of 66 fail; the report lists each with the student, the request, the HTTP status and Canvas' own message; Retry failed. This is the "Removed 18 of 54" case of HW1.
+
+**The one finding (step 9 of `tapgrade-0.6.6-interrupted`).**
+
+- After a reload the page shows the Grade view. The number on the bar and the record on the phone survive, so goal and partial work are restored. The place is not: the person taps Update Canvas again to see `Interrupted: 42 of 66 left — Resume`.
+- OPERATION-MODEL §5.4 asks for all three. `fixed` assumed the view would come back on Update Canvas; the code does not do that (its `view` starts as `grade` and is not stored).
+- Closing the gap (the page comes back on Update Canvas) makes the chain silent. `test_chain.py` asserts that, then breaks each of ten properties of the repaired chain, one at a time: exactly the matching verifier fires.
+
+What the numbers say, and what they do not:
+
+- The working set peaks at 3 = B: the step's own need (1) plus 2 held (the goal, and what to expect: 212 rows, 66 students). speeds-kit's doc says "peak 2": it counts held items only.
+- Load is higher than `fixed` (15.00) mostly because this chain includes the scan of 66 rows that `fixed` left out (66 coarse items × 0.25 = 16.5). Compare chains of the same task; the task here includes that scan.
+- Judgments made in the file (its `provenance.note`): a before/after one tap away counts as on screen at Apply; Apply is irreversible (no undo; the text from before stays on the phone) while Resume and Retry failed are idempotent; the tap on Update Canvas after a refresh is a RE-ORIENT, as speeds-kit's doc calls it.
+- Silent still means "nothing declared wrong" (`P-02be`). A chain captured from the audit's own run of the flow (`P-9d8b`) is the way to test what is declared here.
 
 ## P-2a7c integration point (design only; nothing here is built)
 
