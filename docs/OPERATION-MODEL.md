@@ -78,3 +78,28 @@ Each is content-blind: it uses the step properties, not the meaning of the page.
 9. **Correctness after commit**: the system re-reads the target and reports correctness against intent, not only that
    "everything matches".
 10. **Separators carry structure**: block boundaries (a key vs the grader's note) are visible without reading content.
+
+
+## 6. Where this sits in emu (read with `docs/EXPLORE-SPEC.md`)
+
+This model is not a second explorer. It is the per-step anatomy of `explore`'s decision records, plus the one piece
+EXPLORE-SPEC's implemented layer says it does not do yet: **working-memory limits need decider-side memory** (the scripted
+policies read the page instead of remembering).
+
+| EXPLORE-SPEC knob | primitives here | what it adds |
+|---|---|---|
+| `--working-memory N` | HOLD with budget B = N slots; KEYIFY to fit a goal in one slot; RELOAD when a goal falls out | the decider keeps keys, not the page; RELOAD is a recorded detour with its own cost |
+| `--distractibility p` | SCAN hijacked by the most salient look-alike | the confusable count and similarity of the step |
+| `--patience k` | WAIT without a progress signal → REFRESH → RE-ORIENT | why patience runs out: no feedback, lost position |
+| `--impulsivity` | READ truncated; COMMIT without PREVIEW | the reversibility of the step decides the damage |
+| `--salience-driven` | ANCHOR by salience instead of by an intended landmark | anchor type of the step |
+
+Two uses, one record format:
+
+1. **Simulated**: `explore_run` deciders keep a slot store (HOLD/KEYIFY) of size N and must RELOAD from a named external
+   source (the task text) when a needed key is gone; every RELOAD and RE-ORIENT is a step in the trace. The sweep then shows
+   how goal-achievement and false completions change with N.
+2. **Recorded**: a person's narrated chain (the HW1 correction pass) written in the same step format is a fixture: the
+   verifiers in section 5 run on it, and a policy reproducing it should hit the same RELOADs.
+
+Open problem: `P-2a7c` in `docs/OPEN-PROBLEMS.md`; issues #31–#40.
