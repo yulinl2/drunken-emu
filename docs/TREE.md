@@ -42,9 +42,11 @@ that is never executed is not a regeneration command.
 |   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
 |   |-- __init__.py
+|   |-- affordances.py
 |   |-- blind_audit.py
 |   |-- browser.py
 |   |-- ci_claims.py
+|   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
 |   |-- fragment_links.py
@@ -52,6 +54,7 @@ that is never executed is not a regeneration command.
 |   |-- smoke.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
+|   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
 |   `-- test_fragment_links.py
@@ -175,5 +178,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-21 directories, 129 files tracked
+21 directories, 134 files tracked
 ```

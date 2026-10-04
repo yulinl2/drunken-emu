@@ -321,6 +321,37 @@ loop and the test shape, not the fixture.
 **Closes when** the browser backend passes an equivalent of `test_explore_text.py` (same three
 assertions, a rendered fixture) in CI.
 
+
+
+---
+
+## P-0a86 — `explore_step` acted before a page that fetches its data had rendered `CLOSED`
+
+*ID by CONTRIBUTING rule 6: `P-` + first four hex of `sha1("explore_step acted before a page that fetches its data had rendered")`.*
+
+Found 2026-09-29 by using the stepper on a page that is not a React artifact. `explore_step.py` waited for
+`#root` to have children, which is true at DOMContentLoaded for a static shell; the speeds-kit GUI then fetched its
+student list, so the first replayed click landed on an empty list. Symptom: a click "did nothing", screenshot identical
+to the previous step, no error. The wrong first diagnosis was a slow server (measured 2 ms) — the fix was in the
+stepper, not the page.
+
+**Closed 2026-09-29:** navigate at DOMContentLoaded, then a *bounded* (5 s) best-effort wait for network idle plus a 250 ms settle;
+readiness no longer assumes `#root`. The React path was re-run on a fixture artifact (unchanged output). A page that polls or
+streams forever never reaches idle, so the wait may not be an error: checked on a page that fetches every 50 ms, which steps
+normally after the 5 s bound. (First version used an unbounded `networkidle` and a review pointed out it would hang on exactly
+those pages.)
+
+## P-b279 — a scripted decider makes the impairment sweep runnable without an API key `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a scripted decider makes the impairment sweep runnable without an API key")`.*
+
+P1 said the dose–response sweep is blocked on a paid API key. That was true of a *model* decider and false of the sweep:
+a policy script that holds a goal and reads the rendered page is a decider, and it is free, deterministic per seed and about
+2 s per trial. `checks/explore_run.py` runs it (README of `EXPLORE-SPEC.md`, "Implemented layer v1"). Status is `OPEN`, not `SPEC'D`, because part of it is now built. What stays open: a model
+decider would bring common sense the scripts lack (a script that only knows how to find Q1c-ii cannot be surprised by a page it
+was not written for), and working-memory limits are not modelled. Treat script-decider curves as a lower bound on how *findable*
+a goal is for a reader who already knows what the app is; a first-time reader does worse.
+
 ## P-246d — in-page fragment links have no check that fails on a dead or hidden target `OPEN`
 
 **The gap.** `blind_audit.py` is content-blind by design, so an `<a href="#x">` whose target does not exist, or exists with an empty box, passes every check in the kit. `region_shots.py`'s "anchors" are camera targets, not links. A dashboard artifact audited on 2026-09-06 (yulinl2/MetaProof `experiments/testbeds/T3-control/maintained/artifacts/`) carried a planted dead link that the audit did not see; a small Playwright check written there did.
