@@ -38,6 +38,9 @@ that is never executed is not a regeneration command.
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- fixtures/
+|   |   |-- chains/
+|   |   |   |-- hw1_correction_pass.json
+|   |   |   `-- hw1_correction_pass_fixed.json
 |   |   |-- fragment_links_clean.jsx
 |   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
@@ -58,6 +61,7 @@ that is never executed is not a regeneration command.
 |   |-- smoke.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
+|   |-- test_chain.py
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
@@ -182,5 +186,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-21 directories, 136 files tracked
+22 directories, 139 files tracked
 ```
