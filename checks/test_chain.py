@@ -615,6 +615,34 @@ def test_a_loop_is_a_refresh_right_after_a_wait_or_a_verify():
     assert ld["counts"]["loops"] == 1 + 0 + 3            # after the WAIT, not after the COMMIT, after the VERIFY (x3)
 
 
+def unroll(chain):
+    """the same chain with every `times: n` step written out as n consecutive steps"""
+    c = copy.deepcopy(chain)
+    c["steps"] = [dict(s, times=1) for s in c["steps"] for _ in range(s["times"])]
+    for i, s in enumerate(c["steps"], 1):
+        s["n"] = i
+    return c
+
+
+def test_times_is_n_consecutive_copies_in_every_count(hw1, fixed):
+    """Copilot review of PR #43: `WAIT, REFRESH x3` counted 3 loops and `WAIT, REFRESH, REFRESH, REFRESH` counted 1."""
+    wait = {"op": "WAIT", "progress_visible": True, "view_stable": True}
+    refresh = {"op": "REFRESH", "restores": []}
+    chains = [hw1["cheap"], hw1["expensive"], fixed,
+              chain1(wait, {**refresh, "times": 3}),                                       # the reviewer's example
+              chain1(wait, {**refresh, "times": 2}, {"op": "VERIFY", "kind": "consistency", "times": 2},
+                     {**refresh, "times": 2}, {"op": "DISCRIMINATE", "confusables": [2, 0.7], "anchor": "edge", "times": 3},
+                     {"op": "RELOAD", "source": "chat", "held": ["g"], "times": 2}, {"op": "RE-ORIENT", "times": 2})]
+    for ch in chains:
+        a, b = L.chain_load(ch), L.chain_load(unroll(ch))
+        assert a["counts"] == pytest.approx(b["counts"]) and a["terms"] == pytest.approx(b["terms"])
+        assert a["load"] == pytest.approx(b["load"]) and a["peak_slots"] == b["peak_slots"]
+    ex = L.chain_load(chains[3])
+    assert ex["counts"]["loops"] == 3 == L.chain_load(chain1(wait, refresh, refresh, refresh))["counts"]["loops"]
+    # a refresh that does not follow a wait, a verify or a looping refresh is still not a loop
+    assert L.chain_load(chain1(commit(), refresh, refresh))["counts"]["loops"] == 0
+
+
 def test_length_is_reported_never_scored():
     short, long_ = load_of(*[{"op": "ANCHOR", "anchor": "edge"}] * 3), load_of(*[{"op": "ANCHOR", "anchor": "edge"}] * 50)
     assert (short["steps"], long_["steps"]) == (3, 50) and short["load"] == long_["load"] == 0
@@ -694,17 +722,22 @@ def test_nested_text_must_be_strings_so_a_bad_value_is_exit_2_and_never_a_crash(
     """Codex review of PR #43: {"text": {"target": 123}} used to parse, and the report's len() then crashed with a
     traceback, whose exit code (1) is the code for "findings".  The normalised form is checked like the written one."""
     bad_commit = commit(reversibility="irreversible", preview_before=False, everything_on_screen=False, verify_after="none")
-    cases = [({"target": 123}, "text.target"), ({"note": ["x"]}, "text.note"), ({"targt": "x"}, "text.targt"),
-             ("oops", "`text` must be an object")]
+    tap = {"op": "TAP", "feedback": "none"}                  # Copilot's own example: a finding-producing step, target 1
+    cases = [(bad_commit, {"target": 123}, "text.target"), (bad_commit, {"note": ["x"]}, "text.note"),
+             (bad_commit, {"targt": "x"}, "text.targt"), (bad_commit, "oops", "`text` must be an object"),
+             (tap, {"target": 1}, "text.target")]
     f = tmp_path / "t.json"
-    for bad, needle in cases:
-        raw = raw1({**bad_commit, "text": bad})
+    for base, bad, needle in cases:
+        raw = raw1({**base, "text": bad})
         with pytest.raises(C.ChainError) as e:
             C.parse(raw)
         assert needle in str(e.value) and "step 1" in str(e.value)
         f.write_text(json.dumps(raw))
         rc, out, err = emu("check", f)
         assert rc == 2 and needle in err and "Traceback" not in err and out == ""
+        rc, out, err = emu("check", f, "--json")                         # the JSON mode answers in JSON, not a traceback
+        assert rc == 2 and json.loads(out)["ok"] is False and needle in json.loads(out)["error"]["problems"][0]
+        assert "Traceback" not in err
     with pytest.raises(C.ChainError) as e:                              # the same hole in the provenance's note
         C.parse(raw1(CHECKED, **{"provenance": {**PROV, "note": 5}}))
     assert "provenance `note` must be a string" in str(e.value)
@@ -712,6 +745,21 @@ def test_nested_text_must_be_strings_so_a_bad_value_is_exit_2_and_never_a_crash(
     assert C.parse(json.loads(C.dumps(ok))) == ok
     f.write_text(json.dumps(raw1({**bad_commit, "text": {"target": "Apply", "note": "n"}})))
     assert emu("check", f)[0] == 1                                       # valid text, real findings: still exit 1
+
+
+def test_a_file_that_is_not_utf8_is_exit_2_in_both_modes(tmp_path):
+    """Copilot review of PR #43: UnicodeDecodeError is a ValueError, so the OSError handler let it through as a traceback."""
+    f = tmp_path / "latin1.json"
+    f.write_bytes(b'{"provenance": {"source": "narrated", "date": "2026-10-04", "who": "t"}, "steps": ["READ caf\xe9"]}')
+    with pytest.raises(C.ChainError) as e:
+        C.load(f)
+    assert "UTF-8" in str(e.value) and "latin1.json" in str(e.value)
+    rc, out, err = emu("check", f)
+    assert rc == 2 and "UTF-8" in err and "Traceback" not in err and out == ""
+    rc, out, err = emu("check", f, "--json")
+    assert rc == 2 and json.loads(out)["ok"] is False and "UTF-8" in json.loads(out)["error"]["problems"][0] and "Traceback" not in err
+    f.write_bytes('{"provenance": {"source": "narrated", "date": "2026-10-04", "who": "t"}, "steps": ["READ café"]}'.encode())
+    assert emu("check", f)[0] == 0                          # the same text as real UTF-8 is a valid chain
 
 
 def test_cli_chain_selector_spans_all_the_input_files():
@@ -816,7 +864,9 @@ def test_ledger_entries_exist_with_content_derived_ids_and_the_docs_name_them():
         assert hashlib.sha1(title.encode()).hexdigest()[:4] == pid                    # CONTRIBUTING rule 6
         assert re.search(rf"^## P-{pid} — .* `OPEN`$", ledger, re.M)
         assert f'sha1("{title}")' in ledger and f"`P-{pid}`" in DOC
-    assert "P-2a7c" in DOC and "## P-2a7c" not in ledger     # PR #42 owns that entry: referenced here, not duplicated
+    # PR #42 owns the P-2a7c entry. Referenced here, never written here; once #42 merges the heading may exist, but only once
+    # (Copilot review of PR #43: asserting it absent would turn this job red the day #42 merges, in either merge order).
+    assert "P-2a7c" in DOC and len(re.findall(r"^## P-2a7c\b", ledger, re.M)) <= 1
 
 
 def test_readme_tree_and_ci_point_at_the_layer():

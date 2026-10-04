@@ -15,7 +15,11 @@ This file turns each term into a number with an explicit weight, and reports the
     reload         RELOAD steps (x times)                                        reload
     reorient       RE-ORIENT steps (x times)                                     reorient
     discriminate   sum of the look-alike similarity (0..1) of DISCRIMINATE steps discriminate
-    loops          REFRESH steps directly after a WAIT or a VERIFY (x times)     loop
+    loops          REFRESH steps directly after a WAIT, a VERIFY, or a REFRESH that was one (x times)   loop
+
+`times: n` on a step is n consecutive copies of it in EVERY row above: a chain with `times` and the same chain written
+out step by step have the same components (a test asserts it), so "WAIT, REFRESH x3" and "WAIT, REFRESH, REFRESH, REFRESH"
+are both 3 loops.
 
 Where the weights come from (read this before quoting the number):
   * reload = 6: the model says a RELOAD is itself a chain (ANCHOR, SCAN, ANCHOR, READ, KEYIFY: five steps) and
@@ -69,9 +73,10 @@ def chain_load(chain: dict, budget: int | None = None, weights: dict | None = No
     slot_steps = reloads = reorients = loops = 0
     peak = peak_held = 0
     over: list[int] = []
-    prev_op = None
+    prev_op, prev_looped = None, False
     for s in chain["steps"]:
         t = s["times"]
+        looped = False
         if s["reading"] == "fine":
             fine += s["amount"] * t
         elif s["reading"] == "coarse":
@@ -88,9 +93,13 @@ def chain_load(chain: dict, budget: int | None = None, weights: dict | None = No
             reorients += t
         elif s["op"] == "DISCRIMINATE":
             sim_sum += s["confusables"]["similarity"] * t
-        elif s["op"] == "REFRESH" and prev_op in ("WAIT", "VERIFY"):
-            loops += t
-        prev_op = s["op"]
+        elif s["op"] == "REFRESH":
+            # a refresh is one turn of a wait/verify loop when it follows the WAIT or VERIFY, or a refresh that was one;
+            # the copies a `times` stands for follow each other, so they count like separate steps would
+            looped = prev_op in ("WAIT", "VERIFY") or (prev_op == "REFRESH" and prev_looped)
+            if looped:
+                loops += t
+        prev_op, prev_looped = s["op"], looped
     terms = {
         "reading": fine * w["read_fine"] + coarse * w["read_coarse"],
         "slot_steps": slot_steps * w["slot_step"],

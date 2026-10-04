@@ -478,6 +478,8 @@ def load(path) -> dict:
     p = Path(path)
     try:
         text = p.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:                # a ValueError, not an OSError: without this it is a traceback
+        raise ChainError([f"not valid UTF-8 text (byte {e.start}: {e.reason}); save the file as UTF-8"], str(p)) from None
     except OSError as e:
         raise ChainError([f"cannot read the file: {e.strerror or e}"], str(p)) from None
     return load_text(text, "yaml" if p.suffix.lower() in (".yaml", ".yml") else "json", str(p))

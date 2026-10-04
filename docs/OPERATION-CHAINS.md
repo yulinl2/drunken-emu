@@ -88,7 +88,7 @@ JSON is canonical. One file holds one chain, or several under `chains`.
 | `feedback` | `immediate` · `delayed` · `none` | `immediate` | what the system answered |
 | `reversibility` | `idempotent` · `reversible` · `irreversible` | `idempotent` (COMMIT: required) | cost of an error |
 | `interruption` | subset of `position`, `goal`, `partial` | none | what an app switch or refresh **at this step** loses |
-| `times` | whole number ≥ 1 | 1 | the step was done n times in a row ("loop ×3") |
+| `times` | whole number ≥ 1 | 1 | the step was done n times in a row ("loop ×3"): n consecutive copies of it in every count. A repeated body is each of its steps with the same `times` |
 | `intent`, `view` | short keys | none | the job this step performs, and the view it happens in. `intent` needs `view` |
 | `origin_stated`, `exclusions_stated` | true / false | absent | the step shows a list or a prompt. Give both or neither |
 | `boundary_visible` | true / false | absent | the step reads block-structured text |
@@ -230,7 +230,7 @@ OPERATION-MODEL §3 gives the formula. `checks/chain_load.py` gives each term a 
 | RELOAD | RELOAD steps × `times` | `reload` 6.0 | §1: a RELOAD is itself a chain of five steps, and it interrupts the task |
 | RE-ORIENT | RE-ORIENT steps × `times` | `reorient` 3.0 | §1: ENUMERATE of the local options, "often" plus a RELOAD: half a RELOAD |
 | discriminate | Σ similarity of DISCRIMINATE steps × `times` | `discriminate` 3.0 | ordinal |
-| loops | REFRESH steps directly after a WAIT or a VERIFY × `times` | `loop` 2.0 | ordinal |
+| loops | REFRESH steps directly after a WAIT, a VERIFY, or a REFRESH that was itself one, × `times` | `loop` 2.0 | ordinal |
 
 - **The weights are not measured.** They make the order the source narration reports come out: RELOAD and RE-ORIENT loops dominate, not any single hard step.
 - Use the number to compare chains of the **same task**. Never as a threshold, a score or minutes.
@@ -409,7 +409,7 @@ Without a declared `op` the runner falls back on `kind` alone and says so in `no
 | Look-alikes start at similarity 0.5 | §5.1 gives no number | `--lookalike` |
 | `times` for "loop ×3" | the narration says ×3; unrolling hides it | a step key |
 | RELOAD written flat; `source` required | §1: a RELOAD is a chain; P-2a7c wants a named source | `chain.py` |
-| A loop is a REFRESH right after a WAIT or a VERIFY | mechanical and testable | `chain_load.py` |
+| A loop is a REFRESH right after a WAIT or a VERIFY, or right after a REFRESH that was one | mechanical and testable; `times: n` equals n copies in every count (a test asserts it) | `chain_load.py` |
 | `commit_correctness` also wants a later VERIFY of the right kind | the chain should show the person seeing the check; it is the one reader of VERIFY `kind` | `chain_verifiers.py` |
 | `progress` also flags `feedback: none` on any step | an unacknowledged action starts the WAIT/REFRESH loop (§1) | `chain_verifiers.py` |
 | `reversibility` sets how strict two verifiers are: an `idempotent` COMMIT needs no preview and may stop at consistency | §1: irreversibility multiplies the cost of an error; the label is the narrator's claim | `colocation`, `commit_correctness` |
