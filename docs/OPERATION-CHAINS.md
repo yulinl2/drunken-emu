@@ -20,13 +20,13 @@ bin/emu chain check CHAIN.json [CHAIN2.json ...] [--budget B] [--json] [--chain 
 |---|---|
 | `0` | no findings in any chain checked |
 | `1` | at least one finding |
-| `2` | the file is not a valid chain, or the usage is wrong; every problem is listed, each with its step number |
+| `2` | the file is not a valid chain, or the usage is wrong, or the checker itself crashed (never exit 1: that means findings only); every problem is listed, each with its step number |
 
 | Option | Does |
 |---|---|
 | `--budget B` | working-memory slots B for every chain checked. Default: the chain's own `budget`, else 3 |
 | `--json` | one JSON document on stdout instead of the report |
-| `--chain ID` | check only this chain id (repeatable) |
+| `--chain ID` | check only this chain id, in whichever input file has it (repeatable). An id is unknown only when no file has it; a file with none of the named chains is skipped |
 | `--lookalike X` | similarity (0..1) from which `confusables` count as look-alikes. Default 0.5 |
 
 Try it:

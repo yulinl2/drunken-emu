@@ -690,6 +690,63 @@ def test_cli_exits_2_on_an_invalid_file_and_lists_the_problems_with_their_steps(
     assert emu()[0] == 2
 
 
+def test_nested_text_must_be_strings_so_a_bad_value_is_exit_2_and_never_a_crash(tmp_path):
+    """Codex review of PR #43: {"text": {"target": 123}} used to parse, and the report's len() then crashed with a
+    traceback, whose exit code (1) is the code for "findings".  The normalised form is checked like the written one."""
+    bad_commit = commit(reversibility="irreversible", preview_before=False, everything_on_screen=False, verify_after="none")
+    cases = [({"target": 123}, "text.target"), ({"note": ["x"]}, "text.note"), ({"targt": "x"}, "text.targt"),
+             ("oops", "`text` must be an object")]
+    f = tmp_path / "t.json"
+    for bad, needle in cases:
+        raw = raw1({**bad_commit, "text": bad})
+        with pytest.raises(C.ChainError) as e:
+            C.parse(raw)
+        assert needle in str(e.value) and "step 1" in str(e.value)
+        f.write_text(json.dumps(raw))
+        rc, out, err = emu("check", f)
+        assert rc == 2 and needle in err and "Traceback" not in err and out == ""
+    with pytest.raises(C.ChainError) as e:                              # the same hole in the provenance's note
+        C.parse(raw1(CHECKED, **{"provenance": {**PROV, "note": 5}}))
+    assert "provenance `note` must be a string" in str(e.value)
+    ok = C.parse(raw1({**bad_commit, "target": "Apply", "note": "n"}))   # the normalised form still round-trips
+    assert C.parse(json.loads(C.dumps(ok))) == ok
+    f.write_text(json.dumps(raw1({**bad_commit, "text": {"target": "Apply", "note": "n"}})))
+    assert emu("check", f)[0] == 1                                       # valid text, real findings: still exit 1
+
+
+def test_cli_chain_selector_spans_all_the_input_files():
+    """Codex review of PR #43: `--chain cheap a.json b.json` was refused because b.json has no `cheap`."""
+    a, b = FIX / "hw1_correction_pass.json", FIX / "hw1_correction_pass_fixed.json"      # a: cheap + expensive; b: fixed
+    rc, out, _ = emu("check", a, b, "--chain", "cheap")
+    assert rc == 0 and "cheap" in out and "expensive" not in out and b.name not in out
+    rc, out, _ = emu("check", a, b, "--chain", "cheap", "--chain", "fixed")
+    assert rc == 0 and "cheap" in out and "fixed" in out
+    rc, out, _ = emu("check", b, a, "--chain", "expensive")                              # file order does not matter
+    assert rc == 1 and "26 finding(s)" in out and b.name not in out
+    rc, out, err = emu("check", a, b, "--chain", "nosuch")
+    assert rc == 2 and "'nosuch'" in err and "in any file" in err and out == ""
+    rc, out, _ = emu("check", a, b, "--chain", "cheap", "--chain", "nosuch", "--json")   # one unknown id refuses the run
+    assert rc == 2 and json.loads(out)["error"]["file"] is None and "'nosuch'" in json.loads(out)["error"]["problems"][0]
+
+
+def test_a_crash_in_the_checker_is_exit_2_never_exit_1(monkeypatch, capsys):
+    """An uncaught exception exits 1 in Python, and exit 1 here means "the chain has findings"."""
+    import chain_check as K
+    fixed = str(FIX / "hw1_correction_pass_fixed.json")
+
+    def boom(*a, **k):
+        raise RuntimeError("deliberate")
+    monkeypatch.setattr(K.V, "run_chain", boom)
+    assert K.cli(["check", fixed]) == 2
+    err = capsys.readouterr().err
+    assert "chain-internal" in err and "RuntimeError" in err and "not a finding" in err
+    monkeypatch.undo()
+    assert K.cli(["check", fixed]) == 0
+    with pytest.raises(SystemExit) as e:                                                  # usage errors keep argparse's exit 2
+        K.cli(["check"])
+    assert e.value.code == 2
+
+
 def test_bin_emu_dispatches_chain_before_it_needs_an_artifact_and_keeps_its_other_modes():
     src = (KIT / "bin" / "emu").read_text()
     assert src.index('"$MODE" = chain') < src.index('ART="${1:?')            # no artifact, no sync, no server

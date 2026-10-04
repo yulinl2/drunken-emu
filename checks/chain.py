@@ -298,8 +298,19 @@ def _step(raw, n: int, prev_held: list[str], problems: list[str]):
     if b is not None:
         out["boundary_visible"] = b
 
-    text = dict(s["text"]) if isinstance(s.get("text"), dict) else {}
-    for k in FREE_TEXT_STEP:
+    text: dict = {}
+    if "text" in s:                                # the normalised form (what dumps() writes): target and note, both strings
+        if not isinstance(s["text"], dict):
+            P(f"`text` must be an object with `target` and `note` (the normalised form), got {s['text']!r}")
+        else:
+            for k, v in s["text"].items():
+                if k not in FREE_TEXT_STEP:
+                    P(f"unknown key `text.{k}`{_hint(k, FREE_TEXT_STEP)}")
+                elif not isinstance(v, str):
+                    P(f"`text.{k}` must be a string, got {v!r}")
+                else:
+                    text[k] = v
+    for k in FREE_TEXT_STEP:                       # the hand-written form: a scalar is written as its text
         if k in s:
             text[k] = s[k] if isinstance(s[k], str) else str(s[k])
     out["text"] = {"target": text.get("target", ""), "note": text.get("note", "")}
@@ -338,6 +349,8 @@ def _provenance(file_prov, chain_prov, where, problems):
         problems.append(f"{where}: provenance `date` must be a real date YYYY-MM-DD, got {d!r}")
     if not isinstance(merged.get("who"), str) or not merged["who"].strip():
         problems.append(f"{where}: provenance `who` must say who recorded it (a role is enough; no personal data)")
+    if "note" in merged and not isinstance(merged["note"], str):
+        problems.append(f"{where}: provenance `note` must be a string, got {merged['note']!r}")
     return merged
 
 

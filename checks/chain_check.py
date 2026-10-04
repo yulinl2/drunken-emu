@@ -9,10 +9,13 @@ of the ten verifiers (checks/chain_verifiers.py), each with its step number.
 Exit code
   0   no findings in any chain checked
   1   at least one finding
-  2   a file is not a valid chain (the problems are listed, each naming its step) or the usage is wrong
+  2   a file is not a valid chain (the problems are listed, each naming its step), the usage is wrong, or the
+      checker itself crashed (a bug in the checker is never reported as a finding: exit 1 means findings only)
 
 A file may hold several chains (hw1_correction_pass.json holds two): the exit code is 1 if ANY of them has a
-finding; `--chain ID` checks only the named ones.  `--budget B` overrides every chain's own budget (default 3).
+finding.  `--chain ID` checks only the named chains, wherever they are: an id is unknown only when NO input file
+has it, and a file with none of the named chains is skipped.  `--budget B` overrides every chain's own budget
+(default 3).
 `--json` prints one JSON document on stdout instead of the report.
 
 The report shows each step's free-text `target` next to a finding so a human can find the step.  That text is
@@ -93,31 +96,38 @@ def main(argv: list[str] | None = None) -> int:
     ck.add_argument("files", nargs="+", metavar="CHAIN.json")
     ck.add_argument("--budget", type=_positive, default=None, help="working-memory slots B (default: the chain's own, else 3)")
     ck.add_argument("--json", action="store_true", help="print one JSON document instead of the report")
-    ck.add_argument("--chain", action="append", default=None, metavar="ID", help="only this chain id (repeatable)")
+    ck.add_argument("--chain", action="append", default=None, metavar="ID", help="only this chain id, in whichever file has it (repeatable)")
     ck.add_argument("--lookalike", type=_unit, default=V.LOOKALIKE,
                     help=f"similarity at or above which confusables are look-alikes (default {V.LOOKALIKE})")
     args = ap.parse_args(argv)
 
-    files, total, out_lines = [], 0, []
+    docs = []                                                  # every file is read and validated before anything is checked
     for path in args.files:
         try:
-            doc = C.load(path)
+            docs.append((path, C.load(path)))
         except C.ChainError as e:
             if args.json:
                 print(json.dumps({"ok": False, "error": {"file": path, "problems": e.problems}}, indent=2))
             else:
                 print(f"FAIL chain-format: {e}", file=sys.stderr)
             return 2
-        unknown = [i for i in (args.chain or []) if i not in {c["id"] for c in doc["chains"]}]
-        if unknown:
-            msg = (f"{path}: no chain with id {', '.join(map(repr, unknown))}; the file has: "
-                   f"{', '.join(c['id'] for c in doc['chains'])}")
-            if args.json:
-                print(json.dumps({"ok": False, "error": {"file": path, "problems": [msg]}}, indent=2))
-            else:
-                print(f"FAIL chain-select: {msg}", file=sys.stderr)
-            return 2
+    # --chain names chains across ALL the files: an id is unknown only when no file has it.  A file with none of the
+    # named chains is skipped, so `--chain cheap a.json b.json` checks `cheap` wherever it is.
+    known = {c["id"] for _, d in docs for c in d["chains"]}
+    unknown = [i for i in (args.chain or []) if i not in known]
+    if unknown:
+        msg = (f"no chain with id {', '.join(map(repr, unknown))} in any file; "
+               + "; ".join(f"{p} has: {', '.join(c['id'] for c in d['chains'])}" for p, d in docs))
+        if args.json:
+            print(json.dumps({"ok": False, "error": {"file": None, "problems": [msg]}}, indent=2))
+        else:
+            print(f"FAIL chain-select: {msg}", file=sys.stderr)
+        return 2
+    files, total, out_lines = [], 0, []
+    for path, doc in docs:
         chains = [c for c in doc["chains"] if not args.chain or c["id"] in args.chain]
+        if not chains:
+            continue
         results = [V.run_chain(c, args.budget, args.lookalike) for c in chains]
         total += sum(len(r["findings"]) for r in results)
         files.append({"file": path, "chains": [_json_chain(r) for r in results]})
@@ -131,5 +141,18 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if failed else 0
 
 
+def cli(argv: list[str] | None = None) -> int:
+    """main(), except that a crash is exit 2 with the traceback on stderr: Python's own exit code for an uncaught
+    exception is 1, which here means "findings", and a broken checker must not read as a failed chain."""
+    try:
+        return main(argv)
+    except Exception:                                          # argparse's SystemExit passes through untouched
+        import traceback
+        traceback.print_exc()
+        print("FAIL chain-internal: the checker crashed. This is a bug in the checker, not a finding of the chain.",
+              file=sys.stderr)
+        return 2
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli())
