@@ -995,6 +995,12 @@ def test_tapgrade_mutation_controls_cover_every_verifier():
     assert covered == set(V.VERIFIERS)
 
 
+def test_docs_name_the_second_hand_evidence_of_the_hw1_chains_by_hash_only():
+    """The HW1 chains are a paraphrase of a private narration; the docs say so and cite it by hash, never by content."""
+    assert "9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741" in DOC
+    assert "second hand" in DOC and "docs/evidence/2026-10-03-hw1-correction-narration.md" in DOC
+
+
 def test_docs_numbers_for_the_tapgrade_chains_match_the_run(tapgrade):
     for cid, ch in tapgrade.items():
         m = re.search(rf"^\| `{re.escape(cid)}` \| (\d+) \| ([0-9.]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", DOC, re.M)
