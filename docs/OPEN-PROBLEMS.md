@@ -395,6 +395,11 @@ against a measurement.
 **Approximations, named.** The look-alike line (similarity 0.5) is a default, not a result of any experiment. `single_path` compares the
 narrator's `intent` and `view` keys: two views under different keys are invisible. `idempotent` on a COMMIT removes two requirements and is
 the narrator's claim. `held` is the narrator's list of what a person kept in mind.
+**Evidence so far (2026-10-04).** An independent re-read of a narrated chain against its source (`hw1_correction_pass_transcribed.json`, see
+`docs/OPERATION-CHAINS.md`, "HW1 twice") found the gap in both directions: stated properties left undeclared, so a verifier stayed silent (the
+three presses of Scan, the `hw1` look-alike, the doubts about a blank result), and findings that follow only from a value the file had to supply
+(a tap's feedback, what two refreshes kept, Apply's reversibility). The first kind is the gap above; the second is its mirror. This is a narration
+checked against its narration, not against a measurement.
 **Closes when** a captured chain (P-9d8b) and a narrated chain of the same task are compared property by property and the disagreements
 are listed.
 

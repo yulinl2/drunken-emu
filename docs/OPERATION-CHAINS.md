@@ -45,7 +45,7 @@ python3 -m pytest -q checks/test_chain.py                                   # CI
 | `checks/chain_load.py` | the load and the working-memory budget | #33 |
 | `checks/chain_verifiers.py` | the ten verifiers | #33–#39, §5.10 |
 | `checks/chain_check.py` | the CLI behind `bin/emu chain check` | #31 |
-| `checks/fixtures/chains/` | the HW1 chains (recorded, fixed), the TapGrade 0.6.6 chains (what was built) and the worked example | #40 |
+| `checks/fixtures/chains/` | the HW1 chains (recorded from a paraphrase, fixed, and rebuilt from the narration), the TapGrade 0.6.6 chains (what was built) and the worked example | #40 |
 | `checks/test_chain.py` | must-fire, must-hold, mutation controls | all |
 
 ## The format
@@ -316,6 +316,9 @@ Each is a content-blind function over the blind chain. It returns `{verifier, st
 | `cheap` | `hw1_correction_pass.json` | 6 | no findings |
 | `expensive` | `hw1_correction_pass.json` | 34 | all ten verifiers fire (26 findings) |
 | `fixed` | `hw1_correction_pass_fixed.json` | 10 | no findings; peak 2 slots; no RELOAD; no RE-ORIENT |
+| `hw1-run-transcribed` | `hw1_correction_pass_transcribed.json` | 42 | 8 of 10 verifiers fire (20 findings); `single_path` and `separators` stay silent |
+| `hw1-usual-phone-page` | `hw1_correction_pass_transcribed.json` | 9 | 10 findings, from 4 verifiers: `anchoring`, `memory_budget`, `interruption`, `progress` |
+| `hw1-usual-save-cards` | `hw1_correction_pass_transcribed.json` | 6 | 1 finding: step 3, `anchoring` |
 | `tapgrade-0.6.6` | `tapgrade_0_6_6.json` | 10 | 1 finding: step 7, Apply (the comment text of a change is one tap away); peak 3 slots |
 | `tapgrade-0.6.6-interrupted` | `tapgrade_0_6_6.json` | 15 | 2 findings: step 7 (the same), step 9 (a REFRESH that does not restore position) |
 | `tapgrade-0.6.6-failures` | `tapgrade_0_6_6.json` | 14 | 1 finding: step 7 (the same) |
@@ -343,14 +346,94 @@ Where the transcriber interpreted OPERATION-MODEL §4 (also in the file's `notes
 - Steps 31–33 are the narration's "loop ×3". The body (refresh, re-orient, consistency check) is assumed.
 - Amounts and similarities are estimates. The only numbers from the source are 66 students and 212 rows.
 
-**Provenance of the HW1 chains.** They transcribe `docs/OPERATION-MODEL.md` §4, which is the contributing chat session's paraphrase of the owner's narration: second hand, with estimated amounts. The narration itself is now in this repository, verbatim and with the narrator's consent, with a step-by-step transcription whose quotes `validate.py` checks verbatim: `docs/evidence/hw1-correction-2026-10-03/` (narration sha256 `9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741`). Of its 61 entries, 36 carry properties the narrator stated (anchor type, confusables, reading depth, memory), 2 carry inferred ones, and 16 describe what usually happens rather than this run (`scope`). Screenshots stay private. The HW1 chains here have **not** been re-derived from it: where the narrator stated a property, the stated value can replace an estimate, and where the paraphrase merged or reordered steps, the transcription shows the order. Checks that compare a chain with what happened (#32: T1 nesting, T2 where the goal was lost, T10 predicted versus real friction) are judged against that text.
+**Provenance of `cheap` and `expensive`.** They transcribe `docs/OPERATION-MODEL.md` §4, which is the contributing chat session's paraphrase of the owner's narration: second hand, with estimated amounts. The narration itself is now in this repository, verbatim and with the narrator's consent, with a step-by-step transcription whose quotes `validate.py` checks verbatim: `docs/evidence/hw1-correction-2026-10-03/` (narration sha256 `9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741`). Of its 61 entries, 36 carry properties the narrator stated (anchor type, confusables, reading depth, memory), 2 carry inferred ones, and 16 describe what usually happens rather than this run (`scope`). Screenshots stay private. `cheap` and `expensive` have **not** been re-derived from it: where the narrator stated a property, the stated value can replace an estimate, and where the paraphrase merged or reordered steps, the transcription shows the order. A separate build that does this is in "HW1 twice" below. Checks that compare a chain with what happened (#32: T1 nesting, T2 where the goal was lost, T10 predicted versus real friction) are judged against that text.
 
-The fixed flow (`fixed`) is **designed**, not observed: from the issue texts of speeds-kit #25–#31. It stays as the target the code was built toward; the flow as built is in `tapgrade_0_6_6.json` (next section). Edit steps freely. Keep these, or the tests fail on purpose:
+The fixed flow (`fixed`) is **designed**, not observed: from the issue texts of speeds-kit #25–#31. It stays as the target the code was built toward; the flow as built is in `tapgrade_0_6_6.json` (section "TapGrade 0.6.6" below). Edit steps freely. Keep these, or the tests fail on purpose:
 
 - one REFRESH whose `restores` lists position, goal and partial (the interruption probe);
 - COMMITs with a preview, everything on screen and `verify_after: correctness`;
 - WAITs with visible progress and a stable view;
 - a closing VERIFY of kind correctness.
+
+## HW1 twice: a paraphrase, and the narration
+
+**Point.**
+
+- `cheap` and `expensive` were built from a paraphrase of the narration, with estimated amounts; `hw1_correction_pass_transcribed.json` is a second build, from the narration itself, and this section compares the two.
+- The paraphrase chain `expensive` trips all ten verifiers; the run chain built from the narration, `hw1-run-transcribed`, trips eight (`single_path` and `separators` stay silent).
+- So "all ten fire" is a property of the paraphrase chain, not a finding about the run.
+- A third, independent reader then re-read the new chains against the narration. Its verdict: sound with fixes, no step contradicts the narration. The fixes are in. What it pressed on most is which findings rest on what the narrator said and which on a value the file had to supply; the table "What the findings hang on" says.
+
+Measured by `bin/emu chain check checks/fixtures/chains/hw1_correction_pass_transcribed.json` on 2026-10-04 (exit 1):
+
+| Chain | Steps | Load | Peak slots | RELOAD | RE-ORIENT | Findings |
+|---|---|---|---|---|---|---|
+| `hw1-run-transcribed` | 47 | 73.55 | 5 | 1 | 2 | 23 |
+| `hw1-usual-phone-page` | 11 | 24.15 | 6 | 0 | 0 | 10 |
+| `hw1-usual-save-cards` | 6 | 1.25 | 1 | 0 | 0 | 1 |
+
+What each chain is. The transcription separates this run from what the narrator says usually happens (`scope`). So `expensive` splits in two, and the file has three chains. Line numbers below are lines of `narration.zh.txt` in `docs/evidence/hw1-correction-2026-10-03/`.
+
+- `hw1-run-transcribed`: this run, in the narrator's order. The narrator presses a Scan button three times (lines 17, 21, 24); each press is a TAP step whose existence is inferred from the result that follows it. The file says so in the step.
+- `hw1-usual-phone-page`: what usually happens on the phone page. Refresh, hesitate, refresh; memory nearly burned; look-alike text; the keyword found at last; the goal usually forgotten by then, so everything is imported (line 5).
+- `hw1-usual-save-cards`: what saving an artifact card usually costs (line 5). Its paraphrase counterpart is `cheap`.
+
+**What the run chain flags** (`test_chain.py` asserts these steps; steps are numbered as in the file):
+
+| Verifier | Steps | What is there |
+|---|---|---|
+| `anchoring` (4) | 2, 16, 17, 35 | DISCRIMINATE of the three candidate chips (setting, review, resync); `hw1` against `hw2` and other projects' data files; `.js` vs `.json`; the same chips again after the refresh |
+| `memory_budget` (4) | 8, 9, 16, 17 | HOLD, the narrator's 4-bit cache full: working set 5; the RELOAD from the chat; `hw1` with 2 held: working set 5; `.js` vs `.json` with 2 held: working set 4 |
+| `candidate_set` (1) | 7 | the folder, paged through 2 screens with the seams checked; completeness not visible |
+| `interruption` (4) | 22, 32, 41, 45 | four REFRESH, each declared to keep partial work only: position and goal are lost |
+| `colocation` (2) | 30, 39 | both Apply: a summary-comment row shows no detail, so not everything is on screen |
+| `progress` (4) | 20, 21, 31, 40 | the tap on the file with no feedback; "stuck" after it; "stuck" after the first Apply; the view jumps to the top after the second |
+| `causal` (2) | 3, 43 | the Re-sync list does not say where it came from or what is not yet included (the wrong INFER is step 5); the clean result after the last rescan does not say what blank means or which side overwrote which |
+| `commit_correctness` (2) | 30, 39 | both Apply: afterwards the system offers a consistency check only |
+
+<!-- Keep the "(n)" after each verifier name. test_docs_flagged_step_table_is_the_one_this_file_asserts reads every row shaped | `verifier` | steps | in this file, and the last one wins; this table is not the `expensive` one. -->
+
+`single_path` and `separators` are silent (see the next table). The counts in brackets add up to the 23 findings.
+
+**Against `expensive`.** Counted by step, the run chain has 4 REFRESH, 2 RE-ORIENT, 1 RELOAD, 2 COMMIT (Apply), 4 SCAN (by eye) and 4 TAP (the file, and the three presses of Scan). `expensive` has six RE-ORIENT (its "loop ×3" counted) and one Apply. Each row is a place where the paraphrase chain assumed something and the narration says something else, or nothing:
+
+| What | `expensive` assumes | The narration states |
+|---|---|---|
+| RE-ORIENT: 6, not 2 | one after the two usual refreshes (step 5); the body of "loop ×3": refresh, re-orient, check | one after the first refresh (line 17), one after the second (line 21); after the last two, a check each (line 24) |
+| Apply: 1, not 2 | one COMMIT, then the loop | Apply, "stuck", refresh; "66 changes, 42 not applied", Apply again (line 21) |
+| `separators` silent | `boundary_visible: false` on the two narrowing steps (11, 12) | `boundary_visible: true` on all four narrowing steps (12–15): `确知不多也不少`, `不多不少` (line 17) |
+| `single_path` silent | `intent: load-corrections` on two views, `re-sync` and `corrections` (steps 7, 14) | no `intent` or `view` on any step. The nearest is a question about the corrections flow and Re-sync: `我还是不懂` (line 5) |
+| memory | the goal held from step 1 | `held` is empty until step 7 (the narration does not say what was held in steps 1–6); `先清空前面所有大脑缓存` (line 17) clears the cache for the import task |
+| amounts | estimated `amount`s (its own note) | no `amount` on any step: each reading step counts one item |
+| order | the list of changes and the wrong INFER after the import (22, 23); the folder paged after the RELOAD (15) | the INFER comes first and is found wrong before the import (steps 3–6, line 13); the folder is paged, the cache fills, then the RELOAD (steps 7–9, line 17) |
+
+**What the findings hang on.** Each of the 23 findings of the run chain, by how much of it the narrator stated:
+
+| Rests on | Findings | Why |
+|---|---|---|
+| What the narrator stated (11) | `causal` 3; `candidate_set` 7; `memory_budget` 9; `anchoring` 17; `progress` 21, 31, 40; `interruption` 22, 32; `colocation` 30, 39 | the Re-sync list does not say where it came from, and 还没load (line 13); the folder paged with the seams checked and the reload from the chat (line 17); `长得非常像` (line 17: any reading of it is above 0.5); 卡住了 (lines 17, 21) and 页面反复瞬间跳回顶部 (line 21); 又回到了题目页面 (line 21). `colocation` rests on line 13: a summary-comment row shows no detail. That was said of the Re-sync list and is carried to both Apply moments |
+| A stated confusion, a number the reader chose (3) | `anchoring` 2, 16, 35 | the confusion is stated (`语义不够垂直`, line 19; `hw1` against `hw2` and other projects' files, line 17); the similarity, 0.8, is a placeholder chosen to cross 0.5, and at 0.4 they go |
+| A carried default (5) | `memory_budget` 8, 16, 17; `commit_correctness` 30, 39 | B = 3 (the narrator says `4-bit` and, once, `3 bit`: bits are not items) and the HOLD's own slot; Apply's `reversibility` (never stated) and `verify_after` (only a suspicion, line 24) |
+| The narrator's doubts, declared by the reader (1) | `causal` 43 | line 24: what does blank mean, did the file overwrite the online database or the reverse; the reader declared `origin_stated` and `exclusions_stated` false |
+| Not stated, extrapolated (3) | `progress` 20; `interruption` 41, 45 | whether the tap on the file got no feedback (line 17 gives a plan and then 卡住了; the tap itself is inferred); what the last two refreshes kept (line 24 says nothing; copied from the first two) |
+
+On the narrator's stated properties alone, seven of the ten verifiers fire; `commit_correctness` is the eighth only through a carried default. Every step in the last four rows says `[carried: unstated]` in its note, and `test_chain.py` checks that.
+
+The two Apply findings hang on different things, and the test asserts each switch removes its own findings and nothing else:
+
+- `commit_correctness` hangs on Apply not being idempotent and on `verify_after` being below correctness. The narrator never says whether Apply can be undone or repeated safely (no word for it; the narrator pressed it twice and never says whether that was safe). The loader requires a value on every COMMIT, so the chain carries `irreversible`, the value `expensive` has; `reversible` fires the same, only `idempotent` is silent. Both Apply steps `idempotent`: 23 become 21.
+- `colocation` does not hang on reversibility. It hangs on `everything_on_screen: false`, which rests on line 13. Setting it true removes those two findings only.
+
+**Provenance of the narration chains.** Built by one reader from the narration and its transcription, then re-read against the narration by a second, independent reader who started from the narration alone (read-only, 2026-10-04). Its verdict: sound with fixes. No step contradicts the narration, and an independent tally agrees on 4 refreshes, 2 re-orientations, 1 reload and 2 Apply. The fixes are in this version: the three Scan presses added (the first build had none, and said it followed the narration); the `hw1` look-alike and the doubts about the blank result added (stated properties the first build left undeclared, so a verifier stayed silent: `P-02be`); every carried value marked; the findings that rest on an unstated value now say so. What the re-read could not judge: the private screenshots; facts the narration leaves open (whether the file was tapped before the freeze, whether the first refresh at line 24 was a full reload, whether the closing correctness check was carried out, whether the refresh pair at line 5 belongs to this run); and whether `single_path` should fire (several cards could serve the "update" job, lines 19 and 21; whether that is one intent served by several views depends on what "performs the job" means). Not encoded: the wait for the last refresh to finish (line 24), and that the format part of the closing check is easy (line 27). Nobody has driven a phone against these chains.
+
+What the numbers say, and what they do not:
+
+- Same rule as the rest of this file: compare chains of the same task. `hw1-run-transcribed` with `expensive`; `hw1-usual-save-cards` with `cheap`. Not the three rows of the first table with each other: they are different slices of what the narrator described. Load is ordinal: not minutes, not a score.
+- 160.40 against 73.55 does not say the narration is cheaper. `expensive` merges what the run chain keeps apart, in two places. After the first Apply it has 7 steps (27–33), the last three being "loop ×3"; the run chain has 16 (31–46): the same wait, refresh and re-orient, then a second round of chips, a second Apply, the Scan presses, and two refresh-and-check rounds. And `expensive` opens with the usual routine: its steps 1–4 are `hw1-usual-phone-page`'s steps 1–4.
+- Most of the gap is the reading term, 70.75 against 15.50. `expensive` carries estimated amounts; the narrator gives none, so each reading step counts one item. A lower load here does not mean less was read.
+- Peak 5 equals `expensive`'s peak. Both reach it at step 8, a HOLD with four items held plus its own slot. Here the four are the narrator's `4-bit` count, unnamed in the file; `expensive` names its four.
+- Silent still means "nothing declared wrong" (`P-02be`). `single_path` is silent because no step declares an intent or a view; that does not show the flow has one path. `separators` is silent because the narrator calls each of the four narrowings certain; that says nothing about other block boundaries.
+- Two narrated chains of one task are not what closes `P-02be`. That needs a captured chain.
 
 ## TapGrade 0.6.6: the chains the code implements
 

@@ -490,7 +490,7 @@ def test_held_is_inherited_until_changed_and_an_empty_list_clears_it():
 
 
 def test_round_trip_is_idempotent():
-    for name in ("hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json"):
+    for name in ("hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json", "hw1_correction_pass_transcribed.json"):
         d = C.load(FIX / name)
         assert C.parse(json.loads(C.dumps(d))) == d
     every_key = chain1({"op": "HOLD", "held": ["g"], "intent": "i", "view": "v", "target": "t", "note": "n"},
@@ -570,7 +570,8 @@ def _scramble(raw, rng):
     return raw
 
 
-@pytest.mark.parametrize("name", ["hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json"])
+@pytest.mark.parametrize("name", ["hw1_correction_pass.json", "hw1_correction_pass_fixed.json", "tapgrade_0_6_6.json",
+                                  "hw1_correction_pass_transcribed.json"])
 def test_findings_and_load_do_not_depend_on_any_free_text(name):
     raw = json.loads((FIX / name).read_text())
     before = V.check_doc(C.parse(copy.deepcopy(raw)))
@@ -1006,6 +1007,93 @@ def test_docs_name_the_public_evidence_of_the_hw1_chains_and_say_they_are_second
 
 def test_docs_numbers_for_the_tapgrade_chains_match_the_run(tapgrade):
     for cid, ch in tapgrade.items():
+        m = re.search(rf"^\| `{re.escape(cid)}` \| (\d+) \| ([0-9.]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", DOC, re.M)
+        assert m, f"no numbers row for {cid} in the docs"
+        ld, n = L.chain_load(ch), len(V.run_chain(ch)["findings"])
+        assert (int(m[1]), float(m[2]), int(m[3]), int(m[4]), int(m[5]), int(m[6])) == (
+            ld["steps"], round(ld["load"], 2), ld["peak_slots"], ld["counts"]["reloads"], ld["counts"]["reorients"], n), cid
+
+
+# --- 10. HW1 twice: a paraphrase, and the narration ----------------------------------------------------------------------
+# docs/OPERATION-CHAINS.md, "HW1 twice". `expensive` was made from a paraphrase with estimated amounts: a constructed chain that trips every
+# verifier. hw1_correction_pass_transcribed.json is a second reader's rebuild from the public narration (docs/evidence/hw1-correction-2026-10-03/):
+# this-run entries in the narrator's order, and what the narrator says usually happens as two further chains. A third, independent reader then
+# re-read it against the narration (verdict: sound with fixes, no step contradicts the narration); the numbers below are those after the fixes.
+TRANSCRIBED = "hw1_correction_pass_transcribed.json"
+RUN = "hw1-run-transcribed"
+RUN_FINDINGS = {"anchoring": [2, 16, 17, 35], "memory_budget": [8, 9, 16, 17], "candidate_set": [7], "interruption": [22, 32, 41, 45],
+                "colocation": [30, 39], "progress": [20, 21, 31, 40], "causal": [3, 43], "commit_correctness": [30, 39]}   # single_path, separators: silent
+TRANSCRIBED_NUMBERS = {RUN: (47, 73.55, 5, 1, 2, 23), "hw1-usual-phone-page": (11, 24.15, 6, 0, 0, 10), "hw1-usual-save-cards": (6, 1.25, 1, 0, 0, 1)}
+# steps whose findings follow from a value the narrator never stated (a tap's feedback, what a refresh kept, a placeholder similarity, the budget
+# and the hold, Apply's reversibility and verify_after): each must say so in its note
+UNSTATED = (2, 8, 16, 17, 20, 30, 35, 39, 41, 43, 45)
+
+
+@pytest.fixture(scope="module")
+def transcribed():
+    return {c["id"]: c for c in C.load(FIX / TRANSCRIBED)["chains"]}
+
+
+def test_transcribed_run_has_the_findings_the_readers_measured(transcribed):
+    assert fired(transcribed[RUN]) == RUN_FINDINGS
+
+
+def test_the_findings_that_rest_on_unstated_values_say_so_in_the_step(transcribed):
+    """The file claims every value the narrator did not state is marked. A finding that follows from one must be traceable to its step."""
+    steps = transcribed[RUN]["steps"]
+    assert {n for ns in RUN_FINDINGS.values() for n in ns} >= set(UNSTATED)                  # each of these steps does carry a finding
+    for n in UNSTATED:
+        assert "[carried: unstated]" in steps[n - 1]["text"]["note"], (n, steps[n - 1]["op"])
+
+
+def test_transcribed_chains_have_the_readers_numbers(transcribed):
+    assert set(transcribed) == set(TRANSCRIBED_NUMBERS)
+    for cid, want in TRANSCRIBED_NUMBERS.items():
+        ld, n = L.chain_load(transcribed[cid]), len(V.run_chain(transcribed[cid])["findings"])
+        assert (ld["steps"], round(ld["load"], 2), ld["peak_slots"], ld["counts"]["reloads"], ld["counts"]["reorients"], n) == want, cid
+
+
+def test_transcribed_run_has_the_counts_the_narration_gives(transcribed):
+    """Four refreshes, two re-orientations, one reload, two applies, four scans by eye, and four taps (the file, and three presses of the Scan
+    button). The paraphrase chain has six re-orientations and one apply."""
+    n = lambda op: sum(1 for s in transcribed[RUN]["steps"] if s["op"] == op)
+    assert (n("REFRESH"), n("RE-ORIENT"), n("RELOAD"), n("COMMIT"), n("SCAN"), n("TAP")) == (4, 2, 1, 2, 4, 4)
+
+
+def test_all_ten_verifiers_fire_on_the_constructed_chain_but_eight_on_the_narration_chain(hw1, transcribed):
+    """'Trips every verifier' is a property of the constructed chain. On the narrator's stated properties single_path and separators are silent."""
+    assert set(fired(hw1["expensive"])) == set(V.VERIFIERS)
+    assert set(fired(transcribed[RUN])) == set(V.VERIFIERS) - {"single_path", "separators"}
+
+
+def test_what_the_apply_findings_hang_on():
+    """colocation hangs on everything_on_screen (the narrator states that a summary-comment row cannot be opened); commit_correctness hangs on
+    Apply not being idempotent (the narrator says nothing about undoing or repeating it) and on verify_after below correctness (the narrator only
+    suspects a check of consistency alone). Each switch removes its own findings and nothing else."""
+    raw = json.loads((FIX / TRANSCRIBED).read_text())
+
+    def with_commits(**props):
+        run = copy.deepcopy(next(c for c in raw["chains"] if c["id"] == RUN))
+        for s in run["steps"]:
+            if s["op"] == "COMMIT":
+                s.update(props)
+        return fired(C.parse({**raw, "chains": [run]})["chains"][0])
+    base = with_commits()
+    assert base["commit_correctness"] == [30, 39] and base["colocation"] == [30, 39]
+    idem = with_commits(reversibility="idempotent")
+    assert "commit_correctness" not in idem and idem["colocation"] == [30, 39]
+    assert idem == {k: v for k, v in base.items() if k != "commit_correctness"}
+    screen = with_commits(everything_on_screen=True)
+    assert "colocation" not in screen and screen["commit_correctness"] == [30, 39]
+    assert screen == {k: v for k, v in base.items() if k != "colocation"}
+    assert with_commits(verify_after="correctness") == {k: v for k, v in base.items() if k != "commit_correctness"}
+    assert with_commits(reversibility="reversible") == base                              # reversible fires as irreversible does
+    both = with_commits(reversibility="idempotent", everything_on_screen=True)
+    assert "commit_correctness" not in both and "colocation" not in both
+
+
+def test_docs_numbers_for_the_transcribed_chains_match_the_run(transcribed):
+    for cid, ch in transcribed.items():
         m = re.search(rf"^\| `{re.escape(cid)}` \| (\d+) \| ([0-9.]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", DOC, re.M)
         assert m, f"no numbers row for {cid} in the docs"
         ld, n = L.chain_load(ch), len(V.run_chain(ch)["findings"])

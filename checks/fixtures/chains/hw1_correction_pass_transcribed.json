@@ -1,0 +1,465 @@
+{
+ "format": "emu-chain/1",
+ "provenance": {
+  "source": "narrated",
+  "date": "2026-10-03",
+  "who": "the grader's own account, rebuilt step by step by a second reader (a fresh-context verifier) from the public narration and its transcription, docs/evidence/hw1-correction-2026-10-03/ (narration sha256 9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741); re-read against the narration by an independent reader, fixes applied",
+  "note": "The run chain holds this-run entries only, in the narrator's order; what the narrator says usually happens is in the two hw1-usual-* chains (scope: generalized). A property the narrator did not state carries the checker's default or the reader's guess and is marked [carried: unstated] in the step's note: reversibility and verify_after of Apply are among them. Where the transcription differs from the narration (it records 2 of the 4 refreshes and none of the three Scan presses) the narration was followed; the Scan presses are TAP steps whose existence is inferred from their results. Built by one reader, then re-read against the narration by a second, independent one (read-only, 2026-10-04): no step contradicts the narration; its fixes are in this version. Some findings of the run chain still rest on values the narrator never stated (what a tap answered, what two refreshes kept) or on carried defaults; docs/OPERATION-CHAINS.md, 'HW1 twice', says which. Compare hw1_correction_pass.json, which was made from a paraphrase."
+ },
+ "chains": [
+  {
+   "id": "hw1-run-transcribed",
+   "task": "The 2026-10-03 correction pass in the narrator's order (this-run entries only)",
+   "steps": [
+    {
+     "op": "SCAN",
+     "target": "bottom row of chips read one by one, unrelated groups excluded (F1 line 19; G4 line 21)",
+     "anchor": "text-keyword"
+    },
+    {
+     "op": "DISCRIMINATE",
+     "target": "setting / review / resync: 'top candidates' (G4 line 21); similarity: only 'semantics not vertical enough' (line 19)",
+     "confusables": [
+      2,
+      0.8
+     ],
+     "anchor": "text-keyword",
+     "note": "count 2 = three candidates (stated); 0.8 [carried: unstated], a threshold-crossing placeholder for 语义不够垂直"
+    },
+    {
+     "op": "READ",
+     "target": "Re-sync list of changes (the counts on screen, 54 and 70, are from screenshot IMG_0680, not from the narration)",
+     "origin_stated": false,
+     "exclusions_stated": false,
+     "note": "line 13: 信息从哪儿来的？ / 还没load / 除旧迎新的提示 misleading; exclusions_stated false is an inference from 还没load, not stated [carried: unstated]"
+    },
+    {
+     "op": "READ",
+     "target": "a 'summary comment' row has no detail (D2 line 13)",
+     "note": "line 13: 啊对了，summary comment点击看不到详情 is recalled as a fact about the screen; a tap is not narrated"
+    },
+    {
+     "op": "INFER",
+     "target": "'new changes are already in; changing the grade implies the downstream' (D3 line 13)",
+     "note": "narrated after step 6, as the explanation of why the list misled him (line 13); placed before it, in the order it happened"
+    },
+    {
+     "op": "VERIFY",
+     "target": "'果然！！还没load！！' the belief found wrong (D4 line 13)",
+     "kind": "consistency",
+     "note": "kind not stated [carried: unstated]"
+    },
+    {
+     "op": "ENUMERATE",
+     "target": "page through the folder end to end, check the seams; extension filter removes n' distractors at a glance (E1 line 17; IMG_0686/0687)",
+     "pages": 2,
+     "held": [
+      "goal: pick the file to import",
+      "screens already seen"
+     ],
+     "note": "pages: two screenshots show >= 2 screens, narrator gives no number; held labels inferred from E1 text; set_visibly_complete absent (= false), as narrated"
+    },
+    {
+     "op": "HOLD",
+     "target": "'我的4-bit缓存已经又满了，我又开始忘记我是来干嘛的了' (E2 line 17)",
+     "held": [
+      "unnamed 1 (narrator: 4-bit cache full)",
+      "unnamed 2",
+      "unnamed 3",
+      "unnamed 4"
+     ],
+     "note": "4-bit read as 4 slots [carried: unstated]: bits are not items, and the narrator also says '3 bit' (line 9, when asking for help); the items are not named"
+    },
+    {
+     "op": "RELOAD",
+     "target": "the chat app -> conversation -> the line -> the instructions -> reload the goal (E3 line 17)",
+     "source": "chat",
+     "held": [
+      "goal: reloaded from the chat"
+     ]
+    },
+    {
+     "op": "KEYIFY",
+     "target": "first guess 'correction'; plan: no extra keyword, none missing (E3a line 17)",
+     "held": [
+      "key: correction (first guess)",
+      "plan: no more, no fewer"
+     ],
+     "note": "the held labels are from the narrator's inner speech; how many slots they take is [carried: unstated]"
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the unmistakable heading at the bottom of the reply (E3b line 17)",
+     "anchor": "unique-visual"
+    },
+    {
+     "op": "READ",
+     "target": "narrow 1: to this big section (确知不多也不少)",
+     "boundary_visible": true,
+     "note": "the four narrowings are READ steps: whether each is a fine or a coarse read is [carried: unstated]"
+    },
+    {
+     "op": "READ",
+     "target": "narrow 2: to the second small paragraph (确知不多也不少)",
+     "boundary_visible": true
+    },
+    {
+     "op": "READ",
+     "target": "narrow 3: to the file-name phrase (不多不少)",
+     "boundary_visible": true
+    },
+    {
+     "op": "READ",
+     "target": "narrow 4: inside the one candidate file name (不多不少)",
+     "boundary_visible": true
+    },
+    {
+     "op": "DISCRIMINATE",
+     "target": "hw1: not hw2, not a non-hw data file from another project (E3d line 17, top 2)",
+     "confusables": [
+      2,
+      0.8
+     ],
+     "anchor": "text-keyword",
+     "note": "count 2 = the two excluded kinds (stated); similarity [carried: unstated], a placeholder"
+    },
+    {
+     "op": "DISCRIMINATE",
+     "target": ".js vs .json: 'not js, not the look-alike script file just handled' (E3d line 17)",
+     "confusables": [
+      1,
+      0.95
+     ],
+     "anchor": "text-keyword",
+     "note": "count 1 (the script file) and 'very alike' (长得非常像) stated; 0.95 [carried: unstated], a placeholder for 非常像"
+    },
+    {
+     "op": "KEYIFY",
+     "target": "corrections / hw1 / json (top1 predicate, top2 subject, top3 object)",
+     "held": [
+      "key: corrections/hw1/json"
+     ],
+     "note": "he lists three keys as memorised; one compound key is the operation model's chunking (KEYIFY), not the narrator's count [carried: unstated]"
+    },
+    {
+     "op": "NAVIGATE",
+     "target": "back to the proposal page: 'the page is still at the Files App interface' (E4 line 17)",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "note": "restores: position is stated (页面已经定格在打开Files App的界面); goal and partial [carried: unstated]"
+    },
+    {
+     "op": "TAP",
+     "target": "the one correct .json file (planned sequence; E4 line 17)",
+     "feedback": "none",
+     "note": "a tap is not narrated (line 17: a plan, then 完了，卡住了). That it happened, when, and feedback none are [carried: unstated]"
+    },
+    {
+     "op": "WAIT",
+     "target": "'完了，卡住了，该不会登录超时退出了吧' (E5 line 17)",
+     "progress_visible": false,
+     "view_stable": true,
+     "note": "progress_visible false inferred from 'stuck'; view frozen (定格)"
+    },
+    {
+     "op": "REFRESH",
+     "target": "决定刷新页面 (E6 line 17)",
+     "restores": [
+      "partial"
+     ],
+     "note": "the import survived (导入生效了); position/goal: narrator had to recognise the page and recall the card"
+    },
+    {
+     "op": "RE-ORIENT",
+     "target": "识别当前页面内容，再次回忆自己要找哪个卡片——还是resync (E7 line 17)"
+    },
+    {
+     "op": "SCAN",
+     "target": "the banner: hw1-corrections.json (E8 line 17; IMG_0689)",
+     "note": "line 17: 识别resync页面内容，捕获关键字: a keyword capture by eye, a SCAN"
+    },
+    {
+     "op": "VERIFY",
+     "target": "'这确实和上次打开resync看到的不一样，所以导入生效了' (E8 line 17)",
+     "kind": "consistency",
+     "held": [],
+     "note": "kind [carried: unstated]; held cleared here is the reader's choice [carried: unstated]: the narrator says only 再次回忆 at the refresh (step 21), where clearing it would lower the load"
+    },
+    {
+     "op": "SCAN",
+     "target": "scroll down to find Apply: 滑，滑，滑，确认到头了 (E9 line 17)",
+     "times": 3
+    },
+    {
+     "op": "INFER",
+     "target": "'不对，还要Scan啊' (E9 line 17): Scan must come first"
+    },
+    {
+     "op": "TAP",
+     "target": "press Scan (line 17: 不对，还要Scan啊; the result comes up at line 19)",
+     "note": "the press is inferred from its result [carried: unstated]"
+    },
+    {
+     "op": "READ",
+     "target": "'update细则终于出来了': 66 would change (F line 19; IMG_0690, 13:36)"
+    },
+    {
+     "op": "COMMIT",
+     "target": "Apply #1 (G1 line 21)",
+     "reversibility": "irreversible",
+     "preview_before": true,
+     "everything_on_screen": false,
+     "verify_after": "consistency",
+     "note": "reversibility [carried: unstated]; preview_before true: line 19, the details came out; everything_on_screen false: line 13, a summary-comment row cannot be opened (stated for the Re-sync list, carried to Apply); verify_after consistency [carried: unstated]: only his suspicion at line 24, and after Apply nothing was shown until a re-scan (line 21)"
+    },
+    {
+     "op": "WAIT",
+     "target": "'又卡住了，尝试滑动×n，无果' (G2 line 21)",
+     "progress_visible": false,
+     "view_stable": true,
+     "note": "view did not move: swipes had no effect (view_stable true); progress_visible false [carried: unstated], from 卡住了"
+    },
+    {
+     "op": "REFRESH",
+     "target": "决定刷新，一刷又回到了题目页面 (G3 line 21)",
+     "restores": [
+      "partial"
+     ],
+     "note": "position lost (stated); applied rows survived (66 -> 42 left)"
+    },
+    {
+     "op": "RE-ORIENT",
+     "target": "让我重新找到刚才我在哪里 (G4 line 21)"
+    },
+    {
+     "op": "SCAN",
+     "target": "又开始一个一个读chip了，先排除与update语义无关的分组 (G4 line 21)",
+     "anchor": "text-keyword"
+    },
+    {
+     "op": "DISCRIMINATE",
+     "target": "setting / review / resync again: 重复前文操作 (G4 line 21)",
+     "confusables": [
+      2,
+      0.8
+     ],
+     "anchor": "text-keyword",
+     "note": "similarity 0.8 [carried: unstated], a placeholder as in step 2"
+    },
+    {
+     "op": "INFER",
+     "target": "'再次突然发现自己还要再scan一遍先才能看到结果' (G5 line 21)"
+    },
+    {
+     "op": "TAP",
+     "target": "press Scan again (line 21: 再scan一遍)",
+     "note": "the press is inferred from its result [carried: unstated]"
+    },
+    {
+     "op": "VERIFY",
+     "target": "'66个改动里面还剩42个没apply上' (G6 line 21; IMG_0691, 13:44)",
+     "kind": "consistency",
+     "note": "kind not stated [carried: unstated]"
+    },
+    {
+     "op": "COMMIT",
+     "target": "Apply #2: 再次点击apply (G7 line 21)",
+     "reversibility": "irreversible",
+     "preview_before": true,
+     "everything_on_screen": false,
+     "verify_after": "consistency",
+     "note": "reversibility, preview_before, everything_on_screen and verify_after repeated from step 28 [carried: unstated]; he saw a count only (66 changes, 42 not applied, line 21), not what each row becomes"
+    },
+    {
+     "op": "WAIT",
+     "target": "'卡住了……闪回到了widget最上端……页面反复瞬间跳回顶部' (G8 line 21)",
+     "progress_visible": false,
+     "view_stable": false,
+     "note": "view_stable false is stated; progress_visible [carried: unstated]"
+    },
+    {
+     "op": "REFRESH",
+     "target": "最后一次……刷新……rescan (H line 24)",
+     "restores": [
+      "partial"
+     ],
+     "note": "restores [carried: unstated]: line 24 says nothing about what this refresh kept; copied from steps 21 and 30. The rescan that follows is the next step"
+    },
+    {
+     "op": "TAP",
+     "target": "rescan (line 24: rescan)",
+     "note": "the press is inferred from its result [carried: unstated]"
+    },
+    {
+     "op": "VERIFY",
+     "target": "rescan -> 终于clean了 (H line 24; IMG_0692, 13:48 'Everything already matches')",
+     "kind": "consistency",
+     "origin_stated": false,
+     "exclusions_stated": false,
+     "note": "kind [carried: unstated]. The clean result does not say what blank means or which side overwrote which (line 24): origin_stated and exclusions_stated are false, and the doubts are the next step"
+    },
+    {
+     "op": "INFER",
+     "target": "blank: data lost, or really in sync? did the file overwrite the online database, or the reverse? (line 24: 空白到底是数据丢失了还是真的已经和在线端数据库同步了)"
+    },
+    {
+     "op": "REFRESH",
+     "target": "被迫最后检查一次，点击刷新 (H4 line 24)",
+     "restores": [
+      "partial"
+     ],
+     "note": "restores [carried: unstated], as step 38; the wait for the refresh to finish (等待刷新完成，确定刷新完成) is not recorded as a step"
+    },
+    {
+     "op": "VERIFY",
+     "target": "点来点去四处试试，检查眼前随机出现的每一条文字都是符合当前overall status的 (H4 line 24)",
+     "kind": "consistency",
+     "reading": "coarse",
+     "note": "kind [carried: unstated]; reading coarse is the default, not stated"
+    },
+    {
+     "op": "VERIFY",
+     "target": "back in SpeedGrader: rubric -> grade, comment, assignment comment: all correct and consistent; O(m+m^2) (I line 26)",
+     "kind": "correctness",
+     "reading": "fine",
+     "note": "m not stated; completion not stated: line 26 says it still has to be done, line 27 narrates the format part, line 29 the content part only as dread [carried: unstated]"
+    }
+   ],
+   "budget": 3,
+   "notes": "budget 3 is the checker's default and the operation model's 'about 3 things'. The narrator says '4-bit' (lines 5 and 17) and '3 bit' (line 9); bits are not items. With 4, the memory_budget finding at the .js vs .json step goes; the HOLD counts its own item twice (need 1 plus the item held), which is the first memory_budget finding's other half."
+  },
+  {
+   "id": "hw1-usual-phone-page",
+   "task": "What the narrator says usually happens on the phone page (scope: generalized, line 5 of the narration)",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "找到网页，打开网页，登陆 (B1)"
+    },
+    {
+     "op": "REFRESH",
+     "target": "刷新 (B2)",
+     "restores": [],
+     "feedback": "none",
+     "note": "restores [carried: unstated]; feedback: 不确定刷了没"
+    },
+    {
+     "op": "VERIFY",
+     "target": "迟疑（不确定刷了没） (B2)",
+     "kind": "consistency",
+     "note": "kind [carried: unstated]"
+    },
+    {
+     "op": "REFRESH",
+     "target": "再刷新一遍 (B2)",
+     "restores": [],
+     "note": "restores [carried: unstated]"
+    },
+    {
+     "op": "HOLD",
+     "target": "这个时候我的4-bit内存就已经烧得差不多了 (B3)",
+     "held": [
+      "unnamed 1",
+      "unnamed 2",
+      "unnamed 3"
+     ],
+     "note": "'almost burned': 3 placeholders [carried: unstated]"
+    },
+    {
+     "op": "SCAN",
+     "target": "一堆长得差不多的乱码中一边做空间定位一边做文字理解 (B4)",
+     "confusables": [
+      5,
+      0.9
+     ],
+     "anchor": "text-keyword",
+     "note": "count not stated (一堆), 5 [carried: unstated]; 'look alike' stated, 0.9 [carried: unstated]"
+    },
+    {
+     "op": "HOLD",
+     "target": "还要记得自己已经过滤过的所有选项的内容结论 (B5)",
+     "held": [
+      "unnamed 1",
+      "unnamed 2",
+      "unnamed 3",
+      "conclusions of filtered options"
+     ],
+     "note": "the four held items are [carried: unstated]"
+    },
+    {
+     "op": "DISCRIMINATE",
+     "target": "forgot one: go back, find it, re-infer, find the look-alike to compare (B6)",
+     "confusables": [
+      1,
+      0.8
+     ],
+     "anchor": "text-keyword",
+     "note": "similarity [carried: unstated]"
+    },
+    {
+     "op": "SCAN",
+     "target": "最后痛苦地找到“proposal”字样（中心词！！） (B8)",
+     "anchor": "text-keyword"
+    },
+    {
+     "op": "HOLD",
+     "target": "一般这个时候我已经忘了我自己是来干啥的了 (line 5)",
+     "held": [],
+     "note": "held cleared [carried: unstated]: the narrator says the goal is gone, not how many items were still held"
+    },
+    {
+     "op": "INFER",
+     "target": "不管了干脆全导一遍……反正全导一遍的复杂度O(n)跟我来回检查检索的复杂度其实是一样的 (line 5)"
+    }
+   ],
+   "notes": "Whether the refresh, hesitate, refresh pair (line 5) is what usually happens or happened in this run is an inference; read as what usually happens. The narrator's '3 bit' (line 9) is not used here."
+  },
+  {
+   "id": "hw1-usual-save-cards",
+   "task": "What saving each artifact card costs (scope: generalized, line 5 of the narration)",
+   "steps": [
+    {
+     "op": "ANCHOR",
+     "target": "open the card: 固定位置，有明显卡片，鹤立鸡群于文字之中 (A1)",
+     "anchor": "unique-visual",
+     "note": "眼前一共就这俩Artifact output卡片 (line 5): two cards, both in view; a wrong one costs only an overwrite: 幂等操作，无后果 (line 5), not encoded (no step declares it)"
+    },
+    {
+     "op": "ANCHOR",
+     "target": "three dots: 固定位置，有手机屏幕物理边界作为nav anchor (A2)",
+     "anchor": "edge"
+    },
+    {
+     "op": "SCAN",
+     "target": "Save to Files: 要往下翻一下，在一堆长得差不多的文字中...一波O(m)粗读 (A3)",
+     "confusables": [
+      5,
+      0.8
+     ],
+     "anchor": "text-keyword",
+     "note": "count not stated, 5 [carried: unstated]; 'look alike' stated, 0.8 [carried: unstated]"
+    },
+    {
+     "op": "READ",
+     "target": "一波O(1)细读 (A3)"
+    },
+    {
+     "op": "VERIFY",
+     "target": "检查folder位置(边际成本为0) (A4)",
+     "kind": "consistency",
+     "need": 0,
+     "reading": "none",
+     "note": "边际成本为0 (line 5): no cost, so need 0 and no reading"
+    },
+    {
+     "op": "ANCHOR",
+     "target": "点击右上角save: 固定位置，有屏幕物理边界定位 (A5)",
+     "anchor": "edge"
+    }
+   ]
+  }
+ ]
+}
