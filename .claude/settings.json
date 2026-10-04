@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/../MetaProof/ledgers/ROOT-SEED.md\"; [ -f \"$f\" ] || f=\"$CLAUDE_PROJECT_DIR/ledgers/ROOT-SEED.md\"; if [ -f \"$f\" ]; then echo \"=== ROOT-SEED, first screen (whole page: $f; MetaProof #263) ===\"; awk \"/^---\\$/{exit} {print}\" \"$f\" | head -80; fi; true'"
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/README.md\"; if [ -f \"$f\" ]; then echo \"=== drunken-emu: start here (README, Fresh session?) ===\"; awk \"/Fresh session\\\\? Read in this order/{p=1} p&&/^$/{exit} p{print}\" \"$f\"; fi; true'"
           }
         ]
       }

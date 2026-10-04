@@ -407,3 +407,20 @@ RE-ORIENT = 3 follow from section 1's own decomposition; the others are ordinal 
 one task; it is not minutes and has no threshold. The only gate in the layer is the budget flag.
 **Closes when** the weights are checked against timed narrations or measured `explore_run` costs, and a test asserts the order they must
 produce.
+
+## P-2a7c — decider-side working memory: HOLD / KEYIFY / RELOAD for `explore_run` `OPEN`
+
+EXPLORE-SPEC's implemented layer cannot model working-memory limits: its scripted policies re-read the page each step. A real
+task (HW1 correction pass on a phone, 2026-10-03, narrated step by step) spent most of its cost in RELOAD (fetching a lost goal
+from the chat) and RE-ORIENT (after refreshes), not in any single hard step. `docs/OPERATION-MODEL.md` gives the step anatomy,
+the budget, and ten verifiers; issues #31–#40 split the work (chain format, load, verifiers, the HW1 fixture).
+**Closes when** `explore_run` deciders hold at most N keys, RELOAD from a named source is a recorded step with its cost, the
+sweep over N is reported next to the existing knobs, and the HW1 fixture's verifiers fire on the recorded chain.
+## P-6e35 — the start block made this kit depend on a ledger it cannot assume `CLOSED`
+
+The zero-hint block (4c88f9f, MetaProof #263) told every session to read MetaProof's ROOT-SEED first and had no path when
+MetaProof was unreadable; a contributing session without access had to stall or proceed in violation (#44). For a
+general kit in exploratory work, rigidity costs more than divergence. **Closed 2026-10-04 by the owner's decision**: this
+repository stands on its own. CLAUDE.md and README point to README's own "Fresh session?" order; the SessionStart hook
+prints that order (still zero-hint, now native); MetaProof is optional context. Divergence from the other repositories'
+identical block is intended; sharing can come back later by choice.

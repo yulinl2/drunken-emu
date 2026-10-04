@@ -69,6 +69,12 @@ that is never executed is not a regeneration command.
 |   |-- test_external_svg.py
 |   `-- test_fragment_links.py
 |-- docs/
+|   |-- evidence/
+|   |   `-- hw1-correction-2026-10-03/
+|   |       |-- README.md
+|   |       |-- narration.zh.txt
+|   |       |-- transcription.jsonl
+|   |       `-- validate.py
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -189,5 +195,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-22 directories, 142 files tracked
+24 directories, 146 files tracked
 ```

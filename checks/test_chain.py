@@ -995,10 +995,13 @@ def test_tapgrade_mutation_controls_cover_every_verifier():
     assert covered == set(V.VERIFIERS)
 
 
-def test_docs_name_the_second_hand_evidence_of_the_hw1_chains_by_hash_only():
-    """The HW1 chains are a paraphrase of a private narration; the docs say so and cite it by hash, never by content."""
-    assert "9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741" in DOC
-    assert "second hand" in DOC and "docs/evidence/2026-10-03-hw1-correction-narration.md" in DOC
+def test_docs_name_the_public_evidence_of_the_hw1_chains_and_say_they_are_second_hand():
+    """The HW1 chains paraphrase a narration; the docs say so and point at the evidence directory, whose README carries the same hash."""
+    ev = KIT / "docs" / "evidence" / "hw1-correction-2026-10-03"
+    assert "docs/evidence/hw1-correction-2026-10-03/" in DOC and "second hand" in DOC
+    h = "9823c285dcfb9e279818cf5ad19402cae8960f97b40b512eeeb09103ec8d7741"
+    assert h in DOC and h in (ev / "README.md").read_text(encoding="utf-8")
+    assert hashlib.sha256((ev / "narration.zh.txt").read_bytes()).hexdigest() != "", "the narration file exists"
 
 
 def test_docs_numbers_for_the_tapgrade_chains_match_the_run(tapgrade):
