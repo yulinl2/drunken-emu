@@ -24,6 +24,8 @@ that is never executed is not a regeneration command.
 
 ```text
 .
+|-- .claude/
+|   `-- settings.json
 |-- .github/
 |   `-- workflows/
 |       `-- claims.yml
@@ -173,5 +175,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-20 directories, 128 files tracked
+21 directories, 129 files tracked
 ```
