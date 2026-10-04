@@ -924,7 +924,9 @@ def test_readme_tree_and_ci_point_at_the_layer():
 # docs/OPERATION-CHAINS.md, "TapGrade 0.6.6: the chains the code implements". Written from speeds-kit's docs/TAPGRADE.md and its
 # userscript, not from a person on a phone (provenance: designed). `fixed` is what the code was built toward; this is what was built.
 TAPGRADE = "tapgrade_0_6_6.json"
-TAPGRADE_FINDINGS = {"tapgrade-0.6.6": {}, "tapgrade-0.6.6-interrupted": {"interruption": [9]}, "tapgrade-0.6.6-failures": {}}
+TAPGRADE_FINDINGS = {"tapgrade-0.6.6": {"colocation": [7]},
+                     "tapgrade-0.6.6-interrupted": {"colocation": [7], "interruption": [9]},
+                     "tapgrade-0.6.6-failures": {"colocation": [7]}}
 
 
 @pytest.fixture(scope="module")
@@ -933,18 +935,23 @@ def tapgrade():
 
 
 def raw_tapgrade_repaired():
-    """The interrupted chain with the known gap closed (the page comes back on Update Canvas): one chain, silent."""
+    """The interrupted chain with both known findings closed (the page comes back on Update Canvas; the Apply screen shows what each
+    row becomes): one chain, silent. A design that does that is hypothetical: it is what the two findings ask for."""
     raw = json.loads((FIX / TAPGRADE).read_text())
     ch = next(c for c in raw["chains"] if c["id"] == "tapgrade-0.6.6-interrupted")
     next(s for s in ch["steps"] if s["op"] == "REFRESH")["restores"] = ["position", "goal", "partial"]
+    next(s for s in ch["steps"] if s["op"] == "COMMIT")["everything_on_screen"] = True
     return {**raw, "chains": [ch]}
 
 
-def test_tapgrade_chains_have_exactly_the_one_known_finding(tapgrade):
-    """After a refresh in the middle of Apply the page loads on the Grade view: goal and partial work survive, position does not."""
+def test_tapgrade_chains_have_exactly_the_known_findings(tapgrade):
+    """Two findings, each a real property of the flow as built:
+    - at the first Apply the comment text of a change is built only when a student is opened (colocation, step 7 of every chain);
+    - after a reload in the middle of Apply the page shows the Grade view: goal and partial work survive, position does not."""
     assert {cid: fired(ch) for cid, ch in tapgrade.items()} == TAPGRADE_FINDINGS
     found = V.run_chain(tapgrade["tapgrade-0.6.6-interrupted"])["findings"]
-    assert [(f["step"], f["verifier"], f["message"]) for f in found] == [(9, "interruption", "after REFRESH not restored: position")]
+    assert [(f["step"], f["verifier"]) for f in found] == [(7, "colocation"), (9, "interruption")]
+    assert found[1]["message"] == "after REFRESH not restored: position"
 
 
 def test_tapgrade_silence_is_not_omission(tapgrade):
@@ -952,7 +959,8 @@ def test_tapgrade_silence_is_not_omission(tapgrade):
     for cid, ch in tapgrade.items():
         steps = ch["steps"]
         commits = [s for s in steps if s["op"] == "COMMIT"]
-        assert commits and all(s["preview_before"] and s["everything_on_screen"] and s["verify_after"] == "correctness" for s in commits), cid
+        assert commits and all(s["preview_before"] and s["verify_after"] == "correctness" for s in commits), cid
+        assert commits[0]["everything_on_screen"] is False and all(s["everything_on_screen"] for s in commits[1:]), cid   # declared, not omitted
         assert commits[0]["reversibility"] == "irreversible", cid                       # TapGrade has no undo
         assert any(s["op"] == "ANCHOR" and s["anchor"] in ("edge", "fixed-position", "unique-visual") for s in steps), cid
         waits = [s for s in steps if s["op"] == "WAIT"]
@@ -969,7 +977,7 @@ def test_tapgrade_working_set_sits_exactly_at_the_budget_and_nothing_is_reloaded
         assert (res["budget"], res["load"]["peak_slots"], res["load"]["counts"]["reloads"]) == (3, 3, 0), cid
 
 
-def test_closing_the_known_gap_silences_the_interrupted_chain():
+def test_closing_the_known_findings_silences_the_interrupted_chain():
     assert fired(C.parse(raw_tapgrade_repaired())["chains"][0]) == {}
 
 
