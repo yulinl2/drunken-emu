@@ -40,7 +40,8 @@ that is never executed is not a regeneration command.
 |   |-- fixtures/
 |   |   |-- chains/
 |   |   |   |-- hw1_correction_pass.json
-|   |   |   `-- hw1_correction_pass_fixed.json
+|   |   |   |-- hw1_correction_pass_fixed.json
+|   |   |   `-- worked_example.json
 |   |   |-- fragment_links_clean.jsx
 |   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
@@ -70,6 +71,7 @@ that is never executed is not a regeneration command.
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
+|   |-- OPERATION-CHAINS.md
 |   |-- OPERATION-MODEL.md
 |   |-- SANDBOX-FACTS.md
 |   |-- TREE.md
@@ -186,5 +188,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-22 directories, 139 files tracked
+22 directories, 141 files tracked
 ```

@@ -10,11 +10,14 @@ Every verifier has a must-fire case and a must-hold case: a check that cannot fa
   4. the format: loud errors naming the step, defaults, shorthand, round trip, blind view, YAML optional;
   5. content-blindness: a tripwire where free text lives, and a mutation of every free-text field;
   6. the load and the budget: every term, the order cheap < fixed < expensive, length never scored;
-  7. the CLI `bin/emu chain check`: exit codes 0 / 1 / 2.
+  7. the CLI `bin/emu chain check`: exit codes 0 / 1 / 2;
+  8. the docs cannot rot: the worked example, the flagged-step table, the verifier table, the weights, the ledger ids.
 """
 import copy
+import hashlib
 import json
 import random
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -517,8 +520,10 @@ def test_yaml_is_optional_never_required(monkeypatch):
     with pytest.raises(C.ChainError, match="PyYAML"):
         C.load_text(text, "yaml")
     monkeypatch.undo()
-    yaml = pytest.importorskip("yaml")
-    assert yaml
+    try:
+        import yaml                                          # noqa: F401  (optional; its absence is the normal case in CI)
+    except ImportError:
+        pytest.skip("PyYAML is not installed: the loud error above is the whole contract then")
     assert [s["op"] for s in C.load_text(text, "yaml")["chains"][0]["steps"]] == ["READ", "SCAN"]
 
 
@@ -693,3 +698,77 @@ def test_bin_emu_dispatches_chain_before_it_needs_an_artifact_and_keeps_its_othe
     p = subprocess.run(["bash", str(KIT / "bin" / "emu")], capture_output=True, text=True, cwd=str(KIT), timeout=30)
     assert p.returncode != 0 and "chain" in p.stderr
 
+
+
+# --- 8. the docs cannot rot -------------------------------------------------------------------------------------------
+DOC = (KIT / "docs" / "OPERATION-CHAINS.md").read_text(encoding="utf-8")
+LEDGER = [("operation chains cannot yet be captured from a driven session", "9d8b"),
+          ("chain verifiers read declared properties, so a chain can pass by omission", "02be"),
+          ("the chain load weights are ordinal and uncalibrated", "67a1")]
+
+
+def _block(marker, fence):
+    m = re.search(rf"<!-- {marker} -->\n```{fence}\n(.*?)\n```", DOC, re.S)
+    assert m, f"docs/OPERATION-CHAINS.md lost its {marker} block"
+    return m.group(1)
+
+
+def test_docs_worked_example_is_the_fixture_and_its_report_is_the_real_output():
+    assert json.loads(_block("worked-example:json", "json")) == json.loads((FIX / "worked_example.json").read_text())
+    rc, out, _ = emu("check", "checks/fixtures/chains/worked_example.json")
+    assert rc == 1 and out.rstrip("\n") == _block("worked-example:output", "")
+    assert fired(C.load(FIX / "worked_example.json")["chains"][0]) == {"anchoring": [3], "progress": [7], "interruption": [8]}
+
+
+def test_docs_captured_chain_example_loads_and_shows_the_budget_at_n_equals_2():
+    ch = C.parse(json.loads(_block("captured-example:json", "json")))["chains"][0]
+    assert ch["budget"] == 2 and ch["provenance"]["source"] == "captured"
+    assert fired(ch) == {"anchoring": [2], "memory_budget": [2, 5]}      # the SCAN overflows N=2; the RELOAD
+    assert fired(ch, budget=5) == {"anchoring": [2], "memory_budget": [5]}   # only the RELOAD remains with room to spare
+
+
+def test_docs_flagged_step_table_is_the_one_this_file_asserts():
+    rows = {m.group(1): [int(x) for x in m.group(2).split(",")]
+            for m in re.finditer(r"^\| `(\w+)` \| ([0-9, ]+) \|", DOC, re.M) if m.group(1) in V.VERIFIERS}
+    assert rows == EXPENSIVE
+
+
+def test_docs_verifier_table_names_every_verifier_with_its_section_and_issue():
+    for name, (_, sec, issue) in V.VERIFIERS.items():
+        assert re.search(rf"^\| `{name}` \| {re.escape(sec)} \| {re.escape(issue)}", DOC, re.M), f"{name} {sec} {issue}"
+
+
+def test_docs_state_every_weight_with_its_value():
+    for k, v in L.WEIGHTS.items():
+        m = re.search(rf"`{k}` ([0-9.]+)", DOC)
+        assert m and float(m.group(1)) == v, f"docs disagree with WEIGHTS[{k!r}] = {v}"
+
+
+def test_docs_numbers_for_the_recorded_chains_match_the_run(hw1):
+    for cid in ("cheap", "expensive"):
+        m = re.search(rf"^\| `{cid}` \| (\d+) \| ([0-9.]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|", DOC, re.M)
+        assert m, f"no numbers row for {cid} in the docs"
+        ld, n = L.chain_load(hw1[cid]), len(V.run_chain(hw1[cid])["findings"])
+        assert (int(m[1]), float(m[2]), int(m[3]), int(m[4]), int(m[5]), int(m[6])) == (
+            ld["steps"], round(ld["load"], 2), ld["peak_slots"], ld["counts"]["reloads"], ld["counts"]["reorients"], n)
+
+
+def test_ledger_entries_exist_with_content_derived_ids_and_the_docs_name_them():
+    ledger = (KIT / "docs" / "OPEN-PROBLEMS.md").read_text(encoding="utf-8")
+    for title, pid in LEDGER:
+        assert hashlib.sha1(title.encode()).hexdigest()[:4] == pid                    # CONTRIBUTING rule 6
+        assert re.search(rf"^## P-{pid} — .* `OPEN`$", ledger, re.M)
+        assert f'sha1("{title}")' in ledger and f"`P-{pid}`" in DOC
+    assert "P-2a7c" in DOC and "## P-2a7c" not in ledger     # PR #42 owns that entry: referenced here, not duplicated
+
+
+def test_readme_tree_and_ci_point_at_the_layer():
+    readme = (KIT / "README.md").read_text(encoding="utf-8")
+    for needle in ("step | chain", "chain.py", "chain_verifiers.py", "docs/OPERATION-CHAINS.md", "bin/emu chain check"):
+        assert needle in readme, needle
+    assert "OPERATION-CHAINS.md" in (KIT / "docs" / "TREE.md").read_text(encoding="utf-8")    # gen_tree --check asserts the rest
+    ci = (KIT / ".github" / "workflows" / "claims.yml").read_text(encoding="utf-8")
+    seg = ci.split("\n  chains:")[1].split("\n  figbank:")[0]
+    cmds = [l for l in seg.splitlines() if l.strip().startswith("- ")]
+    assert any("pytest -q checks/test_chain.py" in l for l in cmds)
+    assert not any("playwright" in l.lower() or "chromium" in l.lower() for l in cmds)        # no browser in this job

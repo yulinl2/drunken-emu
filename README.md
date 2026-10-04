@@ -25,7 +25,7 @@ here as evidence of absence.
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots | step
+│   ├── emu                    entry point: smoke | audit | shots | step | chain
 │   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
@@ -37,6 +37,11 @@ drunken-emu/
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
+│   ├── chain.py               operation chains: JSON format, load/validate/normalise (no browser; docs/OPERATION-CHAINS.md)
+│   ├── chain_load.py          chain load + working-memory budget B
+│   ├── chain_verifiers.py     ten content-blind verifiers over a recorded chain
+│   ├── chain_check.py         the CLI behind `bin/emu chain check`
+│   ├── test_chain.py          must-fire / must-hold per verifier, mutation controls, the CLI (no browser)
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
@@ -46,6 +51,8 @@ drunken-emu/
 │   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered
 │   ├── LATEST-CONCLUSIONS.md  one line per settled conclusion, tagged
 │   ├── EXPLORE-SPEC.md        P1 design: parameterised impairment, dose-response curve
+│   ├── OPERATION-MODEL.md     what a person does, step by step, and what it costs: primitives, budget, ten verifiers
+│   ├── OPERATION-CHAINS.md    the chain layer: format, load, verifiers, HW1 fixtures, the P-2a7c integration design
 │   ├── ZENODO-RUNBOOK.md      P5: ordering constraint, human part A then session part B
 │   ├── SANDBOX-FACTS.md       measured container facts
 │   └── TREE.md                complete tracked-file index (generated)
@@ -141,6 +148,19 @@ python3 -m pytest -q checks/test_explore_text.py     # 5 tests, < 1 s, no model 
 impairment knobs, pluggable policy. A scripted policy that *needs* affordances and memory passes;
 a stateless tapper fails. The browser backend is the same loop with different render/act.
 
+## Operation chains (no Chromium)
+
+The kit's original purpose, simulating the *person*: a task recorded as a chain of primitive operations
+(`docs/OPERATION-MODEL.md`), checked against a working-memory budget and ten content-blind verifiers.
+
+```
+bin/emu chain check checks/fixtures/chains/hw1_correction_pass.json         # exit 1: its `expensive` chain trips all ten verifiers
+bin/emu chain check checks/fixtures/chains/hw1_correction_pass_fixed.json   # exit 0
+python3 -m pytest -q checks/test_chain.py                                   # no browser, no model call; CI job `chains`
+```
+
+Format, load, verifiers, fixtures: `docs/OPERATION-CHAINS.md`.
+
 ## Layout
 
 ```
@@ -166,6 +186,7 @@ emu-kit/
 │   ├── affordances.py      what a reader could act on, from the rendered page (visible part, semantic vs pointer-only)
 │   ├── explore_text.py     the explore loop on a text page (no Chromium); test_explore_text.py asserts it
 │   ├── test_explore_run.py positive control for the sweep: impairment bites at p=1, not at p=0; contract errors stop the run
+│   ├── chain*.py · test_chain.py   operation chains: format, load, ten verifiers, CLI, tests (docs/OPERATION-CHAINS.md)
 │   ├── svg_legibility.py · svg_text_gates.py · test_external_svg.py   figure gates (see figbank/)
 │   ├── browser.py          launches the Chromium that is actually installed
 │   └── ci_claims.py        asserts this README is still true; runs in CI

@@ -369,3 +369,41 @@ second; mechanically fine, semantically not a toggle. The checks still only asse
 screenshot reader has to know which control was chosen. **Closes when** each interaction check records the matched
 element's role, text length and geometry (not its text) next to its screenshot. Closed shadow roots stay invisible by
 design; the report's `shadow_roots_walked` makes that visible.
+
+
+## P-9d8b — operation chains cannot yet be captured from a driven session `OPEN`
+
+*ID: `P-` + first four hex of `sha1("operation chains cannot yet be captured from a driven session")` (CONTRIBUTING rule 6).*
+
+**The gap.** `checks/chain.py` reads chains that a person writes from a narration. The "later" half of #32, a chain captured from a
+driven session, does not exist: `explore_run` and `explore_step` record decisions, not primitives with properties.
+**Design.** `docs/OPERATION-CHAINS.md`, section "P-2a7c integration point": how a decision record becomes steps; what the runner can
+measure without reading content and what the policy must declare; B is the run's own working-memory limit N. Related: P-2a7c
+(decider-side working memory, PR #42).
+**Cheapest first step.** The text backend (`checks/explore_text.py`): no browser, and its `mem_capacity` already bounds the decider's memory.
+**Closes when** a scripted run writes a `source: captured` chain, `bin/emu chain check` reads it, the chain's `budget` equals the run's N,
+and its RELOAD count equals the runner's own count of needed keys that were dropped. One test asserts all three.
+
+## P-02be — chain verifiers read declared properties, so a chain can pass by omission `OPEN`
+
+*ID: `P-` + first four hex of `sha1("chain verifiers read declared properties, so a chain can pass by omission")`.*
+
+**The gap.** Each of the ten verifiers (`checks/chain_verifiers.py`) looks only at steps that declare the property it checks. A COMMIT
+must say `everything_on_screen`; a list that is not marked list-showing is never asked where it came from; a refresh nobody recorded is
+never checked. Silence means "nothing declared wrong". Each docstring says what that verifier cannot see; nothing yet tests a narration
+against a measurement.
+**Approximations, named.** The look-alike line (similarity 0.5) is a default, not a result of any experiment. `single_path` compares the
+narrator's `intent` and `view` keys: two views under different keys are invisible. `idempotent` on a COMMIT removes two requirements and is
+the narrator's claim. `held` is the narrator's list of what a person kept in mind.
+**Closes when** a captured chain (P-9d8b) and a narrated chain of the same task are compared property by property and the disagreements
+are listed.
+
+## P-67a1 — the chain load weights are ordinal and uncalibrated `OPEN`
+
+*ID: `P-` + first four hex of `sha1("the chain load weights are ordinal and uncalibrated")`.*
+
+**The gap.** `checks/chain_load.py` turns OPERATION-MODEL section 3 into one number with explicit weights (`WEIGHTS`). RELOAD = 6 and
+RE-ORIENT = 3 follow from section 1's own decomposition; the others are ordinal judgement. None is measured. The number ranks chains of
+one task; it is not minutes and has no threshold. The only gate in the layer is the budget flag.
+**Closes when** the weights are checked against timed narrations or measured `explore_run` costs, and a test asserts the order they must
+produce.
