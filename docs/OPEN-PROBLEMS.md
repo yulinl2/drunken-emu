@@ -369,3 +369,13 @@ second; mechanically fine, semantically not a toggle. The checks still only asse
 screenshot reader has to know which control was chosen. **Closes when** each interaction check records the matched
 element's role, text length and geometry (not its text) next to its screenshot. Closed shadow roots stay invisible by
 design; the report's `shadow_roots_walked` makes that visible.
+
+
+## P-6e35 — the start block made this kit depend on a ledger it cannot assume `CLOSED`
+
+The zero-hint block (4c88f9f, MetaProof #263) told every session to read MetaProof's ROOT-SEED first and had no path when
+MetaProof was unreadable; a contributing session without access had to stall or proceed in violation (#44). For a
+general kit in exploratory work, rigidity costs more than divergence. **Closed 2026-10-04 by the owner's decision**: this
+repository stands on its own. CLAUDE.md and README point to README's own "Fresh session?" order; the SessionStart hook
+prints that order (still zero-hint, now native); MetaProof is optional context. Divergence from the other repositories'
+identical block is intended; sharing can come back later by choice.
