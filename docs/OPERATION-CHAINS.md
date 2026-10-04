@@ -320,7 +320,8 @@ Each is a content-blind function over the blind chain. It returns `{verifier, st
 | `hw1-usual-phone-page` | `hw1_correction_pass_transcribed.json` | 9 | 10 findings, from 4 verifiers: `anchoring`, `memory_budget`, `interruption`, `progress` |
 | `hw1-usual-save-cards` | `hw1_correction_pass_transcribed.json` | 6 | 1 finding: step 3, `anchoring` |
 | `tapgrade-0.6.6` | `tapgrade_0_6_6.json` | 10 | 1 finding: step 7, Apply (the comment text of a change is one tap away); peak 3 slots |
-| `tapgrade-0.6.6-interrupted` | `tapgrade_0_6_6.json` | 15 | 2 findings: step 7 (the same), step 9 (a REFRESH that does not restore position) |
+| `tapgrade-0.6.6-interrupted` | `tapgrade_0_6_6.json` | 14 | 1 finding: step 7 (the same); the page comes back on Update Canvas |
+| `tapgrade-0.6.6-interrupted-lands-on-grade` | `tapgrade_0_6_6.json` | 15 | 2 findings: step 7 (the same), step 9 (a REFRESH that does not restore position): the flow before the reload fix, kept as the find |
 | `tapgrade-0.6.6-failures` | `tapgrade_0_6_6.json` | 14 | 1 finding: step 7 (the same) |
 
 Exact steps flagged on `expensive` (asserted by `test_chain.py`; worked out by hand from the file before the code ran):
@@ -447,27 +448,30 @@ What the numbers say, and what they do not:
 | Chain | Steps | Load | Peak slots | RELOAD | RE-ORIENT | Findings |
 |---|---|---|---|---|---|---|
 | `tapgrade-0.6.6` | 10 | 39.50 | 3 | 0 | 0 | 1 |
-| `tapgrade-0.6.6-interrupted` | 15 | 49.75 | 3 | 0 | 1 | 2 |
+| `tapgrade-0.6.6-interrupted` | 14 | 45.50 | 3 | 0 | 0 | 1 |
+| `tapgrade-0.6.6-interrupted-lands-on-grade` | 15 | 49.75 | 3 | 0 | 1 | 2 |
 | `tapgrade-0.6.6-failures` | 14 | 46.50 | 3 | 0 | 0 | 1 |
 
 What each chain is:
 
 - `tapgrade-0.6.6`: nothing goes wrong. Open SpeedGrader, tap Update Canvas, read where the changes come from, scan the list, (optionally) open a student, Apply, watch, read the verified line.
-- `tapgrade-0.6.6-interrupted`: the page is reloaded in the middle of Apply; the person opens Update Canvas again and taps Resume.
+- `tapgrade-0.6.6-interrupted`: the page is reloaded in the middle of Apply; it comes back on Update Canvas, whose first line is `Interrupted: 42 of 66 left — Resume`; the person taps Resume.
+- `tapgrade-0.6.6-interrupted-lands-on-grade`: the same before the reload fix. The page came back on the Grade view; the person opened Update Canvas again (a RE-ORIENT) and tapped Resume. Kept because it is the flow in which a verifier found a real defect.
 - `tapgrade-0.6.6-failures`: 36 of 66 fail to write; the report lists each with the student, the request, the HTTP status and Canvas' own message; Retry failed. The removal of older summary comments (HW1's "Removed 18 of 54", with its own confirmation and its own retry) is a separate flow and is not modelled.
 
-**Two findings.**
+**Two findings, one of them fixed.**
 
-1. *Step 7 of every chain, `colocation`.* At the first Apply the collapsed rows show points before and after and a source tag; the comment text is built only when a student is opened. Not everything the decision depends on is on the screen, so each chain declares `everything_on_screen: false` and the verifier fires. This is a judgment about what "on screen" means: a before/after one tap away could be counted as on screen, and the verifier would then be silent. The file takes the stricter reading, because a silent check should be earned. Resume and Retry failed rest on a banner or a failure list and a count that are on the screen, so they are declared true. A phone cannot show 66 comments at once; what could close this is a one-line change summary on each collapsed row.
-2. *Step 9 of `tapgrade-0.6.6-interrupted`, `interruption`.* After a reload the page shows the Grade view (its `view` starts as `grade` and is not stored; open or collapsed, height and pill position are). The record on the phone survives, so partial work is restored. The number on the bar comes back only after a fresh scan, so the goal rests on a bare number. The place is not restored: the person taps Update Canvas again to see `Interrupted: 42 of 66 left — Resume`. OPERATION-MODEL §5.4 asks for all three. `fixed` assumed the view would come back on Update Canvas. Storing the view would restore the view, not the open rows or the scroll place; whether `position` then counts as restored depends on what position means.
+1. *Step 7 of every chain, `colocation`* (open). At the first Apply the collapsed rows show points before and after and a source tag; the comment text is built only when a student is opened. Not everything the decision depends on is on the screen, so each chain declares `everything_on_screen: false` and the verifier fires. This is a judgment about what "on screen" means: a before/after one tap away could be counted as on screen, and the verifier would then be silent. The file takes the stricter reading, because a silent check should be earned. Resume and Retry failed rest on a banner or a failure list and a count that are on the screen, so they are declared true. A phone cannot show 66 comments at once; what could close this is a one-line change summary on each collapsed row.
+2. *Step 9 of `tapgrade-0.6.6-interrupted-lands-on-grade`, `interruption`* (found, then fixed). After a reload the page showed the Grade view (its `view` starts as `grade` and is not stored; open or collapsed, height and pill position are). The record on the phone survives, so partial work is restored. The number on the bar comes back only after a fresh scan, so the goal rests on a bare number. The place was not restored: the person tapped Update Canvas again to see `Interrupted: 42 of 66 left — Resume`. OPERATION-MODEL §5.4 asks for all three. `fixed` assumed the view would come back on Update Canvas.
+   **Fixed** in speeds-kit PR #33 (audit checks VIEW-1 and VIEW-2): when the page loads and an update is open on the phone (not finished, started under 12 hours ago), it opens on Update Canvas, whose first line is that banner. `tapgrade-0.6.6-interrupted` is the chain as built now: its REFRESH restores position and the RE-ORIENT step is gone, so `interruption` is silent. The chain as it was is kept, as `tapgrade-0.6.6-interrupted-lands-on-grade`, because it is the flow in which a verifier found a real defect; `test_chain.py` asserts the two differ only by the fix. Honest limits: the view comes back, not the rows that were open or the place in the list, and whether `position` counts as restored then depends on what position means. The declaration rests on an audit check on a mock Canvas, not on anyone driving a phone (`P-02be`), and the edit to the chain was made by the session that made the fix, not by a second reader.
 
-Closing both makes the interrupted chain silent. `test_chain.py` asserts that, then breaks each of ten properties of the repaired chain, one at a time: exactly the matching verifier fires.
+Closing the remaining finding makes the interrupted chain silent. `test_chain.py` asserts that, then breaks each of ten properties of the repaired chain, one at a time: exactly the matching verifier fires.
 
 What the numbers say, and what they do not:
 
 - The working set peaks at 3 = B: the step's own need (1) plus 2 held (the goal, and what to expect: 212 rows, 66 students). speeds-kit's doc says "peak 2": it counts held items only. The second held item is the person's own cross-check, not something the screen forces: the screen shows both numbers, but the block that shows 212 scrolls away while the foot shows only 66. A foot reading `Apply 66 updates (212 rows)` would remove the need to hold it and lower steps 4–7 to 2.
 - Load is higher than `fixed` (15.00) mostly because this chain includes the scan of 66 rows that `fixed` left out (66 coarse items × 0.25 = 16.5). Compare chains of the same task; the task here includes that scan.
-- The other judgments are in the file's `provenance.note`: Apply is irreversible (no undo; the text from before stays on the phone) while Resume and Retry failed are idempotent; the tap on Update Canvas after a reload is a RE-ORIENT, as speeds-kit's doc calls it.
+- The other judgments are in the file's `provenance.note`: Apply is irreversible (no undo; the text from before stays on the phone) while Resume and Retry failed are idempotent; in the chain as it was before the reload fix, the tap on Update Canvas after a reload is a RE-ORIENT, as speeds-kit's doc then called it; after the fix there is no such step.
 - Silent still means "nothing declared wrong" (`P-02be`). A chain captured from the audit's own run of the flow (`P-9d8b`) is the way to test what is declared here.
 
 ## P-2a7c integration point (design only; nothing here is built)

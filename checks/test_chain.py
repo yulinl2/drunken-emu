@@ -926,8 +926,10 @@ def test_readme_tree_and_ci_point_at_the_layer():
 # userscript, not from a person on a phone (provenance: designed). `fixed` is what the code was built toward; this is what was built.
 TAPGRADE = "tapgrade_0_6_6.json"
 TAPGRADE_FINDINGS = {"tapgrade-0.6.6": {"colocation": [7]},
-                     "tapgrade-0.6.6-interrupted": {"colocation": [7], "interruption": [9]},
+                     "tapgrade-0.6.6-interrupted": {"colocation": [7]},
+                     "tapgrade-0.6.6-interrupted-lands-on-grade": {"colocation": [7], "interruption": [9]},
                      "tapgrade-0.6.6-failures": {"colocation": [7]}}
+INTERRUPTED, BEFORE_FIX = "tapgrade-0.6.6-interrupted", "tapgrade-0.6.6-interrupted-lands-on-grade"
 
 
 @pytest.fixture(scope="module")
@@ -936,21 +938,23 @@ def tapgrade():
 
 
 def raw_tapgrade_repaired():
-    """The interrupted chain with both known findings closed (the page comes back on Update Canvas; the Apply screen shows what each
-    row becomes): one chain, silent. A design that does that is hypothetical: it is what the two findings ask for."""
+    """The interrupted chain with its one known finding closed (the Apply screen shows what each row becomes): one chain, silent. The other
+    finding (the page comes back on the Grade view) was closed in the code, and the chain says so. A design that closes the first is
+    hypothetical: it is what the finding asks for."""
     raw = json.loads((FIX / TAPGRADE).read_text())
-    ch = next(c for c in raw["chains"] if c["id"] == "tapgrade-0.6.6-interrupted")
-    next(s for s in ch["steps"] if s["op"] == "REFRESH")["restores"] = ["position", "goal", "partial"]
+    ch = next(c for c in raw["chains"] if c["id"] == INTERRUPTED)
     next(s for s in ch["steps"] if s["op"] == "COMMIT")["everything_on_screen"] = True
     return {**raw, "chains": [ch]}
 
 
 def test_tapgrade_chains_have_exactly_the_known_findings(tapgrade):
-    """Two findings, each a real property of the flow as built:
-    - at the first Apply the comment text of a change is built only when a student is opened (colocation, step 7 of every chain);
-    - after a reload in the middle of Apply the page shows the Grade view: goal and partial work survive, position does not."""
+    """One finding in the flow as built now, and one that was found and then fixed:
+    - at the first Apply the comment text of a change is built only when a student is opened (colocation, step 7 of every chain): open;
+    - after a reload in the middle of Apply the page showed the Grade view: goal and partial work survived, position did not (interruption,
+      step 9 of the chain as it was, kept as BEFORE_FIX). speeds-kit PR #33 fixed it; the chain as built now says the page comes back on
+      Update Canvas and is silent there."""
     assert {cid: fired(ch) for cid, ch in tapgrade.items()} == TAPGRADE_FINDINGS
-    found = V.run_chain(tapgrade["tapgrade-0.6.6-interrupted"])["findings"]
+    found = V.run_chain(tapgrade[BEFORE_FIX])["findings"]
     assert [(f["step"], f["verifier"]) for f in found] == [(7, "colocation"), (9, "interruption")]
     assert found[1]["message"] == "after REFRESH not restored: position"
 
@@ -968,8 +972,9 @@ def test_tapgrade_silence_is_not_omission(tapgrade):
         assert waits and all(s["progress_visible"] and s["view_stable"] for s in waits), cid
         assert any(s["op"] == "VERIFY" and s["kind"] == "correctness" for s in steps[steps.index(commits[0]):]), cid
         assert any("origin_stated" in s for s in steps) and any("boundary_visible" in s for s in steps), cid
-    refresh = next(s for s in tapgrade["tapgrade-0.6.6-interrupted"]["steps"] if s["op"] == "REFRESH")
-    assert refresh["restores"] == ["goal", "partial"]                                    # the probe stays, and says what is lost
+    for cid, lost in ((BEFORE_FIX, ["goal", "partial"]), (INTERRUPTED, ["position", "goal", "partial"])):
+        refresh = next(s for s in tapgrade[cid]["steps"] if s["op"] == "REFRESH")
+        assert refresh["restores"] == lost, cid                                          # the probe stays, and says what comes back
 
 
 def test_tapgrade_working_set_sits_exactly_at_the_budget_and_nothing_is_reloaded(tapgrade):
@@ -978,8 +983,19 @@ def test_tapgrade_working_set_sits_exactly_at_the_budget_and_nothing_is_reloaded
         assert (res["budget"], res["load"]["peak_slots"], res["load"]["counts"]["reloads"]) == (3, 3, 0), cid
 
 
-def test_closing_the_known_findings_silences_the_interrupted_chain():
+def test_closing_the_known_finding_silences_the_interrupted_chain():
     assert fired(C.parse(raw_tapgrade_repaired())["chains"][0]) == {}
+
+
+def test_the_reload_fix_is_what_separates_the_two_interrupted_chains(tapgrade):
+    """Apply the fix to the chain as it was (the refresh restores position, the person no longer has to find Update Canvas again) and its
+    findings are those of the chain as built now: nothing else was changed to make the finding go away."""
+    raw = json.loads((FIX / TAPGRADE).read_text())
+    old = copy.deepcopy(next(c for c in raw["chains"] if c["id"] == BEFORE_FIX))
+    next(s for s in old["steps"] if s["op"] == "REFRESH")["restores"] = ["position", "goal", "partial"]
+    old["steps"] = [s for s in old["steps"] if s["op"] != "RE-ORIENT"]
+    assert fired(C.parse({**raw, "chains": [old]})["chains"][0]) == fired(tapgrade[INTERRUPTED])
+    assert len(old["steps"]) == len(tapgrade[INTERRUPTED]["steps"])
 
 
 @pytest.mark.parametrize("mutate", MUTATIONS, ids=[m.__name__[4:] for m in MUTATIONS])
