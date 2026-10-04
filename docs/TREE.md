@@ -35,6 +35,10 @@ that is never executed is not a regeneration command.
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
 |-- checks/
+|   |-- fixtures/
+|   |   |-- fragment_links_clean.jsx
+|   |   |-- fragment_links_nolinks.jsx
+|   |   `-- fragment_links_planted.jsx
 |   |-- __init__.py
 |   |-- affordances.py
 |   |-- blind_audit.py
@@ -43,17 +47,20 @@ that is never executed is not a regeneration command.
 |   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
+|   |-- fragment_links.py
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
-|   `-- test_external_svg.py
+|   |-- test_external_svg.py
+|   `-- test_fragment_links.py
 |-- docs/
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
+|   |-- OPERATION-MODEL.md
 |   |-- SANDBOX-FACTS.md
 |   |-- TREE.md
 |   `-- ZENODO-RUNBOOK.md
@@ -169,5 +176,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-19 directories, 125 files tracked
+20 directories, 131 files tracked
 ```

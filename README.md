@@ -34,6 +34,7 @@ drunken-emu/
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
+│   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI

@@ -112,3 +112,14 @@ are not facts. Sample twice, or in two environments, before writing it down.
 
 Scope: two dates, one container type. By this file's own rule these are two points, not a settled fact, until a
 third environment of the *non-project* kind is sampled on the same day.
+
+## Editing pitfalls seen 2026-10-02 (TapGrade sessions)
+
+- `open(p, "w").write(open(p).read())` truncates the file **before** it is read: the result is an empty file. Read into a
+  variable first, then open for writing.
+- `re.sub(pattern, repl, s)` interprets backslash escapes in `repl`: `"\n"` becomes a real newline. Patching JavaScript
+  that way split `lines.join("\n")` across two lines (a syntax error). Pass a function (`lambda m: repl`) or escape it.
+- Tool output is JSON-escaped: a file containing two backslashes shows four in the transcript. Count escapes in the file
+  (`repr(open(p).read())`), not on screen.
+- Async Playwright: `p.chromium.launch()` returns a coroutine that fails only when awaited, so a try/except around the call
+  catches nothing; `checks/browser.alaunch` awaits inside the try.
