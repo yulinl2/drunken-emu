@@ -46,7 +46,9 @@ that is never executed is not a regeneration command.
 |   |-- blind_audit.py
 |   |-- browser.py
 |   |-- chain.py
+|   |-- chain_check.py
 |   |-- chain_load.py
+|   |-- chain_verifiers.py
 |   |-- ci_claims.py
 |   |-- explore_run.py
 |   |-- explore_step.py
@@ -180,5 +182,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-21 directories, 134 files tracked
+21 directories, 136 files tracked
 ```
