@@ -369,3 +369,13 @@ second; mechanically fine, semantically not a toggle. The checks still only asse
 screenshot reader has to know which control was chosen. **Closes when** each interaction check records the matched
 element's role, text length and geometry (not its text) next to its screenshot. Closed shadow roots stay invisible by
 design; the report's `shadow_roots_walked` makes that visible.
+
+
+## P-2a7c — decider-side working memory: HOLD / KEYIFY / RELOAD for `explore_run` `OPEN`
+
+EXPLORE-SPEC's implemented layer cannot model working-memory limits: its scripted policies re-read the page each step. A real
+task (HW1 correction pass on a phone, 2026-10-03, narrated step by step) spent most of its cost in RELOAD (fetching a lost goal
+from the chat) and RE-ORIENT (after refreshes), not in any single hard step. `docs/OPERATION-MODEL.md` gives the step anatomy,
+the budget, and ten verifiers; issues #31–#40 split the work (chain format, load, verifiers, the HW1 fixture).
+**Closes when** `explore_run` deciders hold at most N keys, RELOAD from a named source is a recorded step with its cost, the
+sweep over N is reported next to the existing knobs, and the HW1 fixture's verifiers fire on the recorded chain.
