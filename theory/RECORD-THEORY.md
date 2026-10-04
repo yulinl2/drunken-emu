@@ -67,7 +67,14 @@ person. Narration is a weak source of predictors for the run itself (below), and
 **Claim 3 (polarity and attribution).** Outcomes have a polarity (ease: "边际成本为0"; friction: "烧得差不多了") and
 must be attributed to causes (`because`). Both were missing from the first analysis and changed its results.
 
-## 4. Results on the HW1 task (`RESULTS.md`)
+## 4. Structural diagnostics on the HW1 task (`RESULTS.md`)
+
+**What these numbers are and are not.** Roles, polarity, attribution and normalised values were all assigned by hand,
+and the structure itself is still a hypothesis. So the numbers below are not measurements of how good a verifier is.
+Their only use is diagnostic: they show **which structural choices change the conclusions** (defaults, roles,
+attribution) and therefore must be settled, recorded and argued before anything is measured. A number that moves when
+an unrecorded choice changes (agreement under two attribution rules, below) is a sign that the structure is not yet
+there, not a result.
 
 54 trigger points of ten verifiers (plus a label check) in the run itself; outcomes held out.
 
@@ -89,7 +96,7 @@ must be attributed to causes (`because`). Both were missing from the first analy
    (the scan compares with the bank, never with intent) are undecided under S and decided under A.
 4. *A wrong belief is locatable*: D3, 13:00, believed `corrections_loaded = true`; the 13:00 screenshot shows false.
 
-**Fragile:** agreement rates move with the attribution rule (S: 7:1 vs 5:3). Attribution is a modelling question, not
+**Sensitive, so not yet meaningful:** agreement rates move with the attribution rule (S: 7:1 vs 5:3). Attribution is a modelling question, not
 a reporting choice, and must be recorded (`because`, with its asserter) rather than chosen by the analyst afterwards.
 
 ## 5. Working memory as register pressure (`liveness.py` → `LIVENESS.md`)
