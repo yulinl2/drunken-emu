@@ -180,6 +180,12 @@ that is never executed is not a regeneration command.
 |   `-- harness.html
 |-- out/
 |   `-- .gitkeep
+|-- theory/
+|   |-- LIVENESS.md
+|   |-- RECORD-THEORY.md
+|   |-- RESULTS.md
+|   |-- liveness.py
+|   `-- proto.py
 |-- vendor/
 |   |-- babel.js
 |   |-- react.js
@@ -195,5 +201,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-24 directories, 146 files tracked
+25 directories, 151 files tracked
 ```
