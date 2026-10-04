@@ -55,13 +55,18 @@ def _unit(s: str) -> float:
     return v
 
 
+def _clean(text: str) -> str:
+    """free text on one printable line: an escape sequence or a newline in a `target` must not reach the terminal"""
+    return "".join(ch if ch.isprintable() else " " for ch in str(text))
+
+
 def _report(path: str, doc: dict, results: list[dict]) -> list[str]:
     lines = [path]
     by_id = {c["id"]: c for c in doc["chains"]}
     for r in results:
         c, ld = by_id[r["id"]], r["load"]
         prov = c["provenance"]
-        task = c["text"].get("task") or ""
+        task = _clean(c["text"].get("task") or "")
         lines.append(f"  {r['id']}" + (f"  {task}" if task else "") + f"  [{prov['source']} {prov['date']}]")
         lines.append(f"    {ld['steps']} steps · B {r['budget']} · peak {ld['peak_slots']} slot(s) "
                      f"(held {ld['peak_held']}) · RELOAD {ld['counts']['reloads']} · "
@@ -73,7 +78,7 @@ def _report(path: str, doc: dict, results: list[dict]) -> list[str]:
         lines.append(f"    {len(r['findings'])} finding(s)")
         for f in r["findings"]:
             step = c["steps"][f["step"] - 1]
-            tgt = step["text"]["target"]
+            tgt = _clean(step["text"]["target"])
             if len(tgt) > 60:
                 tgt = tgt[:57] + "..."
             lines.append(f"      step {f['step']:<3} {step['op']:<12} {f['verifier']:<18} {f['message']}"

@@ -204,7 +204,7 @@ def _step(raw, n: int, prev_held: list[str], problems: list[str]):
     out: dict = {"n": n, "op": op}
     # anchor: how the target was found
     out["anchor"] = _enum(s, "anchor", ANCHORS, "none", P)
-    if op == "ANCHOR" and "anchor" in s and out["anchor"] in READING_ONLY:
+    if op == "ANCHOR" and "anchor" in s and s["anchor"] in ANCHORS and out["anchor"] in READING_ONLY:       # a typo was reported above: once
         P(f"an ANCHOR step is found without reading: `anchor` must be one of {', '.join(POSITIONAL)} "
           f"(got {out['anchor']!r}); if it was found by reading, make it a SCAN")
     out["confusables"] = _confusables(s, P)
@@ -256,7 +256,7 @@ def _step(raw, n: int, prev_held: list[str], problems: list[str]):
         if v is not None and (not isinstance(v, str) or not v.strip()):
             P(f"`{k}` must be a short non-empty key, got {v!r}")
             v = None
-        out[k] = v
+        out[k] = v.strip() if isinstance(v, str) else v                      # "re-sync " and "re-sync" are one view
     if out["intent"] and not out["view"]:
         P("`intent` needs `view` too: two views serving one intent is what the single-path check compares")
 
@@ -339,6 +339,8 @@ def _provenance(file_prov, chain_prov, where, problems):
     if merged.get("source") not in SOURCES:
         problems.append(f"{where}: provenance `source` must be one of {', '.join(SOURCES)}, got {merged.get('source')!r}")
     d = merged.get("date")
+    if isinstance(d, datetime.date):                  # YAML reads an unquoted 2026-10-03 as a date object, not text
+        d = merged["date"] = (d.date() if isinstance(d, datetime.datetime) else d).isoformat()
     ok = isinstance(d, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", d) is not None
     if ok:
         try:

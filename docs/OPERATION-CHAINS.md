@@ -114,6 +114,29 @@ JSON is canonical. One file holds one chain, or several under `chains`.
 
 A key on the wrong op is an error, not a no-op.
 
+### What the required keys mean
+
+Answer each as the person saw it, not as the system was designed.
+
+| Key | Means | Read by |
+|---|---|---|
+| COMMIT `preview_before` | before committing, the person saw what each row would become | `colocation` |
+| COMMIT `everything_on_screen` | everything the decision depends on was on the screen at that moment | `colocation` |
+| COMMIT `verify_after` | what the system did afterwards: `none`; `consistency` (checked the target against its own records); `correctness` (re-read the target and reported against the intent) | `commit_correctness` |
+| WAIT `progress_visible` | the screen showed that something was happening, and how far | `progress` |
+| WAIT `view_stable` | the view did not move during the wait (no jump to the top) | `progress` |
+| WAIT `partial_result_says_left` | a partial result says what is left, and why the rest failed | `progress` |
+| REFRESH `restores` | what is **still there after** the refresh: `position`, `goal`, `partial`. The verifier flags what is missing | `interruption` |
+| `interruption` (any step) | what an app switch or refresh **at this step** would take away. `restores` is what survives, `interruption` is what is lost | `interruption` |
+| ENUMERATE `set_visibly_complete` | the person could tell the set was complete without paging (a count, "all shown") | `candidate_set` |
+| ENUMERATE `pages` | how many screens were paged through | `candidate_set` |
+| VERIFY `kind` | `consistency`: A matches B. `correctness`: A matches what was intended | `commit_correctness` |
+| RELOAD `source` | where the lost goal was fetched from | `memory_budget` |
+
+**SCAN or ENUMERATE?** A SCAN coarse-reads items already in view to find a keyword. An ENUMERATE makes sure the whole set has been seen: paging, scrolling, checking the seams between screens. Scrolling to find one item is a SCAN per screen. Scrolling to be sure nothing is missing is an ENUMERATE with `pages`.
+
+**Labels are compared as written.** `intent`, `view`, `held` labels and RELOAD `source` are compared after trimming the spaces at both ends: `re-sync ` and `re-sync` are one view, `Re-sync` and `re-sync` are two. YAML reads an unquoted `2026-10-03` as a date: that works too.
+
 ### The sixteen ops, and what a plain step costs
 
 The 15 primitives of OPERATION-MODEL §1, plus `TAP`. `TAP` is the physical act on a target an earlier step chose. §4 writes it in both chains, so it is here: it costs nothing.
@@ -163,7 +186,7 @@ All problems come back **in one pass**, each naming its step. Fix them together.
 2. One line per thing the person did. Pick the op from the table. Put the narration's words in `target`.
 3. Add what the narration says. "Nine menu items" → `amount: 9`. "Almost the same name" → `confusables: [1, 0.9]`. "Nothing moved" → `progress_visible: false`.
 4. Memory: write `held` at the step where the person starts keeping something in mind. Write it again only when it changes.
-5. Steps that carry a verdict (COMMIT, WAIT, REFRESH, VERIFY, RELOAD) have required keys. The loader names the one you forgot.
+5. Steps that carry a verdict (COMMIT, WAIT, REFRESH, VERIFY, RELOAD) have required keys. The loader names the one you forgot; "What the required keys mean" says what each asks.
 6. Run `bin/emu chain check FILE`. Fix by step number.
 7. Guess amounts and similarities. Write that in `provenance.note`. They are estimates, not measurements.
 
@@ -424,6 +447,16 @@ Without a declared `op` the runner falls back on `kind` alone and says so in `no
 | `P-02be` | verifiers read declared properties, so a chain can pass by omission | the declared properties are measured on a captured chain and compared with a narrated chain of the same task |
 | `P-67a1` | the load weights are ordinal and uncalibrated | the weights are fitted or checked against timed narrations or measured runs |
 | `P-2a7c` | running the budget inside `explore_run` (PR #42) | see its entry, and "Done when" above |
+
+### Approximations confirmed by an independent review of PR #43
+
+None changes a documented number. Each is a case of P-02be (a verifier reads what the narrator declared) or a default that is easy to misread.
+
+- A `HOLD` counts its own item twice: `need` 1 plus the item in `held`. `HOLD[a]`, `HOLD[a,b]`, `HOLD[a,b,c]` flags the third step (demand 4 against B = 3); the same list with `need: 0` is silent. Write `need: 0` on a HOLD whose only demand is the item it holds. The HW1 peak of 5 counts it.
+- `candidate_set` is silent when `set_visibly_complete` is true, however many `pages` were turned.
+- `commit_correctness` accepts any later VERIFY of the right kind, including one under another `intent`; `COMMIT, COMMIT, VERIFY` passes.
+- A NAVIGATE with no `restores` is silent in `interruption`; an irreversible `TAP` with no COMMIT is invisible to `colocation`; a SCAN with no `confusables` is silent in `anchoring`.
+- `amount` times `times` can overflow to `Infinity` in `--json`, with absurd values only.
 
 This layer does **not**: measure any person; read a page; capture a session; set a threshold on the load; judge whether a narration is true.
 

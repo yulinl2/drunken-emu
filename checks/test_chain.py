@@ -747,6 +747,45 @@ def test_nested_text_must_be_strings_so_a_bad_value_is_exit_2_and_never_a_crash(
     assert emu("check", f)[0] == 1                                       # valid text, real findings: still exit 1
 
 
+def test_whitespace_around_an_intent_or_view_key_is_not_another_view():
+    """Independent review of PR #43: 're-sync ' and 're-sync' were counted as two views of one job."""
+    same = chain1({"op": "NAVIGATE", "intent": "load", "view": "re-sync"}, {"op": "NAVIGATE", "intent": "load", "view": " re-sync "})
+    assert "single_path" not in fired(same) and same["steps"][1]["view"] == "re-sync"
+    assert fired(chain1({"op": "NAVIGATE", "intent": "load", "view": "re-sync"}, {"op": "NAVIGATE", "intent": "load", "view": "corrections"}))["single_path"] == [2]
+    assert fired(chain1({"op": "NAVIGATE", "intent": "load", "view": "re-sync"}, {"op": "NAVIGATE", "intent": "load", "view": "Re-sync"}))["single_path"] == [2]   # case counts
+
+
+def test_a_misspelt_anchor_value_gets_one_error_not_two():
+    """Independent review of PR #43: 'edgee' also drew a second, misleading error about the default it fell back to."""
+    with pytest.raises(C.ChainError) as e:
+        C.parse(raw1({"op": "ANCHOR", "anchor": "edgee"}))
+    assert len(e.value.problems) == 1 and "did you mean 'edge'" in e.value.problems[0] and "got 'none'" not in e.value.problems[0]
+    with pytest.raises(C.ChainError) as e:                                   # a real reading-only anchor on an ANCHOR is still its own, single error
+        C.parse(raw1({"op": "ANCHOR", "anchor": "text-keyword"}))
+    assert len(e.value.problems) == 1 and "make it a SCAN" in e.value.problems[0]
+
+
+def test_an_unquoted_yaml_date_is_a_date_not_an_error():
+    """Independent review of PR #43: YAML reads 2026-10-03 as a date object, which the loader then refused with a confusing message."""
+    import datetime
+    for d in (datetime.date(2026, 10, 3), datetime.datetime(2026, 10, 3, 14, 5)):
+        doc = C.parse({"provenance": {"source": "narrated", "date": d, "who": "t"}, "steps": ["READ x"]})
+        assert doc["chains"][0]["provenance"]["date"] == "2026-10-03" and json.loads(C.dumps(doc))      # and it is plain JSON again
+    with pytest.raises(C.ChainError):
+        C.parse({"provenance": {"source": "narrated", "date": 20261003, "who": "t"}, "steps": ["READ x"]})   # a number is still not a date
+
+
+def test_control_characters_in_free_text_never_reach_the_terminal(tmp_path):
+    """Independent review of PR #43: an escape sequence or a newline in a `target` was printed as it stood."""
+    bad = commit(reversibility="irreversible", preview_before=False, everything_on_screen=False, verify_after="none")
+    f = tmp_path / "c.json"
+    f.write_text(json.dumps(raw1({**bad, "target": "Apply\x1b[31m RED\nsecond line\r\x07"}, task="the task\x1b[2J line two")))
+    rc, out, _ = emu("check", f)
+    assert rc == 1 and not any(c in out for c in ("\x1b", "\x07", "\r"))
+    line = next(x for x in out.splitlines() if "colocation" in x)
+    assert "Apply" in line and "second line" in line and "line two" in out      # one finding, one line, the text kept (cleaned)
+
+
 def test_a_file_that_is_not_utf8_is_exit_2_in_both_modes(tmp_path):
     """Copilot review of PR #43: UnicodeDecodeError is a ValueError, so the OSError handler let it through as a traceback."""
     f = tmp_path / "latin1.json"
