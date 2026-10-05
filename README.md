@@ -42,6 +42,8 @@ drunken-emu/
 │   ├── chain_verifiers.py     ten content-blind verifiers over a recorded chain
 │   ├── chain_check.py         the CLI behind `bin/emu chain check`
 │   ├── test_chain.py          must-fire / must-hold per verifier, mutation controls, the CLI (no browser)
+│   ├── prediction_score.py · test_prediction.py · measure_sample_predictors.py   the HW2 pre-registration: scorer, pin test, predictor measurement (docs/predictions/)
+│   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
@@ -53,6 +55,7 @@ drunken-emu/
 │   ├── EXPLORE-SPEC.md        P1 design: parameterised impairment, dose-response curve
 │   ├── OPERATION-MODEL.md     what a person does, step by step, and what it costs: primitives, budget, ten verifiers
 │   ├── OPERATION-CHAINS.md    the chain layer: format, load, verifiers, HW1 fixtures, the P-2a7c integration design
+│   ├── predictions/           the prediction registered before the HW2 blind sample pass (see OPERATION-CHAINS.md)
 │   ├── ZENODO-RUNBOOK.md      P5: ordering constraint, human part A then session part B
 │   ├── SANDBOX-FACTS.md       measured container facts
 │   └── TREE.md                complete tracked-file index (generated)
@@ -160,6 +163,8 @@ python3 -m pytest -q checks/test_chain.py                                   # no
 ```
 
 Format, load, verifiers, fixtures: `docs/OPERATION-CHAINS.md`.
+
+A prediction registered before a real pass, and scored after it: `docs/predictions/hw2-sample-pass.md`; pinned by `python3 -m pytest -q checks/test_prediction.py` (no browser). Remade for a new speeds-kit head by one command, `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` (needs Chromium; the registration says what it does).
 
 ## Layout
 

@@ -82,7 +82,8 @@ that is never executed is not a regeneration command.
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
-|   `-- test_fragment_links.py
+|   |-- test_fragment_links.py
+|   `-- test_prediction.py
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -104,8 +105,10 @@ that is never executed is not a regeneration command.
 |   |   |   |-- new-keys.json
 |   |   |   `-- summary.json
 |   |   |-- hw2-sample-pass.inputs.json
+|   |   |-- hw2-sample-pass.md
 |   |   |-- hw2-sample-pass.measured-example-bank.json
-|   |   `-- hw2-sample-pass.measured.json
+|   |   |-- hw2-sample-pass.measured.json
+|   |   `-- hw2-sample-pass.prediction.json
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -232,5 +235,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 178 files tracked
+29 directories, 181 files tracked
 ```
