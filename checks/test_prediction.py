@@ -17,7 +17,9 @@ measured file or the numbers move. No browser, no model, no network (CI job `cha
      twice or not at all stops the build; a difference since the first draft that no change explains stops it;
   5. the scorer (checks/prediction_score.py) on toy data, with the numbers worked out by hand, and its refusals;
   6. the one command (rebuild): what it refuses, that it never writes in the checkout it reads;
-  7. the docs name the files, and the tables of the .md are the JSON's.
+  7. the docs name the files, and the tables of the .md are the JSON's;
+  8. the second registration (supersede): the rule that sets P1, P2 and P8, the judgments that name the value they replaced, the baselines that keep an earlier
+     registration as data, and the stale statement that no note may make.
 """
 import copy
 import hashlib
@@ -695,7 +697,8 @@ def test_a_claim_that_nothing_moved_is_checked():
 
 def test_a_text_of_a_change_cites_the_docs_by_placeholder_and_a_placeholder_that_names_nothing_stops_the_build():
     fill = CH.filler(INPUTS)
-    assert fill("at {this}: {rbRoute}") == f"at {INPUTS['speeds_kit']['commit'][:7]}: docs/HW2-HW3-RUNBOOK.md:142"
+    rb = INPUTS["citations"]["rbRoute"]
+    assert fill("at {this}: {rbRoute}") == f"at {INPUTS['speeds_kit']['commit'][:7]}: {rb['file']}:{rb['lines'][0]}" + (f"-{rb['lines'][1]}" if rb["lines"][1] != rb["lines"][0] else "")
     with pytest.raises(CH.Unattributed, match="no anchor"):
         fill("{nope}")
     for text in [c["change"] + " " + c["effect"] for c in CH.CHANGES + CH.CHANGES_SINCE_REPLACED] + list(CH.WHY.values()) + list(CH.WHY_SINCE_REPLACED.values()):
@@ -1032,7 +1035,7 @@ def test_the_text_is_a_function_of_the_registration_and_the_inputs():
     AJ = json.loads((KIT / REG["measured_example_bank"]["path"]).read_text(encoding="utf-8"))
     fx = json.loads(FIXTURE.read_text(encoding="utf-8"))
     assert MK.render(REG, MJ, AJ, fx, INPUTS) == md
-    other = {**INPUTS, "speeds_kit": {**INPUTS["speeds_kit"], "commit": "0" * 40}}
+    other = {**INPUTS, "citations": {**INPUTS["citations"], "rbStderr": {**INPUTS["citations"]["rbStderr"], "lines": [1, 1]}}}          # the same commit, another line cited
     assert MK.render(REG, MJ, AJ, fx, other) != md
 
 
@@ -1066,3 +1069,240 @@ def test_the_docs_point_at_the_registration():
     tree = (KIT / "docs" / "TREE.md").read_text(encoding="utf-8")
     for name in ("hw2-sample-pass.md", "hw2-sample-pass.prediction.json", "hw2-sample-pass.measured.json", "hw2-sample-pass.inputs.json", "first-draft-ca80695", "tapgrade_0_6_7_sample_pass.json", "test_prediction.py", "prediction_score.py", "hw2_sample_prediction", "rebuild.py"):
         assert name in tree, name
+
+
+# --- 8. the second registration: the rule, the judgments, the baselines ------------------------------------------------------------------
+def _replaced_folder() -> Path:
+    return KIT / REG["changes_since_replaced_registration"]["baseline"]["path"]
+
+
+def _replaced_json(name):
+    return json.loads((_replaced_folder() / name).read_text(encoding="utf-8"))
+
+
+def _measured_pair():
+    return (json.loads((KIT / REG["measured"]["path"]).read_text(encoding="utf-8")), json.loads((KIT / REG["measured_example_bank"]["path"]).read_text(encoding="utf-8")))
+
+
+def test_half_way_goes_to_the_lower_step_and_the_line_is_worked_out_by_hand():
+    from checks.hw2_sample_prediction import events as EV
+    assert EV.half_down(0.325) == 0.30 and EV.half_down(0.375) == 0.35 and EV.half_down(0.55) == 0.55 and EV.half_down(0.5249) == 0.50 and EV.half_down(0.5251) == 0.55
+    assert EV.half_down(0.04) == 0.05 and EV.half_down(0.0) == 0.0
+    # P2 was judged 0.60 at 4.0 screens (example-size bank) and 0.80 at 10.9 (large bank): at 10.0 the line reads 0.80 - 0.9 * 0.2 / 6.9, the middle with 0.60 is 0.687, which rounds to 0.70
+    assert EV.read_off("P2", 4.0) == pytest.approx(0.60) and EV.read_off("P2", 10.9) == pytest.approx(0.80)
+    assert EV.read_off("P2", 10.0) == pytest.approx(0.80 - 0.9 * 0.2 / 6.9)
+    p, small, large = EV.by_rule("P2", 4.0, 10.0)
+    assert (p, small) == (0.70, pytest.approx(0.60)) and large == pytest.approx(0.7739, abs=1e-4)
+    assert EV.read_off("P2", 100) == 0.95 and EV.read_off("P2", -100) == 0.05, "never below 0.05 or above 0.95"
+    # P8 (0.25 at 4.0, 0.40 at 10.9): at 10.0 the line reads 0.25 + 6 * 0.15 / 6.9 = 0.3804; the middle with 0.25 is 0.315, which rounds to 0.30
+    assert EV.by_rule("P8", 4.0, 10.0)[0] == 0.30
+    # P1 (0.45 at 41%, 0.65 at 71%): at 68% the line reads 0.45 + 0.27 * 0.2 / 0.3 = 0.63; the middle with 0.45 is 0.54, which rounds to 0.55
+    assert EV.read_off("P1", 0.68) == pytest.approx(0.63) and EV.by_rule("P1", 0.41, 0.68)[0] == 0.55
+
+
+def test_p1_p2_and_p8_are_what_the_rule_gives_at_the_measured_numbers_and_the_rule_starts_from_the_replaced_registration():
+    from checks.hw2_sample_prediction import events as EV
+    MJ, AJ = _measured_pair()
+    M, A = MJ["predictors"], AJ["predictors"]
+    ev = {e["id"]: e for e in REG["events"]}
+    key_out, a_key_out = 1 - M["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"], 1 - A["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"]
+    assert ev["P1"]["p"] == EV.by_rule("P1", a_key_out, key_out)[0]
+    assert ev["P2"]["p"] == EV.by_rule("P2", A["window"]["screens_per_question"]["median"], M["window"]["screens_per_question"]["median"])[0]
+    assert ev["P8"]["p"] == EV.by_rule("P8", A["window"]["screens_per_question"]["median"], M["window"]["screens_per_question"]["median"])[0]
+    for eid in EV.CALIBRATION:
+        assert "p follows the rule at the top of events.py" in ev[eid]["rests_on"] and f"that registration set {EV.registered_before(eid):.2f}" in ev[eid]["rests_on"], eid
+    summary = _replaced_json("summary.json")
+    if summary["artifact"]["commit"].startswith("cec1bba"):                      # the rule is calibrated on that registration: at its own numbers it gives its own p
+        assert {eid: EV.registered_before(eid) for eid in EV.CALIBRATION} == {eid: summary["events"][eid]["p"] for eid in EV.CALIBRATION}
+        old_large, old_example = _replaced_json("measured.json")["predictors"], _replaced_json("measured-example-bank.json")["predictors"]
+        (_, (xs1, _), (xl1, _)), (_, (xs2, _), (xl2, _)) = EV.CALIBRATION["P1"], EV.CALIBRATION["P2"]
+        assert xs1 == pytest.approx(1 - old_example["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"], abs=0.005)
+        assert xl1 == pytest.approx(1 - old_large["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"], abs=0.005)
+        assert (xs2, xl2) == (old_example["window"]["screens_per_question"]["median"], old_large["window"]["screens_per_question"]["median"])
+        assert EV.CEC1BBA == {"message_shift_px": old_large["view_stability"]["load_toast"]["content_moves_when_it_goes_px"], "window_large_px": old_large["window"]["pair_view"]["body_h"],
+                              "window_with_message_large_px": old_large["window"]["pair_view_with_toast"]["body_h"], "window_with_message_example_px": old_example["window"]["pair_view_with_toast"]["body_h"],
+                              "head_with_a_wrapped_tag_px": old_large["window"]["pair_view"]["head_h"]}, "the numbers typed for the cec1bba build are that registration's measured numbers"
+
+
+def test_the_example_banks_old_chip_shift_was_the_wrapped_head_growing():
+    """the claim that the chip-tap shift belongs to the head change, not to the list: the shift the example-size bank measured before is the growth of the head"""
+    from checks.hw2_sample_prediction import events as EV
+    summary = _replaced_json("summary.json")
+    if not summary["artifact"]["commit"].startswith("cec1bba"):
+        pytest.skip("written for the registration against cec1bba")
+    MJ, AJ = _measured_pair()
+    old_shift = _replaced_json("measured-example-bank.json")["predictors"]["view_stability"]["chip_tap"]["max_chip_shift_px"]
+    assert old_shift == pytest.approx(EV.CEC1BBA["head_with_a_wrapped_tag_px"] - MJ["predictors"]["window"]["pair_view"]["head_h"], abs=0.15)
+    assert AJ["predictors"]["view_stability"]["chip_tap"]["max_chip_shift_px"] < old_shift
+
+
+@pytest.mark.parametrize("key", list(COMPARISONS))
+def test_the_current_tool_reproduces_each_baselines_own_numbers_on_its_script(key):
+    """new-keys.json is made by the current tool on the baseline's own script; it must give the baseline's numbers back for every key the baseline has (timings aside)"""
+    folder = KIT / REG[key]["baseline"]["path"]
+    keys = json.loads((folder / "new-keys.json").read_text(encoding="utf-8"))
+    chk = keys["checked_against_the_baseline"]
+    assert chk["keys_different"] == 0 and chk["keys_compared"] > 0 and keys["script_sha256"] == json.loads((folder / "measured.json").read_text(encoding="utf-8"))["script"]["sha256"]
+    assert REG[key]["baseline"]["new_keys_check"] == chk
+
+
+def test_an_event_changed_by_judgment_names_the_value_it_had_and_who_judged_it():
+    from checks.hw2_sample_prediction import events as EV
+    ev = {e["id"]: e for e in REG["events"]}
+    comparison = REG["changes_since_replaced_registration"]
+    moved = {m["key"]: m for c in comparison["changes"] for m in c["moved"]}
+    judged = [k.split(":")[1] for k, m in moved.items() if k.startswith("event:") and k.endswith(":p")]
+    assert judged, "the third round moved the p of some event"
+    for eid in judged:
+        m = moved[f"event:{eid}:p"]
+        assert eid not in EV.CALIBRATION, f"{eid} follows the rule: a change of its p is the rule's"
+        text = ev[eid]["rests_on"]
+        assert f"{float(m['before']):.2f}" in text and "judgment" in text and "has now seen" in text, f"{eid}: the replaced value, the word judgment and who has seen the change"
+        assert "expected to remove" in text or "now tests the fix" in text, f"{eid}: what the fix is expected to do to the event"
+    md = MD.read_text(encoding="utf-8")
+    assert "is expected to take away, and what it is not" in md and "the pass may show other frictions that nothing here predicts" in md and "Nothing was lowered to make the prediction look right" in md
+    old_summary = _replaced_json("summary.json")
+    was, now = CH.top_five(old_summary["events"]), CH.top_five({e["id"]: e for e in REG["events"]})
+    assert ("The top five changed since" in md) == (was != now) and ("These are the same five as in the registration for" in md) == (was == now)
+    assert ("number:events:top_five" in moved) == (was != now), "the changes table lists the top five when it moved"
+
+
+def test_a_round_without_a_list_of_expected_effects_or_a_history_entry_stops_the_text(monkeypatch):
+    from checks.hw2_sample_prediction import markdown as MK
+    MJ, AJ = _measured_pair()
+    fx = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    th = REG["artifact"]["commit"][:7]
+    assert MK.render(REG, MJ, AJ, fx, INPUTS) == MD.read_text(encoding="utf-8")
+    rows = MK.EXPECTED[th]
+    monkeypatch.setattr(MK, "EXPECTED", {})
+    with pytest.raises(ValueError, match="no list for the round"):
+        MK.render(REG, MJ, AJ, fx, INPUTS)
+    monkeypatch.setattr(MK, "EXPECTED", {th: [r for r in rows if r[0] != "P5"]})
+    with pytest.raises(ValueError, match="no entry for P5"):
+        MK.render(REG, MJ, AJ, fx, INPUTS)
+    monkeypatch.setattr(MK, "EXPECTED", {th: rows})
+    monkeypatch.setattr(MK, "HISTORY", [h for h in MK.HISTORY if h[0] != th])
+    with pytest.raises(ValueError, match="no entry for the snapshot"):
+        MK.render(REG, MJ, AJ, fx, INPUTS)
+
+
+def test_no_note_or_event_says_none_throws_the_list_to_the_top_while_the_measurement_says_it_does_not(fx):
+    """the pair chain's save note said it for the cec1bba build and went on saying it after the build changed: a sentence that claims it must be about an earlier build"""
+    MJ, _ = _measured_pair()
+    if MJ["predictors"]["view_stability"]["none_tap"]["jumps_to_the_top"]:
+        pytest.skip("the measurement says the list is thrown to the top: the statement is true")
+    texts = [stp["note"] for ch in fx["chains"] for stp in ch["steps"]] + [e["rests_on"] for e in REG["events"]] + [r["value"] for r in REG["predictors"]]
+    for text in texts:
+        for sentence in re.split(r"(?<=[.;]) ", text):
+            if re.search(r"\bNone\b", sentence) and re.search(r"\b(jumps|throws|thrown)\b[^.;]*\bto the top\b", sentence):
+                assert re.search(r"none of|: no\b|cec1bba|ca80695|before|earlier|first draft", sentence, re.I), f"a sentence says None throws the list to the top: {sentence[:200]}"
+
+
+# the one command, for a registration that was pushed
+def _git_in(path):
+    return lambda *a: subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", *a], cwd=path, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def test_supersede_and_replace_previous_exclude_each_other_and_supersede_needs_an_older_registration(tmp_path, monkeypatch):
+    with pytest.raises(SystemExit, match="exclude each other"):
+        RB.rebuild(tmp_path, supersede=True, replace_previous=True)
+    repo, kit = tmp_path / "repo", tmp_path / "kit"
+    repo.mkdir()
+    kit.mkdir()
+    git = _git_in(repo)
+    git("init", "-q")
+    (repo / "README").write_text("nothing registered yet\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-q", "-m", "files")
+    monkeypatch.setattr(RB, "REPO", repo)
+    toy_checkout(kit, monkeypatch)
+    with pytest.raises(SystemExit, match="HEAD holds no registration to supersede"):
+        RB.rebuild(kit, commit="a" * 40, supersede=True)
+    (repo / RG.PRED).parent.mkdir(parents=True)
+    (repo / RG.PRED).write_bytes(PRED.read_bytes())
+    git("add", "-A")
+    git("commit", "-q", "-m", "a registration")
+    assert RB.head_registration_commit() == REG["artifact"]["commit"] and RB.registration_commit() == git("rev-parse", "HEAD")
+    with pytest.raises(SystemExit, match="built against this very speeds-kit commit"):
+        RB.rebuild(kit, commit=REG["artifact"]["commit"], supersede=True)
+
+
+def test_a_superseded_registration_keeps_the_commit_that_registered_it_and_its_folder_leaves_the_index_when_an_older_one_goes(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    git = _git_in(repo)
+    git("init", "-q")
+    for rel in (RG.PRED, RG.FIXTURE, RG.MEASURED, RG.MEASURED_EXAMPLE):
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+        (repo / rel).write_bytes((KIT / rel).read_bytes())
+    old = repo / "docs/predictions/replaced-0000000"
+    old.mkdir(parents=True)
+    (old / "summary.json").write_text("{}", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-q", "-m", "the registration, and an older one kept as data")
+    registered = git("rev-parse", "HEAD")
+    monkeypatch.setattr(RB, "REPO", repo)
+    kept = RB.snapshot_replaced("f" * 40, supersede=True)
+    assert kept == f"docs/predictions/replaced-{REG['artifact']['commit'][:7]}" and not old.exists()
+    summary = json.loads((repo / kept / "summary.json").read_text(encoding="utf-8"))
+    assert summary["registered_in"] == registered and "stays in the history" in summary["what"] and "superseded" in summary["what"]
+    assert RB.drop_removed_replaced() == ["docs/predictions/replaced-0000000/summary.json"]
+    assert "D  docs/predictions/replaced-0000000/summary.json" in git("status", "--porcelain")
+    assert RB.drop_removed_replaced() == [], "nothing left to drop"
+    fresh = RB.snapshot_replaced("f" * 40, supersede=False)
+    assert json.loads((repo / fresh / "summary.json").read_text(encoding="utf-8"))["registered_in"] is None, "a registration replaced before any commit has no commit"
+
+
+def test_the_commit_messages_of_a_superseding_run_say_which_registration_they_supersede(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    folder = repo / "docs/predictions/replaced-cec1bba"
+    folder.mkdir(parents=True)
+    (folder / "summary.json").write_text(json.dumps({"registered_in": "74118b521fada830b44f12531acad568b4b2afaf"}), encoding="utf-8")
+    monkeypatch.setattr(RB, "REPO", repo)
+    MJ, AJ = _measured_pair()
+    b1, b2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=True)
+    assert "second registration" in b1 and "committed as 74118b5" in b1 and "stays in the history" in b1
+    assert "supersedes the one against speeds-kit cec1bba (committed as 74118b5)" in b2 and "Both stay in the history" in b2
+    c1, c2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=False)
+    assert "second registration" not in c1 + c2
+
+
+def test_a_second_registration_pair_is_amended_against_the_same_head_only(tmp_path, monkeypatch):
+    """--replace-previous on a pair that --supersede made keeps it a second registration; against another head it would lose the comparison with the pushed one, so it refuses"""
+    repo, kit = tmp_path / "repo", tmp_path / "kit"
+    repo.mkdir()
+    kit.mkdir()
+    git = _git_in(repo)
+    git("init", "-q")
+    (repo / "README").write_text("base\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-q", "-m", "base")
+    (repo / "a.txt").write_text("1\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-q", "-m", RB.SUBJECT1_NEXT.format(short="be4e324"))
+    (repo / RG.PRED).parent.mkdir(parents=True)
+    (repo / RG.PRED).write_bytes(PRED.read_bytes())
+    git("add", "-A")
+    git("commit", "-q", "-m", RB.SUBJECT2_NEXT.format(short="be4e324"))
+    assert RB.SECOND_MARK in RB.SUBJECT2_NEXT and RB.SECOND_MARK not in RB.SUBJECT2
+    monkeypatch.setattr(RB, "REPO", repo)
+    toy_checkout(kit, monkeypatch)
+    with pytest.raises(SystemExit, match="second registration"):
+        RB.rebuild(kit, commit="b" * 40, make_commits=True, replace_previous=True, trailers=["Key: value"])
+    # a pair made for a first registration is not touched by that refusal: its subjects are the first ones
+    assert RB.SUBJECT1.startswith(RB.PRIOR_SUBJECTS[0]) and RB.SUBJECT2.startswith(RB.PRIOR_SUBJECTS[1])
+    assert RB.SUBJECT1_NEXT.startswith(RB.PRIOR_SUBJECTS[0]) and RB.SUBJECT2_NEXT.startswith(RB.PRIOR_SUBJECTS[1]), "--replace-previous knows both kinds of pair"
+
+
+def test_the_registration_says_which_version_of_the_file_it_is_when_it_supersedes_a_committed_one():
+    base = REG["changes_since_replaced_registration"]["baseline"]
+    reg_in = base["registered_in"]
+    if not reg_in:
+        pytest.skip("the registration it replaces was never committed")
+    was = REG["changes_since_replaced_registration"]["scripts"]["before"]["commit"][:7]
+    assert "this version of this file" in REG["registered_by"] and reg_in[:7] in REG["registered_by"] and was in REG["registered_by"] and "stays in the history" in REG["registered_by"]
+    md = MD.read_text(encoding="utf-8")
+    assert "**The commit that adds this version of this file is the registration**" in md and f"was committed as `{reg_in[:7]}` and stays in the history; this one supersedes it" in md
+    ops = (KIT / "docs" / "OPERATION-CHAINS.md").read_text(encoding="utf-8")
+    assert f"(committed as `{reg_in[:7]}`) is superseded by this one: both stay in the history" in ops
+    assert subprocess.run(["git", "cat-file", "-t", reg_in], cwd=str(KIT), capture_output=True, text=True).stdout.strip() in ("commit", ""), "the commit named is one of this repository's (or the clone is shallow)"
