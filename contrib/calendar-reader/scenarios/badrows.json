@@ -1,0 +1,10 @@
+{
+  "name": "badrows",
+  "why": "positive control — the component's own validation must name every defect",
+  "array": "EVENTS",
+  "body": "  { id:\"dup\", label:\"D1\", short:\"First\", days:[0], start:\"10:00\", end:\"11:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"dup\", label:\"D2\", short:\"Second\", days:[1], start:\"10:00\", end:\"11:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"noday\", label:\"ND\", short:\"NoDay\", days:[], start:\"10:00\", end:\"11:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"badtime\", label:\"BT\", short:\"BadTime\", days:[2], start:\"nope\", end:\"11:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"backwards\", label:\"BW\", short:\"Back\", days:[3], start:\"15:00\", end:\"14:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"offgrid\", label:\"OG\", short:\"OffGrid\", days:[9], start:\"10:00\", end:\"11:00\", room:\"HLL 552\", kind:\"course\" },\n  { id:\"nocolour\", label:\"NC\", short:\"NoColour\", days:[4], start:\"10:00\", end:\"11:00\", room:\"ZZZ 001\", kind:\"course\" }",
+  "expect": {
+    "contains": ["is claimed by both", "lists no days", "written as",
+                 "ends at or before", "Days run 0", "no colour in PALETTE"]
+  }
+}

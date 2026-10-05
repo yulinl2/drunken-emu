@@ -1,0 +1,7 @@
+{
+  "name": "empty",
+  "why": "Math.min(...[]) is Infinity; an empty schedule must still draw a grid",
+  "array": "EVENTS",
+  "body": "",
+  "expect": { "minNodes": 40 }
+}
