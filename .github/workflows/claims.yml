@@ -23,6 +23,18 @@ jobs:
       - run: pip install --quiet pytest
       - run: python3 -m pytest -q checks/test_explore_text.py
 
+  chains:
+    # The operation-chain layer (docs/OPERATION-CHAINS.md): format, load, the ten verifiers (must-fire and must-hold
+    # each), the HW1 fixtures and the CLI; the HW2 registration pinned to its fixture, and its scorer. No Chromium, no model.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install --quiet pytest
+      - run: python3 -m pytest -q checks/test_chain.py
+      - run: python3 -m pytest -q checks/test_prediction.py
+
   figbank:
     # the figure bank's own gates: renderer, budget/overflow/ellipsis, React host, text calibration. No browser.
     runs-on: ubuntu-latest

@@ -1,0 +1,623 @@
+{
+ "tapgrade-0.6.7-sample-install": [
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 3,
+   "held": []
+  },
+  {
+   "op": "ANCHOR",
+   "anchor": "unique-visual",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "ANCHOR",
+   "anchor": "edge",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "confusables": [
+    5,
+    0.8
+   ],
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "VERIFY",
+   "kind": "consistency",
+   "need": 0,
+   "reading": "none",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "ANCHOR",
+   "anchor": "edge",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "NAVIGATE",
+   "restores": [
+    "position",
+    "goal",
+    "partial"
+   ],
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "REFRESH",
+   "restores": [
+    "position",
+    "goal",
+    "partial"
+   ],
+   "feedback": "immediate",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "WAIT",
+   "progress_visible": false,
+   "view_stable": true,
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  },
+  {
+   "op": "VERIFY",
+   "kind": "consistency",
+   "held": [
+    "goal: put the data script in the Userscripts folder and see it load",
+    "expected: the numbers the chat gave (questions, pairs)"
+   ]
+  }
+ ],
+ "tapgrade-0.6.7-sample-queue": [
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "origin_stated": false,
+   "exclusions_stated": true,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 4,
+   "held": [
+    "plan: open the queue, then Next pair"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "held": [
+    "plan: open the queue, then Next pair"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "coarse",
+   "amount": 10,
+   "origin_stated": false,
+   "exclusions_stated": true,
+   "held": [
+    "plan: open the queue, then Next pair"
+   ]
+  },
+  {
+   "op": "ANCHOR",
+   "anchor": "fixed-position",
+   "held": [
+    "plan: open the queue, then Next pair"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "held": []
+  }
+ ],
+ "tapgrade-0.6.7-sample-pair": [
+  {
+   "op": "WAIT",
+   "progress_visible": false,
+   "view_stable": true,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 3,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 2,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "DISCRIMINATE",
+   "confusables": [
+    1,
+    0.28
+   ],
+   "anchor": "text-keyword",
+   "reading": "fine",
+   "amount": 3.4,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part",
+    "what the key says for this part"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "times": 3,
+   "held": [
+    "which chips of this part were judged"
+   ]
+  },
+  {
+   "op": "COMMIT",
+   "anchor": "fixed-position",
+   "confusables": [
+    1,
+    0.21
+   ],
+   "reversibility": "reversible",
+   "preview_before": true,
+   "everything_on_screen": false,
+   "verify_after": "consistency",
+   "feedback": "immediate",
+   "intent": "record-pick",
+   "view": "pair",
+   "held": []
+  }
+ ],
+ "tapgrade-0.6.7-sample-pair-reload": [
+  {
+   "op": "WAIT",
+   "progress_visible": false,
+   "view_stable": true,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 3,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 2,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 2,
+   "times": 2,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 2,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "DISCRIMINATE",
+   "confusables": [
+    1,
+    0.28
+   ],
+   "anchor": "text-keyword",
+   "reading": "fine",
+   "amount": 3.4,
+   "times": 2,
+   "held": [
+    "what the student wrote for this part",
+    "what the key says for this part"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "times": 2,
+   "held": [
+    "which chips of this part were judged"
+   ]
+  },
+  {
+   "op": "REFRESH",
+   "restores": [
+    "position",
+    "goal"
+   ],
+   "feedback": "immediate",
+   "held": []
+  },
+  {
+   "op": "WAIT",
+   "progress_visible": false,
+   "view_stable": true,
+   "held": []
+  },
+  {
+   "op": "RE-ORIENT",
+   "reading": "coarse",
+   "amount": 6,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 3,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 2,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "DISCRIMINATE",
+   "confusables": [
+    1,
+    0.28
+   ],
+   "anchor": "text-keyword",
+   "reading": "fine",
+   "amount": 3.4,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part",
+    "what the key says for this part"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "times": 3,
+   "held": [
+    "which chips of this part were judged"
+   ]
+  },
+  {
+   "op": "COMMIT",
+   "anchor": "fixed-position",
+   "confusables": [
+    1,
+    0.21
+   ],
+   "reversibility": "reversible",
+   "preview_before": true,
+   "everything_on_screen": false,
+   "verify_after": "consistency",
+   "feedback": "immediate",
+   "intent": "record-pick",
+   "view": "pair",
+   "held": []
+  }
+ ],
+ "tapgrade-0.6.7-sample-pair-lock": [
+  {
+   "op": "NAVIGATE",
+   "restores": [
+    "position",
+    "goal",
+    "partial"
+   ],
+   "held": []
+  },
+  {
+   "op": "RE-ORIENT",
+   "reading": "coarse",
+   "amount": 4,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 3,
+   "held": []
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": []
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 2,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "fine",
+   "amount": 1,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part"
+   ]
+  },
+  {
+   "op": "DISCRIMINATE",
+   "confusables": [
+    1,
+    0.28
+   ],
+   "anchor": "text-keyword",
+   "reading": "fine",
+   "amount": 3.4,
+   "times": 4,
+   "held": [
+    "what the student wrote for this part",
+    "what the key says for this part"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "times": 3,
+   "held": [
+    "which chips of this part were judged"
+   ]
+  },
+  {
+   "op": "COMMIT",
+   "anchor": "fixed-position",
+   "confusables": [
+    1,
+    0.21
+   ],
+   "reversibility": "reversible",
+   "preview_before": true,
+   "everything_on_screen": false,
+   "verify_after": "consistency",
+   "feedback": "immediate",
+   "intent": "record-pick",
+   "view": "pair",
+   "held": []
+  }
+ ],
+ "tapgrade-0.6.7-sample-export": [
+  {
+   "op": "ANCHOR",
+   "anchor": "edge",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "confusables": [
+    4,
+    0.31
+   ],
+   "amount": 5,
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "TAP",
+   "feedback": "immediate",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "READ",
+   "reading": "coarse",
+   "amount": 10,
+   "origin_stated": true,
+   "exclusions_stated": true,
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "confusables": [
+    1,
+    0.15
+   ],
+   "amount": 3,
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "COMMIT",
+   "anchor": "text-keyword",
+   "reversibility": "idempotent",
+   "preview_before": false,
+   "everything_on_screen": true,
+   "verify_after": "consistency",
+   "feedback": "immediate",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "VERIFY",
+   "kind": "consistency",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  }
+ ],
+ "tapgrade-0.6.7-sample-handback": [
+  {
+   "op": "NAVIGATE",
+   "restores": [
+    "position",
+    "goal",
+    "partial"
+   ],
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "RE-ORIENT",
+   "reading": "coarse",
+   "amount": 5,
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "ANCHOR",
+   "anchor": "edge",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "SCAN",
+   "anchor": "text-keyword",
+   "amount": 4,
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "VERIFY",
+   "kind": "consistency",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  },
+  {
+   "op": "COMMIT",
+   "anchor": "edge",
+   "reversibility": "irreversible",
+   "preview_before": true,
+   "everything_on_screen": false,
+   "verify_after": "none",
+   "feedback": "immediate",
+   "held": [
+    "goal: copy the picks and hand them to the chat"
+   ]
+  }
+ ]
+}

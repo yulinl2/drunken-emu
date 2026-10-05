@@ -38,26 +38,52 @@ that is never executed is not a regeneration command.
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- fixtures/
+|   |   |-- chains/
+|   |   |   |-- hw1_correction_pass.json
+|   |   |   |-- hw1_correction_pass_fixed.json
+|   |   |   |-- hw1_correction_pass_transcribed.json
+|   |   |   |-- tapgrade_0_6_6.json
+|   |   |   |-- tapgrade_0_6_7_sample_pass.json
+|   |   |   `-- worked_example.json
 |   |   |-- fragment_links_clean.jsx
 |   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
+|   |-- hw2_sample_prediction/
+|   |   |-- __init__.py
+|   |   |-- __main__.py
+|   |   |-- chains.py
+|   |   |-- changes.py
+|   |   |-- cites.py
+|   |   |-- events.py
+|   |   |-- inputs.py
+|   |   |-- markdown.py
+|   |   |-- rebuild.py
+|   |   `-- registration.py
 |   |-- __init__.py
 |   |-- affordances.py
 |   |-- blind_audit.py
 |   |-- browser.py
+|   |-- chain.py
+|   |-- chain_check.py
+|   |-- chain_load.py
+|   |-- chain_verifiers.py
 |   |-- ci_claims.py
 |   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
 |   |-- fragment_links.py
+|   |-- measure_sample_predictors.py
+|   |-- prediction_score.py
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
+|   |-- test_chain.py
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
-|   `-- test_fragment_links.py
+|   |-- test_fragment_links.py
+|   `-- test_prediction.py
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -65,9 +91,28 @@ that is never executed is not a regeneration command.
 |   |       |-- narration.zh.txt
 |   |       |-- transcription.jsonl
 |   |       `-- validate.py
+|   |-- predictions/
+|   |   |-- first-draft-ca80695/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- replaced-be4e324/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- hw2-sample-pass.inputs.json
+|   |   |-- hw2-sample-pass.md
+|   |   |-- hw2-sample-pass.measured-example-bank.json
+|   |   |-- hw2-sample-pass.measured.json
+|   |   `-- hw2-sample-pass.prediction.json
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
+|   |-- OPERATION-CHAINS.md
 |   |-- OPERATION-MODEL.md
 |   |-- SANDBOX-FACTS.md
 |   |-- TREE.md
@@ -190,5 +235,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-24 directories, 141 files tracked
+29 directories, 181 files tracked
 ```
