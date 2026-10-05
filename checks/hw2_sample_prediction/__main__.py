@@ -1,8 +1,11 @@
 """python3 -m checks.hw2_sample_prediction COMMAND
 
-  rebuild  --speeds-kit PATH [--port 8881] [--commit --replace-previous --trailer T ...] [--tests]
+  rebuild  --speeds-kit PATH [--port 8881] [--commit (--replace-previous | --supersede) --trailer T ...] [--tests]
            the whole thing, for another speeds-kit head: read the checkout, measure both bank sizes on a mock Canvas, find the cited lines,
            write the fixture, the inputs, the registration (JSON and text) and the OPERATION-CHAINS section; prints what moved.
+           --replace-previous: the registration in HEAD is the last two commits this command made and was not pushed: drop them and make the pair again.
+           --supersede: the registration in HEAD was pushed and stays in the history (built against another head): keep it as data in
+           docs/predictions/replaced-<commit>/ and add two new commits on top (without --commit it only prepares the files and runs the checks).
   inputs   --speeds-kit PATH        only the inputs file (commit, sha256s, the place of every cited line)
   build    [--check] [--parent SHA] the fixture, the registration and its text from the committed inputs and measured files;
                                     --check changes nothing and exits 1 when a committed file is not what the generator makes
@@ -28,6 +31,7 @@ def main(argv=None) -> int:
     r.add_argument("--measured-example", help="use this measured file instead of measuring")
     r.add_argument("--commit", action="store_true", help="make the two commits: the chains and measurements first, the registration last")
     r.add_argument("--replace-previous", action="store_true", help="with --commit: first drop the last two commits if they are the pair this command made earlier (soft reset; the working tree is kept)")
+    r.add_argument("--supersede", action="store_true", help="the registration in HEAD (built against another speeds-kit commit) was pushed and stays in the history: keep it as data and add two new commits on top")
     r.add_argument("--trailer", action="append", default=[], help="a trailer line of both commit messages, 'Key: value' (repeat; needed with --commit)")
     r.add_argument("--tests", action="store_true", help="also run test_chain, test_explore_text, gen_tree --check and ci_claims (EMU_PORT=8883)")
     i = sub.add_parser("inputs", help="write only docs/predictions/hw2-sample-pass.inputs.json")
@@ -45,7 +49,7 @@ def main(argv=None) -> int:
             if bool(a.measured_large) != bool(a.measured_example):
                 ap.error("--measured-large and --measured-example go together")
             measured = {"large": a.measured_large, "example": a.measured_example} if a.measured_large else None
-            return RB.rebuild(Path(a.speeds_kit), a.speeds_kit_commit, a.port, measured, a.commit, a.replace_previous, a.trailer, a.tests)
+            return RB.rebuild(Path(a.speeds_kit), a.speeds_kit_commit, a.port, measured, a.commit, a.replace_previous, a.trailer, a.tests, a.supersede)
         if a.cmd == "inputs":
             inp = I.make(Path(a.speeds_kit), a.speeds_kit_commit)
             RB.write(I.INPUTS_PATH, I.dump(inp))

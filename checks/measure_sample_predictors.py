@@ -265,8 +265,9 @@ def span(vals):
 
 # --- the measurements --------------------------------------------------------------------------------------------------------------------
 GEOM_JS = """(() => { const q = s => r.querySelector(s), h = e => e ? Math.round(e.getBoundingClientRect().height * 10) / 10 : null, body = q('.body');
-  const sheet = q('.sheet').getBoundingClientRect();
-  return { sheet_h: h(q('.sheet')), sheet_top: Math.round(sheet.top), head_h: h(q('.head')), msg_h: h(q('.msg')), tabs_h: h(q('.tabs')), body_h: body && body.clientHeight,
+  const sheet = q('.sheet').getBoundingClientRect(), mb = q('.msg') && q('.msg').getBoundingClientRect();
+  return { sheet_h: h(q('.sheet')), sheet_top: Math.round(sheet.top), head_h: h(q('.head')), msg_h: h(q('.msg')),
+           msg_over_page_px: mb ? Math.round(Math.max(0, Math.min(mb.bottom, sheet.top) - mb.top) * 10) / 10 : null, tabs_h: h(q('.tabs')), body_h: body && body.clientHeight,
            scroll_h: body && body.scrollHeight, foot_h: h(q('.foot')), bar_h: h(q('.bar')), chips: r.querySelectorAll('.chip').length, groups: r.querySelectorAll('.grp').length,
            none_buttons: r.querySelectorAll('.zero').length, tall: q('.sheet').classList.contains('tall') }; })()"""
 
@@ -278,7 +279,7 @@ async def m_window(p: Phone, data, uids):
     async with p:
         await p.open_pair(data, "Q1")
         g = await p.sh(GEOM_JS)
-        out["pair_view_with_toast"] = {k: g[k] for k in ("sheet_h", "head_h", "msg_h", "tabs_h", "body_h", "foot_h", "bar_h")}
+        out["pair_view_with_toast"] = {k: g[k] for k in ("sheet_h", "head_h", "msg_h", "msg_over_page_px", "tabs_h", "body_h", "foot_h", "bar_h")}
         await p.quiet()
         g = await p.sh(GEOM_JS)
         out["pair_view"] = {k: g[k] for k in ("sheet_h", "head_h", "tabs_h", "body_h", "foot_h", "bar_h")}
@@ -631,6 +632,28 @@ async def m_view_stability(p: Phone, data, uids):
         # a clamped key opens by a tap: what is under it is pushed down by the extra lines
         info = await p.sh("(() => { const k = [...r.querySelectorAll('.gkey')].find(x => x.scrollHeight > x.clientHeight + 1); if (!k) return null; const h0 = k.getBoundingClientRect().height; k.click(); return k.getBoundingClientRect().height - h0; })()")
         out["clamped_key_opened_by_a_tap"] = None if info is None else {"content_below_pushed_down_px": r1(info)}
+    # the load message leaves while the reader has scrolled the list on (a person reads within the 4 s): where is the list afterwards?  A fresh phone: the file is imported, and
+    # announced, on the first load only
+    async with Phone(p.browser, p.base, p.src, p.data, p.key) as q:
+        await q.page.goto(q.url(data["sample"]["pairs"]["Q4"][0]))
+        await q.ready()
+        if await q.sh("!!r.querySelector('.msg')"):
+            await q.page.evaluate(TOAST_JS)
+            await q.scroll_body(600)
+            before = await q.sh("r.querySelector('.body').scrollTop")
+            await q.page.wait_for_function("() => window.__toast.off != null", timeout=9000)
+            await asyncio.sleep(0.3)
+            out["load_toast_leaves_with_the_list_scrolled"] = {"scroll_before_px": r1(before), "scroll_after_px": r1(await q.sh("r.querySelector('.body').scrollTop"))}
+        else:
+            out["load_toast_leaves_with_the_list_scrolled"] = None      # the message was gone before the list could be scrolled (a slow machine): not measured
+        # the message that the next pair's page shows after Save and next ("Recorded on this phone ..."): how much of the student's work above the sheet it covers
+        await q.open_pair(data, "Q4"); await q.quiet()
+        await q.tap_selector("[data-role=nodeduct]")
+        await q.tap_button("Save and next", False)
+        await q.page.wait_for_function(f"() => {{ const m = {SHADOW}.querySelector('.msg'); return !!m && /Recorded/.test(m.textContent); }}", timeout=15000)
+        out["next_pair_message"] = await q.sh("""(() => { const m = r.querySelector('.msg'), s = r.querySelector('.sheet').getBoundingClientRect(), b = m.getBoundingClientRect();
+            const over = Math.max(0, Math.min(b.bottom, s.top) - b.top), x = v => Math.round(v * 10) / 10;
+            return { height_px: x(b.height), over_the_page_px: x(over), work_area_h_px: x(s.top), share_of_the_work_area_pct: x(100 * over / s.top) }; })()""")
     return out
 
 

@@ -28,6 +28,87 @@ def short(sha: str) -> str:
     return sha[:8]
 
 
+def superseded_sentence(prev: dict, reg_in: str | None) -> str:
+    """The Point's sentence about the registration this one supersedes (or replaced before it was pushed)"""
+    was = prev["scripts"]["before"]["commit"][:7]
+    if reg_in:
+        return (f" A registration against `{was}` was committed (`{reg_in[:7]}`) and this one supersedes it: both stay in the history, the pass is scored against this one, "
+                "and the section after it says what moved since that one.")
+    return f" A registration against `{was}` was built and replaced before anything was pushed; the section after it says what moved since that one."
+
+
+def top_five_sentence(prev: dict | None) -> str:
+    """whether the five friction events with the highest p are the superseded registration's five (the changes table lists the item when they are not)"""
+    if not prev:
+        return ""
+    was = prev["scripts"]["before"]["commit"][:7]
+    moved = next((m for c in prev["changes"] for m in c["moved"] if m["key"] == "number:events:top_five"), None)
+    if moved:
+        return f"The top five changed since the registration for `{was}`: it had {moved['before']}; now {moved['after']}. "
+    return f"These are the same five as in the registration for `{was}`. "
+
+
+# What the sample fixer's last round is expected to do to the events it touches, and to the ones a reader would ask about, by the speeds-kit head the registration is built against.
+# (event, verdict, short label for the bullet, why) with verdict one of: removes | keeps | unchanged | adds.  Written by the author of the registration, who has seen the change; the build stops when an event
+# whose p, basis or kind moved since the superseded registration has no entry, or when the head has no list.
+EXPECTED = {
+    "be4e324": [
+        ("P5", "removes", "P5", "On the mock the list no longer jumps to the top after None, so the event has lost its reason. What is left is the chance that a phone still does it, and that is what the event now tests."),
+        ("P4", "removes", "the message part of P4", "Its message part (a message that moves every chip) is gone on the mock. The warning line under a second chip and the chip taps are still there."),
+        ("P2", "keeps", "P2", "The window is taller and a list is a little shorter in screens, but it still scrolls and no chip is on the first screen. The rule at the top of events.py gives the p it had."),
+        ("P1", "keeps", "P1", "The fix does not move the key against its chips except through the taller window. The rule gives the p it had."),
+        ("P8", "keeps", "P8", "The picks are still spread over as many screens, give or take one. The rule gives the p it had."),
+        ("Q1", "unchanged", "Q1", "The button 'Open the sample queue' was already in view with the load message up; the message now floats above the sheet and cannot cover it. Only the text changed."),
+        ("Q5", "unchanged", "Q5", "The same reason as Q1: the note and its button were already in view with the message up."),
+        ("P14", "adds", "P14", "The message now covers a strip of the student's work for about four seconds after each page load. A guess at the one friction the fix may add."),
+    ],
+}
+
+
+def expected_rows(R: dict, prev: dict, th: str) -> list[list]:
+    """the table of the events the last round touches: [event, p before, p now, how p was set, what the round is expected to do to it]"""
+    rows = EXPECTED.get(th)
+    if rows is None:
+        raise ValueError(f"markdown.EXPECTED has no list for the round ending at {th}: write which events the change is expected to remove, which not, and which it adds")
+    items = {m["key"]: m for c in prev["changes"] for m in c["moved"]}
+    listed = {eid for eid, _, _, _ in rows}
+    for key in items:
+        if key.startswith("event:") and key.split(":")[1] not in listed:
+            raise ValueError(f"{key} changed since the superseded registration, but markdown.EXPECTED[{th!r}] has no entry for {key.split(':')[1]}: say what the round is expected to do to it")
+    evid = {e["id"]: e for e in R["events"]}
+    out = []
+    for eid, verdict, _, why in rows:
+        e = evid[eid]
+        pm, added = items.get(f"event:{eid}:p"), items.get(f"event:{eid}:added")
+        was = "new" if added else (pm["before"] if pm else f"{e['p']:.2f}")
+        if eid in E.CALIBRATION:
+            how = "the rule at the top of events.py; " + ("p moved with the number it reads" if pm else "the number it reads moved, the p it gives did not")
+        elif added:
+            how = f"{e['basis']} (a new event)"
+        elif pm:
+            how = "judgment of the author of both registrations, who has now seen the change"
+        else:
+            how = "not changed: the number it rests on did not move"
+        out.append([eid, was, f"{e['p']:.2f}", how, {"removes": "remove it. ", "keeps": "not remove it. ", "unchanged": "not change it. ", "adds": "add it. "}[verdict] + why])
+    return out
+
+
+def expected_bullet(R: dict, prev: dict, th: str, reg_in: str | None) -> str:
+    """The Point's bullet: which events the last round is expected to remove, which not, which it adds, and that the pass may show other frictions"""
+    rows = EXPECTED[th] if th in EXPECTED else None
+    expected_rows(R, prev, th)                                                         # raises when the list is missing or incomplete
+    was = prev["scripts"]["before"]["commit"][:7]
+    ids = lambda verdict: ", ".join(short for _, v, short, _ in rows if v == verdict) or "none"
+    items = {m["key"]: m for c in prev["changes"] for m in c["moved"]}
+    judged = [f"{eid} ({items[f'event:{eid}:p']['before']} to {items[f'event:{eid}:p']['after']})" for eid, _, _, _ in rows if f"event:{eid}:p" in items and eid not in E.CALIBRATION]
+    return (f"- **What the sample fixer's last round (`{th}`) is expected to take away, and what it is not.** Expected to remove: {ids('removes')}. Not expected to remove: {ids('keeps')}. "
+            f"Keep their p, only their text changed: {ids('unchanged')}. Adds: {ids('adds')}. "
+            + (f"The p of {', '.join(judged)} changed by judgment: mine, as the author who set the earlier values and has now seen the change. " if judged else "")
+            + f"The table at the start of the section on what changed since the `{was}` registration has every value, how it was set, and what the round is expected to do to each event. "
+            "Nothing was lowered to make the prediction look right: a p falls only where the thing it was about is gone on the mock, and the registration exists to be scored. "
+            "**If the fix works, the pass may show other frictions that nothing here predicts.** P14 is a guess at one of them, not a list.")
+
+
 def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     M, A = MJ["predictors"], AJ["predictors"]
     cite = Cites(inputs["citations"])                    # the lines of the snapshot's docs and code that a sentence below rests on
@@ -63,21 +144,29 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     prev = R.get("changes_since_replaced_registration")
     first = ch_changes["scripts"]
     drafted = R["drafted"]
+    th_short = sk["commit"][:7]
+    reg_in = (prev["baseline"].get("registered_in") if prev else None)               # the commit that registered the superseded registration, when it was committed
+    ph = E.stability_phrases(VS)
 
     w("# Registered before the pass: the HW2 blind sample on a phone")
     w("")
-    w(f"Drafted {drafted}. **The commit that adds this file is the registration** (`theory/RECORD-THEORY.md` section 8, step 2). Do not edit this file or the fixture after it: write a new dated registration. A test pins both (`checks/test_prediction.py`).")
+    w(f"Drafted {drafted}. **The commit that adds this " + ("version of this file" if reg_in else "file") + " is the registration** (`theory/RECORD-THEORY.md` section 8, step 2). "
+      + (f"The version before it, the registration against `{prev['scripts']['before']['commit'][:7]}`, was committed as `{reg_in[:7]}` and stays in the history; this one supersedes it. " if reg_in else "")
+      + "Do not edit this file or the fixture after it: write a new dated registration. A test pins both (`checks/test_prediction.py`).")
     w("")
     w("## The point")
     w("")
     w("- **What this is.** A prediction, made before the owner's HW2 blind sample pass, of where the pass will be hard and in which order its parts will take time. The pass: 45 sampled (question, student) pairs, graded blind in TapGrade 0.6.7 sample mode on an iPhone, picks kept on the phone, exported as JSON, handed back. Nobody has used this flow on a phone yet.")
-    w(f"- **Against which code.** speeds-kit `{sk['commit'][:7]}`, script sha256 `{short(art['script_sha256'])}…`, {art['script_lines']} lines, build {art['build']}. An earlier draft against `{first['before']['commit'][:7]}` was never registered; section \"What changed in TapGrade between the first draft\" says what moved since, by how much." + (f" A registration against `{prev['scripts']['before']['commit'][:7]}` was built and replaced before anything was pushed; the section after it says what moved since that one." if prev else ""))
+    w(f"- **Against which code.** speeds-kit `{sk['commit'][:7]}`, script sha256 `{short(art['script_sha256'])}…`, {art['script_lines']} lines, build {art['build']}. An earlier draft against `{first['before']['commit'][:7]}` was never registered; section \"What changed in TapGrade between the first draft\" says what moved since, by how much." + (superseded_sentence(prev, reg_in) if prev else ""))
     w("- **Seven segments, one chain each** (table below). The load model ranks one instance of each. It is ordinal: not minutes.")
     w(f"- **Memory is predicted to fail in one place.** Choosing chips for a part (S3 step 7, and the same step in S4 and S5). The step needs 2 slots and two items are held (what the student wrote, what the key says): working set 4 against B = {budget}. Everywhere else the working set fits: install peaks at {chk[PFX + 'install']['peak_slots']}, the queue, the export and the hand-back at {max(chk[PFX + x]['peak_slots'] for x in ('queue', 'export', 'handback'))}.")
     w(f"- **The bank's size is not known.** The measured layout is for an invented bank of {SM['chips']} chips ({SM['chips'] / SM['questions']:.0f} per question), a stress sample. The runbook's example output says {EXAMPLE_ITEMS} bank items ({cite('rbStderr')}), {EXAMPLE_ITEMS} chips in all, so a bank of that size was measured too (section 3b): lists of {a_scr['median']} screens instead of {scr['median']}, and a part's key in view with its chips {100 * al['key_in_view_with_a_chip']['share']:.0f}% of the time instead of {100 * cl['key_in_view_with_a_chip']['share']:.0f}%. The memory prediction stands at both sizes and is weaker in the small one; P1, P2, P8 and P12 sit between the two.")
-    w(f"- **Most of the friction is not memory, and no verifier reads it.** The chip window is {pv['body_h']:.0f} px, {pv['body_pct_of_screen']:.0f}% of the screen, with no chip on the first screen; one question's list is {scr['median']} screens (median; {a_scr['median']} in the example-size bank). None, No deductions, the Grade button, hiding and resizing the sheet throw the list back to the top. The load toast leaving moves the content {VS['load_toast']['content_moves_when_it_goes_px']:.0f} px. From a pair, the Queue button is {M['window']['queue_button_from_pair']['screens_down']} screens down ({A['window']['queue_button_from_pair']['screens_down']} in the example-size bank). All measured on a mock in headless Chromium.")
+    NM = VS["next_pair_message"]
+    w(f"- **Most of the friction is not memory, and no verifier reads it.** The chip window is {pv['body_h']:.0f} px, {pv['body_pct_of_screen']:.0f}% of the screen, with no chip on the first screen; one question's list is {scr['median']} screens (median; {a_scr['median']} in the example-size bank). On the mock {ph['scroll_text']}{ph['leaves']}. A message floats above the sheet: it moves the content {VS['load_toast']['content_moves_when_it_goes_px']:.0f} px, and it covers {NM['over_the_page_px']:.0f} px of the {NM['work_area_h_px']:.0f} px of the student's work above the sheet for about four seconds after a page load. From a pair, the Queue button is {M['window']['queue_button_from_pair']['screens_down']} screens down ({A['window']['queue_button_from_pair']['screens_down']} in the example-size bank). All measured on a mock in headless Chromium.")
     w(f"- **The way to the first pair is in the runbook.** At `{sk['commit'][:7]}` it names both routes ({cite('rbRouteOutside')}; {cite('rbRouteSampled')}) and says the Sample tab is not in the Grade view ({cite('rbRoute')}). At `{first['before']['commit'][:7]}` it said \"The pass: Grade, then the Sample tab, then Next pair\", which sent the owner to a tab the Grade view does not have. The docs were fixed before this registration; Q1's probability fell (the section on what changed in TapGrade lists the values and why).")
-    w(f"- **{len(ev)} events, each with a step and a probability** ({n_by.get('declared', 0)} declared, {n_by.get('measured', 0)} measured, {n_by.get('carried-from-HW1', 0)} carried from HW1, {n_by.get('guess', 0)} guessed). Top five friction events: " + "; ".join(f"{e['id']} {e['p']:.2f}" for e in top5) + f". {len(fine)} of the events are predictions that nothing goes wrong (p at or below 0.10).")
+    w(f"- **{len(ev)} events, each with a step and a probability** ({n_by.get('declared', 0)} declared, {n_by.get('measured', 0)} measured, {n_by.get('carried-from-HW1', 0)} carried from HW1, {n_by.get('guess', 0)} guessed). Top five friction events: " + "; ".join(f"{e['id']} {e['p']:.2f}" for e in top5) + f". {top_five_sentence(prev)}{len(fine)} of the events are predictions that nothing goes wrong (p at or below 0.10).")
+    if prev:
+        w(expected_bullet(R, prev, th_short, reg_in))
     w("- **Order of durations** (one instance each): " + " > ".join(NAME[s["id"]] for s in ordered if s["id"] != PFX + "install").replace("export > hand-back", "export = hand-back") + ". Install is not comparable by duration.")
     w("- **What would make it wrong** is in section 7: a tau-b of 0 or below, a pair of segments the weights order stably that the pass reverses, no better a score than counting steps, onsets that hit no more than chance, friction at steps where every verifier was silent.")
     w("- **What it is not.** Written by the same author as the chain layer, the fixture and the measurement script. The weights are ordinal and uncalibrated. The artifact was measured on a mock Canvas in headless Chromium at 390x844 touch with an invented sample, not on an iPhone. Section 8.")
@@ -175,7 +264,7 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     for line in table(["Measured", "Invented large bank (primary)", "Example-size bank"], rows):
         w(line)
     w("")
-    w(f"What moves: how often the key is out of view at the chip decision, how far the list runs, how far the Queue button is, how often two chips look alike. The memory prediction (S3 step 7) stands at both sizes, since the key is out of view for about {10 * (1 - al['key_in_view_with_a_chip']['share']):.0f} chip views in ten even in the small bank, and it is weaker there. Events P1, P2, P8, P12 and Q1 say how p was set between the two. What does not move: the {pv['body_h']:.0f} to {A['window']['pair_view']['body_h']:.0f} px window, the toast shift, the list thrown to the top, the Sample tab that only the queue has, the export.")
+    w(f"What moves: how often the key is out of view at the chip decision, how far the list runs, how far the Queue button is, how often two chips look alike. The memory prediction (S3 step 7) stands at both sizes, since the key is out of view for about {10 * (1 - al['key_in_view_with_a_chip']['share']):.0f} chip views in ten even in the small bank, and it is weaker there. Events P1, P2, P8, P12 and Q1 say how p was set between the two. What does not move between the two sizes: " + (f"the window ({pv['body_h']:.0f} px in both, with or without a message), " if pv["body_h"] == A["window"]["pair_view"]["body_h"] else f"the window ({pv['body_h']:.0f} px and {A['window']['pair_view']['body_h']:.0f} px), ") + "the message that floats above the sheet and moves nothing, the list that keeps its place, the Sample tab that only the queue has, the export.")
     w("")
 
     # ------------------------------------------------------------------------------------------------------------------------------ 4
@@ -223,7 +312,7 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     for line in table(["Id", "Counts as happening when", "Rests on"], [[e["id"], e["observable"], e["rests_on"]] for e in ev]):
         w(line)
     w("")
-    w("How p was set: from a base rate in HW1 where there is one (the **carried** rows: one pass, one person, so coarse); from a measured number or a declaration where the chain says something (the others, by judgment, not by a formula); otherwise a plain guess. None was fitted. The three least sure are named in the hand-off reply and in section 8.")
+    w("How p was set: from a base rate in HW1 where there is one (the **carried** rows: one pass, one person, so coarse); from a measured number or a declaration where the chain says something (by judgment, except P1, P2 and P8, which follow the rule at the top of `events.py` from a number that differs between the two bank sizes: two judgments of the earlier registration are the two points of a line, and the new measured numbers are read off it); otherwise a plain guess. None was fitted. The three least sure are named in the hand-off reply and in section 8.")
     w("")
 
     # ------------------------------------------------------------------------------------------------------------------------------ 5
@@ -299,7 +388,7 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     # ------------------------------------------------------------------------------------------------------------------------------ what changed in TapGrade
     fd, th = first["before"], first["this"]
 
-    def changes_section(ch, heading, point, before_label, closing):
+    def changes_section(ch, heading, point, before_label, closing, extra=None):
         w(heading)
         w("")
         w(point.format(n=ch["moved_count"], path=ch["baseline"]["path"]))
@@ -314,6 +403,8 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
                 ["findings of the checker", b0["findings"], t0["findings"]]]):
             w(line)
         w("")
+        if extra:
+            extra()
         for i, c in enumerate(ch["changes"], 1):
             w(f"**{i}. {c['change']}.**")
             w("")
@@ -340,34 +431,56 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
                     "First draft", "What this section does not do: it does not say the first draft was wrong or this one is right. Both are beliefs written before a pass. It says what the code did to the numbers between them.")
     if prev:
         pv0 = prev["scripts"]["before"]
+        def events_table():
+            w(f"**The events the last round touches, and what it is expected to do to them.** The values are this registration's and the `{pv0['commit'][:7]}` registration's; the sentence in the last column is mine, written after seeing the change.")
+            w("")
+            for line in table(["Event", f"p at {pv0['commit'][:7]}", "p now", "How p was set", "The round is expected to"], expected_rows(R, prev, th["commit"][:7])):
+                w(line)
+            w("")
+        if reg_in:
+            lead = (f"**Point.** A registration against speeds-kit `{pv0['commit'][:7]}` was committed (`{reg_in[:7]}`) and stays in the history. The sample fixer's third round (`{th['commit'][:7]}`) then changed the code it was written about, "
+                    "and this registration takes its place as the one the pass is scored against. ")
+        else:
+            lead = f"**Point.** A registration against speeds-kit `{pv0['commit'][:7]}` was built and replaced, before anything was pushed, when speeds-kit moved to `{th['commit'][:7]}`. "
         changes_section(prev, f"## What changed in TapGrade since the registration for {pv0['commit'][:7]} that this one replaces",
-                        f"**Point.** A registration against speeds-kit `{pv0['commit'][:7]}` was built and replaced, before anything was pushed, when the sample fixer's follow-up landed (`{th['commit'][:7]}`). " + "{n} numbers, declared properties and probabilities differ between the two, listed the same way. Its numbers are kept as data in `{path}`. The judgments that changed are here with the values they had.",
-                        f"{pv0['commit'][:7]} registration", "Everything the first section lists that is not here is as the replaced registration had it.")
+                        lead + "{n} numbers, declared properties and probabilities differ between the two, listed the same way. Its numbers are kept as data in `{path}`. The judgments that changed are here with the values they had.",
+                        f"{pv0['commit'][:7]} registration", f"Everything the first section lists that is not here is as the `{pv0['commit'][:7]}` registration had it.", events_table)
 
     # ------------------------------------------------------------------------------------------------------------------------------ re-run
     w("## Re-running on the final code")
     w("")
-    w(f"The sample fixer's follow-up is in this snapshot (Save for a student outside the sample asks; Add deduction and Add credit item hidden and the shared bank page not pushed while a sample is loaded; the runbook and `docs/TAPGRADE.md` naming the route to the queue as it is: {cite('rbRoute')}; {cite('tgRoute')}). A further review round may still change the code. Until this registration is pushed (a commit that is not pushed can be replaced), one command remakes everything that moved:")
+    w(f"The sample fixer's follow-up and third round are in this snapshot (Save for a student outside the sample asks; Add deduction and Add credit item hidden and the shared bank page not pushed while a sample is loaded; the runbook and `docs/TAPGRADE.md` naming the route to the queue as it is: {cite('rbRoute')}; {cite('tgRoute')}; "
+      f"a rebuild of the sheet keeps the list where it was: {cite('tgKeepsPlace')}; a message floats above the sheet: {cite('tgMessage')}; the head names its pair whole: {cite('tgHeadWhole')}; the stop rule is three signs: {cite('rbStop')}). "
+      "A further review round may still change the code. Until this registration is pushed (a commit that is not pushed can be replaced), one command remakes everything that moved:")
     w("")
     w("```bash")
     w("python3 -m checks.hw2_sample_prediction rebuild --speeds-kit /path/to/speeds-kit --port 8881     # about 5 minutes; reads the checkout, never writes in it")
     w("```")
     w("")
-    w("What it does, in order: reads the files from the checkout (and stops if they have local changes); copies the script and the mock Canvas to a temporary folder; starts the mock on the port (8881 to 8883) and stops it before it returns; measures both bank sizes; finds every line of the code and of the docs that a note or an event cites, by its anchor; rebuilds the fixture, the inputs file, the registration JSON, this file and the short section of `docs/OPERATION-CHAINS.md`; runs `bin/emu chain check`. It then prints what moved. It stops, and says so, when a cited construct or line of the docs is gone or appears twice, or when something moved since the first draft that `checks/hw2_sample_prediction/changes.py` does not explain.")
+    w("What it does, in order: reads the files from the checkout (and stops if they have local changes); copies the script and the mock Canvas to a temporary folder; starts the mock on the port (8881 to 8883) and stops it before it returns; measures both bank sizes; finds every line of the code and of the docs that a note or an event cites, by its anchor; rebuilds the fixture, the inputs file, the registration JSON, this file and the short section of `docs/OPERATION-CHAINS.md`; runs `bin/emu chain check`. It then prints what moved. It stops, and says so, when a cited construct or line of the docs is gone or appears twice, or when something moved since the first draft or since the superseded registration that `checks/hw2_sample_prediction/changes.py` does not explain.")
     w("")
-    w("What a person still does: read the notes and events the command lists (a cited construct whose first line changed; a doc or kit file that changed), edit `chains.py` where a declared property must change and `events.py` where a probability must (each event's `rests_on` says what it rests on), explain new differences in `changes.py`, and run it again until it stops with nothing to explain. Then the same command with `--commit` makes the two commits, the chains and measurements first and the registration last:")
+    w("What a person still does: read the notes and events the command lists (a cited construct whose first line changed; a doc or kit file that changed), edit `chains.py` where a declared property must change and `events.py` where a probability must (each event's `rests_on` says what it rests on), explain new differences in `changes.py`, say in `markdown.py` what the round is expected to do to the events it touches, and run it again until it stops with nothing to explain. Then the same command with `--commit` makes the two commits, the chains and measurements first and the registration last:")
     w("")
     w("```bash")
     w("python3 -m checks.hw2_sample_prediction rebuild --speeds-kit /path/to/speeds-kit --commit --replace-previous --tests --trailer 'LINE OF THE COMMIT MESSAGE' --trailer 'ANOTHER LINE'")
     w("```")
     w("")
-    w("`--replace-previous` drops the last two commits only when they are the pair this command made (soft reset: the working tree is kept). Built against another speeds-kit commit, the new registration keeps the one it drops as data in `docs/predictions/replaced-<commit>/` (and removes an older such folder), so that it can say what moved since; built again against the same commit, only the text is amended and the folder of the earlier registration stays. `--tests` also runs `checks/test_chain.py`, `checks/test_explore_text.py`, `bin/gen_tree.py --check` and `checks/ci_claims.py` (port 8883). Nothing is pushed. Do not edit a registered file by hand: `python3 -m pytest -q checks/test_prediction.py` fails if the fixture, a measured file, the inputs, the generator or the registered numbers move.")
+    w("`--replace-previous` drops the last two commits only when they are the pair this command made (soft reset: the working tree is kept). Built against another speeds-kit commit, the new registration keeps the one it drops as data in `docs/predictions/replaced-<commit>/` (and removes an older such folder), so that it can say what moved since; built again against the same commit, only the text is amended and the folder of the earlier registration stays. "
+      "`--tests` also runs `checks/test_chain.py`, `checks/test_explore_text.py`, `bin/gen_tree.py --check` and `checks/ci_claims.py` (port 8883). Nothing is pushed. Do not edit a registered file by hand: `python3 -m pytest -q checks/test_prediction.py` fails if the fixture, a measured file, the inputs, the generator or the registered numbers move.")
+    w("")
+    w("Once a registration is pushed it stays in the history, and `--replace-previous` refuses it. For a later head, `--supersede` adds two new commits on top instead of dropping any, keeps the registration in HEAD as data in `docs/predictions/replaced-<commit>/` (the folder says in which commit it was registered), and says in the new text that it supersedes that one:")
+    w("")
+    w("```bash")
+    w("python3 -m checks.hw2_sample_prediction rebuild --speeds-kit /path/to/speeds-kit --supersede --commit --tests --trailer 'LINE OF THE COMMIT MESSAGE' --trailer 'ANOTHER LINE'")
+    w("```")
+    w("")
+    w("The pass is scored against the registration at the head of the branch, the later of the two. Without `--commit`, `--supersede` only prepares the files and runs the checks.")
     w("")
 
     # ------------------------------------------------------------------------------------------------------------------------------ drafting
     w("## What changed while drafting")
     w("")
-    w("So that the registration cannot be read as tuned. The first six items are the first draft's own history (against `" + fd["commit"][:7] + "`); the rest are this redo's.")
+    w("So that the registration cannot be read as tuned. The first six items are the first draft's own history (against `" + fd["commit"][:7] + "`); the rest are the later rounds', in order.")
     w("")
     w("- The first run of the checker on the fixture printed the same 20 findings at the same steps as the final one. After it, the `held` lists were derived from the dataflow table instead of typed, and the similarity measures were made consistent (label times shape everywhere: three controls moved from 0.47-0.48 to 0.15-0.31, below the 0.5 line before and after). Three loads moved (queue 9.50 to 8.50, S4 78.44 to 76.44, hand-back 10.50 to 11.50). No finding was added or removed, and no declaration was changed to add or remove one. The order was the same except export against hand-back, which the tie rule calls a tie.")
     w("- Late in the first draft, reading the runbook's example (`31 bank items` is 31 chips in all), I saw that the invented bank (137 chips) was far larger than the only documented size. I added `--bank example` and a measure of whether a part's key is in view with its chips, measured both sizes, and moved four probabilities before registering: P1 0.65 to 0.55, P2 0.80 to 0.70, P8 0.40 to 0.30, P12 0.40 to 0.20 (section 4d says how). The chains' findings did not change; the fixture's notes gained the second size's numbers.")
@@ -375,30 +488,70 @@ def render(R: dict, MJ: dict, AJ: dict, fixture: dict, inputs: dict) -> str:
     w("- The invented keys were first two to three times too long (58% clamped to two lines). They were rescaled to the length spread of a real homework's keys (median 40 characters; 6 of 40 clamped). That changes the clamped-key figures only.")
     w("- The measured files are the output of the committed script, once per bank size, and each was repeated. Repeat runs differed only in timings (`feedback_ms`, `loading`, the seconds a toast stays).")
     w("- The first draft's snapshot moved on while it was written (two later commits, an audit wait and the delta check's fixes). Everything in the first draft was read from `" + fd["commit"][:7] + "`.")
-    redo = (prev["scripts"]["before"]["commit"] if prev else th["commit"])[:7]            # the first redo: against the head the replaced registration was built on
-    w("- **Redo against `" + redo + "`.** The coordinating session's list of TapGrade changes came first; I then re-ran both measurements, diffed them against the first draft's files, and re-read every declared property the changes touch before changing anything. What I changed after seeing the new numbers: one declared amount (the queue's SCAN, which reads the toast and then the note with its button), two probabilities (Q1 and Q5), and one new event (P13). They are judgments about what the new measurement shows, set after seeing it, so they are listed above with the first draft's values next to them and are not claims that the first draft was tuned toward them. Nothing else was changed: the same findings at the same steps, the same B, the same weights. The measurement of `" + redo + "` was run several times (once by hand, then through `rebuild`, which lists every non-timing key that moved since the previous run); the runs differed only in timings.")
-    w("- The first draft cited code lines by number, typed by hand. Two of its citations pointed at the wrong construct (the safe-area padding is at line 1653 of `" + fd["commit"][:7] + "`'s script, not 1673; the note on Check's default tab cited the map from views to groups instead of the default). Citations are now found by anchor (`checks/hw2_sample_prediction/cites.py`) and recorded with the text of their first line in the inputs file. An anchor that no longer matches exactly once stops the rebuild. The lines of the docs that a sentence rests on are cited the same way (see the last item).")
-    w("- Numbers that had been typed into the predictor table and the prose (a 6-13 screen range, a 173 px window, a 9,700-character paste, a line number, the counts of events) are now read from the measured files, the JSON or the inputs. The predictor table's step references (S3:9 and the like) are checked against the fixture.")
-    w("- The measurement script learned to read both file formats and both storage keys, and gained three measurements: the first line of a student outside the sample, two pages of one phone, and what a tap on Save and next does on a page outside the sample (whether it asks, what the question names, what Cancel and OK send to Canvas; flags and counts only). They were run on the scripts of the earlier sets too (`new-keys.json` in each baseline), so that every new key has a value from before.")
-    if prev:
-        pv0 = prev["scripts"]["before"]
-        w(f"- **Follow-up against `{th['commit'][:7]}`.** A registration against `{pv0['commit'][:7]}` was built first and replaced before it was pushed, because speeds-kit moved (the sample fixer's follow-up). Before changing anything I ran `python3 -m checks.hw2_sample_prediction verify` on the new head, read the script and doc diffs, and re-ran both measurements. What I changed by judgment after reading the follow-up: the probability of Q1 (the docs at `{th['commit'][:7]}` name the route to the first pair; the `{pv0['commit'][:7]}` runbook said \"Grade, then the Sample tab\") and of P11 and its basis (at `{th['commit'][:7]}` Save and next asks, which I measured on the scripts of all three sets), and the notes of queue steps 1 and 2 and install step 11. Each is listed in the second section above with the value it had. No declared property moved, and no load, peak, finding or rank.")
-    note = AMENDED.get(th["commit"][:7])
-    if note:
-        w(note.format(th=th["commit"][:7], fd=fd["commit"][:7], pv0=(prev["scripts"]["before"]["commit"] if prev else th["commit"])[:7]))
+    rounds = [c for c, _ in HISTORY]
+    if th_short not in rounds:
+        raise ValueError(f"markdown.HISTORY has no entry for the snapshot {th_short}: write what was done in this round (what was run, read and changed, and by what rule or judgment)")
+    ctx = dict(th=th_short, fd=fd["commit"][:7], pv=(prev["scripts"]["before"]["commit"][:7] if prev else ""), pv_in=(reg_in or ""), check=(prev["baseline"].get("new_keys_check") if prev else None),
+               ch_check=ch_changes["baseline"].get("new_keys_check"), judged=judged_events(prev, th_short) if prev else "")
+    for commit, make in HISTORY[:rounds.index(th_short) + 1]:
+        for bullet in make(ctx):
+            w(bullet)
     w("")
     return "\n".join(L) + "\n"
 
 
-# What was corrected in the text of a registration after its first commit and before it was pushed (the commits are replaced, so the history is told here), by the snapshot it was built against.
-AMENDED = {
-    "cec1bba": ("- **Amended before the first push, same snapshot `{th}`.** The first text of this registration, under The point, quoted a line of the runbooks at `{fd}` and `{pv0}` as if it were the runbook's at `{th}`: "
-                "\"Grade, then the Sample tab\". The runbook at `{th}` does not say that. I then checked every sentence about the docs or the script, in this file, the fixture's notes and the events, against `{th}`, "
-                "and fixed what was false or had no support: that sentence; the class size behind the share of first pages (the first draft divided by 66, the students HW1's correction touched; HW1's class was 68); "
-                "a code line cited for Next pair; the Install section cited for a fact it does not hold (document-start); where the load toast sits; three statements that said more than the docs say; and wording with \"now\". "
-                "A note or an event that speaks of the docs now cites the line it rests on, found by anchor like the code, so a snapshot whose docs say something else stops the build. "
-                "The measurements, the declared properties, the loads, the findings, the ranks and every probability are as they were."),
-}
+def judged_events(prev: dict, th: str) -> str:
+    """'P4 0.30 to 0.20, P5 0.20 to 0.05': the events whose p moved by judgment since the superseded registration (not the ones the rule of events.py sets)"""
+    items = {m["key"]: m for c in prev["changes"] for m in c["moved"]}
+    return ", ".join(f"{eid} {items[f'event:{eid}:p']['before']} to {items[f'event:{eid}:p']['after']}" for eid, _, _, _ in EXPECTED.get(th, []) if f"event:{eid}:p" in items and eid not in E.CALIBRATION)
+
+
+# What was done in each round after the first draft, in order, by the speeds-kit head it was built against: a function of the context that returns the bullets.
+# A registration built against a head that is not in this list stops the build: write what was done.
+def _round_cac0dc8(x):
+    return [
+        "- **Redo against `cac0dc8`.** The coordinating session's list of TapGrade changes came first; I then re-ran both measurements, diffed them against the first draft's files, and re-read every declared property the changes touch before changing anything. What I changed after seeing the new numbers: one declared amount (the queue's SCAN, which reads the toast and then the note with its button), two probabilities (Q1 and Q5), and one new event (P13). They are judgments about what the new measurement shows, set after seeing it, so they are listed above with the first draft's values next to them and are not claims that the first draft was tuned toward them. Nothing else was changed: the same findings at the same steps, the same B, the same weights. The measurement of `cac0dc8` was run several times (once by hand, then through `rebuild`, which lists every non-timing key that moved since the previous run); the runs differed only in timings.",
+        ("- The first draft cited code lines by number, typed by hand. Two of its citations pointed at the wrong construct (the safe-area padding is at line 1653 of `" + x["fd"] + "`'s script, not 1673; the note on Check's default tab cited the map from views to groups instead of the default). "
+         "Citations are now found by anchor (`checks/hw2_sample_prediction/cites.py`) and recorded with the text of their first line in the inputs file. An anchor that no longer matches exactly once stops the rebuild. The lines of the docs that a sentence rests on are cited the same way (see the amendment below)."),
+        "- Numbers that had been typed into the predictor table and the prose (a 6-13 screen range, a 173 px window, a 9,700-character paste, a line number, the counts of events) are now read from the measured files, the JSON or the inputs. The predictor table's step references (S3:9 and the like) are checked against the fixture.",
+        "- The measurement script learned to read both file formats and both storage keys, and gained three measurements: the first line of a student outside the sample, two pages of one phone, and what a tap on Save and next does on a page outside the sample (whether it asks, what the question names, what Cancel and OK send to Canvas; flags and counts only). They were run on the scripts of the earlier sets too (`new-keys.json` in each baseline), so that every new key has a value from before.",
+    ]
+
+
+def _round_cec1bba(x):
+    return [
+        (f"- **Follow-up against `cec1bba`.** A registration against `cac0dc8` was built first and replaced before it was pushed, because speeds-kit moved (the sample fixer's follow-up). Before changing anything I ran `python3 -m checks.hw2_sample_prediction verify` on the new head, read the script and doc diffs, and re-ran both measurements. "
+         "What I changed by judgment after reading the follow-up: the probability of Q1 (the docs at `cec1bba` name the route to the first pair; the `cac0dc8` runbook said \"Grade, then the Sample tab\") and of P11 and its basis (at `cec1bba` Save and next asks, which I measured on the scripts of the earlier sets), "
+         "and the notes of queue steps 1 and 2 and install step 11. Each is listed in the first section above with the first draft's value. No declared property moved, and no load, peak, finding or rank."
+         + (f" That registration was committed (`{x['pv_in'][:7]}`) and stays in the history." if x["pv"] == "cec1bba" and x["pv_in"] else "")),
+        ("- **Amended before the first push, same snapshot `cec1bba`.** The first text of that registration, under The point, quoted a line of the runbooks at `ca80695` and `cac0dc8` as if it were the runbook's at `cec1bba`: "
+         "\"Grade, then the Sample tab\". The runbook at `cec1bba` does not say that. I then checked every sentence about the docs or the script, in the text, the fixture's notes and the events, against `cec1bba`, "
+         "and fixed what was false or had no support: that sentence; the class size behind the share of first pages (the first draft divided by 66, the students HW1's correction touched; HW1's class was 68); "
+         "a code line cited for Next pair; the Install section cited for a fact it does not hold (document-start); where the load toast sits; three statements that said more than the docs say; and wording with \"now\". "
+         "A note or an event that speaks of the docs now cites the line it rests on, found by anchor like the code, so a snapshot whose docs say something else stops the build. "
+         "The measurements, the declared properties, the loads, the findings, the ranks and every probability were as they were."),
+    ]
+
+
+def _round_be4e324(x):
+    ck = x["check"]
+    return [
+        (f"- **Third round against `be4e324`: this is the second registration.** The one against `{x['pv']}` was committed" + (f" (`{x['pv_in'][:7]}`)" if x["pv_in"] else "") + " and stays in the history. The sample fixer's third round then changed the code it was about. "
+         "The pass has not happened, so this registration takes its place as the one the pass is scored against."),
+        ("- What I did, in order. I ran `python3 -m checks.hw2_sample_prediction verify` on the new head. I read the diffs of the script, `docs/TAPGRADE.md` and the runbook myself, not from a list. "
+         f"I ran the current measurement tool on the `{x['pv']}` script and on the `{x['fd']}` script, so that the two probes added for this round (where the list is after the load message leaves; how much of the student's work the message covers) have a value from before; they are in `new-keys.json` of each baseline"
+         + (f", and on the `{x['pv']}` script the tool gave the same value for each of the {ck['keys_compared']} other keys that registration printed ({ck['keys_different']} different, timings aside)" if ck else "")
+         + ". I re-ran both measurements on `be4e324`. The tool grew those two probes, so its sha256 in section 1 is not the one the earlier registration names."),
+        ("- What changed, and how. **By rule:** P1, P2 and P8 follow the rule at the top of `events.py` (the line through the two judgments of the `" + x["pv"] + "` registration, read at the new measured numbers). Their numbers moved and the rule gives the p they had. "
+         f"**By judgment, mine, as the author who set the earlier values and has now seen the change:** {x['judged'] or 'none'}. **By guess:** a new event, P14. "
+         "I did not lower anything to make the prediction look right. P4 and P5 fall only because what they were about is gone on the mock. P5 now tests whether the fix holds on a phone. P14 adds the friction the fix may bring. "
+         "Both the values they had and the sentence on what the fix is expected to remove are in the table at the start of the second section."),
+        ("- While writing it I found a note in the pair chain's save step that still said None throws the list to the top. It was true at `cec1bba` and is not at `be4e324`. It is fixed, and a test now fails when a note or an event says the list is thrown to the top while the measurement says it is not. "
+         "No declared property moved, and no load, peak, finding or rank."),
+    ]
+
+
+HISTORY = [("cac0dc8", _round_cac0dc8), ("cec1bba", _round_cec1bba), ("be4e324", _round_be4e324)]
 
 
 # ---------------------------------------------------------------------------------------------------------------------------------- docs/OPERATION-CHAINS.md
@@ -413,6 +566,9 @@ def ops_section(R: dict, MJ: dict, AJ: dict, inputs: dict) -> str:
     prev = R.get("changes_since_replaced_registration")
     pv = MJ["predictors"]["window"]["pair_view"]
     VS = MJ["predictors"]["view_stability"]
+    ph = E.stability_phrases(VS)
+    NM = VS["next_pair_message"]
+    reg_in = prev["baseline"].get("registered_in") if prev else None
     tot = sum(len(c["findings"]) for c in chk.values())
     differ = re.search(r"orders (\d+) of the (\d+) comparable", R["ranking"]["baseline_by_step_count"]["note"])
     L = []
@@ -423,7 +579,7 @@ def ops_section(R: dict, MJ: dict, AJ: dict, inputs: dict) -> str:
     w("")
     w("**Point.**")
     w("")
-    w("- A pre-registered prediction is the one test of this layer that can fail (`theory/RECORD-THEORY.md` section 8). `docs/predictions/hw2-sample-pass.md` says, before the owner's HW2 blind sample pass, where it will be hard, how hard, and in which order its parts will take time. The commit that adds it is the registration. After the pass it is scored against the owner's narration and screenshots.")
+    w("- A pre-registered prediction is the one test of this layer that can fail (`theory/RECORD-THEORY.md` section 8). `docs/predictions/hw2-sample-pass.md` says, before the owner's HW2 blind sample pass, where it will be hard, how hard, and in which order its parts will take time. The commit that adds it is the registration" + (" (the commit that adds this version of it; the version before it stays in the history and is superseded)" if reg_in else "") + ". After the pass it is scored against the owner's narration and screenshots.")
     w(f"- The chains are `checks/fixtures/chains/tapgrade_0_6_7_sample_pass.json`: seven, one per segment of the pass, written from the code and docs of speeds-kit `{sk['commit'][:7]}` and not from anyone using the flow. B = 3. Provenance says `designed`, {inputs['drafted'][:10]}.")
     w(f"- {len(ev)} events, each with a step and a probability, each marked measured, declared, carried from HW1 or guessed. {n_fine} of them predict that nothing goes wrong.")
     w("- Files and tests keep it honest. `docs/predictions/hw2-sample-pass.prediction.json` holds the numbers `bin/emu chain check` printed. `checks/test_prediction.py` fails with `the fixture changed after registration: write a NEW dated registration, do not edit this one` if the fixture, a measured file, the generator or those numbers move. `checks/prediction_score.py` is the scoring (Brier, Kendall's tau-b, onsets within two steps).")
@@ -442,12 +598,13 @@ def ops_section(R: dict, MJ: dict, AJ: dict, inputs: dict) -> str:
     w("What the numbers say, and what they do not:")
     w("")
     w("- Memory is predicted to fail in one place: choosing chips for a part (step 7 of `tapgrade-0.6.7-sample-pair`, the same step after a reload or a lock). The step needs 2 and two items are held (what the student wrote, what the key says): working set 4 against B = 3. No other step is over B, and at B = 4 none is.")
-    w(f"- Most of the predicted friction is not memory and no verifier reads it: a {pv['body_h']:.0f} px chip window, a list thrown back to the top by None, hiding or resizing the sheet, a toast that moves the content {VS['load_toast']['content_moves_when_it_goes_px']:.0f} px. Those are measured on the artifact, not declared.")
+    w(f"- Most of the predicted friction is not memory and no verifier reads it: a {pv['body_h']:.0f} px chip window with no chip on the first screen, and a message that floats over {NM['over_the_page_px']:.0f} px of the student's work for about four seconds after each page load; on the mock {ph['scroll_text']}. Those are measured on the artifact, not declared.")
     w(f"- The bank's size is not known. The measured layout is for an invented bank of {SM['chips']} chips; the runbook's example output says {EXAMPLE_ITEMS} bank items ({cite('rbStderr')}; {EXAMPLE_ITEMS} chips in all), so that size was measured too. The memory prediction stands at both and is weaker in the small one; the registration says which events moved.")
     w("- Load is ordinal and the rank is of one instance of each segment (a pair happens about 45 times). It has no term for waiting or for an app switch outside a REFRESH or RE-ORIENT, which is one reason the install segment is not scored by duration.")
     w(f"- The {tot} findings are what the verifiers say about declarations written by the author of this layer (`P-02be`: silence means nothing was declared wrong). Every finding has an event on its step, so the pass can contradict it.")
     w(f"- The weights are not calibrated (`P-67a1`). The registration also ranks by step count alone, so the pass can show whether the weights add anything. The two rankings differ on {differ.group(1)} of the {differ.group(2)} comparable pairs, so the test is weak.")
-    w(f"- A first draft against `{fd['commit'][:7]}` was never registered" + (f", and a registration against `{prev['scripts']['before']['commit'][:7]}` was replaced before it was pushed" if prev else "") + "; the registration lists what changed in TapGrade since each, and by how much. The sample mode may still change: when it does, run the one command at the end of the registration before it is pushed; once it is pushed, a change of code or numbers is a new dated registration.")
+    w(f"- A first draft against `{fd['commit'][:7]}` was never registered" + ((f", and a registration against `{prev['scripts']['before']['commit'][:7]}` (committed as `{reg_in[:7]}`) is superseded by this one: both stay in the history" if reg_in else f", and a registration against `{prev['scripts']['before']['commit'][:7]}` was replaced before it was pushed") if prev else "")
+      + "; the registration lists what changed in TapGrade since each, and by how much. The sample mode may still change: when it does, run the one command at the end of the registration before it is pushed; once it is pushed, a change of code or numbers is a new dated registration, made with `--supersede`.")
     w("")
     w(OPS_MARK[1])
     w("")

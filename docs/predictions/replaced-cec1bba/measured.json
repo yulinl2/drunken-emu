@@ -3,10 +3,10 @@
  "tool": "checks/measure_sample_predictors.py",
  "script": {
   "path": "userscripts/tapgrade.user.js",
-  "sha256": "352275b86e5a12fe2ba684454c9c46148ef4ab03b97e479cff2b00647183f01e",
-  "bytes": 253835,
+  "sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
+  "bytes": 257658,
   "version": "0.6.7",
-  "build": "10-04 23:12"
+  "build": "10-05 01:03"
  },
  "mock": {
   "base": "http://127.0.0.1:PORT"
@@ -566,39 +566,39 @@
   },
   "feedback_ms": {
    "chip": {
-    "ms": 18.0,
+    "ms": 10.1,
     "kind": "immediate"
    },
    "half_point_plus": {
-    "ms": 5.8,
+    "ms": 6.1,
     "kind": "immediate"
    },
    "no_deductions": {
-    "ms": 14.3,
+    "ms": 12.8,
     "kind": "immediate"
    },
    "save_with_a_verdict": {
-    "ms": 13.7,
+    "ms": 12.1,
     "kind": "immediate"
    },
    "check_on_the_bar": {
-    "ms": 8.4,
+    "ms": 8.2,
     "kind": "immediate"
    },
    "sample_picks_tab": {
-    "ms": 3.3,
+    "ms": 4.8,
     "kind": "immediate"
    },
    "copy_as_json": {
-    "ms": 11.2,
+    "ms": 13.0,
     "kind": "immediate"
    },
    "save_with_nothing_picked": {
-    "ms": 5.2,
+    "ms": 5.4,
     "kind": "immediate"
    },
    "save_and_next": {
-    "ms": 7.0,
+    "ms": 12.7,
     "kind": "immediate"
    }
   },
@@ -657,8 +657,8 @@
    "mock_submission_read_delay_s": 1.2,
    "states": [
     {
-     "from_s": 0.2,
-     "for_s": 0.25,
+     "from_s": 0.19,
+     "for_s": 0.22,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
      "head_is_pair": true,
@@ -672,8 +672,8 @@
      "sheet_top_px": 405
     },
     {
-     "from_s": 0.45,
-     "for_s": 0.12,
+     "from_s": 0.41,
+     "for_s": 0.11,
      "host": true,
      "purpose_tag": "Changes Canvas",
      "head_is_pair": false,
@@ -687,7 +687,7 @@
      "sheet_top_px": 628
     },
     {
-     "from_s": 0.57,
+     "from_s": 0.52,
      "for_s": 1.12,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
@@ -702,7 +702,7 @@
      "sheet_top_px": 607
     },
     {
-     "from_s": 1.69,
+     "from_s": 1.64,
      "for_s": 0.0,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
@@ -723,10 +723,10 @@
    "head_shows_a_bare_student_id_while_loading": true,
    "no_foot_while_loading": true,
    "sheet_top_moves_px": 223,
-   "seconds_from_tap_to_pair_ready": 1.69,
-   "old_page_stays_seconds": 0.45,
+   "seconds_from_tap_to_pair_ready": 1.64,
+   "old_page_stays_seconds": 0.41,
    "toast_of_the_save_shown_on_the_next_page": true,
-   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.79
+   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.75
   },
   "first_contact": {
    "students_in_sample": 35,
@@ -749,7 +749,14 @@
      "says_save_writes_to_canvas": true
     },
     "hint_button_visible_fraction_with_toast": 1,
-    "hint_button_visible_fraction_without_toast": 1
+    "hint_button_visible_fraction_without_toast": 1,
+    "tap_save_and_next": {
+     "asks_first": true,
+     "names_the_blind_pass": true,
+     "says_it_writes_to_canvas": true,
+     "writes_after_cancel": 0,
+     "writes_after_ok": 1
+    }
    },
    "load_toast_seconds_on_screen": 4.2,
    "inside_sample": {

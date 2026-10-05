@@ -1,13 +1,14 @@
 {
- "what": "the registration built against speeds-kit cac0dc8 on 2026-10-05 00:31 EDT and replaced before anything was pushed: the numbers it printed, kept as data so that the registration that replaces it can say what moved. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared properties of its fixture, every step key except the text), summary.json (this file), new-keys.json (measurements that did not exist then, made on its script by the current measurement script; empty unless someone added them).",
+ "what": "the registration built against speeds-kit cec1bba on 2026-10-05 02:16 EDT, committed as 74118b5 (it stays in the history) and superseded by a later registration: the numbers it printed, kept as data so that the registration that replaces it can say what moved. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared properties of its fixture, every step key except the text), summary.json (this file), new-keys.json (measurements that did not exist then, made on its script by the current measurement script, with a count of how many of its own keys that script reproduced; empty when there are none).",
+ "registered_in": "74118b521fada830b44f12531acad568b4b2afaf",
  "artifact": {
-  "commit": "cac0dc881293990bcf493d014bbff3432f4fa7fc",
-  "script_sha256": "352275b86e5a12fe2ba684454c9c46148ef4ab03b97e479cff2b00647183f01e",
-  "script_lines": 3369,
+  "commit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92",
+  "script_sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
+  "script_lines": 3395,
   "version": "0.6.7",
-  "build": "10-04 23:12"
+  "build": "10-05 01:03"
  },
- "drafted": "2026-10-05 00:31 EDT",
+ "drafted": "2026-10-05 02:16 EDT",
  "segments": {
   "tapgrade-0.6.7-sample-install": {
    "steps": 12,
@@ -298,7 +299,7 @@
    ]
   },
   "Q1": {
-   "p": 0.35,
+   "p": 0.15,
    "basis": "declared",
    "kind": "friction",
    "steps": [
@@ -511,8 +512,8 @@
    ]
   },
   "P11": {
-   "p": 0.03,
-   "basis": "declared",
+   "p": 0.01,
+   "basis": "measured",
    "kind": "fine",
    "steps": [
     [

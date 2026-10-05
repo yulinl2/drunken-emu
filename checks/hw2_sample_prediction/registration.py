@@ -158,10 +158,15 @@ def build(repo: Path, MJ: dict, AJ: dict, inputs: dict, parent: str, drafted: st
     M = MJ["sample"]
     raw_doc = json.loads((repo / FIXTURE).read_text(encoding="utf-8"))       # the file as written: the loader fills defaults in, which the first draft's record does not have
     ch_changes = changes.compute(repo, inputs, MJ, AJ, raw_doc, seg_numbers, findings, [[a, b, r] for a, b, r in unstable], groups, evs)
+    superseded = ch_changes.get("replaced")
+    reg_in = superseded["baseline"].get("registered_in") if superseded else None            # the commit that registered the registration this one supersedes, when there was one
+    registered_by = ("the commit that adds this version of this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2). "
+                     f"The version committed as {reg_in[:7]}, the registration against speeds-kit {superseded['scripts']['before']['commit'][:7]}, is superseded by it and stays in the history"
+                     if reg_in else "the commit that adds this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2)")
     reg = {
         "schema": "emu-prediction/1", "id": "hw2-sample-pass",
         "title": "The HW2 blind sample pass on the owner's phone (TapGrade 0.6.7 sample mode): where it will be hard, how much, in which order",
-        "registered_by": "the commit that adds this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2)",
+        "registered_by": registered_by,
         "drafted": drafted or inputs["drafted"],
         "spec": "theory/RECORD-THEORY.md section 8; issue #32, test point E5",
         "artifact": {"repository": "speeds-kit", "commit": sk["commit"], "checkout_head": sk["checkout_head"], "script": script["path"], "script_sha256": script["sha256"], "script_lines": script["lines"],
@@ -234,7 +239,8 @@ def build(repo: Path, MJ: dict, AJ: dict, inputs: dict, parent: str, drafted: st
         "limits": ["written by the same author as the builder of the chain layer, the fixture and the measurement script: not independent",
                    "the load weights are ordinal and uncalibrated (P-67a1); amounts, parts per pair and taps per pair are guesses",
                    "the pass has not happened: every p is a belief, none is fitted", "the artifact was measured on a mock Canvas in headless Chromium at 390x844 touch with this container's fonts, not on an iPhone, not on a real Canvas, with an invented sample",
-                   f"the snapshot is speeds-kit {sk['commit'][:7]}, the sample fixer's follow-up included; a further review round may change the sample mode again, and what it changes is not predicted here: if this registration is already pushed when it does, the new code is a new dated registration",
+                   f"the snapshot is speeds-kit {sk['commit'][:7]}, the sample fixer's follow-up and third round included; a further review round may change the sample mode again, and what it changes is not predicted here: if this registration is already pushed when it does, the new code is a new dated registration (the earlier registrations stay in the history)",
+                   "the third round's fixes (the list kept where it was, a message that floats over the page, the head kept whole) were measured in headless Chromium only; whether Safari on an iPhone does the same is what P5 and P14 test",
                    "HW1's outcomes are base rates only (basis carried-from-HW1): one pass by one person",
                    f"the real bank's size is unknown: the measured layout is for an invented bank of {M['chips']} chips ({M['chips'] / M['questions']:.0f} per question), and a bank of the runbook's example size ({EXAMPLE_ITEMS} bank items, {cite('rbStderr')}: {EXAMPLE_ITEMS} chips in all) was measured too; events P1, P2, P8 and P12 state a p between the two",
                    "+-2 steps covers 5 of the 9 steps of the pair chain: a loss placed at random hits more often than not", "silence in a narration is ambiguous: an event coded 0 may be a difficulty that was not mentioned",

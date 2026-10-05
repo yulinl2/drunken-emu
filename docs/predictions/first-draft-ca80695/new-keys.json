@@ -1,20 +1,28 @@
 {
- "what": "Measurements that did not exist when the first draft was written, made on the first-draft script (speeds-kit ca80695) by the current checks/measure_sample_predictors.py, so that the registration can give them a first-draft value. Large bank, the same invented sample (seed 2). Only the keys the first-draft measured files lack are kept.",
+ "what": "Measurements that did not exist when the first draft was written, made on the first-draft script (speeds-kit ca80695) by the current checks/measure_sample_predictors.py, so that the registration can give them a first-draft value. Large bank, the same invented sample (seed 2). Only the keys the first-draft measured files lack are kept; checked_against_the_baseline says how many of the keys it has were measured again and found the same.",
  "script_sha256": "786bddeed40a06b8ecd738397957877939e51572060e0e24f681c89cd45e2490",
  "command": "python3 checks/measure_sample_predictors.py <the ca80695 script> MOCK_URL --bank large",
+ "checked_against_the_baseline": {
+  "keys_compared": 298,
+  "keys_different": 0,
+  "not_compared": "timings (feedback_ms, loading, the seconds a message stays on screen)"
+ },
  "predictors": {
-  "two_pages": {
-   "stale_page_save": {
-    "picks_after_the_other_page_saved": 1,
-    "picks_after_this_page_saved": 1,
-    "the_other_pages_pick_is_kept": false
+  "window": {
+   "pair_view_with_toast": {
+    "msg_over_page_px": 0
+   }
+  },
+  "view_stability": {
+   "load_toast_leaves_with_the_list_scrolled": {
+    "scroll_before_px": 600.0,
+    "scroll_after_px": 0.0
    },
-   "return_to_a_stale_page": {
-    "queue_line_for_the_pair_the_other_page_recorded": {
-     "before": "0 of 5 recorded",
-     "after": "0 of 5 recorded"
-    },
-    "sees_it_without_a_reload": false
+   "next_pair_message": {
+    "height_px": 55.8,
+    "over_the_page_px": 0,
+    "work_area_h_px": 405.1,
+    "share_of_the_work_area_pct": 0
    }
   },
   "first_contact": {
@@ -33,6 +41,20 @@
      "writes_after_cancel": 1,
      "writes_after_ok": null
     }
+   }
+  },
+  "two_pages": {
+   "stale_page_save": {
+    "picks_after_the_other_page_saved": 1,
+    "picks_after_this_page_saved": 1,
+    "the_other_pages_pick_is_kept": false
+   },
+   "return_to_a_stale_page": {
+    "queue_line_for_the_pair_the_other_page_recorded": {
+     "before": "0 of 5 recorded",
+     "after": "0 of 5 recorded"
+    },
+    "sees_it_without_a_reload": false
    }
   }
  }

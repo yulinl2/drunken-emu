@@ -3,10 +3,10 @@
  "tool": "checks/measure_sample_predictors.py",
  "script": {
   "path": "userscripts/tapgrade.user.js",
-  "sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
-  "bytes": 257658,
+  "sha256": "d63dc263df7fdb77828eae1e74ae3603ce7d9a9d195a1153deca53ad74255423",
+  "bytes": 259524,
   "version": "0.6.7",
-  "build": "10-05 01:03"
+  "build": "10-05 03:02"
  },
  "mock": {
   "base": "http://127.0.0.1:PORT"
@@ -36,22 +36,23 @@
    "viewport_h": 844,
    "pair_view_with_toast": {
     "sheet_h": 438.9,
-    "head_h": 84.8,
+    "head_h": 69.6,
     "msg_h": 55.8,
+    "msg_over_page_px": 55.8,
     "tabs_h": 54,
-    "body_h": 111,
+    "body_h": 188,
     "foot_h": 63,
     "bar_h": 62.2
    },
    "pair_view": {
     "sheet_h": 438.9,
-    "head_h": 84.8,
+    "head_h": 69.6,
     "tabs_h": 54,
-    "body_h": 173,
+    "body_h": 188,
     "foot_h": 63,
     "bar_h": 62.2,
     "sheet_pct": 52.0,
-    "body_pct_of_screen": 20.5,
+    "body_pct_of_screen": 22.3,
     "work_area_above_sheet_h": 405.1,
     "work_area_pct": 48.0
    },
@@ -68,16 +69,16 @@
      "groups": 6,
      "none_buttons": 3,
      "scroll_h": 1899,
-     "body_h": 173,
-     "screens": 11.0
+     "body_h": 188,
+     "screens": 10.1
     },
     "Q2": {
      "chips": 11,
      "groups": 3,
      "none_buttons": 2,
      "scroll_h": 1313,
-     "body_h": 173,
-     "screens": 7.6
+     "body_h": 188,
+     "screens": 7.0
     },
     "Q3": {
      "chips": 10,
@@ -92,32 +93,32 @@
      "groups": 6,
      "none_buttons": 3,
      "scroll_h": 2219,
-     "body_h": 173,
-     "screens": 12.8
+     "body_h": 188,
+     "screens": 11.8
     },
     "Q5": {
      "chips": 17,
      "groups": 5,
      "none_buttons": 3,
      "scroll_h": 1883,
-     "body_h": 173,
-     "screens": 10.9
+     "body_h": 188,
+     "screens": 10.0
     },
     "Q6": {
      "chips": 10,
      "groups": 4,
      "none_buttons": 2,
      "scroll_h": 1365,
-     "body_h": 173,
-     "screens": 7.9
+     "body_h": 188,
+     "screens": 7.3
     },
     "Q7": {
      "chips": 18,
      "groups": 5,
      "none_buttons": 3,
      "scroll_h": 1977,
-     "body_h": 173,
-     "screens": 11.4
+     "body_h": 188,
+     "screens": 10.5
     },
     "Q8": {
      "chips": 11,
@@ -132,26 +133,26 @@
      "groups": 6,
      "none_buttons": 2,
      "scroll_h": 2045,
-     "body_h": 173,
-     "screens": 11.8
+     "body_h": 188,
+     "screens": 10.9
     }
    },
    "screens_per_question": {
     "min": 6.2,
-    "median": 10.9,
-    "max": 12.8
+    "median": 10.0,
+    "max": 11.8
    },
    "queue_button_from_pair": {
     "offset_in_body_px": 1787.9,
-    "screens_down": 10.3
+    "screens_down": 9.5
    },
    "pair_view_largest_sheet": {
     "took_effect": true,
     "sheet_h": 717,
-    "body_h": 451,
+    "body_h": 466,
     "work_area_above_sheet_h": 127.0,
     "work_area_pct": 15.0,
-    "screens_for_first_question": 4.2
+    "screens_for_first_question": 4.1
    }
   },
   "primary_action": {
@@ -502,13 +503,13 @@
     },
     "in_view": {
      "max_fully_visible_together": 3,
-     "mean_fully_visible": 1.2,
-     "mean_fully_visible_when_any": 1.51,
-     "share_of_windows_with_two_or_more": 0.4,
-     "windows": 2270,
-     "pairs_seen_together": 112,
+     "mean_fully_visible": 1.4,
+     "mean_fully_visible_when_any": 1.61,
+     "share_of_windows_with_two_or_more": 0.48,
+     "windows": 2252,
+     "pairs_seen_together": 143,
      "largest_similarity_seen_together": 0.51,
-     "mean_similarity_seen_together": 0.21,
+     "mean_similarity_seen_together": 0.22,
      "identical_label_pairs_seen_together": 0
     },
     "same_label_repeats_in_one_question": {
@@ -528,14 +529,14 @@
      "clamped": 6
     },
     "key_in_view_with_a_chip": {
-     "chip_views": 2776,
-     "share": 0.29
+     "chip_views": 3056,
+     "share": 0.32
     },
     "part_group_height_px": {
      "parts": 40,
      "mean": 272.9,
      "max": 443.7,
-     "share_that_fit_in_the_open_body": 0.1
+     "share_that_fit_in_the_open_body": 0.23
     }
    },
    "reason_labels": {
@@ -553,11 +554,11 @@
    "at_the_largest_sheet": {
     "in_view": {
      "max_fully_visible_together": 6,
-     "mean_fully_visible": 4.3,
-     "mean_fully_visible_when_any": 4.28,
+     "mean_fully_visible": 4.4,
+     "mean_fully_visible_when_any": 4.43,
      "share_of_windows_with_two_or_more": 1.0,
-     "windows": 1852,
-     "pairs_seen_together": 456,
+     "windows": 1835,
+     "pairs_seen_together": 461,
      "largest_similarity_seen_together": 1.0,
      "mean_similarity_seen_together": 0.28,
      "identical_label_pairs_seen_together": 38
@@ -566,39 +567,39 @@
   },
   "feedback_ms": {
    "chip": {
-    "ms": 10.1,
+    "ms": 16.3,
     "kind": "immediate"
    },
    "half_point_plus": {
-    "ms": 6.1,
+    "ms": 6.0,
     "kind": "immediate"
    },
    "no_deductions": {
-    "ms": 12.8,
+    "ms": 15.6,
     "kind": "immediate"
    },
    "save_with_a_verdict": {
-    "ms": 12.1,
+    "ms": 22.2,
     "kind": "immediate"
    },
    "check_on_the_bar": {
-    "ms": 8.2,
+    "ms": 9.3,
     "kind": "immediate"
    },
    "sample_picks_tab": {
-    "ms": 4.8,
+    "ms": 3.7,
     "kind": "immediate"
    },
    "copy_as_json": {
-    "ms": 13.0,
+    "ms": 18.3,
     "kind": "immediate"
    },
    "save_with_nothing_picked": {
-    "ms": 5.4,
+    "ms": 8.7,
     "kind": "immediate"
    },
    "save_and_next": {
-    "ms": 12.7,
+    "ms": 11.7,
     "kind": "immediate"
    }
   },
@@ -606,13 +607,13 @@
    "load_toast": {
     "seconds_on_screen": 3.9,
     "height_px": 55.8,
-    "content_moves_when_it_goes_px": 61.8,
-    "open_body_grows_px": 62.0,
+    "content_moves_when_it_goes_px": 0.0,
+    "open_body_grows_px": 0.0,
     "goes_by_itself": true
    },
    "refusal_toast": {
     "height_px": 74.7,
-    "content_moves_when_it_comes_px": 80.7
+    "content_moves_when_it_comes_px": 0.0
    },
    "chip_tap": {
     "max_chip_shift_px": 2.0,
@@ -624,21 +625,21 @@
     "warning_shown": true
    },
    "no_deductions_tap": {
-    "scroll_before_px": 65.0,
-    "scroll_after_px": 0.0
+    "scroll_before_px": 58.0,
+    "scroll_after_px": 58.0
    },
    "none_tap": {
-    "scroll_before_px": 1603.0,
-    "scroll_after_px": 0.0,
-    "jumps_to_the_top": true
+    "scroll_before_px": 1564.0,
+    "scroll_after_px": 1564.0,
+    "jumps_to_the_top": false
    },
    "grade_button_on_a_pair": {
     "scroll_before_px": 500.0,
-    "scroll_after_px": 0.0
+    "scroll_after_px": 500.0
    },
    "hide_and_reopen_the_sheet": {
     "scroll_before_px": 600.0,
-    "scroll_after_px": 0.0,
+    "scroll_after_px": 600.0,
     "ticked_before": 3,
     "ticked_after": 3
    },
@@ -646,19 +647,29 @@
     "sheet_h_before_px": 438.9,
     "sheet_h_after_px": 639.0,
     "scroll_before_px": 600.0,
-    "scroll_after_px": 0.0,
+    "scroll_after_px": 600.0,
     "ticked_after": 3
    },
    "clamped_key_opened_by_a_tap": {
     "content_below_pushed_down_px": 17.5
+   },
+   "load_toast_leaves_with_the_list_scrolled": {
+    "scroll_before_px": 600.0,
+    "scroll_after_px": 600.0
+   },
+   "next_pair_message": {
+    "height_px": 55.8,
+    "over_the_page_px": 55.8,
+    "work_area_h_px": 405.1,
+    "share_of_the_work_area_pct": 13.8
    }
   },
   "loading": {
    "mock_submission_read_delay_s": 1.2,
    "states": [
     {
-     "from_s": 0.19,
-     "for_s": 0.22,
+     "from_s": 0.2,
+     "for_s": 0.24,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
      "head_is_pair": true,
@@ -672,7 +683,7 @@
      "sheet_top_px": 405
     },
     {
-     "from_s": 0.41,
+     "from_s": 0.44,
      "for_s": 0.11,
      "host": true,
      "purpose_tag": "Changes Canvas",
@@ -687,8 +698,8 @@
      "sheet_top_px": 628
     },
     {
-     "from_s": 0.52,
-     "for_s": 1.12,
+     "from_s": 0.55,
+     "for_s": 1.14,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
      "head_is_pair": false,
@@ -702,7 +713,7 @@
      "sheet_top_px": 607
     },
     {
-     "from_s": 1.64,
+     "from_s": 1.69,
      "for_s": 0.0,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
@@ -719,14 +730,14 @@
    ],
    "first_new_state_says_changes_canvas": true,
    "a_state_tells_the_owner_to_pick_a_student": true,
-   "seconds_in_the_pick_a_student_state": 1.12,
+   "seconds_in_the_pick_a_student_state": 1.14,
    "head_shows_a_bare_student_id_while_loading": true,
    "no_foot_while_loading": true,
    "sheet_top_moves_px": 223,
-   "seconds_from_tap_to_pair_ready": 1.64,
-   "old_page_stays_seconds": 0.41,
+   "seconds_from_tap_to_pair_ready": 1.69,
+   "old_page_stays_seconds": 0.44,
    "toast_of_the_save_shown_on_the_next_page": true,
-   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.75
+   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.81
   },
   "first_contact": {
    "students_in_sample": 35,
@@ -767,10 +778,10 @@
     "tabs_open": 1
    },
    "pair_title_slack_px_one_pair_per_question": {
-    "min": -0.3,
+    "min": 28.7,
     "max": 29.7,
-    "borderline_under_2px": 7,
-    "clipped": 7
+    "borderline_under_2px": 0,
+    "clipped": 0
    }
   },
   "interruption": {
