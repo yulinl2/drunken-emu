@@ -1,0 +1,25 @@
+--- a/bin/emu
++++ b/bin/emu
+@@ usage
+-#   bin/emu smoke  <artifact.jsx>
+-#   bin/emu audit  <artifact.jsx> [read_stops] [min_px]
+-#   bin/emu shots  <artifact.jsx> "anchor 1" "anchor 2" ...
++#   bin/emu all    <artifact.jsx>            every check, one browser, one verdict
++#   bin/emu smoke  <artifact.jsx>
++#   bin/emu audit  <artifact.jsx> [read_stops] [min_px]
++#   bin/emu shots  <artifact.jsx> "anchor 1" "anchor 2" ...
++#   bin/emu read   <artifact.jsx> [--content .app] [--key .legend-row]
++#   bin/emu clip   <artifact.jsx> [--selector button,.block] [--min-tap 44]
++#   bin/emu scen   <artifact.jsx> --scenarios scenarios/*.json
++#   bin/emu fonts  fetch|shot|measure ...    (no artifact, no server)
++#
++# Selectors come from `emu.json` beside the artifact when one is there, so they
++# are stated once instead of retyped every run.
+@@ dispatch
+ case "$MODE" in
++  all)   timeout 180 python3 -u checks/gate.py         "$URL" "$KIT/out" ${CFG:+--config "$CFG"} ;;
++  read)  timeout 120 python3 -u checks/reading.py      "$URL" "$@" ;;
++  clip)  timeout 120 python3 -u checks/clipping.py     "$URL" "$@" ;;
+   smoke) timeout 90  python3 -u checks/smoke.py       "$URL" "$KIT/out" ;;
+   audit) timeout 150 python3 -u checks/blind_audit.py "$URL" "$KIT/out" "$@" ;;
+   shots) timeout 120 python3 -u checks/region_shots.py "$URL" "$KIT/out" "$@" ;;

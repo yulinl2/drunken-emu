@@ -58,6 +58,22 @@ that is never executed is not a regeneration command.
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
 |   `-- test_fragment_links.py
+|-- contrib/
+|   `-- calendar-reader/
+|       |-- checks/
+|       |   |-- clipping.py
+|       |   |-- gate.py
+|       |   |-- reading.py
+|       |   |-- scenarios.py
+|       |   |-- timetravel.py
+|       |   `-- webfonts.py
+|       |-- scenarios/
+|       |   |-- badrows.json
+|       |   `-- empty.json
+|       |-- GOTCHAS.md
+|       |-- PREFACE.md
+|       |-- README.md
+|       `-- dispatch-sketch.patch
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -190,5 +206,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-24 directories, 141 files tracked
+28 directories, 153 files tracked
 ```
