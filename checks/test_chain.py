@@ -650,6 +650,46 @@ def test_length_is_reported_never_scored():
     assert "steps" not in L.chain_load(chain1("READ x"))["terms"]
 
 
+def _compensated_sum(iterable, /, start=0):
+    """what `sum()` does with floats from CPython 3.12: Neumaier's compensated sum (a copy of the C loop, so the test can run it on any interpreter)"""
+    total, comp, floats = start, 0.0, False
+    for x in iterable:
+        if isinstance(total, float) or isinstance(x, float):
+            if not floats:
+                floats, total = True, float(total)
+            t = total + x
+            comp += ((total - t) + x) if abs(total) >= abs(x) else ((x - t) + total)
+            total = t
+        else:
+            total = total + x
+    return total + comp if floats and comp and comp == comp and comp not in (float("inf"), float("-inf")) else total
+
+
+def test_the_load_does_not_depend_on_how_the_interpreter_sums_floats(monkeypatch):
+    """CI found it: CPython 3.12 changed `sum()` to add floats with compensation, so a load came out 76.44 where the registration made under 3.11 has
+    76.44000000000001, and six tests of docs/predictions went red. The load is its terms added left to right in plain code; a `sum()` that compensates
+    must change nothing, on any interpreter. (red on the old `sum(terms.values())`)"""
+    chains = [c for f in sorted(FIX.glob("*.json")) for c in C.load(f)["chains"]]
+    expected = {}
+    for ch in chains:
+        terms = L.chain_load(ch)["terms"]
+        total = 0
+        for v in terms.values():
+            total += v
+        expected[ch["id"]] = total
+    monkeypatch.setattr("builtins.sum", _compensated_sum)
+    differs = [cid for cid, ch in ((c["id"], c) for c in chains) if L.chain_load(ch)["load"] != expected[cid]]
+    assert not differs, f"load depends on the interpreter's sum() for: {differs}"
+
+
+def test_the_compensated_sum_stand_in_differs_from_plain_adding_where_3_12_does():
+    """the stand-in of the test above must be able to fail: it moves the last digit of a known sum (0.1 ten times: 0.9999999999999999 plain, 1.0 compensated)"""
+    plain = 0
+    for _ in range(10):
+        plain += 0.1
+    assert plain != 1.0 and _compensated_sum([0.1] * 10) == 1.0
+
+
 def test_weights_are_explicit_and_overridable():
     assert set(L.WEIGHTS) == {"read_fine", "read_coarse", "slot_step", "reload", "reorient", "discriminate", "loop"}
     ch = chain1({"op": "HOLD", "held": ["a"]}, {"op": "RELOAD", "source": "chat", "held": ["b"]})

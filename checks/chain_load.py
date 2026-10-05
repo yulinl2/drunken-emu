@@ -65,6 +65,15 @@ def working_sets(chain: dict) -> list[dict]:
              "demand": s["need"] + len(s["held"])} for s in chain["steps"]]
 
 
+def plain_sum(values):
+    """Add left to right, term by term. Not `sum()`: from CPython 3.12 it adds floats with compensation, which moves the last digit of a load
+    (76.44 against 76.44000000000001) and with it every number registered under 3.11 (docs/predictions)."""
+    total = 0
+    for v in values:
+        total += v
+    return total
+
+
 def chain_load(chain: dict, budget: int | None = None, weights: dict | None = None) -> dict:
     """Components, the one number, and the budget verdict for one (blind or full) chain."""
     w = {**WEIGHTS, **(weights or {})}
@@ -117,7 +126,7 @@ def chain_load(chain: dict, budget: int | None = None, weights: dict | None = No
         "counts": {"read_fine": fine, "read_coarse": coarse, "slot_steps": slot_steps, "reloads": reloads,
                    "reorients": reorients, "discriminate_similarity": sim_sum, "loops": loops},
         "terms": terms,
-        "load": sum(terms.values()),
+        "load": plain_sum(terms.values()),
     }
 
 
