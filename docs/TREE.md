@@ -43,10 +43,22 @@ that is never executed is not a regeneration command.
 |   |   |   |-- hw1_correction_pass_fixed.json
 |   |   |   |-- hw1_correction_pass_transcribed.json
 |   |   |   |-- tapgrade_0_6_6.json
+|   |   |   |-- tapgrade_0_6_7_sample_pass.json
 |   |   |   `-- worked_example.json
 |   |   |-- fragment_links_clean.jsx
 |   |   |-- fragment_links_nolinks.jsx
 |   |   `-- fragment_links_planted.jsx
+|   |-- hw2_sample_prediction/
+|   |   |-- __init__.py
+|   |   |-- __main__.py
+|   |   |-- chains.py
+|   |   |-- changes.py
+|   |   |-- cites.py
+|   |   |-- events.py
+|   |   |-- inputs.py
+|   |   |-- markdown.py
+|   |   |-- rebuild.py
+|   |   `-- registration.py
 |   |-- __init__.py
 |   |-- affordances.py
 |   |-- blind_audit.py
@@ -60,6 +72,8 @@ that is never executed is not a regeneration command.
 |   |-- explore_step.py
 |   |-- explore_text.py
 |   |-- fragment_links.py
+|   |-- measure_sample_predictors.py
+|   |-- prediction_score.py
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- svg_legibility.py
@@ -76,6 +90,22 @@ that is never executed is not a regeneration command.
 |   |       |-- narration.zh.txt
 |   |       |-- transcription.jsonl
 |   |       `-- validate.py
+|   |-- predictions/
+|   |   |-- first-draft-ca80695/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- replaced-cac0dc8/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- hw2-sample-pass.inputs.json
+|   |   |-- hw2-sample-pass.measured-example-bank.json
+|   |   `-- hw2-sample-pass.measured.json
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -202,5 +232,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-25 directories, 152 files tracked
+29 directories, 178 files tracked
 ```

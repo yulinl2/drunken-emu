@@ -1,0 +1,894 @@
+{
+ "schema": "emu-prediction-inputs/1",
+ "drafted": "2026-10-05 02:16 EDT",
+ "speeds_kit": {
+  "repository": "speeds-kit",
+  "commit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92",
+  "checkout_head": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92",
+  "branch": "claude/relaxed-ramanujan-bgj6za",
+  "script": {
+   "path": "userscripts/tapgrade.user.js",
+   "sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
+   "bytes": 257658,
+   "lines": 3395,
+   "version": "0.6.7",
+   "build": "10-05 01:03"
+  },
+  "mock_canvas": {
+   "path": "tests/tapgrade/mock_canvas.py",
+   "sha256": "d87bacec7942cfe2ebe8360f9143acb02b9e5d348fd5423431c00ae461b51fda"
+  },
+  "read": {
+   "speedkit/tapgrade.py": "ca2116386887a5b441ad1c6230bdce665150081154557ede0b9a932ccd6a69c6",
+   "speedkit/picks.py": "7d412f1400ac387853b49b893451a9869649a977db5d99239479ca7fd82769ce",
+   "docs/TAPGRADE.md": "b881eb9dc2c3a7dc197ed77191380f0d8ee34de8c014fe445cb99bddf210a259",
+   "docs/HW2-HW3-RUNBOOK.md": "b97c02b97d623a2c4707876cc25ce29bce21a57da3db27c00fa90c9f9d8d5ce1"
+  }
+ },
+ "citations": {
+  "readCtx": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    83,
+    92
+   ],
+   "text": "function readCtx() {"
+  },
+  "go": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    611,
+    617
+   ],
+   "text": "function go(key) {"
+  },
+  "flash": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1892,
+    1897
+   ],
+   "text": "function flash(text, kind) {"
+  },
+  "flashTimeout": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1896,
+    1896
+   ],
+   "text": "if (kind !== \"err\") setTimeout(() => { if (S.msg && S.msg.at === at) { S.msg = null; render(); } }, "
+  },
+  "measureBars": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    845,
+    850
+   ],
+   "text": "function measureBars() {"
+  },
+  "sheetTall": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1699,
+    1699
+   ],
+   "text": ".sheet.tall { max-height: 85vh; max-height: 85dvh; }"
+  },
+  "sheetPad": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1698,
+    1698
+   ],
+   "text": "border-top: 2px solid var(--ink); box-shadow: var(--shadow); padding-bottom: env(safe-area-inset-bot"
+  },
+  "gkeyCss": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1764,
+    1766
+   ],
+   "text": ".grp .gkey { margin: 2px 0 6px; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webki"
+  },
+  "chipCodeCss": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1769,
+    1769
+   ],
+   "text": ".grp .chip .code { display: none; }"
+  },
+  "sheetMax": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1925,
+    1925
+   ],
+   "text": "const DRAG_SLOP = 6, EDGE = 8, SHEET_MAX = 0.85;"
+  },
+  "groups": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2045,
+    2045
+   ],
+   "text": "const GROUPS = [[\"grade\", \"Grade\"], [\"update\", \"Update Canvas\"], [\"files\", \"Files\"], [\"check\", \"Chec"
+  },
+  "viewGroup": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2046,
+    2046
+   ],
+   "text": "const VIEW_GROUP = { grade: \"grade\", bank: \"grade\", sample: \"grade\", update: \"update\", loaded: \"file"
+  },
+  "pane": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    202,
+    202
+   ],
+   "text": "pane: { files: \"loaded\", check: \"review\" },"
+  },
+  "samplepicksPurpose": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2063,
+    2063
+   ],
+   "text": "samplepicks: [\"Your recorded blind picks, as the file the kit reads. Nothing is sent to Canvas.\", fa"
+  },
+  "purposeLine": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2065,
+    2070
+   ],
+   "text": "function purposeLine() {"
+  },
+  "enterView": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2079,
+    2088
+   ],
+   "text": "function enterView(v) {"
+  },
+  "enterViewBank": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2080,
+    2080
+   ],
+   "text": "if (v === \"bank\" && sampleLoaded()) return;                       // the Bank is closed while a blin"
+  },
+  "subTabsElse": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2132,
+    2132
+   ],
+   "text": "} else { const st = subTabs(); if (st) sheet.append(st); }"
+  },
+  "loadingRubric": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2172,
+    2172
+   ],
+   "text": "if (!S.assignment) { body.append(el(\"p\", { class: \"hint\", text: \"Loading the rubric from Canvas\\u202"
+  },
+  "pickAStudent": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2180,
+    2180
+   ],
+   "text": "if (!S.sub) { body.append(el(\"p\", { text: \"Pick a student in SpeedGrader. TapGrade follows the stude"
+  },
+  "renderKeepScroll": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2165,
+    2165
+   ],
+   "text": "if (S.view !== \"grade\" && prevTop && key === renderKey) body.scrollTop = prevTop;      // a re-rende"
+  },
+  "headNotice": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2117,
+    2117
+   ],
+   "text": "sampleNotices().slice(0, 1).map((n) => el(\"small\", { class: \"swarn\", text: n.short })), el(\"span\", {"
+  },
+  "renderGradeTop": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2182,
+    2182
+   ],
+   "text": "body.prepend(...sampleTop());                           // before anything else: a student outside t"
+  },
+  "renderMsg": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2122,
+    2122
+   ],
+   "text": "if (S.msg) sheet.append(el(\"div\", { class: \"msg \" + S.msg.kind, role: S.msg.kind === \"err\" ? \"alert\""
+  },
+  "buildFoot": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    929,
+    946
+   ],
+   "text": "function buildFoot() {"
+  },
+  "footMarkRest": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    942,
+    943
+   ],
+   "text": "else if (fresh.length) kids.push(el(\"button\", { class: \"btn quiet\", disabled: S.busy, onclick: markR"
+  },
+  "save": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1083,
+    1083
+   ],
+   "text": "async function save(andNext) {"
+  },
+  "saveAsks": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1088,
+    1088
+   ],
+   "text": "if (!S.saveAsked && !sampleSaveOk()) return;           // a student outside a loaded blind sample: t"
+  },
+  "sampleSaveAsk": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2876,
+    2880
+   ],
+   "text": "function sampleSaveAsk() {"
+  },
+  "copy": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1615,
+    1622
+   ],
+   "text": "async function copy(text, okMsg) {"
+  },
+  "autoloadFrom": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    764,
+    770
+   ],
+   "text": "function autoloadFrom(key, d) {"
+  },
+  "autoloadData": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    771,
+    775
+   ],
+   "text": "function autoloadData() {"
+  },
+  "importProposalsSample": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    656,
+    656
+   ],
+   "text": "const sampleFile = !!obj && obj.schema === SAMPLE_FILE_SCHEMA;"
+  },
+  "importSample": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3257,
+    3283
+   ],
+   "text": "function importSample(obj, name) {"
+  },
+  "importSampleToast": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3281,
+    3281
+   ],
+   "text": "flash(`Loaded the blind sample: ${plur(total, \"pair\")} on ${plur(Object.keys(pairs).length, \"questio"
+  },
+  "sampleLoadedRows": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3284,
+    3288
+   ],
+   "text": "const sampleLoadedRows = () => {"
+  },
+  "machineRefusedBySample": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2891,
+    2898
+   ],
+   "text": "function machineRefusedBySample(obj, name) {"
+  },
+  "refusedToast": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2859,
+    2859
+   ],
+   "text": "const SAMPLE_REFUSED_TOAST = \"The machine's proposals file was NOT loaded: a blind sample is stored."
+  },
+  "sampleNotices": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2901,
+    2907
+   ],
+   "text": "function sampleNotices() {"
+  },
+  "sampleWriteAsk": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2865,
+    2872
+   ],
+   "text": "function sampleWriteAsk(plan) {"
+  },
+  "applyUpdatesAsk": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    1463,
+    1463
+   ],
+   "text": "const ask = sampleWriteAsk(plan);                           // Apply, Resume and Retry failed all co"
+  },
+  "rulesLocal": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2788,
+    2788
+   ],
+   "text": "//   2. Local only. Nothing in this block calls api(). A pick goes to localStorage and to the histor"
+  },
+  "rulesHalfPicked": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2790,
+    2790
+   ],
+   "text": "//      A pair left half-picked is not kept: after a reload it is not recorded."
+  },
+  "sampleTag": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2798,
+    2798
+   ],
+   "text": "const SAMPLE_SCHEMA = \"tapgrade-sample/1\", PICKS_SCHEMA = \"speedkit-picks/1\", SAMPLE_TAG = \"Blind: n"
+  },
+  "lsSetChecked": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2806,
+    2806
+   ],
+   "text": "function lsSetChecked(k, v) { lsSet(k, v); try { return localStorage.getItem(LS + k) === JSON.string"
+  },
+  "sampleRefresh": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2812,
+    2826
+   ],
+   "text": "function sampleRefresh() {"
+  },
+  "sampleDraft": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2911,
+    2919
+   ],
+   "text": "function sampleDraft(q) {"
+  },
+  "sampleTally": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2937,
+    2943
+   ],
+   "text": "function sampleTally(g, d) {"
+  },
+  "sampleHead": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2956,
+    2964
+   ],
+   "text": "function sampleHead() {"
+  },
+  "sampleTabState": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2971,
+    2975
+   ],
+   "text": "function sampleTabState(c) {"
+  },
+  "sampleSubs": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2979,
+    2983
+   ],
+   "text": "function sampleSubs() {"
+  },
+  "sampleSubsCheck": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2982,
+    2982
+   ],
+   "text": "return VIEW_GROUP[S.view] === \"check\" ? TABS.check.concat([[\"samplepicks\", \"Sample picks\"]]) : null;"
+  },
+  "samplePairs": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2840,
+    2842
+   ],
+   "text": "// the queue: by question, then by Canvas user id as a number"
+  },
+  "sampleNext": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3004,
+    3004
+   ],
+   "text": "function sampleNext() { const nxt = sampleLeft()[0]; if (nxt) sampleOpen(nxt); else flash(`All ${sam"
+  },
+  "sampleOpen": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2986,
+    2994
+   ],
+   "text": "function sampleOpen(p, quiet) {"
+  },
+  "sampleFocus": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2995,
+    3003
+   ],
+   "text": "function sampleFocus() {                                                  // after a student loads: "
+  },
+  "sampleFocusNotice": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3001,
+    3002
+   ],
+   "text": "const nt = lsGet(snoticeKey(), null);                                   // what the save that brough"
+  },
+  "sampleTop": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3013,
+    3021
+   ],
+   "text": "function sampleTop() {"
+  },
+  "sampleTopNotice": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3017,
+    3017
+   ],
+   "text": "out.push(el(\"div\", { class: \"hint held\", role: \"note\", \"data-role\": \"snormal\" }, `A blind sample is "
+  },
+  "sampleChip": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3023,
+    3037
+   ],
+   "text": "function sampleChip(q, d, it, idx) {"
+  },
+  "gkeyLine": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3077,
+    3077
+   ],
+   "text": "if (g.part && g.part.key) sec.append(el(\"p\", { class: \"gkey\", title: \"Tap to show all\", onclick: (e)"
+  },
+  "queueButton": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3084,
+    3084
+   ],
+   "text": "el(\"button\", { class: \"btn quiet\", onclick: () => enterView(\"sample\") }, \"Queue\"),"
+  },
+  "sampleSoft": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3116,
+    3142
+   ],
+   "text": "function sampleSoft() {"
+  },
+  "sampleSave": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3162,
+    3186
+   ],
+   "text": "function sampleSave(andNext) {"
+  },
+  "sampleSaveRec": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3168,
+    3169
+   ],
+   "text": "const rec = { uid, q, at: nowIso(), version: VERSION, none: !!d.none, codes: chosen.map((it) => it.c"
+  },
+  "sampleSaveMerge": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3173,
+    3173
+   ],
+   "text": "const held = lsGet(spicksKey(), {}), merged = Object.assign({}, held && typeof held === \"object\" && "
+  },
+  "sampleSaveReadBack": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3174,
+    3174
+   ],
+   "text": "if (!lsSetChecked(spicksKey(), merged)) {"
+  },
+  "sampleSaveLog": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3179,
+    3179
+   ],
+   "text": "appendLog(sampleLogEntry(uid));"
+  },
+  "sampleSaveRecorded": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3181,
+    3181
+   ],
+   "text": "const got = \"Recorded on this phone. Nothing was sent to Canvas.\", left = sampleLeft().length, all ="
+  },
+  "sampleSaveNext": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3184,
+    3184
+   ],
+   "text": "if (andNext && left) { const nxt = sampleLeft()[0]; if (String(curId()) !== nxt.uid) lsSet(snoticeKe"
+  },
+  "sampleLines": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3189,
+    3196
+   ],
+   "text": "function sampleLines(all) {"
+  },
+  "sampleLeftText": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3197,
+    3197
+   ],
+   "text": "const sampleLeftText = (all, left, why) => (left ? `${left} of ${all.length} pairs ${left === 1 ? \"i"
+  },
+  "renderSampleQueue": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3198,
+    3213
+   ],
+   "text": "function renderSampleQueue(body) {"
+  },
+  "sampleQueueFoot": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3214,
+    3218
+   ],
+   "text": "function sampleQueueFoot() {"
+  },
+  "samplePicksDoc": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3223,
+    3241
+   ],
+   "text": "function samplePicksDoc() {"
+  },
+  "halfPointSigned": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3237,
+    3237
+   ],
+   "text": "else if (Math.abs(+pk.adj || 0) > 1e-9) ds.push({ item: p.q, reason: \"\", points: round2(+pk.adj) });"
+  },
+  "renderSamplePicks": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3242,
+    3254
+   ],
+   "text": "function renderSamplePicks(body) {"
+  },
+  "copyButtons": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3251,
+    3252
+   ],
+   "text": "el(\"button\", { class: \"btn primary\", disabled: !n || !!r.problems.length, onclick: () => copy(JSON.s"
+  },
+  "copyButton": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3251,
+    3251
+   ],
+   "text": "el(\"button\", { class: \"btn primary\", disabled: !n || !!r.problems.length, onclick: () => copy(JSON.s"
+  },
+  "scanReview": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2590,
+    2594
+   ],
+   "text": "async function scanReview() {"
+  },
+  "renderReview": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2604,
+    2604
+   ],
+   "text": "function renderReview(body) {"
+  },
+  "renderReviewSkip": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2611,
+    2611
+   ],
+   "text": "if (sampleQs(uid).length) continue;           // a student in the blind sample: what Canvas holds fo"
+  },
+  "reviewLeftOut": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2625,
+    2625
+   ],
+   "text": "(dropped ? `; ${plur(dropped, \"row\")} lost every proposed deduction and got full marks, which is wha"
+  },
+  "reviewHistory": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    2636,
+    2636
+   ],
+   "text": "body.append(el(\"h4\", { text: \"Saved from this phone\" }),"
+  },
+  "pagehide": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3342,
+    3342
+   ],
+   "text": "addEventListener(\"pagehide\", () => { S.unloading = true; });"
+  },
+  "pageshow": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3345,
+    3351
+   ],
+   "text": "addEventListener(\"pageshow\", (e) => {"
+  },
+  "visibilitychange": {
+   "file": "userscripts/tapgrade.user.js",
+   "lines": [
+    3352,
+    3352
+   ],
+   "text": "document.addEventListener(\"visibilitychange\", () => { if (document.visibilityState === \"visible\") sa"
+  },
+  "asUserscriptRunAt": {
+   "file": "speedkit/tapgrade.py",
+   "lines": [
+    240,
+    240
+   ],
+   "text": "head += [\"// @run-at       document-start\", \"// @inject-into  content\", \"// @noframes\", \"// ==/UserS"
+  },
+  "asUserscriptStore": {
+   "file": "speedkit/tapgrade.py",
+   "lines": [
+    241,
+    247
+   ],
+   "text": "store = json.dumps(f\"tapgrade:{key}:{c}:{a}\")"
+  },
+  "asUserscriptBody": {
+   "file": "speedkit/tapgrade.py",
+   "lines": [
+    249,
+    252
+   ],
+   "text": "body = (f\"(() => {{\\n  const DATA = /*TAPGRADE-DATA*/{json.dumps(data, ensure_ascii=False)}/*END*/;\\"
+  },
+  "bankChipText": {
+   "file": "speedkit/picks.py",
+   "lines": [
+    151,
+    151
+   ],
+   "text": "if _num(e.get(\"points\")): bank.setdefault(p[\"id\"], []).append({\"code\": f\"{it['id']}.{r}\", \"delta\": e"
+  },
+  "rbMakeFile": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    127,
+    127
+   ],
+   "text": "- Who: the owner, on the phone. The coordinating session makes the file first."
+  },
+  "rbStderr": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    132,
+    132
+   ],
+   "text": "- Expect, on stderr (the numbers are an example): `# blind sample data for hw2: 9 questions, 45 pair"
+  },
+  "rbFolder": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    138,
+    138
+   ],
+   "text": "- Put the `.user.js` in the Userscripts folder next to TapGrade. The machine's data script, if it is"
+  },
+  "rbOpen": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    140,
+    140
+   ],
+   "text": "- Open SpeedGrader for any HW2 student. TapGrade says `Loaded the blind sample: 45 pairs on 9 questi"
+  },
+  "rbStop": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    141,
+    141
+   ],
+   "text": "- No such message, no `A blind sample is loaded` line at the top of a student page and no `Sample Q."
+  },
+  "rbRoute": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    142,
+    142
+   ],
+   "text": "- To the first pair: 2 taps from the first page. The Sample tab is not in the Grade view. It exists "
+  },
+  "rbRouteOutside": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    143,
+    143
+   ],
+   "text": "- The first page is a student outside the sample (its first line says `A blind sample is loaded ... "
+  },
+  "rbRouteSampled": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    144,
+    144
+   ],
+   "text": "- The first page is a sampled student (the header says `Sample Q3, pair 3 of 3`): you are on a pair "
+  },
+  "rbClass": {
+   "file": "docs/HW2-HW3-RUNBOOK.md",
+   "lines": [
+    317,
+    317
+   ],
+   "text": "- HW1's flaw hit 66 of 68 students (212 rows). For a flaw that hits 90% of the work, 5 sampled pairs"
+  },
+  "tgUserscripts": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    40,
+    40
+   ],
+   "text": "- iOS/macOS Safari: Userscripts. Others: Tampermonkey or Violentmonkey."
+  },
+  "tgImportOnce": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    85,
+    86
+   ],
+   "text": "Put the `.user.js` next to TapGrade in the Userscripts folder."
+  },
+  "tgRoute": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    423,
+    435
+   ],
+   "text": "**Start the pass: what you tap.** From the first page it takes 2 taps to reach the first pair. The S"
+  },
+  "tgFlow7": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    494,
+    494
+   ],
+   "text": "| 7 | COMMIT(local). Save and next. | the red button, bottom right: the place Next pair has | 0 | `R"
+  },
+  "tgFlow10": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    497,
+    497
+   ],
+   "text": "| 10 | ANCHOR(Check) then ANCHOR(Sample picks) then READ(counts, the warning) then COMMIT(Copy as JS"
+  },
+  "tgLimitsPhone": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    541,
+    541
+   ],
+   "text": "- Run on a mock Canvas in headless Chromium at 390×844 touch. Not tried on a real phone (iPhone Safa"
+  },
+  "tgNoKeep": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    551,
+    551
+   ],
+   "text": "- A browser that will not keep the sample's file (a private window, no space left, site data blocked"
+  },
+  "tgClass": {
+   "file": "docs/TAPGRADE.md",
+   "lines": [
+    240,
+    240
+   ],
+   "text": "The 2026-10-03 correction (212 rows, 66 students) cost a long chain of reloads and guesses."
+  }
+ }
+}

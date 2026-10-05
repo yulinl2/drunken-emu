@@ -1,0 +1,39 @@
+{
+ "what": "Measurements that did not exist when the first draft was written, made on the first-draft script (speeds-kit ca80695) by the current checks/measure_sample_predictors.py, so that the registration can give them a first-draft value. Large bank, the same invented sample (seed 2). Only the keys the first-draft measured files lack are kept.",
+ "script_sha256": "786bddeed40a06b8ecd738397957877939e51572060e0e24f681c89cd45e2490",
+ "command": "python3 checks/measure_sample_predictors.py <the ca80695 script> MOCK_URL --bank large",
+ "predictors": {
+  "two_pages": {
+   "stale_page_save": {
+    "picks_after_the_other_page_saved": 1,
+    "picks_after_this_page_saved": 1,
+    "the_other_pages_pick_is_kept": false
+   },
+   "return_to_a_stale_page": {
+    "queue_line_for_the_pair_the_other_page_recorded": {
+     "before": "0 of 5 recorded",
+     "after": "0 of 5 recorded"
+    },
+    "sees_it_without_a_reload": false
+   }
+  },
+  "first_contact": {
+   "outside_sample": {
+    "notice": {
+     "present": true,
+     "index_in_body": 1,
+     "purpose_line_index": 0,
+     "before_the_purpose_line": false,
+     "says_save_writes_to_canvas": true
+    },
+    "tap_save_and_next": {
+     "asks_first": false,
+     "names_the_blind_pass": null,
+     "says_it_writes_to_canvas": null,
+     "writes_after_cancel": 1,
+     "writes_after_ok": null
+    }
+   }
+  }
+ }
+}

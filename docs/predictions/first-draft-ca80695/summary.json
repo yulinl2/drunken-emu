@@ -1,0 +1,733 @@
+{
+ "what": "the first draft of the HW2 blind-sample prediction, written against speeds-kit ca80695 on 2026-10-04 and never registered or pushed: the numbers it printed, kept as data so that the registration can say what moved since. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared properties of its fixture, every step key except the text), summary.json (this file), new-keys.json (measurements that did not exist then, made on the first-draft script by the current measurement script).",
+ "artifact": {
+  "commit": "ca80695808bc135aacfa3b0dab100c397b07cb08",
+  "script_sha256": "786bddeed40a06b8ecd738397957877939e51572060e0e24f681c89cd45e2490",
+  "script_lines": 3233,
+  "version": "0.6.7",
+  "build": "10-04 20:04"
+ },
+ "drafted": "2026-10-04 evening ET",
+ "segments": {
+  "tapgrade-0.6.7-sample-install": {
+   "steps": 12,
+   "load": 27.5,
+   "peak_slots": 3,
+   "findings": 2,
+   "rank": 4.0,
+   "over_budget": {
+    "2": [
+     4,
+     5,
+     11,
+     12
+    ],
+    "3": [],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-queue": {
+   "steps": 6,
+   "load": 8.5,
+   "peak_slots": 2,
+   "findings": 2,
+   "rank": 7.0,
+   "over_budget": {
+    "2": [],
+    "3": [],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-pair": {
+   "steps": 9,
+   "load": 47.71,
+   "peak_slots": 4,
+   "findings": 4,
+   "rank": 3.0,
+   "over_budget": {
+    "2": [
+     7
+    ],
+    "3": [
+     7
+    ],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-pair-reload": {
+   "steps": 18,
+   "load": 76.44,
+   "peak_slots": 4,
+   "findings": 7,
+   "rank": 1.0,
+   "over_budget": {
+    "2": [
+     7,
+     16
+    ],
+    "3": [
+     7,
+     16
+    ],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-pair-lock": {
+   "steps": 10,
+   "load": 51.71,
+   "peak_slots": 4,
+   "findings": 3,
+   "rank": 2.0,
+   "over_budget": {
+    "2": [
+     8
+    ],
+    "3": [
+     8
+    ],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-export": {
+   "steps": 7,
+   "load": 11.75,
+   "peak_slots": 2,
+   "findings": 0,
+   "rank": 5.5,
+   "over_budget": {
+    "2": [],
+    "3": [],
+    "4": []
+   }
+  },
+  "tapgrade-0.6.7-sample-handback": {
+   "steps": 6,
+   "load": 11.5,
+   "peak_slots": 2,
+   "findings": 2,
+   "rank": 5.5,
+   "over_budget": {
+    "2": [],
+    "3": [],
+    "4": []
+   }
+  }
+ },
+ "findings": [
+  [
+   "tapgrade-0.6.7-sample-install",
+   4,
+   "anchoring"
+  ],
+  [
+   "tapgrade-0.6.7-sample-install",
+   10,
+   "progress"
+  ],
+  [
+   "tapgrade-0.6.7-sample-queue",
+   1,
+   "causal"
+  ],
+  [
+   "tapgrade-0.6.7-sample-queue",
+   4,
+   "causal"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair",
+   1,
+   "progress"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair",
+   7,
+   "memory_budget"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair",
+   9,
+   "colocation"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair",
+   9,
+   "commit_correctness"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   1,
+   "progress"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   7,
+   "memory_budget"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   9,
+   "interruption"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   10,
+   "progress"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   16,
+   "memory_budget"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   18,
+   "colocation"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-reload",
+   18,
+   "commit_correctness"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-lock",
+   8,
+   "memory_budget"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-lock",
+   10,
+   "colocation"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-lock",
+   10,
+   "commit_correctness"
+  ],
+  [
+   "tapgrade-0.6.7-sample-handback",
+   6,
+   "colocation"
+  ],
+  [
+   "tapgrade-0.6.7-sample-handback",
+   6,
+   "commit_correctness"
+  ]
+ ],
+ "events": {
+  "I1": {
+   "p": 0.25,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     6
+    ]
+   ]
+  },
+  "I2": {
+   "p": 0.15,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     4
+    ]
+   ]
+  },
+  "I3": {
+   "p": 0.5,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     9
+    ]
+   ]
+  },
+  "I4": {
+   "p": 0.4,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     11
+    ]
+   ]
+  },
+  "I5": {
+   "p": 0.35,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     10
+    ],
+    [
+     "install",
+     11
+    ]
+   ]
+  },
+  "I6": {
+   "p": 0.1,
+   "basis": "carried-from-HW1",
+   "kind": "fine",
+   "steps": [
+    [
+     "install",
+     4
+    ]
+   ]
+  },
+  "I7": {
+   "p": 0.2,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "install",
+     12
+    ]
+   ]
+  },
+  "Q1": {
+   "p": 0.45,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "queue",
+     2
+    ]
+   ]
+  },
+  "Q2": {
+   "p": 0.58,
+   "basis": "declared",
+   "kind": "path",
+   "steps": [
+    [
+     "queue",
+     1
+    ]
+   ]
+  },
+  "Q3": {
+   "p": 0.1,
+   "basis": "declared",
+   "kind": "fine",
+   "steps": [
+    [
+     "queue",
+     1
+    ],
+    [
+     "queue",
+     4
+    ]
+   ]
+  },
+  "Q4": {
+   "p": 0.05,
+   "basis": "declared",
+   "kind": "fine",
+   "steps": [
+    [
+     "queue",
+     6
+    ]
+   ]
+  },
+  "Q5": {
+   "p": 0.2,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "queue",
+     1
+    ]
+   ]
+  },
+  "P1": {
+   "p": 0.55,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     7
+    ],
+    [
+     "pair-reload",
+     7
+    ],
+    [
+     "pair-reload",
+     16
+    ],
+    [
+     "pair-lock",
+     8
+    ]
+   ]
+  },
+  "P2": {
+   "p": 0.7,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     5
+    ],
+    [
+     "pair",
+     6
+    ]
+   ]
+  },
+  "P3": {
+   "p": 0.6,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     3
+    ]
+   ]
+  },
+  "P4": {
+   "p": 0.3,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     8
+    ]
+   ]
+  },
+  "P5": {
+   "p": 0.2,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     8
+    ]
+   ]
+  },
+  "P6": {
+   "p": 0.2,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     1
+    ],
+    [
+     "pair-reload",
+     1
+    ],
+    [
+     "pair-reload",
+     10
+    ],
+    [
+     "install",
+     10
+    ]
+   ]
+  },
+  "P7": {
+   "p": 0.55,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     1
+    ]
+   ]
+  },
+  "P8": {
+   "p": 0.3,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     9
+    ],
+    [
+     "pair-reload",
+     18
+    ],
+    [
+     "pair-lock",
+     10
+    ]
+   ]
+  },
+  "P9": {
+   "p": 0.25,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     9
+    ],
+    [
+     "pair-reload",
+     18
+    ],
+    [
+     "pair-lock",
+     10
+    ]
+   ]
+  },
+  "P10": {
+   "p": 0.1,
+   "basis": "measured",
+   "kind": "fine",
+   "steps": [
+    [
+     "pair",
+     9
+    ]
+   ]
+  },
+  "P11": {
+   "p": 0.03,
+   "basis": "declared",
+   "kind": "fine",
+   "steps": [
+    [
+     "pair",
+     9
+    ]
+   ]
+  },
+  "P12": {
+   "p": 0.2,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     7
+    ]
+   ]
+  },
+  "R1": {
+   "p": 0.55,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-reload",
+     9
+    ]
+   ]
+  },
+  "R2": {
+   "p": 0.4,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-reload",
+     9
+    ]
+   ]
+  },
+  "R3": {
+   "p": 0.35,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-reload",
+     11
+    ]
+   ]
+  },
+  "L1": {
+   "p": 0.35,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-lock",
+     1
+    ]
+   ]
+  },
+  "L2": {
+   "p": 0.1,
+   "basis": "measured",
+   "kind": "fine",
+   "steps": [
+    [
+     "pair-lock",
+     1
+    ]
+   ]
+  },
+  "L3": {
+   "p": 0.12,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-lock",
+     1
+    ]
+   ]
+  },
+  "L4": {
+   "p": 0.4,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair-lock",
+     2
+    ]
+   ]
+  },
+  "E1": {
+   "p": 0.25,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "export",
+     2
+    ]
+   ]
+  },
+  "E2": {
+   "p": 0.4,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "export",
+     5
+    ]
+   ]
+  },
+  "E3": {
+   "p": 0.25,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "export",
+     6
+    ]
+   ]
+  },
+  "E4": {
+   "p": 0.3,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "export",
+     4
+    ]
+   ]
+  },
+  "E5": {
+   "p": 0.25,
+   "basis": "measured",
+   "kind": "friction",
+   "steps": [
+    [
+     "export",
+     1
+    ],
+    [
+     "export",
+     7
+    ]
+   ]
+  },
+  "H1": {
+   "p": 0.3,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "handback",
+     5
+    ]
+   ]
+  },
+  "H2": {
+   "p": 0.4,
+   "basis": "carried-from-HW1",
+   "kind": "friction",
+   "steps": [
+    [
+     "handback",
+     2
+    ]
+   ]
+  },
+  "H3": {
+   "p": 0.3,
+   "basis": "declared",
+   "kind": "friction",
+   "steps": [
+    [
+     "handback",
+     6
+    ]
+   ]
+  }
+ },
+ "unstable_pairs": [
+  [
+   "tapgrade-0.6.7-sample-export",
+   "tapgrade-0.6.7-sample-handback",
+   0.5825
+  ]
+ ],
+ "groups": [
+  [
+   "tapgrade-0.6.7-sample-pair-reload"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair-lock"
+  ],
+  [
+   "tapgrade-0.6.7-sample-pair"
+  ],
+  [
+   "tapgrade-0.6.7-sample-install"
+  ],
+  [
+   "tapgrade-0.6.7-sample-export",
+   "tapgrade-0.6.7-sample-handback"
+  ],
+  [
+   "tapgrade-0.6.7-sample-queue"
+  ]
+ ]
+}
