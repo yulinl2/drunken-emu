@@ -11,6 +11,11 @@
   "window": {
    "pair_view_with_toast": {
     "msg_over_page_px": 0
+   },
+   "part_headings_at_the_first_render": {
+    "parts": 6,
+    "saying_full": 0,
+    "heading_h_px": 18.9
    }
   },
   "view_stability": {
@@ -23,6 +28,25 @@
     "over_the_page_px": 0,
     "work_area_h_px": 405.1,
     "share_of_the_work_area_pct": 0
+   },
+   "rebuild_with_ticks": {
+    "ticked_chips": 2,
+    "ticked_chips_after": 2,
+    "warnings_before": 1,
+    "warnings_above_the_window_before": 1,
+    "warnings_after_the_rebuild": 0,
+    "scroll_before_px": 2024.0,
+    "scroll_after_px": 0.0,
+    "same_chip_shift_px": 1970.9,
+    "stamp_bumps_right_after_the_rebuild": false
+   },
+   "sheet_at_its_floor": {
+    "stored_height_fraction": 0.05,
+    "sheet_h_with_the_load_message_px": 384.0,
+    "sheet_h_after_it_left_px": 328.0,
+    "sheet_h_after_a_rebuild_px": 328.0,
+    "raised_by_the_message_px": 56.0,
+    "stays_raised_after_it_left": false
    }
   },
   "first_contact": {

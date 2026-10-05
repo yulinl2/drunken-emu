@@ -23,7 +23,8 @@ CALIBRATION = {
 }
 
 
-# What the registration against cec1bba measured, for the sentences that say what the third round changed (a test compares these with docs/predictions/replaced-cec1bba/measured*.json).
+# What the registration against cec1bba measured, for the sentences that say what the third round changed.  The cec1bba script and the first draft's behaved alike in each of these respects, so a test compares
+# them with the first draft's measured files (docs/predictions/first-draft-ca80695/measured*.json), which stay in the repository.
 CEC1BBA = {"message_shift_px": 61.8, "window_large_px": 173, "window_with_message_large_px": 111, "window_with_message_example_px": 126, "head_with_a_wrapped_tag_px": 84.8}
 
 
@@ -108,6 +109,12 @@ def events(MJ: dict, AJ: dict, inputs: dict) -> list[dict]:
     save, sn = PA["tap_target_px"]["Save"], PA["tap_target_px"]["Save and next"]
     spp, rts = TP["stale_page_save"], TP["return_to_a_stale_page"]
     NM = VS["next_pair_message"]
+    RW, FL = VS.get("rebuild_with_ticks"), VS.get("sheet_at_its_floor")
+    rebuild_shift = (f"a rebuild of the sheet with {RW['ticked_chips']} chips ticked in a part moves a chip far below {RW['same_chip_shift_px']:g} px against the top of the window" if RW else "a rebuild with ticks was not measured")
+    p5_rebuild = ((f"[measured: view_stability.rebuild_with_ticks] the list is put back at the same pixels and, with {RW['ticked_chips']} chips ticked in a part, on the same chip too (a chip far below moved {RW['same_chip_shift_px']:g} px against the top of the window; {c('renderTallies')}). " if RW else
+                   "A rebuild with ticks was not measured. ")
+                  + "The build for be4e324 put the list back at the same pixels but not on the same chip when a part had two ticks (the sample reviewer's S-1); the measurement for that registration did not tick chips before a rebuild and did not see it. ")
+    floor_words = (f"a sheet pulled down to its lowest height is raised {FL['raised_by_the_message_px']:g} px by the load message" if FL else "the sheet at its lowest height was not measured")
     big_work = W["pair_view_largest_sheet"]["work_area_above_sheet_h"]
     no_chip_first = not (W["first_screen_shows_a_chip"] or A["window"]["first_screen_shows_a_chip"])
     assert no_chip_first, "a chip is on the first screen: re-read the texts of P2 and of the window row of the predictor table"
@@ -178,21 +185,24 @@ def events(MJ: dict, AJ: dict, inputs: dict) -> list[dict]:
              observable="the narration mentions the size of the sheet, the scrolling in it, dragging it, or hiding it", p=p2, basis="measured",
              rests_on=f"[measured: window] {pv['body_h']:.0f} px open ({pv['body_pct_of_screen']:.0f}% of the screen; {pvt['body_h']:.0f} px with a message up: it floats above the sheet and takes no room, {c('msgCss')}; the cec1bba build had {CEC1BBA['window_large_px']} px in the large bank, and {CEC1BBA['window_with_message_large_px']} px with the message up), "
                      f"median {scr['median']} screens per question in the invented large bank and {A_scr['median']} in the example-size bank, no chip on the first screen in either; p is between {p2_large:.2f} (large) and {p2_small:.2f} (small): {rule_text('P2', A_scr['median'], scr['median'], screens_fmt)}. "
-                     "The window is taller and the list is kept in place when the owner hides or resizes the sheet, but the scrolling stays: the fix is not expected to remove this event"),
+                     f"The window is taller and the list is kept in place when the owner hides or resizes the sheet ([measured: view_stability.sheet_at_its_floor] {floor_words}: {c('sheetFloor')}), but the scrolling stays: the fix is not expected to remove this event"),
         dict(id="P3", steps=[("pair", 3)], event="finding the answer to the question inside the student's submission is described as the slow part of a pair",
              observable="the narration says finding the question, the part or the page in the student's work takes the time", p=0.6, basis="guess",
              rests_on="outside TapGrade and unmeasured; HW1 I3 names the same kind of cost in another task"),
         dict(id="P4", steps=[("pair", 8)], event="a tap lands on the wrong chip, or content moves under the finger (a warning line appearing under a part when a second chip is ticked)",
              observable="the narration says something moved, jumped, or a wrong chip was tapped", p=0.2, basis="measured",
              rests_on=f"[measured: view_stability] a message floats above the sheet and moves the list {VS['load_toast']['content_moves_when_it_goes_px']:.0f} px when it goes and {VS['refusal_toast']['content_moves_when_it_comes_px']:.0f} px when an error message comes ({c('msgCss')}; the cec1bba build moved it {CEC1BBA['message_shift_px']:.0f} px at each, {MJ['sample']['pairs']} times in a pass); "
-                     f"a second chip in a part pushes everything below down {VS['second_chip_in_a_part']['content_below_pushed_down_px']:.0f} px and a chip tap moves the chips {VS['chip_tap']['max_chip_shift_px']:.0f} px. "
-                     "p is a judgment (0.30 in the cec1bba registration) of the author of that registration, who has now seen the third round's change: the message part is gone on the mock, the warning line stays and was probably the larger share (the message left 4 s after a load, when the owner is usually still reading the work), so one third is taken off. "
+                     f"a second chip in a part pushes everything below down {VS['second_chip_in_a_part']['content_below_pushed_down_px']:.0f} px and a chip tap moves the chips {VS['chip_tap']['max_chip_shift_px']:.0f} px; {rebuild_shift} ([measured: view_stability.rebuild_with_ticks], {c('renderTallies')}). "
+                     "p is a judgment (0.30 in the cec1bba registration) of the author of that registration, who has now seen the third round's change: the message part is gone on the mock, the warning line stays and was probably the larger share (the message left 4 s after a load, when the owner is usually still reading the work), so one third was taken off. "
+                     "It is 0.20 in the registrations for be4e324 and for this snapshot: the fourth round removes one more source of movement, a rebuild that landed off the chip (S-1), which the earlier measurement did not see and the 0.20 never counted, so nothing is lowered for it. "
                      "The fix is expected to remove the message part of this event, not the warning line"),
         dict(id="P5", steps=[("pair", 8)], event="the owner uses None (a part not attempted) and the sheet jumps to the top, and says so",
              observable="the narration says the list jumped back to the top after a tap", p=0.05, basis="measured",
              rests_on=f"[measured: view_stability.none_tap] a None tap at {VS['none_tap']['scroll_before_px']:,.0f} px leaves the list at {VS['none_tap']['scroll_after_px']:,.0f} px (jumps to the top: {'yes' if VS['none_tap']['jumps_to_the_top'] else 'no'}; the build put the list back, {c('renderKeepScroll')}; the cec1bba build threw it to the top); "
                      "whether None is used at all is a guess (about one in two). p is a judgment (0.20 in the cec1bba registration: None used about half of the time, and said so about four times in ten) of the author of that registration, who has now seen the change: "
-                     "the jump is gone on the mock, so what is left is the chance that a phone still jumps, taken as one in four, which makes 0.05. This event now tests the fix on a phone: a jump narrated after a None tap means it did not hold. The fix is expected to remove this event"),
+                     "the jump is gone on the mock, so what is left is the chance that a phone still jumps, taken as one in four, which makes 0.05. This event now tests the fix on a phone: a jump narrated after a None tap means it did not hold. The fix is expected to remove this event. "
+                     + p5_rebuild +
+                     "p stays 0.05 in this registration: it was not lowered for a fix that was found incomplete once, and it was not raised for it either, because the event is the jump to the top and the jump was already gone"),
         dict(id="P6", steps=[("pair", 1), ("pair-reload", 1), ("pair-reload", 10), ("install", 10)],
              event="the owner reports a wrong or confusing message while a page loads ('Pick a student in SpeedGrader', 'Changes Canvas', a bare student number)",
              observable="the narration or a screenshot shows and mentions one of those messages", p=0.2, basis="measured",
@@ -212,7 +222,9 @@ def events(MJ: dict, AJ: dict, inputs: dict) -> list[dict]:
         dict(id="P11", steps=[("pair", 9)], event="the owner saves a student outside the sample in normal mode (a write to Canvas)",
              observable="the narration or the Canvas gradebook shows a grade written for a student not in the sample", p=0.01, basis="measured",
              rests_on=f"[measured: first_contact.outside_sample.tap_save_and_next, first_contact.outside_sample.save_and_next_disabled] Save and next is disabled until 'Mark rest full' is tapped, and after it Save and next asks first (answer: {'yes' if SV['asks_first'] else 'no'}); the question names the blind pass ({'yes' if SV['names_the_blind_pass'] else 'no'}) and says it writes to Canvas ({'yes' if SV['says_it_writes_to_canvas'] else 'no'}); Cancel sends {SV['writes_after_cancel']} requests that write, OK sends {SV['writes_after_ok']}. "
-                     f"A write through Save and next takes at least three taps (Mark rest full, Save and next, OK), the last on a question that says what it does (a nothing-goes-wrong prediction; the question is asked in save(), {c('saveAsks')}, so a plain Save asks too: code). p is a judgment, lower than it was when the first draft's script let Save and next write with no question (the section on what changed in TapGrade lists the values)"),
+                     f"A write through Save and next takes at least three taps (Mark rest full, Save and next, OK), the last on a question that says what it does (a nothing-goes-wrong prediction; the question is asked in save(), {c('saveAsks')}, so a plain Save asks too: code). p is a judgment, lower than it was when the first draft's script let Save and next write with no question (the section on what changed in TapGrade lists the values). "
+                     f"The docs say that Save on a sampled pair cannot write and that three doors can, each asking once first: Save and next on a student outside the sample (this event), Update Canvas, Remove older summary comments; "
+                     f"they name a fourth, Set up rubric from a file, offered only when Canvas holds no rubric, which asks first too ({c('tgWriteDoors')}; {c('rbWriteRow')})"),
         dict(id="P12", steps=[("pair", 7)], event="the owner dithers between look-alike chips (two similarly worded reasons in one part)",
              observable="the narration says two chips looked alike or the right one was hard to tell", p=0.2, basis="measured",
              rests_on=f"[measured: chips.reason_labels] {len(look['pairs_at_or_above_0.5'])} of {look['pairs']} reason pairs score 0.5 or more ({', '.join(look['pairs_at_or_above_0.5'])}); about {100 * share_part:.0f}% of parts and {100 * share_pair:.0f}% of pairs (at {parts_per_pair:.1f} parts per pair) hold one in the invented large bank, {100 * a_share_part:.0f}% and {100 * a_share_pair:.0f}% in the example-size one (about two chips per part); p is a guess between the two, low because few pairs of labels look alike"),

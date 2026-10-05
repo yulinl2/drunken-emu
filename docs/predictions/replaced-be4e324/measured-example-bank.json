@@ -3,10 +3,10 @@
  "tool": "checks/measure_sample_predictors.py",
  "script": {
   "path": "userscripts/tapgrade.user.js",
-  "sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
-  "bytes": 257658,
+  "sha256": "d63dc263df7fdb77828eae1e74ae3603ce7d9a9d195a1153deca53ad74255423",
+  "bytes": 259524,
   "version": "0.6.7",
-  "build": "10-05 01:03"
+  "build": "10-05 03:02"
  },
  "mock": {
   "base": "http://127.0.0.1:PORT"
@@ -38,8 +38,9 @@
     "sheet_h": 438.9,
     "head_h": 69.6,
     "msg_h": 55.8,
+    "msg_over_page_px": 55.8,
     "tabs_h": 54,
-    "body_h": 126,
+    "body_h": 188,
     "foot_h": 63,
     "bar_h": 62.2
    },
@@ -566,39 +567,39 @@
   },
   "feedback_ms": {
    "chip": {
-    "ms": 14.8,
+    "ms": 9.6,
     "kind": "immediate"
    },
    "half_point_plus": {
-    "ms": 4.0,
+    "ms": 5.6,
     "kind": "immediate"
    },
    "no_deductions": {
-    "ms": 16.2,
+    "ms": 16.9,
     "kind": "immediate"
    },
    "save_with_a_verdict": {
-    "ms": 16.8,
+    "ms": 25.7,
     "kind": "immediate"
    },
    "check_on_the_bar": {
-    "ms": 11.3,
+    "ms": 8.4,
     "kind": "immediate"
    },
    "sample_picks_tab": {
-    "ms": 3.4,
+    "ms": 4.6,
     "kind": "immediate"
    },
    "copy_as_json": {
-    "ms": 14.2,
+    "ms": 7.4,
     "kind": "immediate"
    },
    "save_with_nothing_picked": {
-    "ms": 5.5,
+    "ms": 5.4,
     "kind": "immediate"
    },
    "save_and_next": {
-    "ms": 6.2,
+    "ms": 14.6,
     "kind": "immediate"
    }
   },
@@ -606,16 +607,16 @@
    "load_toast": {
     "seconds_on_screen": 3.9,
     "height_px": 55.8,
-    "content_moves_when_it_goes_px": 61.8,
-    "open_body_grows_px": 62.0,
+    "content_moves_when_it_goes_px": 0.0,
+    "open_body_grows_px": 0.0,
     "goes_by_itself": true
    },
    "refusal_toast": {
     "height_px": 74.7,
-    "content_moves_when_it_comes_px": 80.7
+    "content_moves_when_it_comes_px": 0.0
    },
    "chip_tap": {
-    "max_chip_shift_px": 15.2,
+    "max_chip_shift_px": 2.0,
     "scroll_jump_px": 4.0,
     "the_chip_is_ticked": true
    },
@@ -624,33 +625,43 @@
     "warning_shown": true
    },
    "no_deductions_tap": {
-    "scroll_before_px": 65.0,
-    "scroll_after_px": 0.0
+    "scroll_before_px": 58.0,
+    "scroll_after_px": 58.0
    },
    "none_tap": {
-    "scroll_before_px": 155.0,
-    "scroll_after_px": 0.0,
-    "jumps_to_the_top": true
+    "scroll_before_px": 124.0,
+    "scroll_after_px": 124.0,
+    "jumps_to_the_top": false
    },
    "grade_button_on_a_pair": {
     "scroll_before_px": 500.0,
-    "scroll_after_px": 0.0
+    "scroll_after_px": 500.0
    },
    "hide_and_reopen_the_sheet": {
-    "scroll_before_px": 600.0,
-    "scroll_after_px": 0.0,
+    "scroll_before_px": 574.0,
+    "scroll_after_px": 570.0,
     "ticked_before": 2,
     "ticked_after": 2
    },
    "resize_the_sheet_by_dragging_its_head": {
     "sheet_h_before_px": 438.9,
     "sheet_h_after_px": 639.0,
-    "scroll_before_px": 600.0,
-    "scroll_after_px": 0.0,
+    "scroll_before_px": 570.0,
+    "scroll_after_px": 370.0,
     "ticked_after": 2
    },
    "clamped_key_opened_by_a_tap": {
     "content_below_pushed_down_px": 35.1
+   },
+   "load_toast_leaves_with_the_list_scrolled": {
+    "scroll_before_px": 570.0,
+    "scroll_after_px": 570.0
+   },
+   "next_pair_message": {
+    "height_px": 55.8,
+    "over_the_page_px": 55.8,
+    "work_area_h_px": 405.1,
+    "share_of_the_work_area_pct": 13.8
    }
   },
   "loading": {
@@ -658,7 +669,7 @@
    "states": [
     {
      "from_s": 0.2,
-     "for_s": 0.22,
+     "for_s": 0.24,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
      "head_is_pair": true,
@@ -672,8 +683,8 @@
      "sheet_top_px": 405
     },
     {
-     "from_s": 0.42,
-     "for_s": 0.11,
+     "from_s": 0.44,
+     "for_s": 0.17,
      "host": true,
      "purpose_tag": "Changes Canvas",
      "head_is_pair": false,
@@ -687,8 +698,8 @@
      "sheet_top_px": 628
     },
     {
-     "from_s": 0.53,
-     "for_s": 1.16,
+     "from_s": 0.61,
+     "for_s": 1.06,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
      "head_is_pair": false,
@@ -702,7 +713,7 @@
      "sheet_top_px": 607
     },
     {
-     "from_s": 1.69,
+     "from_s": 1.67,
      "for_s": 0.0,
      "host": true,
      "purpose_tag": "Recorded on this phone only",
@@ -719,14 +730,14 @@
    ],
    "first_new_state_says_changes_canvas": true,
    "a_state_tells_the_owner_to_pick_a_student": true,
-   "seconds_in_the_pick_a_student_state": 1.16,
+   "seconds_in_the_pick_a_student_state": 1.06,
    "head_shows_a_bare_student_id_while_loading": true,
    "no_foot_while_loading": true,
    "sheet_top_moves_px": 223,
-   "seconds_from_tap_to_pair_ready": 1.69,
-   "old_page_stays_seconds": 0.42,
+   "seconds_from_tap_to_pair_ready": 1.67,
+   "old_page_stays_seconds": 0.44,
    "toast_of_the_save_shown_on_the_next_page": true,
-   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.78
+   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.79
   },
   "first_contact": {
    "students_in_sample": 33,

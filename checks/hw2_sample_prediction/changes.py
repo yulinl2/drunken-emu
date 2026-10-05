@@ -33,58 +33,132 @@ NOISY = ("feedback_ms.", "loading.", "first_contact.load_toast_seconds_on_screen
 # so a sentence about what the docs say carries the line it rests on and stops the build when the docs say something else.  A placeholder that names nothing stops it too.
 # Keys: measured:<bank-independent path> | declared:<chain suffix>:<step>:<property> | number:<chain suffix>:<what> | event:<id>:<p|basis|kind|steps|added|removed>
 
-# The sample fixer's third round (speeds-kit cec1bba to be4e324).  The first-draft script and the cec1bba script behaved alike in each respect these entries describe (the current
-# measurement tool was run on both, and the values before are the same), so the same entries serve both comparisons; their `moved` patterns are disjoint.
+# The sample fixer's third round (speeds-kit cec1bba to be4e324) and fourth round (be4e324 to 66eee2a).  The first-draft script and the cec1bba script behaved alike in each respect the third round's
+# entries describe (the current measurement tool was run on both, and the values before are the same).  Where one number moved in both rounds the first-draft list has ONE entry for it
+# (`pair-view-layout`) and says in each Why which round moved it; the list against the registration that was replaced holds the fourth round only.
 UNMOVED_CHAINS = ["declared:install:*", "declared:pair*:*", "declared:export:*", "declared:handback:*", "number:install:*", "number:pair*:*", "number:export:*", "number:handback:*", "number:ranking:*"]
 NO_CHAIN_MOVED = "no declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved"
 
-THIRD_ROUND = [
-    dict(id="message-floats",
-         change="A message (the load message, a refusal, 'Recorded on this phone ...', an error) floats above the sheet instead of sitting in it: it takes no room from the open part, moves no chip when it comes or goes, lets a tap through to the page, and its timer takes it away without rebuilding the sheet; a long one is cut off at the room above the sheet",
-         moved=["measured:view_stability.load_toast.*", "measured:view_stability.refusal_toast.*", "measured:view_stability.next_pair_message.*", "measured:view_stability.load_toast_leaves_with_the_list_scrolled.*",
-                "measured:window.pair_view_with_toast.body_h", "measured:window.pair_view_with_toast.msg_over_page_px", "event:P4:p", "event:P14:added"],
-         nothing_moved_in=["measured:view_stability.second_chip_in_a_part.*", "measured:view_stability.clamped_key_opened_by_a_tap.*", "measured:view_stability.load_toast.height_px", "measured:view_stability.refusal_toast.height_px",
-                           "measured:window.pair_view_with_toast.msg_h", "measured:window.pair_view_with_toast.sheet_h", "measured:window.pair_view_with_toast.tabs_h", "measured:window.pair_view_with_toast.foot_h",
-                           "measured:window.pair_view_with_toast.bar_h", *UNMOVED_CHAINS],
-         effect="At {this} the message is out of the flow ({msgCss}; {tgMessage}): the content under it does not move when it comes or goes, and the open part of the sheet is the same with the message up as without it. "
-                "Before, it sat in the sheet, took its height from the list while it showed, and moved every chip when it came and again when it went. The notes of the steps that wait for a message or read around it say so "
-                "(the page load, the load message, the button under it, the export's message). One cost goes and one appears. A message can no longer push a chip from under the finger. It now covers the top of the student's work "
-                "for the seconds it shows, so a new event, P14, predicts that. P4 loses its message part, and its p falls by judgment: the same author set the earlier value and has now seen the change; the value it had is in the table. "
-                "Checked: the message's own height, the warning line that a second chip pushes down, the foot and the bar are as they were; " + NO_CHAIN_MOVED + "."),
-    dict(id="list-keeps-its-place",
-         change="A rebuild of the sheet puts the list back where it was when the view, the row and (in Grade) the student are the same, as the last step of the rebuild, and hiding the sheet remembers where the list was: a tap on None or on No deductions, hiding and opening the sheet, a resize drag and the bar's Grade button no longer throw the list to the top; another student or another row starts at the top",
-         moved=["measured:view_stability.none_tap.scroll_after_px", "measured:view_stability.none_tap.jumps_to_the_top", "measured:view_stability.no_deductions_tap.scroll_after_px", "measured:view_stability.grade_button_on_a_pair.scroll_after_px",
-                "measured:view_stability.hide_and_reopen_the_sheet.scroll_after_px", "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px", "event:P5:p", "event:P5:kind"],
-         nothing_moved_in=["measured:view_stability.chip_tap.scroll_jump_px", "measured:view_stability.chip_tap.the_chip_is_ticked", "measured:view_stability.hide_and_reopen_the_sheet.ticked_*",
-                           "measured:view_stability.resize_the_sheet_by_dragging_its_head.ticked_after", "measured:view_stability.resize_the_sheet_by_dragging_its_head.sheet_h_*", *UNMOVED_CHAINS],
-         effect="{renderKeepScroll}; {tgKeepsPlace}. At {this} the list stays where the reader had it after each of those taps. Before, every one of them threw it to the top and the reader had to find the part again. "
-                "The notes of the steps where the owner scrolls, hides or resizes the sheet say so. P5, the event that predicted the jump, loses its reason on the mock: its p falls by judgment (the same author, who has now seen the change), "
-                "it becomes a prediction that nothing goes wrong, and it now tests whether the fix holds on a phone. Checked: the ticks stay, the sheet is as high after a resize as before, and a chip tap moves the list by the same few pixels; "
-                + NO_CHAIN_MOVED + "."),
-    dict(id="head-whole",
-         change="The head of a pair names it whole at 390 px and keeps its height: a stamp of four or more characters is set smaller, so the tag stays on one line and the title is not cut off, whatever the points",
-         moved=["measured:window.pair_view.*", "measured:window.pair_view_largest_sheet.*", "measured:window.pair_view_with_toast.head_h", "measured:window.per_question.*", "measured:window.screens_per_question.*",
-                "measured:window.queue_button_from_pair.*", "measured:chips.*", "measured:first_contact.pair_title_slack_px_one_pair_per_question.*", "measured:view_stability.chip_tap.max_chip_shift_px",
-                "measured:view_stability.none_tap.scroll_before_px", "measured:view_stability.no_deductions_tap.scroll_before_px", "measured:view_stability.hide_and_reopen_the_sheet.scroll_before_px",
-                "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px"],
-         nothing_moved_in=["measured:window.pair_view.sheet_h", "measured:window.pair_view.tabs_h", "measured:window.pair_view.foot_h", "measured:window.pair_view.bar_h", "measured:window.pair_view.work_area_above_sheet_h",
-                           "measured:window.pair_view_largest_sheet.work_area_above_sheet_h", "measured:window.first_screen_shows_a_chip", "measured:window.sticky_headers_off_at_this_height", "measured:chips.reason_labels.*", *UNMOVED_CHAINS],
-         effect="{stampTier}; {scoreWide}; {tgHeadWhole}. At {this} the head is one height whatever the points. Before, a stamp of five characters made the tag wrap, the head grew a line, and every row under it moved by that growth; "
-                "with a longer stamp the title was cut off. The open part of the sheet is taller by what the wrapped head took. That moves the numbers of the large invented bank, whose questions carry stamps long enough to wrap. "
-                "In the example-size bank the window was already this tall, so only the large bank's window numbers are in the table; what moves in the example-size bank is a chip tap: the shift it measured before is the head growing as the points changed. "
-                "A taller window shows more chips at once and makes each list a little shorter in screens. It does not remove the scrolling: no chip is on the first screen in either bank, and P2, which follows the rule at the top of events.py, "
-                "keeps its p. " + NO_CHAIN_MOVED[0].upper() + NO_CHAIN_MOVED[1:] + "."),
-    dict(id="docs-third-round",
-         change="The runbook (step 7) and docs/TAPGRADE.md give the stop rule as three signs, one per kind of first page, any one missing meaning stop; say that the history route and the export differ for a half point that changes no points, so the blind pass uses the export; and count the third round's checks",
-         moved=[], nothing_moved_in=["declared:install:*", "number:install:*", "declared:export:*", "number:export:*", "event:I*"],
-         effect="The install note cites the three signs ({rbStop}: {rbStopLoad}; {rbStopPair}; {rbStopOther}; docs/TAPGRADE.md says the same: {tgStopRule}), and the notes of the pages that carry a sign name it. The runbook already told the owner to look for three things; it now says which page shows which. "
-                "The half-point sentence is at {rbHalfRoute} and {tgHalfRoute}; the export chain already says the export keeps a half point as a signed deduction. "
-                "Nothing measured moved and no declared property: the owner was to check the load message after the reload (install step 11) and read the header of the first pair, as before."),
-    dict(id="not-on-the-path-third-round",
-         change="Everything else in the third round (cec1bba to {this}): the new checks of the kit's audit and their twins that test the checks (they test the kit, not the owner's phone), the build stamp, a comment in the script about the way to the queue, the counts and the changelog in the docs",
-         moved=[], nothing_moved_in=["number:handback:*", "number:ranking:*"],
-         effect="Not on the path of a sampled pair."),
-]
+MESSAGE_FLOATS = dict(
+    id="message-floats",
+    change="A message (the load message, a refusal, 'Recorded on this phone ...', an error) floats above the sheet instead of sitting in it: it takes no room from the open part, moves no chip when it comes or goes, lets a tap through to the page, and its timer takes it away without rebuilding the sheet; a long one is cut off at the room above the sheet",
+    moved=["measured:view_stability.load_toast.*", "measured:view_stability.refusal_toast.*", "measured:view_stability.next_pair_message.*", "measured:view_stability.load_toast_leaves_with_the_list_scrolled.*",
+           "measured:window.pair_view_with_toast.body_h", "measured:window.pair_view_with_toast.msg_over_page_px", "event:P4:p", "event:P14:added"],
+    nothing_moved_in=["measured:view_stability.second_chip_in_a_part.*", "measured:view_stability.clamped_key_opened_by_a_tap.*", "measured:view_stability.load_toast.height_px", "measured:view_stability.refusal_toast.height_px",
+                      "measured:window.pair_view_with_toast.msg_h", "measured:window.pair_view_with_toast.sheet_h", "measured:window.pair_view_with_toast.tabs_h", "measured:window.pair_view_with_toast.foot_h",
+                      "measured:window.pair_view_with_toast.bar_h", *UNMOVED_CHAINS],
+    effect="At {this} the message is out of the flow ({msgCss}; {tgMessage}): the content under it does not move when it comes or goes, and the open part of the sheet is the same with the message up as without it. "
+           "Before, it sat in the sheet, took its height from the list while it showed, and moved every chip when it came and again when it went. The notes of the steps that wait for a message or read around it say so "
+           "(the page load, the load message, the button under it, the export's message). One cost goes and one appears. A message can no longer push a chip from under the finger. It now covers the top of the student's work "
+           "for the seconds it shows, so a new event, P14, predicts that. P4 loses its message part, and its p falls by judgment: the same author set the earlier value and has now seen the change; the value it had is in the table. "
+           "Checked: the message's own height, the warning line that a second chip pushes down, the foot and the bar are as they were; " + NO_CHAIN_MOVED + ".")
+
+LIST_KEEPS_ITS_PLACE = dict(
+    id="list-keeps-its-place",
+    change="A rebuild of the sheet puts the list back where it was when the view, the row and (in Grade) the student are the same, as the last step of the rebuild, and hiding the sheet remembers where the list was: a tap on None or on No deductions, hiding and opening the sheet, a resize drag and the bar's Grade button no longer throw the list to the top; another student or another row starts at the top; and (the fourth round) the rebuild draws a sampled pair's part tallies and warnings too, so with ticks in a part the list lands on the same chip",
+    moved=["measured:view_stability.none_tap.scroll_after_px", "measured:view_stability.none_tap.jumps_to_the_top", "measured:view_stability.no_deductions_tap.scroll_after_px", "measured:view_stability.grade_button_on_a_pair.scroll_after_px",
+           "measured:view_stability.hide_and_reopen_the_sheet.scroll_after_px", "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px",
+           "measured:view_stability.rebuild_with_ticks.scroll_after_px", "measured:view_stability.rebuild_with_ticks.same_chip_shift_px", "measured:view_stability.rebuild_with_ticks.warnings_after_the_rebuild", "event:P5:p", "event:P5:kind"],
+    nothing_moved_in=["measured:view_stability.chip_tap.the_chip_is_ticked", "measured:view_stability.hide_and_reopen_the_sheet.ticked_*",
+                      "measured:view_stability.resize_the_sheet_by_dragging_its_head.ticked_after", "measured:view_stability.resize_the_sheet_by_dragging_its_head.sheet_h_*",
+                      "measured:view_stability.rebuild_with_ticks.ticked_*", "measured:view_stability.rebuild_with_ticks.warnings_before", "measured:view_stability.rebuild_with_ticks.warnings_above_the_window_before",
+                      "measured:view_stability.rebuild_with_ticks.stamp_bumps_right_after_the_rebuild", *UNMOVED_CHAINS],
+    effect="{renderKeepScroll}; {tgKeepsPlace}. At {this} the list stays where the reader had it after each of those taps. Before, every one of them threw it to the top and the reader had to find the part again. "
+           "The notes of the steps where the owner scrolls, hides or resizes the sheet say so. P5, the event that predicted the jump, loses its reason on the mock: its p falls by judgment (the same author, who has now seen the change), "
+           "it becomes a prediction that nothing goes wrong, and it now tests whether the fix holds on a phone. "
+           "The fourth round finished what the third began. The third round put the list back at the same pixels, but only a tap drew a pair's part tallies and warnings, so a rebuild blanked them and, with two ticks in a part, "
+           "the same pixels showed another chip (the sample reviewer's S-1). At {this} the rebuild draws them ({renderTallies}; {tgTallies}) and the list lands on the same chip. "
+           "The tool's new probe ticks two chips in a part and rebuilds (`view_stability.rebuild_with_ticks`): on the first draft's script the list goes to the top, and the table gives how far a chip far below the top of the window moved. "
+           "Checked: the ticks stay, the sheet is as high after a resize as before, the stamp does not bump on a rebuild; " + NO_CHAIN_MOVED + ".")
+
+PAIR_VIEW_LAYOUT = dict(
+    id="pair-view-layout",
+    change="The head of a pair names it whole at 390 px and keeps its height whatever the points (a stamp of four or more characters is set smaller, so the tag stays on one line and the title is not cut off), and (the fourth round) a rebuild draws a pair's part tallies, so each part heading holds its tally from the first render",
+    moved=["measured:window.pair_view.*", "measured:window.pair_view_largest_sheet.*", "measured:window.pair_view_with_toast.head_h", "measured:window.part_headings_at_the_first_render.*", "measured:window.per_question.*",
+           "measured:window.screens_per_question.*", "measured:window.queue_button_from_pair.*", "measured:chips.*", "measured:first_contact.pair_title_slack_px_one_pair_per_question.*", "measured:view_stability.chip_tap.*",
+           "measured:view_stability.none_tap.scroll_before_px", "measured:view_stability.no_deductions_tap.scroll_before_px", "measured:view_stability.hide_and_reopen_the_sheet.scroll_before_px",
+           "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px", "measured:view_stability.rebuild_with_ticks.scroll_before_px"],
+    nothing_moved_in=["measured:window.pair_view.sheet_h", "measured:window.pair_view.tabs_h", "measured:window.pair_view.foot_h", "measured:window.pair_view.bar_h", "measured:window.pair_view.work_area_above_sheet_h",
+                      "measured:window.pair_view_largest_sheet.work_area_above_sheet_h", "measured:window.first_screen_shows_a_chip", "measured:window.sticky_headers_off_at_this_height", "measured:chips.reason_labels.*", *UNMOVED_CHAINS],
+    effect="{stampTier}; {scoreWide}; {tgHeadWhole}. At {this} the head is one height whatever the points. Before, a stamp of five characters made the tag wrap, the head grew a line, and every row under it moved by that growth; "
+           "with a longer stamp the title was cut off. The open part of the sheet is taller by what the wrapped head took. That moves the numbers of the large invented bank, whose questions carry stamps long enough to wrap. "
+           "In the example-size bank the window was already this tall, so only the large bank's window numbers are in the table; what moves in the example-size bank is a chip tap: the shift it measured before is the head growing as the points changed. "
+           "The fourth round adds a smaller step the other way. A rebuild draws a pair's part tallies ({renderTallies}; {tgTallies}), so the parts say `full` from the first render, and a heading that holds a tally is taller than one that held none. "
+           "Each part is longer by that, so each list is longer, the Queue button is further down it, and the first tap in a part no longer grows a heading under the finger: a chip tap moves nothing now, in either bank. "
+           "The step shows in both banks; the Why column says, for each number, which round moved it. "
+           "A taller window shows more chips at once and makes each list a little shorter in screens. It does not remove the scrolling: no chip is on the first screen in either bank, and P2, which follows the rule at the top of events.py, "
+           "keeps its p. " + NO_CHAIN_MOVED[0].upper() + NO_CHAIN_MOVED[1:] + ".")
+
+# the fourth round, against the registration that was replaced (be4e324): what the fixer's S-1 changed, in one entry
+TALLIES_ON_REBUILD = dict(
+    id="tallies-on-rebuild",
+    change="A rebuild of the sheet draws a sampled pair's part tallies and warnings, as a tap does, so the parts say `full` from the first render and the position put back lands on the same chip when parts have ticks (the sample reviewer's S-1); the stamp does not bump on a rebuild",
+    moved=["measured:window.part_headings_at_the_first_render.*", "measured:view_stability.rebuild_with_ticks.*", "measured:window.per_question.*", "measured:window.screens_per_question.*", "measured:window.queue_button_from_pair.*", "measured:chips.*",
+           "measured:view_stability.chip_tap.*", "measured:view_stability.none_tap.*", "measured:view_stability.hide_and_reopen_the_sheet.*", "measured:view_stability.resize_the_sheet_by_dragging_its_head.*",
+           "measured:view_stability.load_toast_leaves_with_the_list_scrolled.*"],
+    nothing_moved_in=["measured:window.pair_view.*", "measured:window.pair_view_largest_sheet.*", "measured:window.pair_view_with_toast.*", "measured:window.first_screen_shows_a_chip", "measured:window.sticky_headers_off_at_this_height",
+                      "measured:window.tap_targets_on_a_pair.*", "measured:first_contact.pair_title_slack_px_one_pair_per_question.*", "measured:chips.reason_labels.*", "measured:view_stability.load_toast.*",
+                      "measured:view_stability.refusal_toast.*", "measured:view_stability.next_pair_message.*", "measured:view_stability.second_chip_in_a_part.*", "measured:view_stability.clamped_key_opened_by_a_tap.*",
+                      "measured:view_stability.no_deductions_tap.*", "measured:view_stability.grade_button_on_a_pair.*", "measured:view_stability.rebuild_with_ticks.stamp_bumps_right_after_the_rebuild",
+                      "measured:view_stability.rebuild_with_ticks.ticked_*", "measured:view_stability.rebuild_with_ticks.warnings_before", "measured:view_stability.rebuild_with_ticks.warnings_above_the_window_before", *UNMOVED_CHAINS],
+    effect="{renderTallies}; {tgTallies}. At {this} the list stays on the same chip after a rebuild when parts have ticks. Before, only a tap drew a pair's part tallies and warnings, so a rebuild blanked them: the list above the window was shorter "
+           "by what was left undrawn, and the position the rebuild put back showed another chip (the sample reviewer's S-1). The registration for be4e324 did not see it, because its probes never ticked a chip before a rebuild; "
+           "this one's tool does (`view_stability.rebuild_with_ticks`, measured on this script and, with the same tool, on the script of that registration, whose folder holds those numbers in new-keys.json). "
+           "Two small things follow. A heading that holds a tally is taller than one that held none, and the parts hold theirs from the first render, so every part is longer, each list is longer by the sum, and the Queue button is further down it "
+           "(the docs name the same cause on the kit's own pages: {tgQueueFar}); the open part of the sheet did not change. And the first tap in a part no longer grows its heading, so a chip tap moves nothing under the finger. "
+           "Those are the numbers that moved: the parts' headings, the length of each list and the screens it is, the Queue distance, the chips in view, and the positions where the tool puts a row. "
+           "The stamp does not bump on a rebuild, before or after (the tool reads it). Checked: the window (the head, the open part, the strips of the sheet), the messages and the pair's first-contact numbers did not move; " + NO_CHAIN_MOVED + ".")
+
+FLOOR_IGNORES_THE_MESSAGE = dict(
+    id="floor-ignores-the-message",
+    change="The sheet's lowest height no longer counts a message that floats above it: a sheet pulled down to its floor is not raised when a message comes and does not stay raised when it goes (SF2)",
+    moved=["measured:view_stability.sheet_at_its_floor.*"],
+    nothing_moved_in=["measured:view_stability.sheet_at_its_floor.stored_height_fraction", *UNMOVED_CHAINS],
+    effect="{sheetFloor}; {tgFloor}. At {this} a message does not count in the lowest height the sheet may be dragged to. Before, a reader who had dragged the sheet to its floor saw it grow by the message's height while the load message showed "
+           "(the first draft's script), and from the third round on it also stayed taller after the message had gone (the build for be4e324). That matters only to a reader who dragged the sheet to its floor: the pass starts at the default height, "
+           "and nothing in the runbook asks for the floor. The tool's new probe pulls the sheet to its floor and shows the load message (`view_stability.sheet_at_its_floor`; the table gives the heights). "
+           "No chain has a step that does this and no event rests on it, so the registration reports the number and moves nothing for it. " + NO_CHAIN_MOVED[0].upper() + NO_CHAIN_MOVED[1:] + ".")
+
+UPDATE_VIEW = dict(
+    id="update-view",
+    change="Two things at the end of an update: a sheet that was hidden while an update ended opens at the report, and the Update foot's button says `Checking…` while the students are read back (SF1 and the foot's label)",
+    moved=[], nothing_moved_in=["measured:primary_action.*", "measured:interruption.*", *UNMOVED_CHAINS],
+    effect="{reportTopEnd}; {reportTopFail}; {footChecking}; {tgHideEnd}; {tgFootWord}. Both are in Update Canvas, which the owner is told not to use during the pass ({rbNoUpdate}). "
+           "Nothing on the path of a sampled pair moved, and no measured number: the tool does not run an update. If one is run by mistake, the report is at the top and the button says what it is doing.")
+
+DOCS_FOURTH_ROUND = dict(
+    id="docs-fourth-round",
+    change="The runbook and docs/TAPGRADE.md say what is true about writing during the pass (Save and Save and next on a sampled pair write nothing; three other doors can write, and a fourth, Set up rubric from a file, is offered only when Canvas holds no rubric; each asks once first), "
+           "give the limits below 390 px, for a late data script and in landscape, and count the fourth round's checks; the runbook's step 10 says what to do on the phone before the bulk pass",
+    moved=[], nothing_moved_in=["declared:install:*", "number:install:*", "declared:export:*", "number:export:*", "declared:handback:*", "number:handback:*", "event:I*"],
+    effect="The docs say it ({tgWriteDoors}; {rbWriteRow}). The docs name four doors: the first three are counted in the same sentence, the fourth follows it, and the sentence that names the fourth, in the runbook's decision row and in the docs' paragraph, was added by a docs-only commit after `66eee2a` (the head of the fourth round). "
+           "P11, the event about a stray write, rests on the measured question and on this, and its p does not change: the fourth door, which creates a rubric on Canvas, is offered only when Canvas holds none, and this registration did not try it with a sample loaded (the docs say so too). "
+           "The three limits are now written down, and they are the reviewers' and the kit author's numbers, not this tool's, which does not measure them: narrower than 390 px the head is cut ({tgNarrower}); "
+           "in landscape the Grade view's bar is below the screen ({tgLandscape}); a data script that fires late moves the list, because the position put back is of pixels, not of a place ({tgLateScript}). "
+           "This registration measures at 390 by 844 in portrait and says so in its limits. "
+           "The runbook's step 10 now tells the owner what to do on the phone before the bulk pass ({rbBulkOnPhone}): copy the picks and keep them as `sample/picks.json`, then clear the sample data, which asks first when picks are recorded and changes nothing on Canvas. "
+           "That is after the pass and on no chain of this registration. Nothing measured moved and no declared property: the owner reads the same pages in the same order as before.")
+
+NOT_ON_THE_PATH_THIRD_ROUND = dict(
+    id="not-on-the-path-third-round",
+    change="Everything else in the third round (cec1bba to be4e324): the new checks of the kit's audit and their twins that test the checks (they test the kit, not the owner's phone), the build stamp, a comment in the script about the way to the queue, the counts and the changelog in the docs",
+    moved=[], nothing_moved_in=["number:handback:*", "number:ranking:*"],
+    effect="Not on the path of a sampled pair.")
+
+NOT_ON_THE_PATH_FOURTH_ROUND = dict(
+    id="not-on-the-path-fourth-round",
+    change="Everything else in the fourth round (be4e324 to {this}): the audit's new checks (they test the kit, not the owner's phone; S-2 is a check that a guard in Accept & next, which already held, holds), the build stamp, the counts and the changelog in the docs",
+    moved=[], nothing_moved_in=["number:handback:*", "number:ranking:*"],
+    effect="Not on the path of a sampled pair.")
+
+WHAT_DID_NOT_MOVE = dict(
+    id="what-did-not-move",
+    change="Everything the be4e324 registration rests on that the fourth round did not touch",
+    moved=[], nothing_moved_in=["declared:*", "number:*", "measured:export.*", "measured:primary_action.*", "measured:interruption.*", "measured:two_pages.*", "measured:first_contact.*", "event:*"],
+    effect="Stated so that a reader need not look: no declared property of any chain moved, no load, peak, finding, rank, tie or onset moved, and the five friction events with the highest p are the same five. "
+           "No event changed. P1, P2 and P8 follow the rule at the top of events.py from numbers that moved a little (the key out of view in the large bank, the screens per question), and the rule gives the p they had; "
+           "the table in section 4d says so for each. P4 and P5 keep theirs: a rebuild that landed off the chip (S-1) was real on the build for be4e324 and was in neither p, and it is gone at {this}, so nothing is lowered for it. "
+           "No measured number of the export, the buttons, the interruptions, the two pages, the messages, the window or the first page outside the sample moved (timings aside).")
 
 CHANGES = [
     dict(id="schema-and-key", change="The sample's data file has its own schema (tapgrade-blind-sample/1) and its own storage key (tapgrade:sampleauto:...); a machine data file and the sample never replace each other; the refusal sentence stays on the phone (head, top of Grade, Files > Loaded); the load toast is one short line",
@@ -95,7 +169,7 @@ CHANGES = [
          effect="The queue's note says so. Nothing moved: the queue view fits the sheet as before, and no chain used the Bank."),
     dict(id="asks-before-writing", change="What can still write asks once, naming the blind pass, while a sample is loaded: Update Canvas (Apply, Resume, Retry failed), Remove older summary comments (and Retry failed removals), and Save and next or Accept & next for a student outside the sample",
          moved=["measured:first_contact.outside_sample.tap_save_and_next.*", "event:P11:*"], nothing_moved_in=["measured:first_contact.outside_sample.save_and_next_*"],
-         effect="The one tap of the pass that could reach Canvas by mistake, Save and next on a page outside the sample, is measured on both scripts: the first draft's wrote at the first tap and asked nothing; this one asks, names the blind pass and Canvas, and sends nothing on Cancel. P11 falls, and this registration backs it with that measurement. The other asks are on no chain: the owner is told not to use Update Canvas, and a tap on the bar's red button only reads."),
+         effect="The one tap of the pass that could reach Canvas by mistake, Save and next on a page outside the sample, is measured on both scripts: the first draft's wrote at the first tap and asked nothing; this one asks, names the blind pass and Canvas, and sends nothing on Cancel. P11 falls, and this registration backs it with that measurement. The other asks are on no chain: the owner is told not to use Update Canvas ({rbNoUpdate}), and a tap on the bar's red button only reads."),
     dict(id="review-clear-export", change="Check > Review leaves the sample out; a pick whose deduction value changed is stale; Clear sample data leaves nothing behind; a half point alone is exported as a signed question-level deduction",
          moved=[], nothing_moved_in=["measured:export.*", "declared:export:*", "number:export:*"],
          effect="The export notes cite them. Nothing moved: the copy holds the same picks, characters and lines, and Sample picks is still the fifth tab."),
@@ -112,11 +186,25 @@ CHANGES = [
     dict(id="not-on-the-path", change="Everything else in the diff of the script up to cec1bba (Update Canvas's grade arithmetic, a Grade row with a comment and no points opening undecided, the Files line about the bank, the build stamp)",
          moved=[], nothing_moved_in=["number:handback:*", "number:ranking:*"],
          effect="Not on the path of a sampled pair."),
-    *THIRD_ROUND,
+    MESSAGE_FLOATS,
+    LIST_KEEPS_ITS_PLACE,
+    PAIR_VIEW_LAYOUT,
+    dict(id="docs-third-round",
+         change="The runbook (step 7) and docs/TAPGRADE.md give the stop rule as three signs, one per kind of first page, any one missing meaning stop; say that the history route and the export differ for a half point that changes no points, so the blind pass uses the export; and count the third round's checks",
+         moved=[], nothing_moved_in=["declared:install:*", "number:install:*", "declared:export:*", "number:export:*", "event:I*"],
+         effect="The install note cites the three signs ({rbStop}: {rbStopLoad}; {rbStopPair}; {rbStopOther}; docs/TAPGRADE.md says the same: {tgStopRule}), and the notes of the pages that carry a sign name it. The runbook already told the owner to look for three things; it now says which page shows which. "
+                "The half-point sentence is at {rbHalfRoute} and {tgHalfRoute}; the export chain already says the export keeps a half point as a signed deduction. "
+                "Nothing measured moved and no declared property: the owner was to check the load message after the reload (install step 11) and read the header of the first pair, as before."),
+    NOT_ON_THE_PATH_THIRD_ROUND,
+    FLOOR_IGNORES_THE_MESSAGE,
+    UPDATE_VIEW,
+    DOCS_FOURTH_ROUND,
+    NOT_ON_THE_PATH_FOURTH_ROUND,
 ]
 
 # why each moved item moved: pattern -> reason (no numbers: they come from the two sides).  The first pattern that matches is the reason, so a specific one stands before a general one.
-WHY_THIRD = {
+WHY_FIRST_DRAFT_LATER = {
+    # the messages (third round)
     "measured:view_stability.load_toast.*": "the message floats above the sheet: it takes no room and moves nothing when it comes or goes",
     "measured:view_stability.refusal_toast.*": "the message floats above the sheet: it takes no room and moves nothing when it comes or goes",
     "measured:view_stability.next_pair_message.*": "the message after Save and next now floats over the top of the student's work instead of pushing the work down; the earlier script covered none of it (measured on that script by the current tool)",
@@ -125,23 +213,44 @@ WHY_THIRD = {
     "measured:window.pair_view_with_toast.msg_over_page_px": "the message now covers this much of the page above the sheet; the earlier script's message covered none of it (it pushed the content and shrank the list instead; measured on that script by the current tool)",
     "event:P4:p": "the message part of this event is gone on the mock (a message no longer moves the content); the warning line, the chip taps and the rest stay. A judgment, not a rule: the same author's, who has now seen the change; one third taken off",
     "event:P14:added": "the message now covers the top of the student's work for the seconds it shows: the friction this fix may add; a guess",
+    # the list keeps its place (third round) and lands on the same chip (fourth)
     "measured:view_stability.none_tap.jumps_to_the_top": "the list is put back where it was after the sheet is rebuilt",
     "measured:view_stability.none_tap.scroll_after_px": "the list is put back where it was after the sheet is rebuilt",
     "measured:view_stability.no_deductions_tap.scroll_after_px": "the list is put back where it was after the sheet is rebuilt",
     "measured:view_stability.grade_button_on_a_pair.scroll_after_px": "the list is put back where it was after the sheet is rebuilt",
     "measured:view_stability.hide_and_reopen_the_sheet.scroll_after_px": "hiding the sheet remembers where the list was and opening it puts the list back there (held by the end of the list where the list is short)",
     "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px": "the list is put back where it was after the sheet is rebuilt (held by the end of the list where a taller sheet leaves less to scroll)",
+    "measured:view_stability.rebuild_with_ticks.scroll_after_px": "the list is put back where it was after the sheet is rebuilt",
+    "measured:view_stability.rebuild_with_ticks.same_chip_shift_px": "the list is put back (the first draft threw it to the top) and the rebuild draws the warnings of the ticked parts, so the position put back shows the same chip",
+    "measured:view_stability.rebuild_with_ticks.warnings_after_the_rebuild": "the rebuild draws the warnings of the ticked parts; before the fourth round only a tap did, and a rebuild blanked them",
     "event:P5:p": "the list no longer jumps to the top on the mock; what is left is the chance that a phone still does it, so p falls. A judgment, not a rule: the same author's, who has now seen the change; the event now tests the fix on a phone",
     "event:P5:kind": "p is now at or below the line the registration draws for a prediction that nothing goes wrong",
+    # the pair's layout (third round: the head; fourth: the part tallies at the first render)
+    "measured:window.part_headings_at_the_first_render.saying_full": "a rebuild draws the part tallies, so the parts say `full` from the first render; before the fourth round only a tap drew them",
+    "measured:window.part_headings_at_the_first_render.heading_h_px": "a heading that holds its tally is a little taller than one that held none",
     "measured:window.pair_view.head_h": "the tag stays on one line, so the head keeps its height",
     "measured:window.pair_view_with_toast.head_h": "the tag stays on one line, so the head keeps its height",
     "measured:window.*.body_h": "the head keeps its height, so the open part of the sheet is taller",
     "measured:window.pair_view.body_pct_of_screen": "the head keeps its height, so the open part of the sheet is taller",
+    "measured:window.per_question.*.scroll_h": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)",
+    "measured:window.per_question.*.screens": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks",
+    "measured:window.screens_per_question.*": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks",
+    "measured:window.pair_view_largest_sheet.screens_for_first_question": "the open part is taller, so the same list is fewer screens of it; the headings' growth gives a little back",
+    "measured:window.queue_button_from_pair.offset_in_body_px": "Queue is the last row of a list that is longer by the part headings' growth (the fourth round)",
+    "measured:window.queue_button_from_pair.screens_down": "Queue is further down a longer list (the headings' growth); the open part is taller in the large bank, so the distance in screens is shorter there, and a little longer in the example-size bank, where the open part is as it was",
     "measured:window.*": "the open part of the sheet is taller, so the same list is fewer screens of it",
-    "measured:chips.*": "the open part of the sheet is taller, so more of the list is in view at once",
+    "measured:chips.at_the_default_sheet.part_group_height_px.mean": "a part's heading holds its tally from the first render and is taller by it (the fourth round)",
+    "measured:chips.at_the_default_sheet.part_group_height_px.max": "a part's heading holds its tally from the first render and is taller by it (the fourth round)",
+    "measured:chips.at_the_default_sheet.part_group_height_px.share_that_fit_in_the_open_body": "the open part of the sheet is taller, so more parts fit whole",
+    "measured:chips.*": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little",
     "measured:first_contact.pair_title_slack_px_one_pair_per_question.*": "the stamp is set smaller when it is long, so it leaves the title its room",
-    "measured:view_stability.chip_tap.max_chip_shift_px": "a chip tap changes the points in the stamp; a longer stamp no longer makes the tag wrap and the head grow, which moved every chip under it by the head's growth (the shift measured before)",
-    "measured:view_stability.*.scroll_before_px": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, and the head over it, changed, so the same row sits at another scroll position",
+    "measured:view_stability.chip_tap.max_chip_shift_px": "a chip tap changes the stamp's points and its part's heading: before, a longer stamp made the tag wrap and the head grow, which moved every chip under it (the shift measured in the example-size bank), and the first tap in a part grew the heading, which the rebuild now draws at the start (the shift measured in the large bank); neither moves anything now",
+    "measured:view_stability.chip_tap.scroll_jump_px": "the list moved at a chip tap, while the chips under the finger moved; a chip tap no longer changes the head or the part's heading, so nothing moves",
+    "measured:view_stability.*.scroll_before_px": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position",
+    # the sheet's lowest height (fourth round; the head change moved the strips that set it)
+    "measured:view_stability.sheet_at_its_floor.raised_by_the_message_px": "a message that floats above the sheet is not counted in the sheet's lowest height",
+    "measured:view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px": "a message is not counted in the lowest height, and the head keeps its height, so the strips that set the floor are lower",
+    "measured:view_stability.sheet_at_its_floor.*": "the head keeps its height, so the strips that set the lowest height are lower",
 }
 
 WHY = {
@@ -157,21 +266,37 @@ WHY = {
     "event:P11:p": "a write takes a third tap, on a question that names the blind pass and Canvas, and Cancel sends nothing (measured)",
     "event:P11:basis": "the question and what Cancel does are measured, not read from the code",
     "event:P13:added": "the merge at save time and the re-read when a page returns are new, and measured",
-    **WHY_THIRD,
+    **WHY_FIRST_DRAFT_LATER,
 }
 
-# the same, for what moved since the registration this one supersedes (built against speeds-kit cec1bba): the third round, and a list of what did not move
+# the same, for what moved since the registration this one supersedes (built against speeds-kit be4e324): the fourth round, and a list of what did not move
 CHANGES_SINCE_REPLACED = [
-    *THIRD_ROUND,
-    dict(id="what-did-not-move", change="Everything the cec1bba registration rests on that the third round did not touch",
-         moved=[], nothing_moved_in=["declared:*", "number:*", "measured:export.*", "measured:primary_action.*", "measured:interruption.*", "measured:two_pages.*", "measured:first_contact.outside_sample.*",
-                                     "event:I*", "event:Q*", "event:R*", "event:L*", "event:E*", "event:H*", "event:P1:*", "event:P2:*", "event:P3:*", "event:P6:*", "event:P7:*",
-                                     "event:P8:*", "event:P9:*", "event:P10:*", "event:P11:*", "event:P12:*", "event:P13:*"],
-         effect="Stated so that a reader need not look: no declared property of any chain moved, no load, peak, finding, rank, tie or onset moved, and the five friction events with the highest p are the same five. "
-                "Of the events only P4, P5 and P14 changed (the three above). P1, P2 and P8 follow the rule at the top of events.py from numbers that moved (the key out of view in the large bank, the screens per question) and the rule gives the p they had; "
-                "the table in section 4d says so for each. No measured number of the export, the buttons, the interruptions, the two pages or the first page outside the sample moved (timings aside)."),
+    TALLIES_ON_REBUILD,
+    FLOOR_IGNORES_THE_MESSAGE,
+    UPDATE_VIEW,
+    DOCS_FOURTH_ROUND,
+    NOT_ON_THE_PATH_FOURTH_ROUND,
+    WHAT_DID_NOT_MOVE,
 ]
-WHY_SINCE_REPLACED = dict(WHY_THIRD)
+WHY_SINCE_REPLACED = {
+    "measured:window.part_headings_at_the_first_render.saying_full": "a rebuild draws the part tallies now, so the parts say `full` from the first render; before, only a tap drew them",
+    "measured:window.part_headings_at_the_first_render.heading_h_px": "a heading that holds its tally is a little taller than one that held none",
+    "measured:view_stability.rebuild_with_ticks.warnings_after_the_rebuild": "the rebuild draws the warnings of the ticked parts; before, only a tap did, and a rebuild blanked them",
+    "measured:view_stability.rebuild_with_ticks.same_chip_shift_px": "with the warnings drawn by the rebuild the list above the window is as long as it was, so the position put back shows the same chip (before, it landed off by what the rebuild had left undrawn)",
+    "measured:view_stability.chip_tap.*": "the heading of the part already holds its tally at the first render, so the first tap in a part grows nothing under the finger (before, it grew the heading)",
+    "measured:window.per_question.*.scroll_h": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum",
+    "measured:window.per_question.*.screens": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens",
+    "measured:window.screens_per_question.*": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens",
+    "measured:window.queue_button_from_pair.offset_in_body_px": "Queue is the last row of a list that is longer by the part headings' growth",
+    "measured:window.queue_button_from_pair.screens_down": "Queue is further down a longer list, and the open part is the same",
+    "measured:chips.at_the_default_sheet.part_group_height_px.*": "a part's heading holds its tally from the first render and is taller by it",
+    "measured:chips.*": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little",
+    "measured:view_stability.none_tap.*": "the row sits lower in the list: each part above it has a heading that holds its tally from the first render, taller by it (where the tool put the row, and where the list is put back)",
+    "measured:view_stability.hide_and_reopen_the_sheet.*": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down",
+    "measured:view_stability.resize_the_sheet_by_dragging_its_head.*": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down",
+    "measured:view_stability.load_toast_leaves_with_the_list_scrolled.*": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down",
+    "measured:view_stability.sheet_at_its_floor.*": "a message that floats above the sheet is not counted in the sheet's lowest height now, so a sheet at its floor does not rise with the message and does not stay raised after it",
+}
 
 def comparisons(repo: Path) -> dict:
     """the comparisons to make: with the first draft always, and with the registration this one replaces when its folder docs/predictions/replaced-<commit>/ exists (one at most)"""
@@ -207,6 +332,7 @@ LABELS = {
     "view_stability.next_pair_message.over_the_page_px": "the message after Save and next: px of the student's work above the sheet that it covers",
     "view_stability.next_pair_message.share_of_the_work_area_pct": "the message after Save and next: share of the student's work above the sheet that it covers (%)",
     "view_stability.load_toast_leaves_with_the_list_scrolled.scroll_after_px": "list position (px) after the load message leaves, the list scrolled before it",
+    "view_stability.load_toast_leaves_with_the_list_scrolled.scroll_before_px": "list position (px) before the load message leaves (the tool scrolls to a set offset)",
     "view_stability.none_tap.scroll_after_px": "list position (px) after a tap on None",
     "view_stability.none_tap.scroll_before_px": "list position (px) before a tap on None (where the tool put the row)",
     "view_stability.none_tap.jumps_to_the_top": "a tap on None throws the list to the top",
@@ -229,6 +355,7 @@ LABELS = {
     "window.screens_per_question.median": "screens of the open part per question's list, median",
     "window.screens_per_question.max": "screens of the open part per question's list, longest",
     "window.queue_button_from_pair.screens_down": "Queue button, screens down from the top of a pair's list",
+    "window.queue_button_from_pair.offset_in_body_px": "Queue button, px down from the top of a pair's list",
     "first_contact.pair_title_slack_px_one_pair_per_question.min": "room left beside the pair's title in the head, tightest question (px; below 0 = cut off)",
     "first_contact.pair_title_slack_px_one_pair_per_question.clipped": "questions whose pair title is cut off in the head",
     "first_contact.pair_title_slack_px_one_pair_per_question.borderline_under_2px": "questions with under 2 px to spare beside the pair's title",
@@ -245,6 +372,21 @@ LABELS = {
     "chips.at_the_largest_sheet.in_view.mean_fully_visible_when_any": "chips fully in view at once, mean over windows with at least one (largest sheet)",
     "chips.at_the_largest_sheet.in_view.pairs_seen_together": "pairs of chips in view together over the scroll windows (largest sheet)",
     "chips.at_the_largest_sheet.in_view.windows": "scroll windows looked at (largest sheet)",
+    "chips.at_the_default_sheet.part_group_height_px.mean": "height of a part group (header, key, chips), mean (px)",
+    "chips.at_the_default_sheet.part_group_height_px.max": "height of a part group (header, key, chips), tallest (px)",
+    # the fourth round
+    "window.part_headings_at_the_first_render.saying_full": "part headings that say `full` at the first render (of the parts of the first pair opened)",
+    "window.part_headings_at_the_first_render.heading_h_px": "height of a part heading at the first render, mean (px)",
+    "view_stability.chip_tap.scroll_jump_px": "the list's own movement when a chip is tapped (px)",
+    "view_stability.rebuild_with_ticks.warnings_after_the_rebuild": "warnings drawn after the sheet was rebuilt, two chips ticked in a part (one was drawn before)",
+    "view_stability.rebuild_with_ticks.same_chip_shift_px": "how far a chip far below the ticked part sits from where it was after a rebuild (px; 0 = the same chip)",
+    "view_stability.rebuild_with_ticks.scroll_after_px": "list position (px) after a rebuild with ticks in a part",
+    "view_stability.rebuild_with_ticks.scroll_before_px": "list position (px) before a rebuild with ticks (where the tool put a chip far below the ticked part)",
+    "view_stability.sheet_at_its_floor.raised_by_the_message_px": "px that the load message raises a sheet pulled down to its lowest height",
+    "view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px": "sheet pulled down to its lowest height, load message up (px)",
+    "view_stability.sheet_at_its_floor.sheet_h_after_it_left_px": "sheet pulled down to its lowest height, after the load message left (px)",
+    "view_stability.sheet_at_its_floor.sheet_h_after_a_rebuild_px": "sheet pulled down to its lowest height, after a rebuild with no message (px)",
+    "view_stability.sheet_at_its_floor.stays_raised_after_it_left": "the sheet stays raised after the load message has left",
 }
 
 
@@ -262,9 +404,10 @@ def load_baseline(repo: Path, rel: str = BASELINE_DIR) -> dict:
     return out
 
 
-def snapshot(reg: dict, fixture: dict, what: str, registered_in: str | None = None) -> dict[str, str]:
+def snapshot(reg: dict, fixture: dict, what: str, registered_in: str | None = None, registered_before: list | None = None) -> dict[str, str]:
     """declared.json and summary.json of a baseline, from a registration (its JSON) and its fixture: the numbers it printed, as data.
-    `registered_in`: the commit that added that registration to the history, when it was committed (a registration replaced before any commit has none)"""
+    `registered_in`: the commit that added that registration to the history, when it was committed (a registration replaced before any commit has none).
+    `registered_before`: the registrations committed before it, newest first: [{"commit": ..., "speeds_kit": ...}]"""
     declared = {c["id"]: [{k: v for k, v in s.items() if k not in ("target", "note")} for s in c["steps"]] for c in fixture["chains"]}
     segs = {}
     for s in reg["segments"]:
@@ -274,6 +417,7 @@ def snapshot(reg: dict, fixture: dict, what: str, registered_in: str | None = No
     summary = {
         "what": what,
         "registered_in": registered_in,
+        "registered_before": registered_before or [],
         "artifact": {k: reg["artifact"][k] for k in ("commit", "script_sha256", "script_lines", "version", "build")},
         "drafted": reg["drafted"],
         "segments": segs,
@@ -323,9 +467,9 @@ def label_of(key: str) -> str:
     """what a measured key means, for the reader: LABELS, or a sentence for the per-question keys; the key itself when nothing is known"""
     if key in LABELS:
         return LABELS[key]
-    m = re.fullmatch(r"window\.per_question\.(Q\d+)\.(body_h|screens)", key)
+    m = re.fullmatch(r"window\.per_question\.(Q\d+)\.(body_h|screens|scroll_h)", key)
     if m:
-        return f"{m.group(1)}, the pair opened: " + ("open part of the sheet (px)" if m.group(2) == "body_h" else "screens of the open part that its list is")
+        return f"{m.group(1)}, the pair opened: " + {"body_h": "open part of the sheet (px)", "screens": "screens of the open part that its list is", "scroll_h": "length of its list (px)"}[m.group(2)]
     return key
 
 
@@ -493,6 +637,6 @@ def compute(repo: Path, inputs: dict, MJ: dict, AJ: dict, doc: dict, segments: l
                  + number_items(baseline["summary"], segments, findings, unstable, groups, events) + event_items(baseline["summary"], events))
         result[cid] = {"scripts": script_facts(baseline["summary"], inputs, len(events), len(findings)),
                        "baseline": {"path": spec["dir"] + "/", "sha256": baseline["sha"], "registered_in": baseline["summary"].get("registered_in"),
-                                    "new_keys_check": baseline["new-keys"].get("checked_against_the_baseline")},
+                                    "registered_before": baseline["summary"].get("registered_before", []), "new_keys_check": baseline["new-keys"].get("checked_against_the_baseline")},
                        "changes": attribute(items, spec["changes"], spec["why"], spec["since"], fill), "moved_count": len(items)}
     return result

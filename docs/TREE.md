@@ -98,7 +98,7 @@ that is never executed is not a regeneration command.
 |   |   |   |-- measured.json
 |   |   |   |-- new-keys.json
 |   |   |   `-- summary.json
-|   |   |-- replaced-cec1bba/
+|   |   |-- replaced-be4e324/
 |   |   |   |-- declared.json
 |   |   |   |-- measured-example-bank.json
 |   |   |   |-- measured.json

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from . import changes, events as E
+from .markdown import registration_ordinal as ordinal
 from .cites import EXAMPLE_ITEMS, Cites
 from .inputs import REPO, INPUTS_PATH
 
@@ -161,7 +162,8 @@ def build(repo: Path, MJ: dict, AJ: dict, inputs: dict, parent: str, drafted: st
     superseded = ch_changes.get("replaced")
     reg_in = superseded["baseline"].get("registered_in") if superseded else None            # the commit that registered the registration this one supersedes, when there was one
     registered_by = ("the commit that adds this version of this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2). "
-                     f"The version committed as {reg_in[:7]}, the registration against speeds-kit {superseded['scripts']['before']['commit'][:7]}, is superseded by it and stays in the history"
+                     f"This is the {ordinal(superseded['baseline'])[1]} registration. The version committed as {reg_in[:7]}, the registration against speeds-kit {superseded['scripts']['before']['commit'][:7]}, "
+                     "is superseded by it and stays in the history" + (", with the earlier ones" if superseded["baseline"].get("registered_before") else "")
                      if reg_in else "the commit that adds this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2)")
     reg = {
         "schema": "emu-prediction/1", "id": "hw2-sample-pass",
@@ -172,6 +174,7 @@ def build(repo: Path, MJ: dict, AJ: dict, inputs: dict, parent: str, drafted: st
         "artifact": {"repository": "speeds-kit", "commit": sk["commit"], "checkout_head": sk["checkout_head"], "script": script["path"], "script_sha256": script["sha256"], "script_lines": script["lines"],
                      "version": script["version"], "build": script["build"],
                      "mock_canvas": {"path": sk["mock_canvas"]["path"], "sha256": sk["mock_canvas"]["sha256"]},
+                     "files_last_changed_by": sk.get("last_changed_by", {}),
                      "docs_read": "docs/TAPGRADE.md (Blind sample mode, and the lines cited from its Install, Data from the kit and correction sections) and docs/HW2-HW3-RUNBOOK.md (steps 7 and 8, and the line cited from its sample-size section) at that commit"},
         "inputs": {"path": INPUTS_PATH, "sha256": sha(repo / INPUTS_PATH), "what": "the commit, the sha256 of every file read from the speeds-kit checkout, and the place of every code line a note cites"},
         "fixture": {"path": FIXTURE, "sha256": sha(repo / FIXTURE)},
@@ -239,8 +242,9 @@ def build(repo: Path, MJ: dict, AJ: dict, inputs: dict, parent: str, drafted: st
         "limits": ["written by the same author as the builder of the chain layer, the fixture and the measurement script: not independent",
                    "the load weights are ordinal and uncalibrated (P-67a1); amounts, parts per pair and taps per pair are guesses",
                    "the pass has not happened: every p is a belief, none is fitted", "the artifact was measured on a mock Canvas in headless Chromium at 390x844 touch with this container's fonts, not on an iPhone, not on a real Canvas, with an invented sample",
-                   f"the snapshot is speeds-kit {sk['commit'][:7]}, the sample fixer's follow-up and third round included; a further review round may change the sample mode again, and what it changes is not predicted here: if this registration is already pushed when it does, the new code is a new dated registration (the earlier registrations stay in the history)",
-                   "the third round's fixes (the list kept where it was, a message that floats over the page, the head kept whole) were measured in headless Chromium only; whether Safari on an iPhone does the same is what P5 and P14 test",
+                   f"the snapshot is speeds-kit {sk['commit'][:7]}, the sample fixer's follow-up and third and fourth rounds included; a further review round may change the sample mode again, and what it changes is not predicted here: if this registration is already pushed when it does, the new code is a new dated registration (the earlier registrations stay in the history)",
+                   "the sample fixer's fixes (the list kept where it was and drawn the same, a message that floats over the page, the head kept whole, the sheet's floor) were measured in headless Chromium only; whether Safari on an iPhone does the same is what P5 and P14 test",
+                   f"the owner's iPhone is not known and the layout was measured at 390x844: the docs say that narrower than 390 px the head is cut ({cite('tgNarrower')}), that in landscape the Grade bar is below the screen ({cite('tgLandscape')}), and that a data script that fires late over a scrolled list moves the list ({cite('tgLateScript')}); no chain has a step for these and no event predicts them",
                    "HW1's outcomes are base rates only (basis carried-from-HW1): one pass by one person",
                    f"the real bank's size is unknown: the measured layout is for an invented bank of {M['chips']} chips ({M['chips'] / M['questions']:.0f} per question), and a bank of the runbook's example size ({EXAMPLE_ITEMS} bank items, {cite('rbStderr')}: {EXAMPLE_ITEMS} chips in all) was measured too; events P1, P2, P8 and P12 state a p between the two",
                    "+-2 steps covers 5 of the 9 steps of the pair chain: a loss placed at random hits more often than not", "silence in a narration is ambiguous: an event coded 0 may be a difficulty that was not mentioned",

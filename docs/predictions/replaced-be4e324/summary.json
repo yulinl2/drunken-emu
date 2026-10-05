@@ -1,14 +1,20 @@
 {
- "what": "the registration built against speeds-kit cec1bba on 2026-10-05 02:16 EDT, committed as 74118b5 (it stays in the history) and superseded by a later registration: the numbers it printed, kept as data so that the registration that replaces it can say what moved. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared properties of its fixture, every step key except the text), summary.json (this file), new-keys.json (measurements that did not exist then, made on its script by the current measurement script, with a count of how many of its own keys that script reproduced; empty when there are none).",
- "registered_in": "74118b521fada830b44f12531acad568b4b2afaf",
+ "what": "the registration built against speeds-kit be4e324 on 2026-10-05 04:06 EDT, committed as da81743 (it stays in the history) and superseded by a later registration: the numbers it printed, kept as data so that the registration that replaces it can say what moved. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared properties of its fixture, every step key except the text), summary.json (this file), new-keys.json (measurements that did not exist then, made on its script by the current measurement script, with a count of how many of its own keys that script reproduced; empty when there are none).",
+ "registered_in": "da817431ca9e305bb9e51184069099bf8a704be0",
+ "registered_before": [
+  {
+   "commit": "74118b521fada830b44f12531acad568b4b2afaf",
+   "speeds_kit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92"
+  }
+ ],
  "artifact": {
-  "commit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92",
-  "script_sha256": "730f0a93a6a324a25113777f1381806c020368d314469c0d1ce77a822d867855",
-  "script_lines": 3395,
+  "commit": "be4e32432f494bf73b6f565bc74cd54a6cd5fb6b",
+  "script_sha256": "d63dc263df7fdb77828eae1e74ae3603ce7d9a9d195a1153deca53ad74255423",
+  "script_lines": 3406,
   "version": "0.6.7",
-  "build": "10-05 01:03"
+  "build": "10-05 03:02"
  },
- "drafted": "2026-10-05 02:16 EDT",
+ "drafted": "2026-10-05 04:06 EDT",
  "segments": {
   "tapgrade-0.6.7-sample-install": {
    "steps": 12,
@@ -407,7 +413,7 @@
    ]
   },
   "P4": {
-   "p": 0.3,
+   "p": 0.2,
    "basis": "measured",
    "kind": "friction",
    "steps": [
@@ -418,9 +424,9 @@
    ]
   },
   "P5": {
-   "p": 0.2,
+   "p": 0.05,
    "basis": "measured",
-   "kind": "friction",
+   "kind": "fine",
    "steps": [
     [
      "pair",
@@ -545,6 +551,17 @@
     [
      "pair-lock",
      1
+    ]
+   ]
+  },
+  "P14": {
+   "p": 0.15,
+   "basis": "guess",
+   "kind": "friction",
+   "steps": [
+    [
+     "pair",
+     3
     ]
    ]
   },

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -36,8 +37,8 @@ SUBJECT1 = "HW2 sample pass: the chains, the measurement and the scorer, before 
 SUBJECT2 = "Registered before the pass: where the HW2 blind sample will be hard, and in what order (#32, E5)"
 # a registration that supersedes one already in the history: the same beginnings (so that --replace-previous knows the pair), and the head it is built against
 SUBJECT1_NEXT = "HW2 sample pass: the chains, the measurement and the scorer, redone for TapGrade {short} (#32, E5)"
-SUBJECT2_NEXT = "Registered before the pass: where the HW2 blind sample will be hard, second registration, TapGrade {short} (#32, E5)"
-SECOND_MARK = "second registration"            # in the subject of the second commit of a pair made with --supersede
+SUBJECT2_NEXT = "Registered before the pass: where the HW2 blind sample will be hard, {ordinal} registration, TapGrade {short} (#32, E5)"
+NEXT_PAIR_RE = re.compile(r", (second|third|fourth|fifth|sixth) registration, TapGrade [0-9a-f]+ ")          # in the subject of the second commit of a pair made with --supersede
 
 
 def replaced_dirs() -> list[str]:
@@ -211,6 +212,7 @@ def snapshot_replaced(building: str | None = None, supersede: bool = False) -> s
             shutil.rmtree(REPO / old)
     dest.mkdir(parents=True, exist_ok=True)
     registered_in = registration_commit() if supersede else None
+    registered_before = earlier_registrations() if supersede else []
     fate = (f"committed as {registered_in[:7]} (it stays in the history) and superseded by a later registration" if registered_in else "replaced before anything was pushed")
     what = (f"the registration built against speeds-kit {reg['artifact']['commit'][:7]} on {reg['drafted']}, {fate}: the numbers it printed, kept as data so that the "
             "registration that replaces it can say what moved. Files here: measured.json and measured-example-bank.json (its two measured files, as they were), declared.json (the declared "
@@ -218,7 +220,7 @@ def snapshot_replaced(building: str | None = None, supersede: bool = False) -> s
             "measurement script, with a count of how many of its own keys that script reproduced; empty when there are none).")
     for rel, name in ((R.MEASURED, "measured.json"), (R.MEASURED_EXAMPLE, "measured-example-bank.json")):
         (dest / name).write_bytes(blob(rel))
-    for name, text in changes.snapshot(reg, fixture, what, registered_in).items():
+    for name, text in changes.snapshot(reg, fixture, what, registered_in, registered_before).items():
         (dest / name).write_text(text, encoding="utf-8")
     if keep is None:
         keep = (json.dumps({"what": "Measurements that did not exist when this registration was built, made on its script by the current measurement script. Empty unless someone added them.",
@@ -228,10 +230,25 @@ def snapshot_replaced(building: str | None = None, supersede: bool = False) -> s
     return str(dest.relative_to(REPO))
 
 
+def registration_commits() -> list[str]:
+    """the commits of HEAD's history that changed the registration JSON, newest first: each registered a registration"""
+    return git("log", "--format=%H", "--", R.PRED, check=False).split()
+
+
 def registration_commit() -> str | None:
     """the commit of HEAD's history that last changed the registration JSON: the one that registered it"""
-    sha = git("log", "-1", "--format=%H", "--", R.PRED, check=False)
-    return sha or None
+    found = registration_commits()
+    return found[0] if found else None
+
+
+def earlier_registrations() -> list[dict]:
+    """the registrations before the one HEAD holds, newest first: [{"commit": the commit that registered it, "speeds_kit": the speeds-kit commit it was built against}]"""
+    out = []
+    for sha in registration_commits()[1:]:
+        p = subprocess.run(["git", "show", f"{sha}:{R.PRED}"], cwd=str(REPO), capture_output=True)
+        if p.returncode == 0:
+            out.append({"commit": sha, "speeds_kit": json.loads(p.stdout.decode("utf-8"))["artifact"]["commit"]})
+    return out
 
 
 def head_registration_commit() -> str | None:
@@ -333,18 +350,25 @@ def run_tests(extra: bool) -> None:
             raise SystemExit(f"{' '.join(cmd[1:])} failed")
 
 
+def next_ordinal() -> str:
+    """'second', 'third', ...: which registration the one being made is, from the summary of the registration it supersedes (docs/predictions/replaced-<commit>/)"""
+    folders = replaced_dirs()
+    return markdown.registration_ordinal(json.loads((REPO / folders[0] / "summary.json").read_text(encoding="utf-8")) if folders else None)[1]
+
+
 def commit_messages(inp: dict, MJ: dict, AJ: dict, reg_summary: dict, supersede: bool = False) -> tuple[str, str]:
     sk, sc = inp["speeds_kit"], inp["speeds_kit"]["script"]
     folders = replaced_dirs()
     replaced = [Path(d).name[len("replaced-"):] for d in folders]           # the registration(s) this one replaces, kept as data
     kept = (f", and docs/predictions/replaced-{replaced[0]}/ those of the registration against {replaced[0]} that this one replaces" if replaced else "")
     since = (f", and another what changed since the registration against {replaced[0]} that this one replaces" if replaced else "")
-    reg_in = None
-    if supersede and folders:                                               # the commit that registered the one superseded: the baseline's summary says
-        reg_in = json.loads((REPO / folders[0] / "summary.json").read_text(encoding="utf-8")).get("registered_in")
-    second1 = (f"This is the second registration. The one against speeds-kit {replaced[0]} was committed as {reg_in[:7]} and stays in the history; docs/predictions/replaced-{replaced[0]}/\n"
+    base = json.loads((REPO / folders[0] / "summary.json").read_text(encoding="utf-8")) if supersede and folders else None      # the baseline's summary says which commit registered the one superseded
+    reg_in = base.get("registered_in") if base else None
+    word = markdown.registration_ordinal(base)[1]
+    earlier = "".join(f" (before it: the one against speeds-kit {e['speeds_kit'][:7]}, committed as {e['commit'][:7]})" for e in (base.get("registered_before") or [])) if base else ""
+    second1 = (f"This is the {word} registration. The one against speeds-kit {replaced[0]} was committed as {reg_in[:7]} and stays in the history{earlier}; docs/predictions/replaced-{replaced[0]}/\n"
                f"keeps its numbers as data, so that this one can say what moved in TapGrade since.\n\n" if reg_in else "")
-    second2 = (f"This is the second registration: it supersedes the one against speeds-kit {replaced[0]} (committed as {reg_in[:7]}). Both stay in the history; the owner's pass has not happened,\n"
+    second2 = (f"This is the {word} registration: it supersedes the one against speeds-kit {replaced[0]} (committed as {reg_in[:7]}). All of them stay in the history; the owner's pass has not happened,\n"
                f"and this one is the registration it is scored against.\n\n" if reg_in else "")
     b1 = (f"Seven chains of the pass (install, read the queue, one pair, a pair with a reload, a pair after a lock, export, hand-back), written from the code and docs of\n"
           f"speeds-kit {sk['commit'][:7]} (script sha256 {sc['sha256'][:8]}..., {sc['lines']} lines) and not from anyone using the flow. Every declared property cites a\n"
@@ -373,7 +397,7 @@ def commit_messages(inp: dict, MJ: dict, AJ: dict, reg_summary: dict, supersede:
 def rebuild(speeds_kit: Path, commit: str | None = None, port: int = 8881, measured: dict | None = None, make_commits: bool = False, replace_previous: bool = False,
             trailers: list[str] | None = None, tests: bool = False, supersede: bool = False) -> int:
     trailers = trailers or []
-    second_pair = False                                    # --replace-previous on a pair that --supersede made: it stays a second registration
+    second_pair = False                                    # --replace-previous on a pair that --supersede made: it stays a later registration
     if supersede and replace_previous:
         raise SystemExit("--supersede and --replace-previous exclude each other: --supersede adds two commits on top of the registration in HEAD (it was pushed and stays in the history); "
                          "--replace-previous drops the pair of commits this command made (it was not pushed) and makes it again")
@@ -390,7 +414,7 @@ def rebuild(speeds_kit: Path, commit: str | None = None, port: int = 8881, measu
             subs = git("log", "-2", "--format=%s").splitlines()
             if len(subs) != 2 or not (subs[0].startswith(PRIOR_SUBJECTS[1]) and subs[1].startswith(PRIOR_SUBJECTS[0])):
                 raise SystemExit("--replace-previous: the last two commits are not a registration pair made by this command: " + " | ".join(subs))
-            second_pair = SECOND_MARK in subs[0]
+            second_pair = bool(NEXT_PAIR_RE.search(subs[0]))
             say(f"replacing {git('rev-parse', '--short', 'HEAD~1')} and {git('rev-parse', '--short', 'HEAD')} (soft reset to {git('rev-parse', '--short', 'HEAD~2')}; nothing is lost from the working tree)")
     inp_old = I.load(REPO) if (REPO / I.INPUTS_PATH).is_file() else None
     old_measured = {b: read_json(p) for b, p in (("large", R.MEASURED), ("example", R.MEASURED_EXAMPLE)) if (REPO / p).is_file()}
@@ -404,7 +428,7 @@ def rebuild(speeds_kit: Path, commit: str | None = None, port: int = 8881, measu
         if was == inp["speeds_kit"]["commit"]:
             raise SystemExit(f"--supersede: the registration in HEAD was built against this very speeds-kit commit ({was[:7]}); amend an unpushed pair with --replace-previous instead")
     if second_pair and head_registration_commit() != inp["speeds_kit"]["commit"]:
-        raise SystemExit("--replace-previous: the last two commits are a second registration (made with --supersede) built against another speeds-kit commit than this one. "
+        raise SystemExit("--replace-previous: the last two commits are a registration that supersedes an earlier one (made with --supersede) and was built against another speeds-kit commit than this one. "
                          "Dropping them would lose the comparison with the registration they supersede. Reset to the registration that was pushed (git reset --hard to it, in the worktree "
                          "you mean to redo), and run --supersede again.")
     superseding = supersede or second_pair
@@ -482,7 +506,7 @@ def rebuild(speeds_kit: Path, commit: str | None = None, port: int = 8881, measu
         run_tests(extra=tests)
         if make_commits:
             _, b2 = commit_messages(inp, MJ, AJ, summary, superseding)
-            sha2 = commit_staged(SUBJECT2_NEXT.format(short=inp["speeds_kit"]["commit"][:7]) if superseding else SUBJECT2, b2, trailers)
+            sha2 = commit_staged(SUBJECT2_NEXT.format(ordinal=next_ordinal(), short=inp["speeds_kit"]["commit"][:7]) if superseding else SUBJECT2, b2, trailers)
             say(f"commit 2 (the registration): {sha2[:12]}")
             say(f"done. Not pushed. HEAD is {sha2}.")
         else:

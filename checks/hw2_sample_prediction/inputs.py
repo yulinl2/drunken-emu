@@ -84,6 +84,8 @@ def make(root: Path, commit: str | None = None, drafted: str | None = None) -> d
     if not ver:
         raise InputsError("no `const VERSION` in the script")
     table = cites.resolve(tx)                           # stops, naming the citation, when a construct a note cites is gone or appears twice
+    # the last commit (at or before `commit`) that changed each file read: when only the docs changed in the snapshot's own commit, the code is as of an earlier one and the text says so
+    last = {rel: git(root, "log", "-1", "--format=%H", commit, "--", rel) for rel in READ}
     return {
         "schema": SCHEMA,
         "drafted": drafted or now_et(),
@@ -93,6 +95,7 @@ def make(root: Path, commit: str | None = None, drafted: str | None = None) -> d
                        "version": ver.group(1), "build": build.group(1) if build else None},
             "mock_canvas": {"path": MOCK, "sha256": sha256(files[MOCK])},
             "read": {rel: sha256(files[rel]) for rel in READ if rel not in (cites.SCRIPT, MOCK)},
+            "last_changed_by": {rel: c for rel, c in last.items() if c},
         },
         "citations": table,
     }

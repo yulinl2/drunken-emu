@@ -285,6 +285,8 @@ async def m_window(p: Phone, data, uids):
         out["pair_view"] = {k: g[k] for k in ("sheet_h", "head_h", "tabs_h", "body_h", "foot_h", "bar_h")}
         out["pair_view"].update(sheet_pct=r1(100 * g["sheet_h"] / VIEWPORT["height"]), body_pct_of_screen=r1(100 * g["body_h"] / VIEWPORT["height"]),
                                 work_area_above_sheet_h=r1(VIEWPORT["height"] - g["sheet_h"]), work_area_pct=r1(100 * (VIEWPORT["height"] - g["sheet_h"]) / VIEWPORT["height"]))
+        out["part_headings_at_the_first_render"] = await p.sh("""(() => { const gh = [...r.querySelectorAll('.grp .gh')], st = [...r.querySelectorAll('.grp .gstat')];
+            return { parts: gh.length, saying_full: st.filter(e => e.textContent.trim() === 'full').length, heading_h_px: Math.round(10 * gh.reduce((a, e) => a + e.getBoundingClientRect().height, 0) / Math.max(1, gh.length)) / 10 }; })()""")
         out["first_screen_shows_a_chip"] = bool(await p.sh("(() => { const b = r.querySelector('.body').getBoundingClientRect(); return [...r.querySelectorAll('.chip')].some(c => { const x = c.getBoundingClientRect(); return x.top >= b.top && x.bottom <= b.bottom; }); })()"))
         out["sticky_headers_off_at_this_height"] = bool(await p.sh("r.querySelector('.body').classList.contains('nofreeze')"))
         out["tap_targets_on_a_pair"] = await p.sh("""(() => { const cs = [...r.querySelectorAll('button, label.chip, input:not([type=checkbox]), textarea, summary')].map(e => e.getBoundingClientRect()).filter(b => b.width > 0 && b.height > 0);
@@ -543,6 +545,61 @@ TOAST_JS = """(() => { const h = document.getElementById('tapgrade-host'); windo
   new MutationObserver(check).observe(h.shadowRoot, { subtree: true, childList: true }); check(); })()"""
 
 
+REBUILD_POS_JS = """(() => { const body = r.querySelector('.body'), b = body.getBoundingClientRect(), a = r.querySelectorAll('.chip')[IDX].getBoundingClientRect();
+  const w = [...r.querySelectorAll('.gwarn')].filter(x => x.textContent.trim() !== '');
+  return { top: a.top - b.top, scroll: body.scrollTop, warnings: w.length, warnings_above_the_window: w.filter(x => x.getBoundingClientRect().bottom <= b.top).length,
+           ticked: r.querySelectorAll('.chip.on').length, stamp_bumps: !!(r.querySelector('.score') && r.querySelector('.score').classList.contains('bump')) }; })()"""
+
+
+async def probe_rebuild_with_ticks(browser, base, src, data, key):
+    """A rebuild of the sheet (the owner hides it to read the work and opens it by its pill) puts the list back at the same scroll position.  Does the list then show the SAME
+    chip when a part has two ticks, so that its warning line is drawn above the window?  (Position kept in pixels is not position kept: if the rebuild draws the part's tally and
+    warning differently from the page before it, everything under them has moved.)  A fresh phone, the pair of Q4, two chips ticked in a part that has another part under it; the
+    last chip of the list (far under the warning, which is then above the window) is put in the middle of the window; the sheet is hidden and opened; how far has that chip moved
+    against the top of the window?"""
+    async with Phone(browser, base, src, data, key) as q:
+        await q.open_pair(data, "Q4"); await q.quiet()
+        info = await q.sh("""(() => { const gs = [...r.querySelectorAll('.grp')]; const i = gs.findIndex((g, k) => g.querySelectorAll('.chip').length >= 2 && gs[k + 1] && gs[k + 1].querySelector('.chip'));
+            if (i < 0) return null; gs[i].scrollIntoView({block: 'start'}); const c = gs[i].querySelectorAll('.chip');
+            const pt = (e) => { const b = e.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; };
+            const all = [...r.querySelectorAll('.chip')]; return { first: pt(c[0]), second: pt(c[1]), anchor: all.length - 1 }; })()""")
+        if not info:
+            return None
+        await q.page.touchscreen.tap(*info["first"]); await asyncio.sleep(0.15)
+        await q.page.touchscreen.tap(*info["second"]); await asyncio.sleep(0.15)
+        await q.sh(f"r.querySelectorAll('.chip')[{info['anchor']}].scrollIntoView({{block: 'center'}})"); await asyncio.sleep(0.15)
+        pos = REBUILD_POS_JS.replace("IDX", str(info["anchor"]))
+        before = await q.sh(pos)
+        await q.tap_selector(".hide")
+        await q.tap_at(await q.rect(".pill"))
+        await asyncio.sleep(0.3)
+        after = await q.sh(pos)
+        return {"ticked_chips": before["ticked"], "ticked_chips_after": after["ticked"], "warnings_before": before["warnings"], "warnings_above_the_window_before": before["warnings_above_the_window"],
+                "warnings_after_the_rebuild": after["warnings"], "scroll_before_px": r1(before["scroll"]), "scroll_after_px": r1(after["scroll"]), "same_chip_shift_px": r1(after["top"] - before["top"]),
+                "stamp_bumps_right_after_the_rebuild": bool(after["stamp_bumps"])}
+
+
+async def probe_sheet_at_its_floor(browser, base, src, data, key):
+    """The owner has pulled the sheet down to its lowest height to read the work (the code keeps the height for the pages that follow).  The load message that comes with the next
+    page floats above the sheet: does it raise the sheet while it shows, and does the sheet stay raised when the message has gone?  A fresh phone with the lowest height stored."""
+    async with Phone(browser, base, src, data, key, sheet_h=0.05) as q:
+        await q.page.goto(q.url(data["sample"]["pairs"]["Q4"][0]))
+        await q.ready()
+        if not await q.sh("!!r.querySelector('.msg')"):
+            return None                                     # the message was gone before the first look (a slow machine): not measured
+        await q.page.evaluate(TOAST_JS)
+        height = "r.querySelector('.sheet').getBoundingClientRect().height"
+        with_msg = await q.sh(height)
+        await q.page.wait_for_function("() => window.__toast.off != null", timeout=9000)
+        await asyncio.sleep(0.3)
+        after_left = await q.sh(height)
+        await q.tap_selector("[data-role=nodeduct]")        # a rebuild that has no message
+        await asyncio.sleep(0.3)
+        rebuilt = await q.sh(height)
+        return {"stored_height_fraction": 0.05, "sheet_h_with_the_load_message_px": r1(with_msg), "sheet_h_after_it_left_px": r1(after_left), "sheet_h_after_a_rebuild_px": r1(rebuilt),
+                "raised_by_the_message_px": r1(with_msg - rebuilt), "stays_raised_after_it_left": bool(after_left > rebuilt + 1)}
+
+
 async def m_view_stability(p: Phone, data, uids):
     """what moves under the finger when the owner did not ask it to move"""
     out = {}
@@ -654,6 +711,8 @@ async def m_view_stability(p: Phone, data, uids):
         out["next_pair_message"] = await q.sh("""(() => { const m = r.querySelector('.msg'), s = r.querySelector('.sheet').getBoundingClientRect(), b = m.getBoundingClientRect();
             const over = Math.max(0, Math.min(b.bottom, s.top) - b.top), x = v => Math.round(v * 10) / 10;
             return { height_px: x(b.height), over_the_page_px: x(over), work_area_h_px: x(s.top), share_of_the_work_area_pct: x(100 * over / s.top) }; })()""")
+    out["rebuild_with_ticks"] = await probe_rebuild_with_ticks(p.browser, p.base, p.src, p.data, p.key)
+    out["sheet_at_its_floor"] = await probe_sheet_at_its_floor(p.browser, p.base, p.src, p.data, p.key)
     return out
 
 
