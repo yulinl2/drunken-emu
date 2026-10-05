@@ -1111,27 +1111,30 @@ def test_p1_p2_and_p8_are_what_the_rule_gives_at_the_measured_numbers_and_the_ru
     assert ev["P8"]["p"] == EV.by_rule("P8", A["window"]["screens_per_question"]["median"], M["window"]["screens_per_question"]["median"])[0]
     for eid in EV.CALIBRATION:
         assert "p follows the rule at the top of events.py" in ev[eid]["rests_on"] and f"that registration set {EV.registered_before(eid):.2f}" in ev[eid]["rests_on"], eid
+    # the rule at the numbers the registration it supersedes measured gives the p that registration printed: it followed the rule, or it is the one the rule was drawn through
     summary = _replaced_json("summary.json")
-    if summary["artifact"]["commit"].startswith("cec1bba"):                      # the rule is calibrated on that registration: at its own numbers it gives its own p
-        assert {eid: EV.registered_before(eid) for eid in EV.CALIBRATION} == {eid: summary["events"][eid]["p"] for eid in EV.CALIBRATION}
-        old_large, old_example = _replaced_json("measured.json")["predictors"], _replaced_json("measured-example-bank.json")["predictors"]
-        (_, (xs1, _), (xl1, _)), (_, (xs2, _), (xl2, _)) = EV.CALIBRATION["P1"], EV.CALIBRATION["P2"]
-        assert xs1 == pytest.approx(1 - old_example["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"], abs=0.005)
-        assert xl1 == pytest.approx(1 - old_large["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"], abs=0.005)
-        assert (xs2, xl2) == (old_example["window"]["screens_per_question"]["median"], old_large["window"]["screens_per_question"]["median"])
-        assert EV.CEC1BBA == {"message_shift_px": old_large["view_stability"]["load_toast"]["content_moves_when_it_goes_px"], "window_large_px": old_large["window"]["pair_view"]["body_h"],
-                              "window_with_message_large_px": old_large["window"]["pair_view_with_toast"]["body_h"], "window_with_message_example_px": old_example["window"]["pair_view_with_toast"]["body_h"],
-                              "head_with_a_wrapped_tag_px": old_large["window"]["pair_view"]["head_h"]}, "the numbers typed for the cec1bba build are that registration's measured numbers"
+    old_large, old_example = _replaced_json("measured.json")["predictors"], _replaced_json("measured-example-bank.json")["predictors"]
+    out = lambda d: 1 - d["chips"]["at_the_default_sheet"]["key_in_view_with_a_chip"]["share"]
+    scr = lambda d: d["window"]["screens_per_question"]["median"]
+    at_its_own = {"P1": EV.by_rule("P1", out(old_example), out(old_large))[0], "P2": EV.by_rule("P2", scr(old_example), scr(old_large))[0], "P8": EV.by_rule("P8", scr(old_example), scr(old_large))[0]}
+    assert at_its_own == {eid: summary["events"][eid]["p"] for eid in EV.CALIBRATION}, "the rule, read at the superseded registration's own numbers, gives its own p"
+    # the rule is drawn through the two judgments of the cec1bba registration, made at numbers the first draft shows too (the cec1bba script and the first draft's behaved alike there), whose files stay in the repository
+    base_large, base_example = json.loads((BASE / "measured.json").read_text(encoding="utf-8"))["predictors"], json.loads((BASE / "measured-example-bank.json").read_text(encoding="utf-8"))["predictors"]
+    base_summary = json.loads((BASE / "summary.json").read_text(encoding="utf-8"))
+    (_, (xs1, _), (xl1, _)), (_, (xs2, _), (xl2, _)) = EV.CALIBRATION["P1"], EV.CALIBRATION["P2"]
+    assert xs1 == pytest.approx(out(base_example), abs=0.005) and xl1 == pytest.approx(out(base_large), abs=0.005)
+    assert (xs2, xl2) == (scr(base_example), scr(base_large)) and EV.CALIBRATION["P8"][1][0] == xs2 and EV.CALIBRATION["P8"][2][0] == xl2
+    assert {eid: EV.registered_before(eid) for eid in EV.CALIBRATION} == {eid: base_summary["events"][eid]["p"] for eid in EV.CALIBRATION}, "the rule gives back the p the first draft and the cec1bba registration set"
+    assert EV.CEC1BBA == {"message_shift_px": base_large["view_stability"]["load_toast"]["content_moves_when_it_goes_px"], "window_large_px": base_large["window"]["pair_view"]["body_h"],
+                          "window_with_message_large_px": base_large["window"]["pair_view_with_toast"]["body_h"], "window_with_message_example_px": base_example["window"]["pair_view_with_toast"]["body_h"],
+                          "head_with_a_wrapped_tag_px": base_large["window"]["pair_view"]["head_h"]}, "the numbers typed for the cec1bba build are the first draft's measured numbers (the two scripts behaved alike there)"
 
 
 def test_the_example_banks_old_chip_shift_was_the_wrapped_head_growing():
-    """the claim that the chip-tap shift belongs to the head change, not to the list: the shift the example-size bank measured before is the growth of the head"""
+    """the claim that the first draft's chip-tap shift in the example-size bank belongs to the head change, not to the list: the shift it measured then is the growth of the head"""
     from checks.hw2_sample_prediction import events as EV
-    summary = _replaced_json("summary.json")
-    if not summary["artifact"]["commit"].startswith("cec1bba"):
-        pytest.skip("written for the registration against cec1bba")
     MJ, AJ = _measured_pair()
-    old_shift = _replaced_json("measured-example-bank.json")["predictors"]["view_stability"]["chip_tap"]["max_chip_shift_px"]
+    old_shift = json.loads((BASE / "measured-example-bank.json").read_text(encoding="utf-8"))["predictors"]["view_stability"]["chip_tap"]["max_chip_shift_px"]
     assert old_shift == pytest.approx(EV.CEC1BBA["head_with_a_wrapped_tag_px"] - MJ["predictors"]["window"]["pair_view"]["head_h"], abs=0.15)
     assert AJ["predictors"]["view_stability"]["chip_tap"]["max_chip_shift_px"] < old_shift
 
@@ -1147,24 +1150,32 @@ def test_the_current_tool_reproduces_each_baselines_own_numbers_on_its_script(ke
 
 
 def test_an_event_changed_by_judgment_names_the_value_it_had_and_who_judged_it():
+    """each event whose p moved (not by the rule, not a new one) says in its text that the move is a judgment, who judged it and the value it had; the third round's P4 and P5 also say what the fix is expected to do"""
     from checks.hw2_sample_prediction import events as EV
     ev = {e["id"]: e for e in REG["events"]}
-    comparison = REG["changes_since_replaced_registration"]
-    moved = {m["key"]: m for c in comparison["changes"] for m in c["moved"]}
-    judged = [k.split(":")[1] for k, m in moved.items() if k.startswith("event:") and k.endswith(":p")]
-    assert judged, "the third round moved the p of some event"
-    for eid in judged:
-        m = moved[f"event:{eid}:p"]
-        assert eid not in EV.CALIBRATION, f"{eid} follows the rule: a change of its p is the rule's"
-        text = ev[eid]["rests_on"]
-        assert f"{float(m['before']):.2f}" in text and "judgment" in text and "has now seen" in text, f"{eid}: the replaced value, the word judgment and who has seen the change"
-        assert "expected to remove" in text or "now tests the fix" in text, f"{eid}: what the fix is expected to do to the event"
+    judged_third_round = []
+    for key, comparison in COMPARISONS.items():
+        moved = {m["key"]: m for c in comparison["changes"] for m in c["moved"]}
+        for k, m in moved.items():
+            if not (k.startswith("event:") and k.endswith(":p")):
+                continue
+            eid = k.split(":")[1]
+            assert eid not in EV.CALIBRATION, f"{eid} follows the rule: a change of its p is the rule's"
+            if eid in ("P4", "P5"):                                                    # the third round's two judgments
+                judged_third_round.append(eid)
+                text = ev[eid]["rests_on"]
+                assert f"{float(m['before']):.2f}" in text and "judgment" in text and "has now seen" in text, f"{eid}: the replaced value, the word judgment and who has seen the change"
+                assert "expected to remove" in text or "now tests the fix" in text, f"{eid}: what the fix is expected to do to the event"
+    assert sorted(set(judged_third_round)) == ["P4", "P5"], "the first-draft comparison lists the third round's P4 and P5"
+    since = {m["key"]: m for c in REG["changes_since_replaced_registration"]["changes"] for m in c["moved"]}
+    assert not [k for k in since if k.startswith("event:")], "the fourth round moved no event: P1, P2 and P8 stay where the rule puts them, P4 and P5 keep their p"
     md = MD.read_text(encoding="utf-8")
     assert "is expected to take away, and what it is not" in md and "the pass may show other frictions that nothing here predicts" in md and "Nothing was lowered to make the prediction look right" in md
     old_summary = _replaced_json("summary.json")
     was, now = CH.top_five(old_summary["events"]), CH.top_five({e["id"]: e for e in REG["events"]})
     assert ("The top five changed since" in md) == (was != now) and ("These are the same five as in the registration for" in md) == (was == now)
-    assert ("number:events:top_five" in moved) == (was != now), "the changes table lists the top five when it moved"
+    assert ("number:events:top_five" in since) == (was != now), "the changes table lists the top five when it moved"
+    assert was == now, "the top five of the registration for be4e324 is the top five now"
 
 
 def test_a_round_without_a_list_of_expected_effects_or_a_history_entry_stops_the_text(monkeypatch):
@@ -1177,10 +1188,14 @@ def test_a_round_without_a_list_of_expected_effects_or_a_history_entry_stops_the
     monkeypatch.setattr(MK, "EXPECTED", {})
     with pytest.raises(ValueError, match="no list for the round"):
         MK.render(REG, MJ, AJ, fx, INPUTS)
+    # an event whose p moved since the superseded registration needs a row in the list (the fourth round moved none: say that P5 moved)
+    moved = copy.deepcopy(REG)
+    moved["changes_since_replaced_registration"]["changes"][0]["moved"].append({"key": "event:P5:p", "what": "P5 p", "before": "0.10", "after": "0.05", "delta": "-0.05", "why": "x"})
     monkeypatch.setattr(MK, "EXPECTED", {th: [r for r in rows if r[0] != "P5"]})
     with pytest.raises(ValueError, match="no entry for P5"):
-        MK.render(REG, MJ, AJ, fx, INPUTS)
+        MK.render(moved, MJ, AJ, fx, INPUTS)
     monkeypatch.setattr(MK, "EXPECTED", {th: rows})
+    assert MK.render(moved, MJ, AJ, fx, INPUTS)                                           # with its row the text is made
     monkeypatch.setattr(MK, "HISTORY", [h for h in MK.HISTORY if h[0] != th])
     with pytest.raises(ValueError, match="no entry for the snapshot"):
         MK.render(REG, MJ, AJ, fx, INPUTS)
@@ -1255,20 +1270,35 @@ def test_a_superseded_registration_keeps_the_commit_that_registered_it_and_its_f
 
 def test_the_commit_messages_of_a_superseding_run_say_which_registration_they_supersede(tmp_path, monkeypatch):
     repo = tmp_path / "repo"
-    folder = repo / "docs/predictions/replaced-cec1bba"
+    folder = repo / "docs/predictions/replaced-be4e324"
     folder.mkdir(parents=True)
-    (folder / "summary.json").write_text(json.dumps({"registered_in": "74118b521fada830b44f12531acad568b4b2afaf"}), encoding="utf-8")
+    summary = {"registered_in": "da817431ca9e305bb9e51184069099bf8a704be0", "registered_before": [{"commit": "74118b521fada830b44f12531acad568b4b2afaf", "speeds_kit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92"}]}
+    (folder / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
     monkeypatch.setattr(RB, "REPO", repo)
     MJ, AJ = _measured_pair()
     b1, b2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=True)
-    assert "second registration" in b1 and "committed as 74118b5" in b1 and "stays in the history" in b1
-    assert "supersedes the one against speeds-kit cec1bba (committed as 74118b5)" in b2 and "Both stay in the history" in b2
-    c1, c2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=False)
-    assert "second registration" not in c1 + c2
+    assert "third registration" in b1 and "committed as da81743" in b1 and "stays in the history" in b1 and "(before it: the one against speeds-kit cec1bba, committed as 74118b5)" in b1
+    assert "third registration" in b2 and "supersedes the one against speeds-kit be4e324 (committed as da81743)" in b2 and "All of them stay in the history" in b2
+    assert RB.next_ordinal() == "third"
+    # one registration before the superseded one: the second
+    (folder / "summary.json").write_text(json.dumps({"registered_in": "74118b521fada830b44f12531acad568b4b2afaf"}), encoding="utf-8")
+    c1, c2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=True)
+    assert "second registration" in c1 and "second registration" in c2 and "before it" not in c1 and RB.next_ordinal() == "second"
+    # not superseding a committed registration: no ordinal at all
+    d1, d2 = RB.commit_messages(INPUTS, MJ, AJ, {"events": 41, "fine": 8}, supersede=False)
+    assert not re.search(r"\b(second|third|fourth|fifth|sixth) registration", d1 + d2)
+    for n, word in ((1, "first"), (2, "second"), (3, "third"), (4, "fourth")):                  # the ordinal is a function of the baseline, not typed anywhere else
+        base = {"registered_in": "a" * 40, "registered_before": [{"commit": "b" * 40, "speeds_kit": "c" * 40}] * (n - 2)} if n > 1 else None
+        assert MK_ordinal(base) == (n, word)
 
 
-def test_a_second_registration_pair_is_amended_against_the_same_head_only(tmp_path, monkeypatch):
-    """--replace-previous on a pair that --supersede made keeps it a second registration; against another head it would lose the comparison with the pushed one, so it refuses"""
+def MK_ordinal(baseline):
+    from checks.hw2_sample_prediction import markdown as MK
+    return MK.registration_ordinal(baseline)
+
+
+def test_a_later_registration_pair_is_amended_against_the_same_head_only(tmp_path, monkeypatch):
+    """--replace-previous on a pair that --supersede made keeps it a later registration; against another head it would lose the comparison with the pushed one, so it refuses"""
     repo, kit = tmp_path / "repo", tmp_path / "kit"
     repo.mkdir()
     kit.mkdir()
@@ -1279,15 +1309,17 @@ def test_a_second_registration_pair_is_amended_against_the_same_head_only(tmp_pa
     git("commit", "-q", "-m", "base")
     (repo / "a.txt").write_text("1\n", encoding="utf-8")
     git("add", "-A")
-    git("commit", "-q", "-m", RB.SUBJECT1_NEXT.format(short="be4e324"))
+    git("commit", "-q", "-m", RB.SUBJECT1_NEXT.format(short="4626522"))
     (repo / RG.PRED).parent.mkdir(parents=True)
     (repo / RG.PRED).write_bytes(PRED.read_bytes())
     git("add", "-A")
-    git("commit", "-q", "-m", RB.SUBJECT2_NEXT.format(short="be4e324"))
-    assert RB.SECOND_MARK in RB.SUBJECT2_NEXT and RB.SECOND_MARK not in RB.SUBJECT2
+    subject2 = RB.SUBJECT2_NEXT.format(ordinal="third", short="4626522")
+    git("commit", "-q", "-m", subject2)
+    assert RB.NEXT_PAIR_RE.search(subject2) and not RB.NEXT_PAIR_RE.search(RB.SUBJECT2), "a later pair is told from a first one by its subject"
+    assert all(RB.NEXT_PAIR_RE.search(RB.SUBJECT2_NEXT.format(ordinal=o, short="abc1234")) for o in ("second", "third", "fourth"))
     monkeypatch.setattr(RB, "REPO", repo)
     toy_checkout(kit, monkeypatch)
-    with pytest.raises(SystemExit, match="second registration"):
+    with pytest.raises(SystemExit, match="supersedes an earlier one"):
         RB.rebuild(kit, commit="b" * 40, make_commits=True, replace_previous=True, trailers=["Key: value"])
     # a pair made for a first registration is not touched by that refusal: its subjects are the first ones
     assert RB.SUBJECT1.startswith(RB.PRIOR_SUBJECTS[0]) and RB.SUBJECT2.startswith(RB.PRIOR_SUBJECTS[1])
@@ -1295,14 +1327,109 @@ def test_a_second_registration_pair_is_amended_against_the_same_head_only(tmp_pa
 
 
 def test_the_registration_says_which_version_of_the_file_it_is_when_it_supersedes_a_committed_one():
+    from checks.hw2_sample_prediction import markdown as MK
     base = REG["changes_since_replaced_registration"]["baseline"]
     reg_in = base["registered_in"]
     if not reg_in:
         pytest.skip("the registration it replaces was never committed")
     was = REG["changes_since_replaced_registration"]["scripts"]["before"]["commit"][:7]
+    n, word = MK.registration_ordinal(base)
+    assert n == len(base["registered_before"]) + 2 and word in ("second", "third", "fourth", "fifth", "sixth")
     assert "this version of this file" in REG["registered_by"] and reg_in[:7] in REG["registered_by"] and was in REG["registered_by"] and "stays in the history" in REG["registered_by"]
+    assert f"This is the {word} registration" in REG["registered_by"] and ("with the earlier ones" in REG["registered_by"]) == bool(base["registered_before"])
     md = MD.read_text(encoding="utf-8")
-    assert "**The commit that adds this version of this file is the registration**" in md and f"was committed as `{reg_in[:7]}` and stays in the history; this one supersedes it" in md
+    assert "**The commit that adds this version of this file is the registration**" in md and f"This is the {word} registration." in md
+    assert f"was committed as `{reg_in[:7]}` and stays in the history" in md and "this one supersedes it" in md
+    for e in base["registered_before"]:                                                         # every registration before the superseded one is named, with the commit that registered it
+        assert f"the one against `{e['speeds_kit'][:7]}` (`{e['commit'][:7]}`)" in md, e
     ops = (KIT / "docs" / "OPERATION-CHAINS.md").read_text(encoding="utf-8")
-    assert f"(committed as `{reg_in[:7]}`) is superseded by this one: both stay in the history" in ops
+    assert f"(committed as `{reg_in[:7]}`) is superseded by this one: {'both' if n == 2 else 'all of them'} stay in the history" in ops
     assert subprocess.run(["git", "cat-file", "-t", reg_in], cwd=str(KIT), capture_output=True, text=True).stdout.strip() in ("commit", ""), "the commit named is one of this repository's (or the clone is shallow)"
+
+
+# --- 9. the fourth round: the probes that fire on the earlier scripts, where the code is from, the doors that write, and what S-1 left open -----------------------------------
+def _new_keys(folder: Path) -> dict:
+    return json.loads((folder / "new-keys.json").read_text(encoding="utf-8"))["predictors"]
+
+
+def test_the_new_probes_fire_on_the_earlier_scripts_and_are_flat_on_this_one():
+    """a probe that is flat on this script proves nothing unless it fired on the script that had the defect: the baselines hold the same probe run on their own scripts (new-keys.json)"""
+    first, replaced = _new_keys(BASE), _new_keys(_replaced_folder())
+    first_vs, replaced_vs, first_w, replaced_w = first["view_stability"], replaced["view_stability"], first["window"], replaced["window"]
+    # the first draft's script threw the list to the top; the replaced one (be4e324) put it back at the same pixels, on another chip, because a rebuild blanked the warnings
+    assert first_vs["rebuild_with_ticks"]["scroll_after_px"] == 0 and first_vs["rebuild_with_ticks"]["same_chip_shift_px"] > 100
+    r = replaced_vs["rebuild_with_ticks"]
+    assert r["scroll_after_px"] == r["scroll_before_px"] > 0 and r["same_chip_shift_px"] != 0 and r["warnings_after_the_rebuild"] == 0 < r["warnings_before"] and r["warnings_above_the_window_before"] >= 1
+    # a message raised a sheet pulled down to its floor at both earlier scripts; at the replaced one it also stayed raised
+    assert first_vs["sheet_at_its_floor"]["raised_by_the_message_px"] > 0 and replaced_vs["sheet_at_its_floor"]["raised_by_the_message_px"] > 0 and replaced_vs["sheet_at_its_floor"]["stays_raised_after_it_left"] is True
+    assert first_w["part_headings_at_the_first_render"]["saying_full"] == 0 == replaced_w["part_headings_at_the_first_render"]["saying_full"] < replaced_w["part_headings_at_the_first_render"]["parts"]
+    for m in _measured_pair():                                                      # both bank sizes of this registration
+        vs, w = m["predictors"]["view_stability"], m["predictors"]["window"]
+        t = vs["rebuild_with_ticks"]
+        assert t["same_chip_shift_px"] == 0 and t["scroll_after_px"] == t["scroll_before_px"] > 0 and t["ticked_chips"] == t["ticked_chips_after"] >= 2
+        assert t["warnings_after_the_rebuild"] == t["warnings_before"] >= 1 and t["stamp_bumps_right_after_the_rebuild"] is False
+        f = vs["sheet_at_its_floor"]
+        assert f["raised_by_the_message_px"] == 0 and f["stays_raised_after_it_left"] is False and f["sheet_h_with_the_load_message_px"] == f["sheet_h_after_a_rebuild_px"]
+        ph = w["part_headings_at_the_first_render"]
+        assert ph["saying_full"] == ph["parts"] > 0 and ph["heading_h_px"] > replaced_w["part_headings_at_the_first_render"]["heading_h_px"], "a heading that holds its tally is taller than one that held none"
+
+
+def test_the_tool_has_the_probes_the_registration_describes():
+    tool = (KIT / REG["measured"]["tool"]).read_text(encoding="utf-8")
+    for name in ("probe_rebuild_with_ticks", "probe_sheet_at_its_floor", "part_headings_at_the_first_render", "stamp_bumps_right_after_the_rebuild"):
+        assert name in tool, name
+    assert sha(KIT / REG["measured"]["tool"]) == REG["measured"]["tool_sha256"]
+    md = MD.read_text(encoding="utf-8")
+    assert "none of them ticked a chip before a rebuild" in md and "The tool grew them, so its sha256 in section 1 is not the one the earlier registrations name" in md
+
+
+def test_the_inputs_say_which_commit_each_file_read_was_last_changed_by_and_the_text_agrees():
+    from checks.hw2_sample_prediction import markdown as MK
+    sk = INPUTS["speeds_kit"]
+    last, snap = sk["last_changed_by"], sk["commit"]
+    assert set(last) == set(IN.READ) and REG["artifact"]["files_last_changed_by"] == last
+    code = (CT.SCRIPT, IN.MOCK, CT.TAPGRADE_PY, CT.PICKS_PY)
+    docs_only = all(last[f] != snap for f in code) and any(last[f] == snap for f in (CT.TAPGRADE_MD, CT.RUNBOOK))
+    md = MD.read_text(encoding="utf-8")
+    assert ("documents only" in md) == docs_only
+    if docs_only:
+        assert f"the script by `{last[CT.SCRIPT][:7]}`" in md and f"the mock by `{last[IN.MOCK][:7]}`" in md and f"the commit `{snap[:7]}` changed documents only" in md
+    # the sentence, on made-up inputs
+    toy = lambda **changed: {"speeds_kit": {"commit": "d" * 40, "last_changed_by": {f: ("d" if f in changed.get("by_snapshot", ()) else "a") * 40 for f in IN.READ}}}
+    assert "documents only" in MK.lineage_sentence(toy(by_snapshot=(CT.TAPGRADE_MD,))) and "the script by `aaaaaaa`" in MK.lineage_sentence(toy(by_snapshot=(CT.TAPGRADE_MD,)))
+    assert "none of the files read" in MK.lineage_sentence(toy(by_snapshot=()))
+    assert MK.lineage_sentence(toy(by_snapshot=(CT.SCRIPT, CT.RUNBOOK))) == "", "the snapshot's own commit changed the code: nothing to say"
+    assert MK.lineage_sentence({"speeds_kit": {"commit": "d" * 40}}) == "", "inputs that do not say"
+
+
+def test_every_text_that_counts_the_doors_that_write_names_the_fourth_one():
+    """the docs count three doors and name a fourth after them (Set up rubric from a file, offered only when Canvas holds no rubric): a text that says three must say the fourth in the same breath"""
+    for name, text in (("the md", MD.read_text(encoding="utf-8")), ("the JSON", PRED.read_text(encoding="utf-8")), ("the fixture", FIXTURE.read_text(encoding="utf-8"))):
+        found = list(re.finditer(r"three (?:other )?doors|three others can|three doors can", text, re.I))
+        assert found or name == "the fixture", f"{name} no longer says what the docs say about the doors that write"
+        for m in found:
+            around = text[max(0, m.start() - 700): m.end() + 700]
+            assert "Set up rubric from a file" in around and "fourth" in around, f"{name}: a sentence counts the doors that can write and leaves out the fourth: {text[max(0, m.start() - 120): m.end() + 120]!r}"
+    for key in ("rbWriteRow", "tgWriteDoors"):
+        assert "A fourth, Set up rubric from a file" in CT.ANCHORS[key][1].replace("\\", ""), f"the anchor {key} must hold the sentence about the fourth door, so a snapshot whose docs do not say it stops the build"
+    p11 = next(e for e in REG["events"] if e["id"] == "P11")["rests_on"]
+    assert "Set up rubric from a file" in p11 and "asks first too" in p11 and p11.count("docs/") >= 2
+
+
+def test_the_events_the_s1_gap_touches_say_so_and_keep_the_p_they_had():
+    ev = {e["id"]: e for e in REG["events"]}
+    replaced = _replaced_json("summary.json")["events"]
+    for eid in ("P4", "P5"):
+        assert ev[eid]["p"] == replaced[eid]["p"], f"{eid}: nothing is lowered or raised for what the fourth round removed"
+        assert "S-1" in ev[eid]["rests_on"] and "not see" in ev[eid]["rests_on"] or "did not see it" in ev[eid]["rests_on"], f"{eid} says the earlier measurement missed the rebuild that landed off the chip"
+    assert "nothing is lowered for it" in ev["P4"]["rests_on"] and "p stays 0.05" in ev["P5"]["rests_on"] and "not raised for it either" in ev["P5"]["rests_on"]
+    md = MD.read_text(encoding="utf-8")
+    assert "None of my probes ticked a chip before a rebuild" in md and "were true as measured and incomplete" in md
+
+
+@pytest.mark.parametrize("key", list(COMPARISONS))
+def test_every_measured_item_has_a_label_that_is_not_its_own_key(key):
+    for ch in REG[key]["changes"]:
+        for m in ch["moved"]:
+            if m["key"].startswith("measured:"):
+                assert not m["what"].startswith(m["key"][len("measured:"):]), f"{m['key']} has no label (changes.py LABELS or label_of)"
