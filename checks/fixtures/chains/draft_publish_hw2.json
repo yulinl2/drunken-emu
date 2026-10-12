@@ -1,0 +1,832 @@
+{
+ "format": "emu-chain/1",
+ "budget": 3,
+ "provenance": {
+  "source": "designed",
+  "date": "2026-10-12",
+  "who": "a coding-agent session (the one that built the publisher), from the code and docs of the publisher and from content-blind measurements of its sheet on a mock Canvas in headless Chromium at 390x844 touch; nobody has used this flow on a phone",
+  "note": "speeds-kit commit 70f8ef64105652b0c5b4fc5d1f9ba2b7c65a94ee, userscripts/draft-publish.user.js sha256 006ababa16052d59a2a09ac0a56b01b6a6430898030b405240ce165ee9a1ad43, 441 lines. Written BEFORE the owner's first run of the publisher, so this file is a prediction and not a record. The save-from-chat steps reuse the properties the owner STATED about HW1 (tapgrade_0_6_7_sample_pass.json, steps 2-7). Steps marked [guess] are not from anything the owner said; steps marked [declared] are judgments about what the screen says, made by the author of the publisher (P-02be: silence means nothing was declared wrong). The two Canvas-only chains (dp-manual-set, dp-manual-post) are the Gradebook routes the publisher's doc offers; they are written from the author's knowledge of Canvas, not from this owner."
+ },
+ "chains": [
+  {
+   "id": "dp-install-check",
+   "task": "From 'the file is ready' in the chat to the first read of the sheet (nothing is written yet)",
+   "setup": "The coordinating session sent hw2-drafts.user.js and said what to do and which numbers to expect. The file reaches the phone as HW1's files did, is saved into the Userscripts folder next to TapGrade, and the SpeedGrader page of HW2 is reloaded.",
+   "notes": "Waiting for the chat message is not part of the segment. Two items are held from the first step to the last: the goal and the numbers the chat gave.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "the chat message: the file is ready, the three steps, the numbers to expect (to write, held, files that cannot be checked)",
+     "note": "docs/DRAFT-PUBLISH.md 'What the owner does'; the numbers are the generator's own stderr summary",
+     "reading": "fine",
+     "amount": 3,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "anchor": "unique-visual",
+     "target": "open the file's card in the chat",
+     "note": "HW1 A1 (stated): fixed position, one card among text, no look-alike ('无混淆项'); a wrong card costs one overwrite ('幂等'). That this session's file reaches the phone as a card like HW1's is [carried: unstated].",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "anchor": "edge",
+     "target": "the three dots, top right",
+     "note": "HW1 A2 (stated): fixed position, the screen's physical edge as the anchor, a shape unlike any text, no look-alike.",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "anchor": "text-keyword",
+     "confusables": [
+      5,
+      0.8
+     ],
+     "target": "'Save to Files' in the menu, below the fold, among look-alike lines",
+     "note": "HW1 A3 (stated): the item needs a scroll and sits among look-alike text; a coarse read of the lines (O(m)) then a fine read of one (O(1)). Count 5 and similarity 0.8 are [carried: unstated] placeholders, the same as hw1-usual-save-cards step 3.",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "reading": "fine",
+     "amount": 1,
+     "target": "the one item found: Save to Files",
+     "note": "HW1 A3 (stated): the O(1) fine read.",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "kind": "consistency",
+     "need": 0,
+     "reading": "none",
+     "target": "the destination folder on the save sheet",
+     "note": "HW1 A4 (stated): the last folder is remembered, marginal cost 0 (need 0, no reading). The file must go to the Userscripts folder next to TapGrade (docs/HW2-HW3-RUNBOOK.md:138); whether the remembered folder is that one is [carried: unstated], and nothing on the save sheet says which folder is right [guess].",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "anchor": "edge",
+     "target": "Save, top right",
+     "note": "HW1 A5 (stated): fixed position, the screen's physical edge, one step. The save is idempotent (HW1 A1, '幂等').",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "NAVIGATE",
+     "target": "back to Safari: the SpeedGrader tab of HW2 (any student)",
+     "note": "[declared]",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload the page so that the script runs",
+     "note": "[declared]",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "the page loads; nothing says the script is there until the blue 初稿 button appears at the top right",
+     "note": "userscripts/draft-publish.user.js mount(): the button is drawn after the page is idle [declared: nothing says the script is installed while the page loads]",
+     "progress_visible": false,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue 初稿 button, top right, fixed position",
+     "note": "measured: 390x844, one round blue button; TapGrade's pill is bottom right [guess: SpeedGrader has no other blue round control there]",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button: the sheet opens and reads Canvas at once",
+     "note": "the first open runs the read-only check (userscripts/draft-publish.user.js, the button's handler)",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "'正在读 Canvas…（不写任何东西）' while 3 to 4 pages of submissions are read",
+     "note": "[declared]; the sheet says what is happening and that nothing is written",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the six count lines: to write, done, skipped, files unchecked, held, not on the list",
+     "note": "[measured] all counts and the primary button are on one screen, 401 px of 692 (docs/predictions)",
+     "reading": "coarse",
+     "amount": 6,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "compare the counts with the numbers the chat gave",
+     "note": "[declared] the chat gave the same three numbers",
+     "kind": "consistency",
+     "reading": "fine",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-trial-write",
+   "task": "Posting is automatic: the first tap writes one student",
+   "setup": "The sheet has been read (dp-install-check) and the assignment posts grades at once.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "the posting line: 'automatic: the first time only one student is written'",
+     "note": "the line and the button label say it ('先试写 1 位')",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the footer, always on screen ('先试写 1 位')",
+     "note": "[measured] the footer does not scroll away, however long the lists are",
+     "anchor": "fixed-position",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the open list 'the first student': the name, the total, the seven rows with their comments",
+     "note": "in trial mode the list is open (userscripts/draft-publish.user.js, render()); long keys make it several screens, the footer button stays in view",
+     "reading": "coarse",
+     "amount": 3,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation: which student, what is written, who is not written (counts)",
+     "note": "the dialog is native text, 4 short paragraphs",
+     "reading": "fine",
+     "amount": 4,
+     "boundary_visible": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] the student was shown on the sheet before the tap, and the dialog names them with the not-written counts",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "one student is written and read back",
+     "note": "the footer line counts '写入 1 / 1'",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "'试写完成：已写入 <name>，并已读回核对…。请刷新…，再点“写入剩下的 58 位”'",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says the write was read back and matched the draft (rows, comments, total)",
+     "note": "[declared] the system reports the check against the intent; nothing is left to compare by hand except the look in SpeedGrader",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "HOLD",
+     "target": "the written student's name (the line has it)",
+     "note": "the sheet closes with the reload; after it the button says '初稿·已试写' and the sheet repeats the name",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "who: the written student"
+     ]
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload SpeedGrader, as the line says, so that the new scores show",
+     "note": "[declared] the reload closes the sheet; the button's label '初稿·已试写' and, after opening, the line 'you wrote only <name> last time' bring the goal back",
+     "restores": [
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "who: the written student"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-look-at-one",
+   "task": "Open the written student in SpeedGrader and judge what a student will see",
+   "setup": "After the reload; the student is usually the first on the list (the order of the sheet is the order of SpeedGrader), otherwise found by name.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "the written student in SpeedGrader (the first student, or the name picked from the student menu)",
+     "note": "[guess] about half of the time the student is not the first one; then a SCAN of the menu among look-alike names. The button on the page still reads '初稿·已试写'",
+     "restores": [
+      "goal",
+      "partial"
+     ],
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "who: the written student"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the rubric panel: seven rows, points and comments",
+     "note": "[declared]",
+     "anchor": "text-keyword",
+     "amount": 7,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "who: the written student"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the comments of the rows with deductions: '[Q2a] −3 reason', '[Key] the answer', the note",
+     "note": "long: keys run to several hundred characters",
+     "reading": "fine",
+     "amount": 3,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "who: the written student"
+     ]
+    },
+    {
+     "op": "INFER",
+     "target": "these points and words are what students will see; they look right",
+     "note": "[guess] nothing on the page says whether the machine read the work correctly: a judgment of looks",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-write-rest",
+   "task": "Write the other students and see that it worked",
+   "setup": "One student has been written and looked at; the sheet is opened again after the reload.",
+   "steps": [
+    {
+     "op": "ANCHOR",
+     "target": "the blue 初稿 button",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button: the sheet opens and reads Canvas again",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "the read",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the count lines: now 1 done, 58 to write",
+     "reading": "coarse",
+     "amount": 6,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the footer ('写入剩下的 58 位')",
+     "anchor": "fixed-position",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation",
+     "reading": "fine",
+     "amount": 4,
+     "boundary_visible": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] one student has been looked at in SpeedGrader, in the same layout as the others will have",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "58 students, one by one, each read back (about 1 to 3 minutes); '写入 n / 58 · 失败 k' counts up in place",
+     "note": "[declared] a locked phone or another app can stop the page: the next load says '上次写入没有写完' on the button and on the sheet",
+     "progress_visible": true,
+     "view_stable": true,
+     "partial_result_says_left": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 58 位，失败 0 位，还剩 0 位没写。（写入的每一位都已读回核对…）'",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says every written student was read back and matched the draft",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "58 + the one written before = 59: the number the chat gave",
+     "kind": "consistency",
+     "reading": "fine",
+     "held": [
+      "goal: get the HW2 drafts into Canvas",
+      "expected: the numbers the chat gave (to write, held, files unchecked)"
+     ]
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload SpeedGrader so that the scores show",
+     "restores": [
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-failure-retry",
+   "task": "A run ends with failures: see which, understand why, write the rest again",
+   "setup": "A few students failed (Canvas answered an error); the footer line is red and the failed list is open.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 55 位，失败 3 位，还剩 3 位没写。'",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the open list of the failed: a name and Canvas's own message for each",
+     "note": "[declared] the message is Canvas's, in English or a status code; it says why, not what to do",
+     "reading": "fine",
+     "amount": 3,
+     "origin_stated": true,
+     "exclusions_stated": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "INFER",
+     "target": "what to do: tap the same button again, only the three are written",
+     "note": "[declared] the button is labelled '写入剩下的 3 位'",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the footer",
+     "anchor": "fixed-position",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation",
+     "reading": "fine",
+     "amount": 4,
+     "boundary_visible": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "the same kind of write as before, only for the unwritten",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "three students",
+     "progress_visible": true,
+     "view_stable": true,
+     "partial_result_says_left": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 3 位，失败 0 位，还剩 0 位没写。（… 已读回核对 …）'",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says the three were read back and matched",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-interrupted-run",
+   "task": "The phone locks or the page is reloaded in the middle of the long write; the owner comes back",
+   "setup": "58 students are being written. The page dies. Nothing was written twice and nothing is half written that the next run cannot recognise.",
+   "steps": [
+    {
+     "op": "REFRESH",
+     "target": "the page is loaded again (the phone woke, or the owner reloaded)",
+     "note": "userscripts/draft-publish.user.js: the marker of the unfinished run is still in the browser; start() reopens the sheet and reads Canvas by itself",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "the sheet reads Canvas",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the red line 'the last run did not finish…', then the counts (some already the draft, the rest to write)",
+     "reading": "fine",
+     "amount": 3,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the footer ('写入剩下的 N 位')",
+     "anchor": "fixed-position",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-manual-set",
+   "task": "Optional: set HW2's grade posting policy to Manual before writing (what docs/DRAFT-PUBLISH.md offers)",
+   "setup": "Done in Canvas, outside the script.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "Canvas: the Gradebook of the course",
+     "note": "[guess] a phone browser; the owner has not been narrated doing this",
+     "restores": [],
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the HW2 column among the assignment columns",
+     "note": "[guess] columns of other homeworks look alike",
+     "anchor": "text-keyword",
+     "confusables": [
+      4,
+      0.8
+     ],
+     "amount": 8,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the column's menu (three dots)",
+     "note": "[guess]",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the menu for 'Grade Posting Policy'",
+     "note": "[guess] about nine lines",
+     "anchor": "text-keyword",
+     "amount": 9,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "Grade Posting Policy",
+     "feedback": "immediate",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the two options (Automatically, Manually) and which is selected",
+     "reading": "fine",
+     "amount": 2,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "select Manually, Save",
+     "note": "[declared] reversible: the policy can be changed back; nothing is posted or notified",
+     "preview_before": false,
+     "everything_on_screen": true,
+     "verify_after": "consistency",
+     "reversibility": "reversible",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-manual-post",
+   "task": "Manual route, last step: post the hidden grades to the students in the Gradebook",
+   "setup": "All students were written with the policy on Manual; one or more were looked at in SpeedGrader.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "Canvas: the Gradebook of the course",
+     "restores": [],
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the HW2 column",
+     "anchor": "text-keyword",
+     "confusables": [
+      4,
+      0.8
+     ],
+     "amount": 8,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the column's menu (three dots)",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the menu for 'Post grades'",
+     "anchor": "text-keyword",
+     "amount": 9,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "Post grades",
+     "feedback": "immediate",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the dialog: Everyone or Graded; the number of students",
+     "reading": "fine",
+     "amount": 3,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "Post",
+     "note": "[declared] students are notified and see their scores; Canvas can hide them again, but the notification is sent",
+     "preview_before": false,
+     "everything_on_screen": true,
+     "verify_after": "none",
+     "reversibility": "irreversible",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "Canvas posts the grades",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the column no longer shows the hidden-grade marks",
+     "kind": "consistency",
+     "reading": "fine",
+     "held": []
+    }
+   ]
+  }
+ ]
+}

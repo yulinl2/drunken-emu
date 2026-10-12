@@ -44,6 +44,7 @@ drunken-emu/
 │   ├── test_chain.py          must-fire / must-hold per verifier, mutation controls, the CLI (no browser)
 │   ├── prediction_score.py · test_prediction.py · measure_sample_predictors.py   the HW2 pre-registration: scorer, pin test, predictor measurement (docs/predictions/)
 │   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
+│   ├── draft_publish_prediction.py · test_draft_publish_prediction.py   the second registration, made late: the first run of speeds-kit's draft publisher (docs/predictions/draft-publish-first-run.md)
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI

@@ -39,6 +39,7 @@ that is never executed is not a regeneration command.
 |-- checks/
 |   |-- fixtures/
 |   |   |-- chains/
+|   |   |   |-- draft_publish_hw2.json
 |   |   |   |-- hw1_correction_pass.json
 |   |   |   |-- hw1_correction_pass_fixed.json
 |   |   |   |-- hw1_correction_pass_transcribed.json
@@ -68,6 +69,7 @@ that is never executed is not a regeneration command.
 |   |-- chain_load.py
 |   |-- chain_verifiers.py
 |   |-- ci_claims.py
+|   |-- draft_publish_prediction.py
 |   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
@@ -79,6 +81,7 @@ that is never executed is not a regeneration command.
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
 |   |-- test_chain.py
+|   |-- test_draft_publish_prediction.py
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
@@ -104,6 +107,9 @@ that is never executed is not a regeneration command.
 |   |   |   |-- measured.json
 |   |   |   |-- new-keys.json
 |   |   |   `-- summary.json
+|   |   |-- draft-publish-first-run.md
+|   |   |-- draft-publish-first-run.measured.json
+|   |   |-- draft-publish-first-run.prediction.json
 |   |   |-- hw2-sample-pass.inputs.json
 |   |   |-- hw2-sample-pass.md
 |   |   |-- hw2-sample-pass.measured-example-bank.json
@@ -235,5 +241,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 181 files tracked
+29 directories, 187 files tracked
 ```

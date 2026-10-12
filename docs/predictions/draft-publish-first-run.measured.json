@@ -1,0 +1,91 @@
+{
+ "viewport": "390x844 touch",
+ "tool": "measure_publisher.py (content-blind: boxes and sizes only)",
+ "states": [
+  {
+   "state": "ready, Manual posting (the plan)",
+   "viewport_h": 844,
+   "sheet_top": 407,
+   "sheet_visible_h": 438,
+   "content_h": 438,
+   "scroll_part_visible_h": 314,
+   "scroll_part_content_h": 314,
+   "screens_of_the_scrolling_part": 1,
+   "footer_h": 124,
+   "primary": {
+    "top": 329,
+    "bottom": 373,
+    "in_view_without_scrolling": true
+   },
+   "small_targets": [],
+   "min_font_px": 13
+  },
+  {
+   "state": "ready, Manual, every list opened after open-lists",
+   "viewport_h": 844,
+   "sheet_top": 152,
+   "sheet_visible_h": 692,
+   "content_h": 692,
+   "scroll_part_visible_h": 568,
+   "scroll_part_content_h": 1045,
+   "screens_of_the_scrolling_part": 1.84,
+   "footer_h": 124,
+   "primary": {
+    "top": 583,
+    "bottom": 627,
+    "in_view_without_scrolling": true
+   },
+   "small_targets": [],
+   "min_font_px": 13
+  },
+  {
+   "state": "ready, posts at once (trial first)",
+   "viewport_h": 844,
+   "sheet_top": 152,
+   "sheet_visible_h": 692,
+   "content_h": 692,
+   "scroll_part_visible_h": 568,
+   "scroll_part_content_h": 687,
+   "screens_of_the_scrolling_part": 1.21,
+   "footer_h": 124,
+   "primary": {
+    "top": 583,
+    "bottom": 627,
+    "in_view_without_scrolling": true
+   },
+   "small_targets": [],
+   "min_font_px": 13
+  },
+  {
+   "state": "trial written after publish",
+   "viewport_h": 844,
+   "sheet_top": 210,
+   "sheet_visible_h": 634,
+   "content_h": 634,
+   "scroll_part_visible_h": 420,
+   "scroll_part_content_h": 420,
+   "screens_of_the_scrolling_part": 1,
+   "footer_h": 214,
+   "primary": {
+    "top": 525,
+    "bottom": 569,
+    "in_view_without_scrolling": true
+   },
+   "small_targets": [],
+   "min_font_px": 13
+  },
+  {
+   "state": "everything written, Manual after publish",
+   "viewport_h": 844,
+   "sheet_top": 332,
+   "sheet_visible_h": 513,
+   "content_h": 513,
+   "scroll_part_visible_h": 299,
+   "scroll_part_content_h": 299,
+   "screens_of_the_scrolling_part": 1,
+   "footer_h": 214,
+   "small_targets": [],
+   "min_font_px": 13
+  }
+ ]
+}
