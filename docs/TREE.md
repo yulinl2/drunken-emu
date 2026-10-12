@@ -109,6 +109,7 @@ that is never executed is not a regeneration command.
 |   |   |   `-- summary.json
 |   |   |-- draft-publish-first-run.md
 |   |   |-- draft-publish-first-run.measured.json
+|   |   |-- draft-publish-first-run.outcome.md
 |   |   |-- draft-publish-first-run.prediction.json
 |   |   |-- hw2-sample-pass.inputs.json
 |   |   |-- hw2-sample-pass.md
@@ -241,5 +242,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 187 files tracked
+29 directories, 188 files tracked
 ```
