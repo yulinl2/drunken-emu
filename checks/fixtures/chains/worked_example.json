@@ -1,0 +1,15 @@
+{
+  "provenance": {"source": "narrated", "date": "2026-10-04", "who": "made up for docs/OPERATION-CHAINS.md"},
+  "task": "Get last month's statement in a banking app (a made-up narration)",
+  "steps": [
+    {"op": "NAVIGATE", "held": ["goal: last month's statement"], "target": "open the app"},
+    {"op": "ANCHOR", "anchor": "edge", "target": "the menu button, top left"},
+    {"op": "SCAN", "amount": 9, "confusables": [1, 0.9], "anchor": "text-keyword", "target": "nine menu items, looking for 'Statements'; 'Statement settings' is right under it"},
+    "TAP Statements",
+    {"op": "SCAN", "amount": 14, "target": "years, then months"},
+    "TAP last month",
+    {"op": "WAIT", "progress_visible": false, "view_stable": true, "target": "'Loading', nothing moves"},
+    {"op": "NAVIGATE", "restores": [], "target": "switch to messages, come back: the app is on the home screen again"},
+    {"op": "RE-ORIENT", "amount": 6, "target": "where am I, what was I doing"}
+  ]
+}

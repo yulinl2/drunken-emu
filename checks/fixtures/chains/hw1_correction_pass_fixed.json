@@ -1,0 +1,29 @@
+{
+  "format": "emu-chain/1",
+  "provenance": {
+    "source": "designed",
+    "date": "2026-10-04",
+    "who": "a coding-agent session (worker B), from the issue texts of speeds-kit #25-#31",
+    "note": "Designed, not observed. The real flow is being built in speeds-kit and will be documented in speeds-kit docs/TAPGRADE.md; sync this file to that. Edit the steps freely: `bin/emu chain check` says what broke."
+  },
+  "chains": [
+    {
+      "id": "fixed",
+      "task": "The HW1 correction pass after the TapGrade fixes: apply 66 updates to Canvas",
+      "setup": "Before the pass, once: the data userscript installed next to TapGrade carries the answer keys AND the corrections; nothing is picked by hand.",
+      "notes": "Peak working set is 2 slots: the goal, plus what the current step needs. No RELOAD, no RE-ORIENT. The REFRESH at step 7 is a deliberate interruption test.",
+      "steps": [
+        {"op": "NAVIGATE", "anchor": "edge", "feedback": "immediate", "held": ["goal: update Canvas with the corrections"], "intent": "load-corrections", "view": "speedgrader", "target": "open SpeedGrader; the TapGrade pill sits at a fixed screen edge; the data script autoloads proposals and corrections and says so"},
+        {"op": "ANCHOR", "anchor": "unique-visual", "confusables": [3, 0.2], "target": "the bar button 'Update Canvas': one of four purpose-labelled buttons, the only accent-coloured one, with a pending-count badge (66)", "note": "Memory: the goal only."},
+        {"op": "READ", "reading": "coarse", "amount": 3, "origin_stated": true, "exclusions_stated": true, "boundary_visible": true, "target": "the block 'Where these changes come from': Corrections (212 rows, 66 students, from the data script, time) / Answer keys loaded / Summary comments n out of date; nothing says NOT LOADED"},
+        {"op": "READ", "reading": "fine", "amount": 2, "target": "one change opened to before -> after: a rubric comment and the summary comment; everything the decision depends on is on screen"},
+        {"op": "COMMIT", "reversibility": "reversible", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "Apply 66 updates (Canvas can be overwritten; an apply record holds the intended state)"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "target": "one line 'Updating 17 of 66 - 0 failed' updated in place; the view does not move"},
+        {"op": "REFRESH", "restores": ["position", "goal", "partial"], "target": "deliberate refresh mid-WAIT: the view returns to Update Canvas with 'Interrupted: 42 of 66 left - Resume'"},
+        {"op": "COMMIT", "reversibility": "reversible", "preview_before": true, "everything_on_screen": true, "verify_after": "correctness", "intent": "apply-updates", "view": "update-canvas", "target": "Resume (the 'Interrupted' line is the preview)"},
+        {"op": "WAIT", "progress_visible": true, "view_stable": true, "partial_result_says_left": true, "target": "as above"},
+        {"op": "VERIFY", "kind": "correctness", "origin_stated": true, "exclusions_stated": true, "target": "'66 students verified against the intended grades at 14:02'; failures, if any, listed with the student and Canvas' message"}
+      ]
+    }
+  ]
+}

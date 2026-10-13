@@ -151,3 +151,8 @@ working-memory limits (they need decider-side memory; the policies read the page
 the policy's common sense: a policy that knows too much makes the app look better than it is, so policies look at positions,
 visible text and focus, never at app internals.
 First use: `speeds-kit/tests/emu_policies/` (old GUI versus redesign; results in that repository's `docs/GUI-DESIGN.md`).
+
+## Operation chains (2026-10-04)
+
+Working-memory limits need decider-side memory (above). The chain format, the budget B and the ten verifiers that would run on a
+recorded run are in `docs/OPERATION-CHAINS.md`; its section "P-2a7c integration point" is the design for capturing a chain from a driven run.

@@ -1,0 +1,65 @@
+{
+  "format": "emu-chain/1",
+  "provenance": {
+    "source": "narrated",
+    "date": "2026-10-03",
+    "who": "a grader, narrated step by step while applying a correction to 66 students on a phone; transcribed from docs/OPERATION-MODEL.md section 4 by a coding-agent session on 2026-10-04",
+    "note": "Amounts and similarities are the transcriber's estimates (how many items, how alike). The only numbers taken from the source are 66 students and 212 rows."
+  },
+  "chains": [
+    {
+      "id": "cheap",
+      "task": "Save an artifact from chat (2 effective steps)",
+      "notes": "OPERATION-MODEL section 4, cheap chain. One menu entry is found by keyword, among unlike commands; everything else is anchored; the operation is idempotent: nothing can go wrong, nothing to hold. TAP is the physical act and costs nothing.",
+      "steps": [
+        {"op": "ANCHOR", "anchor": "unique-visual", "target": "the artifact card: the only card among text"},
+        {"op": "ANCHOR", "anchor": "edge", "target": "the three-dot button, top-right edge"},
+        {"op": "SCAN", "amount": 6, "confusables": [5, 0.2], "anchor": "text-keyword", "target": "the menu, looking for 'Save ... Files'"},
+        {"op": "READ", "target": "the entry reads Save to Files"},
+        {"op": "TAP", "target": "the entry"},
+        {"op": "ANCHOR", "anchor": "edge", "target": "Save, top-right edge"}
+      ]
+    },
+    {
+      "id": "expensive",
+      "task": "Load the corrections file on the phone, apply it, verify by hand",
+      "notes": "OPERATION-MODEL section 4, expensive chain. Interpretation by the transcriber, each marked on its step: step 7 and step 14 are the same job (load the corrections) reached through two views (Re-sync, corrections); step 8 stands for the narration's '...' where HOLD overflows; step 22 is added to carry the cause of the wrong INFER (a list of changes appeared before the corrections were loaded); steps 31-33 are the narration's 'loop x3', whose body is assumed to be refresh, re-orient, consistency check.",
+      "steps": [
+        {"op": "NAVIGATE", "feedback": "delayed", "held": ["goal: load the corrections file, then apply"], "target": "open the grading site on the phone"},
+        {"op": "REFRESH", "restores": [], "target": "refresh to get the new version"},
+        {"op": "VERIFY", "kind": "consistency", "target": "did the refresh change anything?"},
+        {"op": "REFRESH", "restores": [], "target": "refresh again"},
+        {"op": "RE-ORIENT", "amount": 6, "target": "where am I, what is on screen, what was I doing"},
+        {"op": "SCAN", "amount": 6, "confusables": [4, 0.7], "target": "the bottom tabs: guess by meaning which one loads files"},
+        {"op": "DISCRIMINATE", "confusables": [2, 0.8], "held": ["goal: load the corrections file, then apply", "which tab I am in"], "intent": "load-corrections", "view": "re-sync", "target": "Settings / Review / Re-sync", "note": "Re-sync is one of the two views that load the file."},
+        {"op": "HOLD", "held": ["goal: load the corrections file, then apply", "which tab I am in", "file type: .json not .js", "plan: then Apply"], "target": "keep goal, tab, file type and plan in mind at once", "note": "The narration's '...': HOLD overflows here."},
+        {"op": "RELOAD", "source": "chat", "interruption": ["position"], "held": ["goal: load the corrections file, then apply"], "target": "fetch the lost goal from the chat (leave the page, come back)"},
+        {"op": "ANCHOR", "anchor": "fixed-position", "target": "the last heading in the chat"},
+        {"op": "READ", "amount": 3, "boundary_visible": false, "target": "narrow to the paragraph"},
+        {"op": "READ", "boundary_visible": false, "target": "narrow to the sentence"},
+        {"op": "KEYIFY", "held": ["key: corrections/hw1/json"], "target": "corrections / hw1 / json"},
+        {"op": "NAVIGATE", "intent": "load-corrections", "view": "corrections", "target": "the file picker", "note": "The second view that loads the file."},
+        {"op": "ENUMERATE", "pages": 3, "amount": 36, "confusables": [11, 0.9], "held": ["key: corrections/hw1/json", "names already seen"], "target": "the folder: page through, check the seams between screens"},
+        {"op": "SCAN", "amount": 12, "confusables": [11, 0.9], "anchor": "text-keyword", "target": "the names, looking for the key"},
+        {"op": "DISCRIMINATE", "confusables": [1, 0.95], "anchor": "text-keyword", "held": ["key: corrections/hw1/json"], "target": ".js versus .json"},
+        {"op": "TAP", "feedback": "none", "target": "the .json file"},
+        {"op": "WAIT", "progress_visible": false, "view_stable": true, "target": "nothing says it is loading"},
+        {"op": "REFRESH", "restores": [], "target": "refresh to see whether it loaded"},
+        {"op": "RE-ORIENT", "amount": 5, "target": "where am I now"},
+        {"op": "READ", "reading": "coarse", "amount": 5, "origin_stated": false, "exclusions_stated": false, "target": "a list of changes is on screen", "note": "Added: the list appeared before the corrections were loaded, and nothing says where it came from."},
+        {"op": "INFER", "target": "'it shows changes, so the corrections are loaded: Apply'", "note": "The wrong INFER that started it."},
+        {"op": "SCAN", "amount": 8, "confusables": [3, 0.6], "target": "looking for Apply"},
+        {"op": "DISCRIMINATE", "confusables": [1, 0.8], "anchor": "text-keyword", "target": "Apply versus Scan first"},
+        {"op": "COMMIT", "reversibility": "irreversible", "preview_before": false, "everything_on_screen": false, "verify_after": "consistency", "target": "Apply"},
+        {"op": "WAIT", "progress_visible": false, "view_stable": false, "partial_result_says_left": false, "target": "no progress; the view jumps to the top"},
+        {"op": "REFRESH", "restores": [], "target": "refresh to see where it got to"},
+        {"op": "RE-ORIENT", "target": "where in the list am I"},
+        {"op": "VERIFY", "kind": "consistency", "target": "do the numbers match?"},
+        {"op": "REFRESH", "times": 3, "restores": [], "target": "loop x3: refresh"},
+        {"op": "RE-ORIENT", "times": 3, "target": "loop x3: where am I"},
+        {"op": "VERIFY", "kind": "consistency", "times": 3, "target": "loop x3: do the numbers match?"},
+        {"op": "VERIFY", "kind": "correctness", "reading": "fine", "amount": 42, "target": "open questions, parts, students, by hand: O(m + m^2)", "note": "m = 6 is illustrative."}
+      ]
+    }
+  ]
+}
