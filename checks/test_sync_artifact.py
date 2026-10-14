@@ -5,8 +5,9 @@ The dependency guard, the re-binding of named react imports and the stripping sh
 statement (IMPORT in the script); a floor then strips any line that still starts with `import`.
 Found by running the script on six inputs (2026-10-14): a multi-line import of any module, react included, left its
 tail in app.jsx, which Babel cannot parse, while exit 0 said "synced"; a side-effect import was dropped unchecked.
-The last tests pin what the text match does NOT see (the limits the docs list), so the docs cannot drift from the code.
-No browser, under 2 s:
+The last tests pin what the text match does NOT see (the limits the docs list), so the docs cannot drift from the code. Two property tests compare the guard and the re-binding with the original
+single-line patterns over a generated grid of comment shapes (the grid that found the quote-in-a-comment regression).
+No browser, under 10 s:
 
     python3 -m pytest -q checks/test_sync_artifact.py
 """
@@ -121,3 +122,48 @@ def test_react_imported_under_the_name_React_needs_no_binding(tmp_path):
     for head in ('import React from "react";', 'import * as React from "react";'):
         rc, _, out = sync(tmp_path, head, "export default function App() { return React.createElement('div'); }")
         assert rc == 0 and "import" not in out and not re.search(r"\b(const|let|var)\s+React\b", out)
+
+
+# --- the new code must refuse and bind at least what the ORIGINAL script did. Found by a generated grid (2026-10-14): a comment
+# holding a quote or a semicolon inside the clause stops the shared regex, which the original single-line patterns tolerated.
+OLD_GUARD = re.compile(r'^import\s[^\n]*?from\s+["\']([^"\']+)["\']', re.M)
+OLD_NAMED = re.compile(r'^import\s*{([^}]*)}\s*from\s+["\']react["\']', re.M)
+SUPPORTED = {"react", "react-dom", "react-dom/client"}
+KINDS = [
+    ('import @C0@{ Line @C1@} @C2@from @C3@"@M@";', ("C0", "C1", "C2", "C3")),
+    ('import @C0@Chart@C1@, { Line } @C2@from @C3@"@M@";', ("C0", "C1", "C2", "C3")),
+    ('import @C0@* as NS @C2@from @C3@"@M@";', ("C0", "C2", "C3")),
+    ('import @C3@"@M@";', ("C3",)),
+    ('import {\n  Line,@C1@\n  Bar\n} @C2@from @C3@"@M@";', ("C1", "C2", "C3")),
+]
+COMMENTS = ["/* c */ ", "/* it's */ ", '/* say "hi" */ ', "/* a; b */ ", "// c\n"]
+
+def grid(module):
+    for tmpl, slots in KINDS:
+        for slot in (None, *slots):
+            for c in ([""] if slot is None else COMMENTS):
+                t = tmpl
+                for s in ("C0", "C1", "C2", "C3"):
+                    t = t.replace("@%s@" % s, c if s == slot else "")
+                yield t.replace("@M@", module)
+
+def test_the_guard_refuses_at_least_what_the_original_single_line_guard_refused(tmp_path):
+    missed = []
+    for head in grid("recharts"):
+        rc, _, _ = sync(tmp_path, head)
+        if any(m not in SUPPORTED for m in OLD_GUARD.findall(head)) and rc != 2:
+            missed.append(head)
+    assert not missed, missed
+
+def test_the_rebinding_binds_at_least_what_the_original_rebinding_bound(tmp_path):
+    missed = []
+    for head in grid("react"):
+        rc, _, out = sync(tmp_path, head)
+        want = {t.strip() for m in OLD_NAMED.finditer(head) for t in m.group(1).split(",") if t.strip()}
+        if rc != 0 or not all(w in out for w in want):
+            missed.append(head)
+    assert not missed, missed
+
+def test_an_unsupported_import_with_a_quote_in_a_comment_in_its_clause_is_still_refused(tmp_path):
+    rc, so, out = sync(tmp_path, "import { Line /* it's */ } from \"recharts\";")
+    assert rc == 2 and "UNSUPPORTED_IMPORTS: recharts" in so and out == ""
