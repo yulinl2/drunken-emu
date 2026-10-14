@@ -64,3 +64,11 @@ def test_lines_below_a_multi_line_import_keep_their_numbers(tmp_path):
     src_at = (head + "\n" + APP).split("\n").index(APP)
     out_at = out.split("\n").index(APP.replace("export default ", ""))
     assert rc == 0 and out_at == src_at + 1        # the one-line prelude is the only shift
+
+def test_an_import_with_a_comment_between_from_and_the_module_is_still_stripped(tmp_path):
+    rc, _, out = sync(tmp_path, 'import React from /* harness global */ "react";')
+    assert rc == 0 and not [ln for ln in out.split("\n") if ln.startswith("import")]
+
+def test_an_import_with_a_quote_inside_a_comment_in_its_clause_is_still_stripped(tmp_path):
+    rc, _, out = sync(tmp_path, "import React, /* don't */ { useState } from \"react\";")
+    assert rc == 0 and not [ln for ln in out.split("\n") if ln.startswith("import")]

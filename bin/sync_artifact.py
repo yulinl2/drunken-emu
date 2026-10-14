@@ -63,6 +63,9 @@ def main(src_path: str, out_path: str) -> int:
 
     # 1. strip every import statement whole (it can span lines); its newlines stay, so line numbers below it do not move
     body = IMPORT.sub(lambda m: "\n" * m.group(0).count("\n"), src)
+    # ...then any line still starting with `import` is one the statement matcher does not parse (a comment between `from`
+    # and the module, say). The harness cannot run an import, so none may stay: this is what the old stripping did alone.
+    body = re.sub(r"^import\s[^\n]*$", "", body, flags=re.M)
 
     # 3. strip export default; the name it carried IS the root component
     root_name = None
