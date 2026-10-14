@@ -32,12 +32,13 @@ drunken-emu/
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
-│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2): touch ergonomics, overlay open/close, control-cluster taps, toggle, N-stop read-through
+│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2): touch ergonomics (buttons, summaries and role=button enforced; links and form fields reported), overlay open/close, control-cluster taps, toggle, N-stop read-through
 │   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
 │   ├── test_sync_artifact.py  sync_artifact.py's import forms: single- and multi-line, side-effect, default beside named (no browser; runs in CI)
+│   ├── test_blind_audit_targets.py   blind_audit's tap targets: a small summary or role=button fails the audit, a small link is only reported (Chromium; runs in CI)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)

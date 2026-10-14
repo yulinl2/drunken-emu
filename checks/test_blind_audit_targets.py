@@ -1,0 +1,45 @@
+"""checks/test_blind_audit_targets.py -- must-fire / must-hold tests for the tap targets of blind_audit.py (check B).
+
+Found by running the audit (2026-10-14) on a page with an 18 px <summary> and a 16 px link: the report counted the two
+<button>s, flagged the small one, and said nothing about the rest, so a page of 18 px summary bars read as clean.
+Needs Chromium: each test runs `bin/emu audit`, the way a user does (about 10 s each):
+
+    python3 -m pytest -q checks/test_blind_audit_targets.py
+"""
+import json
+import subprocess
+from pathlib import Path
+
+KIT = Path(__file__).resolve().parent.parent
+
+
+def audit(tmp_path, body, min_px=38):
+    art = tmp_path / "art.jsx"
+    art.write_text('import React from "react";\nexport default function App() {\n  return (\n    <div style={{ padding: 12, width: 360 }}>\n'
+                   + body + "\n    </div>\n  );\n}\n", encoding="utf-8")
+    r = subprocess.run(["bash", str(KIT / "bin" / "emu"), "audit", str(art), "4", str(min_px)], capture_output=True, text=True, timeout=170)
+    line = [ln for ln in r.stdout.splitlines() if ln.startswith("{")][-1]
+    return r.returncode, json.loads(line)["checks"]["ergonomics"]
+
+
+TINY_SUMMARY = '<details open><summary style={{ height: 18, lineHeight: "18px", fontSize: 12 }}>Tiny summary</summary><p style={{ margin: 4 }}>body</p></details>'
+TINY_LINK = '<a href="#x" style={{ display: "inline-block", height: 16, lineHeight: "16px", fontSize: 11 }}>tiny link</a>'
+
+
+def test_a_small_summary_is_counted_and_fails_the_audit_beside_a_small_button(tmp_path):
+    rc, e = audit(tmp_path, TINY_SUMMARY + TINY_LINK + '<div><button style={{ height: 18 }}>tiny</button><button style={{ height: 48 }}>big</button></div>')
+    assert rc == 1 and e["buttons"] == 2 and e["buttons_under_min"] == 1            # the old keys keep their meaning
+    assert e["targets"] == 3 and e["targets_under_min"] == 2 and e["under_min_by_tag"] == {"button": 1, "summary": 1}
+    assert e["reported_not_enforced"]["a"] == {"count": 1, "under_min": 1}
+
+
+def test_a_small_summary_and_a_small_role_button_fail_the_audit_when_every_real_button_is_fine(tmp_path):
+    rc, e = audit(tmp_path, TINY_SUMMARY + '<div role="button" tabIndex={0} style={{ height: 20 }}>tiny role=button</div><button style={{ height: 48 }}>big</button>')
+    assert e["buttons"] == 1 and e["buttons_under_min"] == 0                          # what the old audit saw: a clean page
+    assert e["under_min_by_tag"] == {"summary": 1, "role=button": 1} and rc == 1
+
+
+def test_a_small_link_is_reported_but_does_not_fail_an_audit_whose_controls_are_all_big_enough(tmp_path):
+    rc, e = audit(tmp_path, '<details open><summary style={{ height: 44, lineHeight: "44px" }}>Fine summary</summary><p>body</p></details>' + TINY_LINK
+                  + '<button style={{ height: 48 }}>fine</button>')
+    assert rc == 0 and e["targets_under_min"] == 0 and e["reported_not_enforced"]["a"] == {"count": 1, "under_min": 1}
