@@ -56,3 +56,17 @@ def test_controls_with_visibility_hidden_are_neither_enforced_nor_reported(tmp_p
 def test_a_target_just_under_the_floor_is_not_rounded_up_to_it(tmp_path):
     rc, e = audit(tmp_path, '<button style={{ height: "37.6px" }}>just under</button><button style={{ height: 38 }}>exactly 38</button><button style={{ height: 40 }}>fine</button>')
     assert rc == 1 and e["buttons"] == 3 and e["buttons_under_min"] == 1 and e["targets_under_min"] == 1
+
+
+FIELDS = ('<input type="text" style={{ height: 20 }} />'
+          '<select style={{ height: 20 }}><option>a</option></select>'
+          '<textarea style={{ height: 20 }} />'
+          '<input type="hidden" />')
+
+
+def test_form_fields_are_reported_but_do_not_fail_an_audit_whose_controls_are_all_big_enough(tmp_path):
+    rc, e = audit(tmp_path, '<button style={{ height: 48 }}>fine</button>' + FIELDS)
+    rep = e["reported_not_enforced"]
+    assert rc == 0 and e["targets"] == 1 and e["targets_under_min"] == 0               # report-only: nothing in the fields is enforced
+    assert rep["input"] == {"count": 1, "under_min": 1}                                # two inputs on the page, the type=hidden one is not counted
+    assert rep["select"] == {"count": 1, "under_min": 1} and rep["textarea"] == {"count": 1, "under_min": 1}

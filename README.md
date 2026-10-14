@@ -38,7 +38,7 @@ drunken-emu/
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
 │   ├── test_sync_artifact.py  sync_artifact.py's import forms (single- and multi-line, side-effect, default beside named) and the limits it pins (no browser; runs in CI)
-│   ├── test_blind_audit_targets.py   blind_audit's tap targets: a small summary or role=button fails the audit, a small link is only reported (Chromium; runs in CI)
+│   ├── test_blind_audit_targets.py   blind_audit's tap targets: a small summary or role=button fails the audit, a small link or form field is only reported (Chromium; runs in CI)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
