@@ -27,8 +27,8 @@ here as evidence of absence.
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots | step | chain; one invocation = sync → serve → check → tidy
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects imports the kit cannot satisfy (exit 2 + list)
+│   ├── emu                    entry point: smoke | audit | shots | step | chain; the first four run sync → serve → check → tidy on an artifact; chain needs none of that (no artifact, no server, no browser)
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects a single-line import … from "x" of a module the kit cannot satisfy (exit 2 + list); a multi-line import is not parsed (its tail stays in app.jsx and Babel fails; known bug), a side-effect import is dropped unchecked
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
@@ -37,7 +37,7 @@ drunken-emu/
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
-│   ├── affordances.py         what a reader could act on, extracted from the rendered page (visible part; semantic vs pointer-only)
+│   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
 │   ├── chain.py               operation chains: JSON format, load/validate/normalise (no browser; docs/OPERATION-CHAINS.md)
@@ -49,7 +49,7 @@ drunken-emu/
 │   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
 │   ├── draft_publish_prediction.py · test_draft_publish_prediction.py   the second registration, made late and made again: the first run of speeds-kit's draft publisher 0.3.1 at B = 2, asking the owner for nothing; the registration for 0.2.2 is void (docs/predictions/draft-publish-first-run.md) **Void for the owner's runs (another build ran): `docs/predictions/draft-publish-first-run.outcome.md`; nothing was scored.**
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
-│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates (word budget, forbidden strings, ellipsis, box overflow) on an external SVG (see figbank/)
+│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates on an external SVG: word budget, forbidden strings, ellipsis; box overflow and the other layout gates are reported as not applicable (see figbank/)
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
 ├── figbank/                   the figure bank: schema, components (SVG + React), reader prompt, page app
