@@ -65,3 +65,7 @@ jobs:
         run: python3 -m pytest -q checks/test_sync_artifact.py
       - name: blind_audit tap targets (button, summary and role=button enforced, links and fields reported; Chromium)
         run: python3 -m pytest -q checks/test_blind_audit_targets.py
+      - name: explore_run impairment bites at p=1 and not at p=0 (Chromium)
+        run: python3 -m pytest -q checks/test_explore_run.py
+      - name: svg_text_gates and figpipe --svg, the gates the tests pin
+        run: python3 -m pytest -q checks/test_external_svg.py

@@ -1,4 +1,5 @@
-"""Tests for bin/figpipe --svg (external-SVG mode) and checks/svg_text_gates.py. No browser, no model.
+"""Tests for bin/figpipe --svg (external-SVG mode) and checks/svg_text_gates.py. No model, and no browser is launched. All but one test run with only pytest installed; Review.test_transform_scale_shrinks_the_measured_font
+imports checks.svg_legibility, which imports Playwright (observed in a venv with only pytest, 2026-10-14), so the file runs in the `claims` job of CI.
     python3 -m unittest checks.test_external_svg
 """
 import json, os, subprocess, sys, tempfile, unittest
@@ -106,6 +107,41 @@ class Review(unittest.TestCase):
                 br.close()
             self.assertTrue(any(f["kind"] == "too_small" for f in r["faults"]), r)
             self.assertLess(r["min_font_px"], 2)
+
+
+class Pins(unittest.TestCase):
+    """Branches of svg_text_gates.py that the tests above left unpinned. Found by planted faults (2026-10-14): each of these six
+    changes survived all nine earlier tests; each now fails the test written for it."""
+
+    def gates_of(self, body, **kw):
+        with tempfile.TemporaryDirectory() as d:
+            p = write(d, "p.svg", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">' + body + '</svg>')
+            return tg.gates(p, **kw)
+
+    def test_a_figure_with_exactly_the_budget_passes_and_one_word_more_fails(self):
+        body = "<text>one two three</text>"
+        self.assertEqual(self.gates_of(body, budget=3)["errors"], [])
+        self.assertTrue(any("word budget" in e for e in self.gates_of(body, budget=2)["errors"]))
+
+    def test_text_hidden_by_a_visibility_attribute_is_refused(self):
+        errs = " | ".join(self.gates_of('<text>shown</text><text visibility="hidden">secret words</text>')["errors"])
+        self.assertIn("hidden", errs)
+
+    def test_text_hidden_by_a_style_display_none_is_refused(self):
+        errs = " | ".join(self.gates_of('<text>shown</text><text style="display: none">secret words</text>')["errors"])
+        self.assertIn("hidden", errs)
+
+    def test_forbidden_strings_match_whatever_the_case(self):
+        errs = " | ".join(self.gates_of("<text>Lorem ipsum</text>", forbid=["LOREM"])["errors"])
+        self.assertIn("forbidden", errs)
+
+    def test_three_ascii_dots_count_as_an_ellipsis(self):
+        errs = " | ".join(self.gates_of("<text>and then...</text>")["errors"])
+        self.assertIn("ellipsis", errs)
+
+    def test_box_overflow_is_reported_as_not_applicable(self):
+        na = self.gates_of("<text>x</text>")["not_applicable"]
+        self.assertTrue(any(s.startswith("box overflow") for s in na))
 
 
 if __name__ == "__main__":

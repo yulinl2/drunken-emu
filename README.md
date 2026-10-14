@@ -35,7 +35,7 @@ drunken-emu/
 │   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2): touch ergonomics (buttons, summaries and role=button enforced; links and form fields reported), overlay open/close, control-cluster taps, toggle, N-stop read-through
 │   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
-│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
+│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium; runs in CI); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
 │   ├── test_sync_artifact.py  sync_artifact.py's import forms (single- and multi-line, side-effect, default beside named) and the limits it pins (no browser; runs in CI)
 │   ├── test_blind_audit_targets.py   blind_audit's tap targets: a small summary or role=button fails the audit, a small link or form field is only reported (Chromium; runs in CI)
@@ -51,7 +51,7 @@ drunken-emu/
 │   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
 │   ├── draft_publish_prediction.py · test_draft_publish_prediction.py   the second registration, made late and made again: the first run of speeds-kit's draft publisher 0.3.1 at B = 2, asking the owner for nothing; the registration for 0.2.2 is void (docs/predictions/draft-publish-first-run.md) **Void for the owner's runs (another build ran): `docs/predictions/draft-publish-first-run.outcome.md`; nothing was scored.**
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
-│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates on an external SVG: word budget, forbidden strings, ellipsis; box overflow and the other layout gates are reported as not applicable (see figbank/)
+│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates on an external SVG: word budget, forbidden strings, ellipsis; box overflow and the other layout gates are reported as not applicable (see figbank/); the tests run in CI
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
 ├── figbank/                   the figure bank: schema, components (SVG + React), reader prompt, page app
