@@ -1,7 +1,8 @@
 """checks/test_sync_artifact.py -- must-fire / must-hold tests for the import handling of bin/sync_artifact.py.
 
 An `import` statement may span lines, carry a default beside the braces, or have no clause at all (`import "x"`).
-The dependency guard, the re-binding of named react imports and the stripping must all see the same statements.
+The dependency guard, the re-binding of named react imports and the stripping share one definition of an import
+statement (IMPORT in the script); a floor then strips any line that still starts with `import`.
 Found by running the script on six inputs (2026-10-14): a multi-line import of any module, react included, left its
 tail in app.jsx, which Babel cannot parse, while exit 0 said "synced"; a side-effect import was dropped unchecked.
 The last tests pin what the text match does NOT see (the limits the docs list), so the docs cannot drift from the code.
@@ -109,3 +110,14 @@ def test_an_aliased_react_import_is_emitted_as_an_invalid_destructure(tmp_path):
 def test_a_namespace_react_import_leaves_the_name_unbound(tmp_path):
     rc, _, out = sync(tmp_path, 'import * as R from "react";', "export default function App() { return <div>{R.version}</div>; }")
     assert rc == 0 and "R.version" in out and not re.search(r"\b(const|let|var)\s+R\b", out)
+
+
+def test_a_default_react_import_under_another_name_leaves_the_name_unbound(tmp_path):
+    for head in ('import R from "react";', 'import R, { useState } from "react";'):
+        rc, _, out = sync(tmp_path, head, "export default function App() { return R.createElement('div'); }")
+        assert rc == 0 and "R.createElement" in out and not re.search(r"\b(const|let|var)\s+R\b", out)
+
+def test_react_imported_under_the_name_React_needs_no_binding(tmp_path):
+    for head in ('import React from "react";', 'import * as React from "react";'):
+        rc, _, out = sync(tmp_path, head, "export default function App() { return React.createElement('div'); }")
+        assert rc == 0 and "import" not in out and not re.search(r"\b(const|let|var)\s+React\b", out)

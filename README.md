@@ -28,7 +28,7 @@ here as evidence of absence.
 drunken-emu/
 ├── bin/
 │   ├── emu                    entry point: smoke | audit | shots | step | chain; the first four run sync → serve → check → tidy on an artifact; chain needs none of that (no artifact, no server, no browser)
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; exits 2 with a list for an import of anything but react, react-dom or react-dom/client that starts a line (single- or multi-line, with a default, side-effect). It matches text, not syntax: forms it does not see pass with exit 0 and can break in the browser, and an aliased (a as b) or namespace (* as R) react import is bound wrongly (a syntax error, or an undefined R); the forms are listed in the script's docstring and pinned in test_sync_artifact.py
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; exits 2 with a list for an import of anything but react, react-dom or react-dom/client that starts a line (single- or multi-line, with a default, side-effect). It matches text, not syntax: forms it does not see pass with exit 0 and can break in the browser, and a react import under any name but React (import R from "react", * as R, a as b) is bound wrongly (an undefined name, or a syntax error); the forms are listed in the script's docstring and pinned in test_sync_artifact.py
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
@@ -37,7 +37,7 @@ drunken-emu/
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
-│   ├── test_sync_artifact.py  sync_artifact.py's import forms: single- and multi-line, side-effect, default beside named (no browser; runs in CI)
+│   ├── test_sync_artifact.py  sync_artifact.py's import forms (single- and multi-line, side-effect, default beside named) and the limits it pins (no browser; runs in CI)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
