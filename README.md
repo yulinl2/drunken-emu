@@ -18,6 +18,8 @@ visual affordance, screenshots judged by eye, mechanics asserted by script.
 > presents from outside like drunkenness, and an artifact that survives a drunk
 > emu survives everyone. It is not self-deprecation about the current code.
 
+## Layout
+
 Selected files, annotated for orientation. The complete and CI-asserted index is
 `docs/TREE.md`; this copy is deliberately partial, so do not read an absence
 here as evidence of absence.
@@ -25,16 +27,17 @@ here as evidence of absence.
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots | step | chain
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx
+│   ├── emu                    entry point: smoke | audit | shots | step | chain; one invocation = sync → serve → check → tidy
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects imports the kit cannot satisfy (exit 2 + list)
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
-│   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
-│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
+│   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
+│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2): touch ergonomics, overlay open/close, control-cluster taps, toggle, N-stop read-through
 │   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
-│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium)
-│   ├── affordances.py         what a reader could act on, extracted from the rendered page
+│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
+│   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
+│   ├── affordances.py         what a reader could act on, extracted from the rendered page (visible part; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
 │   ├── chain.py               operation chains: JSON format, load/validate/normalise (no browser; docs/OPERATION-CHAINS.md)
@@ -46,6 +49,7 @@ drunken-emu/
 │   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
 │   ├── draft_publish_prediction.py · test_draft_publish_prediction.py   the second registration, made late and made again: the first run of speeds-kit's draft publisher 0.3.1 at B = 2, asking the owner for nothing; the registration for 0.2.2 is void (docs/predictions/draft-publish-first-run.md) **Void for the owner's runs (another build ran): `docs/predictions/draft-publish-first-run.outcome.md`; nothing was scored.**
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
+│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates (word budget, forbidden strings, ellipsis, box overflow) on an external SVG (see figbank/)
 │   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
 ├── figbank/                   the figure bank: schema, components (SVG + React), reader prompt, page app
@@ -60,8 +64,10 @@ drunken-emu/
 │   ├── ZENODO-RUNBOOK.md      P5: ordering constraint, human part A then session part B
 │   ├── SANDBOX-FACTS.md       measured container facts
 │   └── TREE.md                complete tracked-file index (generated)
-├── harness/harness.html       offline React mount point
-├── vendor/                    unmodified upstream bundles (see THIRD_PARTY_NOTICES.md)
+├── harness/
+│   ├── harness.html           offline React mount point: loads the vendor bundles, then Babel-compiles app.jsx in the browser
+│   └── app.jsx                generated per run by bin/emu and checks/fragment_links.py; untracked and gitignored, not source
+├── vendor/                    unmodified upstream bundles: react.js · reactdom.js · tailwind.js · babel.js (see THIRD_PARTY_NOTICES.md); vendored because the egress proxy re-signs TLS, so CDNs never load headless
 └── out/                       screenshots and logs (gitignored)
 ```
 
@@ -166,38 +172,6 @@ python3 -m pytest -q checks/test_chain.py                                   # no
 Format, load, verifiers, fixtures: `docs/OPERATION-CHAINS.md`.
 
 A prediction registered before a real pass, and scored after it: `docs/predictions/hw2-sample-pass.md`; pinned by `python3 -m pytest -q checks/test_prediction.py` (no browser). Remade for a new speeds-kit head by one command, `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` (needs Chromium; the registration says what it does).
-
-## Layout
-
-```
-emu-kit/
-├── bin/
-│   ├── emu                 orchestrator: sync → serve → check → tidy, one invocation
-│   └── sync_artifact.py    artifact.jsx → browser-runnable app.jsx; rejects
-│                           imports the kit cannot satisfy (exit 2 + list)
-├── harness/
-│   ├── harness.html        loads vendor bundles then Babel-compiles app.jsx in-browser
-│   └── app.jsx             (generated per run)
-├── vendor/                 react.js · reactdom.js · tailwind.js · babel.js
-│                           vendored because the sandbox egress proxy re-signs TLS
-│                           and Chromium rejects its cert → CDNs never load headless
-├── checks/
-│   ├── smoke.py            render? errors? overflow? + per-phase wall clock
-│   ├── blind_audit.py      content-blind: ergonomics, overlay open/close,
-│   │                       control-cluster taps, toggle, N-stop read-through
-│   ├── region_shots.py     content-AWARE camera: text anchors decide only where
-│   │                       to look, never what counts as correct
-│   ├── explore_step.py     P1: one stateless step, the calling session decides (any page, desktop or phone)
-│   ├── explore_run.py      P1: scripted decider + impairment sweep (dose–response, no API key)
-│   ├── affordances.py      what a reader could act on, from the rendered page (visible part, semantic vs pointer-only)
-│   ├── explore_text.py     the explore loop on a text page (no Chromium); test_explore_text.py asserts it
-│   ├── test_explore_run.py positive control for the sweep: impairment bites at p=1, not at p=0; contract errors stop the run
-│   ├── chain*.py · test_chain.py   operation chains: format, load, ten verifiers, CLI, tests (docs/OPERATION-CHAINS.md)
-│   ├── svg_legibility.py · svg_text_gates.py · test_external_svg.py   figure gates (see figbank/)
-│   ├── browser.py          launches the Chromium that is actually installed
-│   └── ci_claims.py        asserts this README is still true; runs in CI
-└── out/                    screenshots + logs (gitignore-able)
-```
 
 ## Why it is shaped this way
 
