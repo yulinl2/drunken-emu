@@ -13,6 +13,7 @@ Checks, in order:
   A. render + zero JS errors + zero horizontal overflow
   B. touch ergonomics: every visible non-decorative <button>, <summary> and [role=button] >= min_px tall (links and
      form fields are counted and reported, not enforced: inline links in running text are exempt in WCAG 2.2);
+     visible = a non-empty box and a computed visibility that is not hidden; heights are compared unrounded (37.6 px is under 38);
      every [data-term] hit-span >= min_px (convention-specific, skipped if absent)
   C. tap the first dashed-decorated element in view -> did a fixed bottom
      layer appear? tap outside it -> did it close?
@@ -88,8 +89,8 @@ async def main():
 
         # B. ergonomics
         R["checks"]["ergonomics"] = await pg.evaluate("""(MIN)=>{
-          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
-          const h=e=>Math.round(e.getBoundingClientRect().height);
+          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'};
+          const h=e=>e.getBoundingClientRect().height;   // raw: a 37.6 px target is under a 38 px floor
           const notTerm=e=>!e.hasAttribute('data-term');
           // enforced: the button-like controls a reader taps. A check that cannot see a control must not report it as fine.
           const tgt=[...new Set(__emuDeep('button,summary,[role=button]'))].filter(notTerm).filter(vis);

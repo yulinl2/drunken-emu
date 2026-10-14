@@ -43,3 +43,16 @@ def test_a_small_link_is_reported_but_does_not_fail_an_audit_whose_controls_are_
     rc, e = audit(tmp_path, '<details open><summary style={{ height: 44, lineHeight: "44px" }}>Fine summary</summary><p>body</p></details>' + TINY_LINK
                   + '<button style={{ height: 48 }}>fine</button>')
     assert rc == 0 and e["targets_under_min"] == 0 and e["reported_not_enforced"]["a"] == {"count": 1, "under_min": 1}
+
+
+def test_controls_with_visibility_hidden_are_neither_enforced_nor_reported(tmp_path):
+    hidden = ('<details open><summary style={{ visibility: "hidden", height: 18, lineHeight: "18px" }}>hidden tiny summary</summary><p>body</p></details>'
+              '<div role="button" tabIndex={0} style={{ visibility: "hidden", height: 20 }}>hidden tiny role=button</div>'
+              '<a href="#x" style={{ visibility: "hidden", display: "inline-block", height: 16 }}>hidden link</a>')
+    rc, e = audit(tmp_path, hidden + '<button style={{ height: 48 }}>fine</button>')
+    assert rc == 0 and e["targets"] == 1 and e["targets_under_min"] == 0 and e["reported_not_enforced"]["a"] == {"count": 0, "under_min": 0}
+
+
+def test_a_target_just_under_the_floor_is_not_rounded_up_to_it(tmp_path):
+    rc, e = audit(tmp_path, '<button style={{ height: "37.6px" }}>just under</button><button style={{ height: 38 }}>exactly 38</button><button style={{ height: 40 }}>fine</button>')
+    assert rc == 1 and e["buttons"] == 3 and e["buttons_under_min"] == 1 and e["targets_under_min"] == 1
