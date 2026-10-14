@@ -1,5 +1,7 @@
-"""Tests for bin/figpipe --svg (external-SVG mode) and checks/svg_text_gates.py. No model, and no browser is launched. All but one test run with only pytest installed; Review.test_transform_scale_shrinks_the_measured_font
-imports checks.svg_legibility, which imports Playwright (observed in a venv with only pytest, 2026-10-14), so the file runs in the `claims` job of CI.
+"""Tests for bin/figpipe --svg (external-SVG mode) and checks/svg_text_gates.py. No model. All but one test run with only pytest installed;
+Review.test_transform_scale_shrinks_the_measured_font launches Chromium (checks.browser.launch) and audits a page with checks.svg_legibility,
+which imports Playwright, so the file as a whole needs Playwright and a Chromium that starts. Observed in a venv with only pytest, 2026-10-14:
+that test failed and the other 14 passed. The file runs in the `claims` job of CI.
     python3 -m unittest checks.test_external_svg
 """
 import json, os, subprocess, sys, tempfile, unittest
