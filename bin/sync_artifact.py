@@ -22,9 +22,11 @@ What it does (and the reason each step exists):
 What the text match does not see (each pinned in checks/test_sync_artifact.py; measured 2026-10-14; exit 0, and
 the artifact can then break in the browser): a comment between `from` and the module, an import that does not
 start its line, `import()`, `export ... from`. Import-like text that starts a line inside a comment or a template
-literal is taken for an import. An aliased hook (`import { useState as us }`) is emitted as
-`const {useState, useState as us} = React;`, a syntax error, and a namespace import (`import * as R`) leaves
-`R` undefined.
+literal is taken for an import. The page has only the global `React`, so a react import works only under that
+name: `import React from "react"` and `import * as React from "react"` mount; a default or namespace import under
+any other name (`import R from "react"`, `import * as R from "react"`) leaves `R` undefined (a ReferenceError when
+the component renders), and an aliased hook (`import { useState as us }`) is emitted as
+`const {useState, useState as us} = React;`, a syntax error.
 
 Usage: sync_artifact.py <artifact.jsx> <out_app.jsx>
 Exit 0 on success; exit 2 with a dependency list if a line-start import names a

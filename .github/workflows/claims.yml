@@ -61,7 +61,7 @@ jobs:
         run: |
           pip install --quiet pytest
           python3 -m pytest -q checks/test_fragment_links.py
-      - name: sync_artifact handles every import form (no browser)
+      - name: sync_artifact import forms, and the limits it pins (no browser)
         run: python3 -m pytest -q checks/test_sync_artifact.py
       - name: blind_audit sees every button-like control (Chromium)
         run: python3 -m pytest -q checks/test_blind_audit_targets.py
