@@ -3,7 +3,7 @@
 a browser-runnable app.jsx for the local harness.
 
 What it does (and the reason each step exists):
-  1. Strip `import` lines            — the harness has no bundler; React/ReactDOM
+  1. Strip `import` statements       — the harness has no bundler; React/ReactDOM
                                        are globals loaded from vendor/*.js.
   2. Re-bind named hook imports      — `import { useState } from "react"` becomes
                                        a `const {...} = React` destructure so the
@@ -26,6 +26,11 @@ import sys
 
 SUPPORTED = {"react", "react-dom", "react-dom/client"}
 
+# one definition of "an import statement", used by the guard, the re-binding and the stripping: it may span lines
+# (`import {\n a,\n b\n} from "x"`), may carry a default beside the braces (`import R, { a } from "x"`), or have no clause
+# at all (`import "x"`); the rest of its last line goes with it
+IMPORT = re.compile(r'^import\b\s*(?:(?P<clause>[^\'";]+?)\s*from\s*)?(?P<q>["\'])(?P<mod>[^"\']+)(?P=q)[^\n]*', re.M)
+
 def main(src_path: str, out_path: str) -> int:
     import os as _os
     if _os.path.realpath(src_path) == _os.path.realpath(out_path):
@@ -36,7 +41,7 @@ def main(src_path: str, out_path: str) -> int:
     src = open(src_path, encoding="utf-8").read()
 
     # 5. dependency boundary check, before any rewriting
-    deps = set(re.findall(r'^import\s[^\n]*?from\s+["\']([^"\']+)["\']', src, re.M))
+    deps = {m.group("mod") for m in IMPORT.finditer(src)}
     unsupported = sorted(d for d in deps if d not in SUPPORTED)
     if unsupported:
         print("UNSUPPORTED_IMPORTS:", ", ".join(unsupported))
@@ -46,16 +51,18 @@ def main(src_path: str, out_path: str) -> int:
 
     # 2. collect named react imports so we can re-bind them
     named = set()
-    for m in re.finditer(r'^import\s*{([^}]*)}\s*from\s+["\']react["\']', src, re.M):
-        named |= {t.strip() for t in m.group(1).split(",") if t.strip()}
+    for m in IMPORT.finditer(src):
+        braces = re.search(r"{([^}]*)}", m.group("clause") or "")
+        if m.group("mod") == "react" and braces:
+            named |= {t.strip() for t in braces.group(1).split(",") if t.strip()}
     # hooks used without import (artifact may rely on claude.ai transform)
     named |= set(re.findall(r'\b(use[A-Z]\w+|createContext|Fragment)\b', src)) & {
         "useState", "useEffect", "useRef", "useMemo", "useCallback",
         "useContext", "useReducer", "useLayoutEffect", "createContext", "Fragment",
     }
 
-    # 1. strip all import lines
-    body = re.sub(r"^import\s[^\n]*$", "", src, flags=re.M)
+    # 1. strip every import statement whole (it can span lines); its newlines stay, so line numbers below it do not move
+    body = IMPORT.sub(lambda m: "\n" * m.group(0).count("\n"), src)
 
     # 3. strip export default; the name it carried IS the root component
     root_name = None

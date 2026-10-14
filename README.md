@@ -28,7 +28,7 @@ here as evidence of absence.
 drunken-emu/
 ├── bin/
 │   ├── emu                    entry point: smoke | audit | shots | step | chain; the first four run sync → serve → check → tidy on an artifact; chain needs none of that (no artifact, no server, no browser)
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects a single-line import … from "x" of a module the kit cannot satisfy (exit 2 + list); a multi-line import is not parsed (its tail stays in app.jsx and Babel fails; known bug), a side-effect import is dropped unchecked
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects imports the kit cannot satisfy in any form: single- or multi-line, with a default, side-effect (exit 2 + list); an aliased (a as b) or namespace (* as R) import of react is not re-bound (known limit)
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
@@ -37,6 +37,7 @@ drunken-emu/
 │   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
 │   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium); a policy that breaks the contract stops the run
 │   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
+│   ├── test_sync_artifact.py  sync_artifact.py's import forms: single- and multi-line, side-effect, default beside named (no browser; runs in CI)
 │   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
 │   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
