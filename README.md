@@ -28,7 +28,7 @@ here as evidence of absence.
 drunken-emu/
 ├── bin/
 │   ├── emu                    entry point: smoke | audit | shots | step | chain; the first four run sync → serve → check → tidy on an artifact; chain needs none of that (no artifact, no server, no browser)
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; rejects imports the kit cannot satisfy in any form: single- or multi-line, with a default, side-effect (exit 2 + list); an aliased (a as b) or namespace (* as R) import of react is not re-bound (known limit)
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; exits 2 with a list for an import of anything but react, react-dom or react-dom/client that starts a line (single- or multi-line, with a default, side-effect). It matches text, not syntax: forms it does not see pass with exit 0 and can break in the browser, and an aliased (a as b) or namespace (* as R) react import is bound wrongly (a syntax error, or an undefined R); the forms are listed in the script's docstring and pinned in test_sync_artifact.py
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
 │   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
@@ -184,8 +184,9 @@ A prediction registered before a real pass, and scored after it: `docs/predictio
    reference artifact (measured) and buys zero toolchain.
 3. **sync as a boundary gate** — the transform (strip imports, rebind hooks,
    append a mount call) is exactly what claude.ai's runtime does implicitly;
-   anything beyond React itself (recharts, lucide-react, …) exits 2 with a
-   named list instead of a blank page.
+   an import of anything beyond React itself (recharts, lucide-react, …) that
+   starts a line exits 2 with a named list instead of a blank page; the forms the
+   text match does not see are listed in `sync_artifact.py`'s docstring.
 4. **Server + test in one shell invocation; port freed by PID file; `cd` on its
    own line** — three sandbox rules each purchased with a debugging round
    (background processes die between tool calls; `pkill -f` can match its own
@@ -225,7 +226,7 @@ A prediction registered before a real pass, and scored after it: `docs/predictio
 Works for artifacts that: are single-file React (.jsx), import nothing beyond
 `react` / `react-dom`, use Tailwind core utility classes, hooks, inline styles,
 SVG, CSS animations. That is: this kit covers the plain-React slice of the
-artifact space, with the boundary enforced mechanically by `sync_artifact.py`.
+artifact space; `sync_artifact.py` checks the boundary for the imports its text match sees (its docstring lists the rest).
 
 Out of scope (exit 2 or no-op by design): npm libraries (recharts, lucide-react,
 d3, shadcn/ui, …) — vendoring UMD builds per library would extend this;

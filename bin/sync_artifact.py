@@ -13,13 +13,22 @@ What it does (and the reason each step exists):
                                        top-level function instead.
   4. Append a ReactDOM.createRoot    — something has to mount the component; the
      mount call                        artifact itself never does (claude.ai does).
-  5. Fail loudly on bare imports     — anything not in SUPPORTED (lucide-react,
-     we cannot satisfy                 recharts, …) will NOT render here; better a
-                                       named error now than a blank page later.
+  5. Fail loudly on bare imports     — a line-start import of anything not in
+     we cannot satisfy                 SUPPORTED (lucide-react, recharts, …) will
+                                       NOT render here; better a named error now
+                                       than a blank page later. The check is a text
+                                       match, not a parser: see the list below.
+
+What the text match does not see (each pinned in checks/test_sync_artifact.py; measured 2026-10-14; exit 0, and
+the artifact can then break in the browser): a comment between `from` and the module, an import that does not
+start its line, `import()`, `export ... from`. Import-like text that starts a line inside a comment or a template
+literal is taken for an import. An aliased hook (`import { useState as us }`) is emitted as
+`const {useState, useState as us} = React;`, a syntax error, and a namespace import (`import * as R`) leaves
+`R` undefined.
 
 Usage: sync_artifact.py <artifact.jsx> <out_app.jsx>
-Exit 0 on success; exit 2 with a dependency list if the artifact needs modules
-this kit does not vendor.
+Exit 0 on success; exit 2 with a dependency list if a line-start import names a
+module this kit does not vendor.
 """
 import re
 import sys

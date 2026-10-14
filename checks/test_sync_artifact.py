@@ -4,13 +4,17 @@ An `import` statement may span lines, carry a default beside the braces, or have
 The dependency guard, the re-binding of named react imports and the stripping must all see the same statements.
 Found by running the script on six inputs (2026-10-14): a multi-line import of any module, react included, left its
 tail in app.jsx, which Babel cannot parse, while exit 0 said "synced"; a side-effect import was dropped unchecked.
+The last tests pin what the text match does NOT see (the limits the docs list), so the docs cannot drift from the code.
 No browser, under 2 s:
 
     python3 -m pytest -q checks/test_sync_artifact.py
 """
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 SYNC = Path(__file__).resolve().parent.parent / "bin" / "sync_artifact.py"
 APP = "export default function App() { return <div>hi</div>; }"
@@ -72,3 +76,36 @@ def test_an_import_with_a_comment_between_from_and_the_module_is_still_stripped(
 def test_an_import_with_a_quote_inside_a_comment_in_its_clause_is_still_stripped(tmp_path):
     rc, _, out = sync(tmp_path, "import React, /* don't */ { useState } from \"react\";")
     assert rc == 0 and not [ln for ln in out.split("\n") if ln.startswith("import")]
+
+
+# --- what the text match does NOT see, pinned so that the docstring of sync_artifact.py and the README cannot drift from
+# the code. Measured 2026-10-14 against the old script too: none of these is new. Each exits 0 with an unsupported package.
+UNSEEN = {
+    "a comment between from and the module": 'import { Line } from /* c */ "recharts";',
+    "a line comment, the module on the next line": 'import { Line } from // c\n"recharts";',
+    "an indented import": '  import { Line } from "recharts";',
+    "a dynamic import()": 'const L = import("recharts");',
+    "export ... from": 'export { Line } from "recharts";',
+}
+
+@pytest.mark.parametrize("head", list(UNSEEN.values()), ids=list(UNSEEN))
+def test_forms_the_text_match_does_not_see_pass_with_exit_0(tmp_path, head):
+    rc, so, _ = sync(tmp_path, head)
+    assert rc == 0 and "UNSUPPORTED_IMPORTS" not in so
+
+def test_import_like_text_starting_a_line_in_a_comment_or_a_template_is_refused(tmp_path):
+    for head in ('/*\nimport { Line } from "recharts";\n*/', 'const s = `\nimport x from "recharts"\n`;'):
+        rc, so, out = sync(tmp_path, head)
+        assert rc == 2 and "UNSUPPORTED_IMPORTS: recharts" in so and out == ""
+
+def test_react_import_text_inside_a_template_is_stripped_from_the_copy(tmp_path):
+    rc, _, out = sync(tmp_path, 'const s = `\nimport React from "react"\n`;')
+    assert rc == 0 and "import React" not in out
+
+def test_an_aliased_react_import_is_emitted_as_an_invalid_destructure(tmp_path):
+    rc, _, out = sync(tmp_path, 'import { useState as us } from "react";')
+    assert rc == 0 and re.search(r"const \{[^}]*useState as us[^}]*\} = React;", out)       # a syntax error in the browser
+
+def test_a_namespace_react_import_leaves_the_name_unbound(tmp_path):
+    rc, _, out = sync(tmp_path, 'import * as R from "react";', "export default function App() { return <div>{R.version}</div>; }")
+    assert rc == 0 and "R.version" in out and not re.search(r"\b(const|let|var)\s+R\b", out)
