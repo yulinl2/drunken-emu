@@ -28,6 +28,11 @@ any other name (`import R from "react"`, `import * as R from "react"`) leaves `R
 the component renders), and an aliased hook (`import { useState as us }`) is emitted as
 `const {useState, useState as us} = React;`, a syntax error.
 
+The guard and the re-binding also run the original single-line patterns (`OLD_GUARD`, `OLD_NAMED`) over the source,
+as the stripping runs the original line strip as a floor: `IMPORT` parses statements but stops at a quote or a
+semicolon inside a comment in the clause, which the original patterns tolerated, so the guard refuses and the
+re-binding binds at least what the original script did (a generated grid in checks/test_sync_artifact.py checks it).
+
 Usage: sync_artifact.py <artifact.jsx> <out_app.jsx>
 Exit 0 on success; exit 2 with a dependency list if a line-start import names a
 module this kit does not vendor.
@@ -41,6 +46,10 @@ SUPPORTED = {"react", "react-dom", "react-dom/client"}
 # (`import {\n a,\n b\n} from "x"`), may carry a default beside the braces (`import R, { a } from "x"`), or have no clause
 # at all (`import "x"`); the rest of its last line goes with it
 IMPORT = re.compile(r'^import\b\s*(?:(?P<clause>[^\'";]+?)\s*from\s*)?(?P<q>["\'])(?P<mod>[^"\']+)(?P=q)[^\n]*', re.M)
+# the original single-line patterns, kept as floors for the guard and for the re-binding (as the old line strip is for the stripping):
+# IMPORT parses whole statements but stops at a quote or a semicolon inside a comment in the clause, which these tolerate
+OLD_GUARD = re.compile(r'^import\s[^\n]*?from\s+["\']([^"\']+)["\']', re.M)
+OLD_NAMED = re.compile(r'^import\s*{([^}]*)}\s*from\s+["\']react["\']', re.M)
 
 def main(src_path: str, out_path: str) -> int:
     import os as _os
@@ -52,7 +61,7 @@ def main(src_path: str, out_path: str) -> int:
     src = open(src_path, encoding="utf-8").read()
 
     # 5. dependency boundary check, before any rewriting
-    deps = {m.group("mod") for m in IMPORT.finditer(src)}
+    deps = {m.group("mod") for m in IMPORT.finditer(src)} | set(OLD_GUARD.findall(src))
     unsupported = sorted(d for d in deps if d not in SUPPORTED)
     if unsupported:
         print("UNSUPPORTED_IMPORTS:", ", ".join(unsupported))
@@ -66,6 +75,8 @@ def main(src_path: str, out_path: str) -> int:
         braces = re.search(r"{([^}]*)}", m.group("clause") or "")
         if m.group("mod") == "react" and braces:
             named |= {t.strip() for t in braces.group(1).split(",") if t.strip()}
+    for m in OLD_NAMED.finditer(src):
+        named |= {t.strip() for t in m.group(1).split(",") if t.strip()}
     # hooks used without import (artifact may rely on claude.ai transform)
     named |= set(re.findall(r'\b(use[A-Z]\w+|createContext|Fragment)\b', src)) & {
         "useState", "useEffect", "useRef", "useMemo", "useCallback",
