@@ -86,12 +86,12 @@ A cold `bin/emu smoke` on a 4-node artifact measured 2.5 s wall clock, of which
 Not quoted as a bare number, because it drifts with every edit (`## Falsified`, row 4). Measure it:
 
 ```
-for d in bin harness; do echo "$d $(find $d -type f | xargs cat | wc -l)"; done
-echo "checks_py $(cat checks/*.py | wc -l)"; echo "README $(wc -l < README.md)"
+for p in bin harness 'checks/**/*.py' README.md; do echo "$p $(git --glob-pathspecs ls-files -z -- "$p" | xargs -0 cat | wc -l)"; done | awk '{print; s += $NF} END {print "total", s}'
 ```
 
-Last measured 2026-10-14 at `068d5fc`: `bin/` 720, `checks/*.py` 7,212, `harness/` 16, this README 315: 8,263 lines in all. `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed,
-not written here; see `THIRD_PARTY_NOTICES.md`.
+It counts tracked files only, so ignored ones cannot move it (`bin/emu` rewrites `harness/app.jsx` on every run, and `__pycache__` fills up beside the sources), and `checks/**/*.py` reaches subpackages. The four areas are the retired claim's, kept so the two compare: this is the kit's code, not the repository, and `docs/`, `figbank/`, `theory/` and `checks/fixtures/` are not in it.
+
+Last measured 2026-10-14 at `068d5fc` (check it out to reproduce these exactly; any later commit prints other numbers): `bin` 720, `harness` 16, `checks/**/*.py` 10,603 (3,391 of them in `checks/hw2_sample_prediction/`), `README.md` 315, total 11,654 lines. `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed, not written here; see `THIRD_PARTY_NOTICES.md`.
 
 ## Falsified
 
@@ -103,7 +103,7 @@ a removed error is an error that can come back.
 | "the Babel phase is linear-ish in source bytes" | 80 KB of pure comments (2 DOM nodes) mounts in 0.20 s; 19 KB of 500 spans takes 0.55 s. Node count is the driver. `ci_claims.py` C1 now pins this comparison so the theory cannot revive. |
 | "mount ~ 0.18 s + 0.55 ms/node" *as a portable constant* | Re-measured in a different container with simpler span fixtures: 0.24 s + 0.17 ms/node. Same shape, 3x different slope. The relationship is the finding; the constant is fixture- and hardware-local. |
 | "Blind by default" as a complete model of a first-time reader | Not killed by measurement — killed by re-reading the original requirement, which asked for *long recursive click chains, each step with a stated intention, driven by common sense and by what is visible on the page*. The anti-leak rule licenses content-blindness only. Intention-lessness was a capability gap wearing a correct principle as a defence, and the defence was persuasive enough to be quoted back as the kit's core virtue before anyone re-read the requirement it displaced. Current state: 4 taps, recursion depth 0, zero feedback. Tracked as `explore`. |
-| "About 2.6 k lines, measured 2026-09-29: `bin/` 717, `checks/*.py` 1,573, `harness/` 22, README 277" (the earlier "638" died the same way) | Re-measured 2026-10-14 at `068d5fc`: `bin/` 720, `checks/*.py` 7,212, `harness/` 16, README 315, 8,263 lines in all, 3.2 times the claim. The README had said the number "drifts with every edit"; nothing flagged it, because `ci_claims.py` asserts timing orderings, not line counts, and `fact_check.py` (PR #4) recomputes only claims tied to a file path. `## Authored surface` now gives the command and a dated measurement. |
+| "About 2.6 k lines, measured 2026-09-29: `bin/` 717, `checks/*.py` 1,573, `harness/` 22, README 277" (the earlier "638" died the same way) | Re-measured 2026-10-14 at `068d5fc`: `bin/` 720, `checks/**/*.py` 10,603, `harness/` 16, README 315, 11,654 lines in all, 4.5 times the claim. It was not a bad count: at the commit before it was written (`6d648d2`) the tree has `bin/` 717, `checks/*.py` 1,573 and README 277 exactly as stated (`harness/` 16, not 22), so what killed it was fifteen days of edits and one change of shape. `checks/*.py` alone is now 7,212 (8,263 in all, 3.2 times the claim), and `checks/hw2_sample_prediction/` (added 2026-10-05, 3,391 lines) lies outside that glob altogether. The README had said the number "drifts with every edit"; nothing flagged it, because `ci_claims.py` asserts timing orderings, not line counts, and `fact_check.py` (PR #4) recomputes only claims tied to a file path. `## Authored surface` now gives the command, which counts tracked files recursively, and a dated measurement. |
 
 The third row is a different species from the first two. Those were wrong
 numbers; a measurement killed them. This one was a wrong *justification* — it
