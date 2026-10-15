@@ -3,7 +3,7 @@
 a browser-runnable app.jsx for the local harness.
 
 What it does (and the reason each step exists):
-  1. Strip `import` lines            — the harness has no bundler; React/ReactDOM
+  1. Strip `import` statements       — the harness has no bundler; React/ReactDOM
                                        are globals loaded from vendor/*.js.
   2. Re-bind named hook imports      — `import { useState } from "react"` becomes
                                        a `const {...} = React` destructure so the
@@ -13,18 +13,43 @@ What it does (and the reason each step exists):
                                        top-level function instead.
   4. Append a ReactDOM.createRoot    — something has to mount the component; the
      mount call                        artifact itself never does (claude.ai does).
-  5. Fail loudly on bare imports     — anything not in SUPPORTED (lucide-react,
-     we cannot satisfy                 recharts, …) will NOT render here; better a
-                                       named error now than a blank page later.
+  5. Fail loudly on bare imports     — a line-start import of anything not in
+     we cannot satisfy                 SUPPORTED (lucide-react, recharts, …) will
+                                       NOT render here; better a named error now
+                                       than a blank page later. The check is a text
+                                       match, not a parser: see the list below.
+
+What the text match does not see (each pinned in checks/test_sync_artifact.py; measured 2026-10-14; exit 0, and
+the artifact can then break in the browser): a comment between `from` and the module, an import that does not
+start its line, `import()`, `export ... from`. Import-like text that starts a line inside a comment or a template
+literal is taken for an import. The page has only the global `React`, so a react import works only under that
+name: `import React from "react"` and `import * as React from "react"` mount; a default or namespace import under
+any other name (`import R from "react"`, `import * as R from "react"`) leaves `R` undefined (a ReferenceError when
+the component renders), and an aliased hook (`import { useState as us }`) is emitted as
+`const {useState, useState as us} = React;`, a syntax error.
+
+The guard and the re-binding also run the original single-line patterns (`OLD_GUARD`, `OLD_NAMED`) over the source,
+as the stripping runs the original line strip as a floor: `IMPORT` parses statements but stops at a quote or a
+semicolon inside a comment in the clause, which the original patterns tolerated, so the guard refuses and the
+re-binding binds at least what the original script did (a generated grid in checks/test_sync_artifact.py checks it).
 
 Usage: sync_artifact.py <artifact.jsx> <out_app.jsx>
-Exit 0 on success; exit 2 with a dependency list if the artifact needs modules
-this kit does not vendor.
+Exit 0 on success; exit 2 with a dependency list if a line-start import names a
+module this kit does not vendor.
 """
 import re
 import sys
 
 SUPPORTED = {"react", "react-dom", "react-dom/client"}
+
+# one definition of "an import statement", used by the guard, the re-binding and the stripping: it may span lines
+# (`import {\n a,\n b\n} from "x"`), may carry a default beside the braces (`import R, { a } from "x"`), or have no clause
+# at all (`import "x"`); the rest of its last line goes with it
+IMPORT = re.compile(r'^import\b\s*(?:(?P<clause>[^\'";]+?)\s*from\s*)?(?P<q>["\'])(?P<mod>[^"\']+)(?P=q)[^\n]*', re.M)
+# the original single-line patterns, kept as floors for the guard and for the re-binding (as the old line strip is for the stripping):
+# IMPORT parses whole statements but stops at a quote or a semicolon inside a comment in the clause, which these tolerate
+OLD_GUARD = re.compile(r'^import\s[^\n]*?from\s+["\']([^"\']+)["\']', re.M)
+OLD_NAMED = re.compile(r'^import\s*{([^}]*)}\s*from\s+["\']react["\']', re.M)
 
 def main(src_path: str, out_path: str) -> int:
     import os as _os
@@ -36,7 +61,7 @@ def main(src_path: str, out_path: str) -> int:
     src = open(src_path, encoding="utf-8").read()
 
     # 5. dependency boundary check, before any rewriting
-    deps = set(re.findall(r'^import\s[^\n]*?from\s+["\']([^"\']+)["\']', src, re.M))
+    deps = {m.group("mod") for m in IMPORT.finditer(src)} | set(OLD_GUARD.findall(src))
     unsupported = sorted(d for d in deps if d not in SUPPORTED)
     if unsupported:
         print("UNSUPPORTED_IMPORTS:", ", ".join(unsupported))
@@ -46,7 +71,11 @@ def main(src_path: str, out_path: str) -> int:
 
     # 2. collect named react imports so we can re-bind them
     named = set()
-    for m in re.finditer(r'^import\s*{([^}]*)}\s*from\s+["\']react["\']', src, re.M):
+    for m in IMPORT.finditer(src):
+        braces = re.search(r"{([^}]*)}", m.group("clause") or "")
+        if m.group("mod") == "react" and braces:
+            named |= {t.strip() for t in braces.group(1).split(",") if t.strip()}
+    for m in OLD_NAMED.finditer(src):
         named |= {t.strip() for t in m.group(1).split(",") if t.strip()}
     # hooks used without import (artifact may rely on claude.ai transform)
     named |= set(re.findall(r'\b(use[A-Z]\w+|createContext|Fragment)\b', src)) & {
@@ -54,8 +83,11 @@ def main(src_path: str, out_path: str) -> int:
         "useContext", "useReducer", "useLayoutEffect", "createContext", "Fragment",
     }
 
-    # 1. strip all import lines
-    body = re.sub(r"^import\s[^\n]*$", "", src, flags=re.M)
+    # 1. strip every import statement whole (it can span lines); its newlines stay, so line numbers below it do not move
+    body = IMPORT.sub(lambda m: "\n" * m.group(0).count("\n"), src)
+    # ...then any line still starting with `import` is one the statement matcher does not parse (a comment between `from`
+    # and the module, say). The harness cannot run an import, so none may stay: this is what the old stripping did alone.
+    body = re.sub(r"^import\s[^\n]*$", "", body, flags=re.M)
 
     # 3. strip export default; the name it carried IS the root component
     root_name = None

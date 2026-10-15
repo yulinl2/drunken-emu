@@ -5,7 +5,7 @@ A page with one big decoy button and one small target button. The policy always 
   p = 0  -> every trial succeeds (the policy and the runner work)
   p = 1  -> every step is hijacked onto the loudest element, the decoy: no trial succeeds, hijacks == steps
 A sweep whose curve cannot move proves nothing; this is the known-bad input that makes it move.
-Needs Chromium (see SANDBOX-FACTS); not wired into the text-only CI job.   python3 checks/test_explore_run.py
+Needs Chromium (see SANDBOX-FACTS); runs in the `claims` job of CI.   python3 checks/test_explore_run.py
 """
 import json, subprocess, sys, tempfile, unittest
 from pathlib import Path

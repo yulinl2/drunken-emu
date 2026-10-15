@@ -11,7 +11,9 @@ error? no overflow?).
 
 Checks, in order:
   A. render + zero JS errors + zero horizontal overflow
-  B. touch ergonomics: every visible non-decorative <button> >= min_px tall;
+  B. touch ergonomics: every visible non-decorative <button>, <summary> and [role=button] >= min_px tall (links and
+     form fields are counted and reported, not enforced: inline links in running text are exempt in WCAG 2.2);
+     visible = a non-empty box and a computed visibility that is not hidden; heights are compared unrounded (37.6 px is under 38);
      every [data-term] hit-span >= min_px (convention-specific, skipped if absent)
   C. tap the first dashed-decorated element in view -> did a fixed bottom
      layer appear? tap outside it -> did it close?
@@ -87,14 +89,27 @@ async def main():
 
         # B. ergonomics
         R["checks"]["ergonomics"] = await pg.evaluate("""(MIN)=>{
-          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
-          const btns=[...__emuDeep('button')]
-            .filter(b=>!b.hasAttribute('data-term')).filter(vis);
-          const small=btns.map(b=>Math.round(b.getBoundingClientRect().height))
-                          .filter(h=>h<MIN);
+          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'};
+          const h=e=>e.getBoundingClientRect().height;   // raw: a 37.6 px target is under a 38 px floor
+          const notTerm=e=>!e.hasAttribute('data-term');
+          // enforced: the button-like controls a reader taps. A check that cannot see a control must not report it as fine.
+          const tgt=[...new Set(__emuDeep('button,summary,[role=button]'))].filter(notTerm).filter(vis);
+          const tag=e=>e.tagName==='BUTTON'?'button':e.tagName==='SUMMARY'?'summary':'role=button';
+          const by={}; for(const e of tgt) if(h(e)<MIN) by[tag(e)]=(by[tag(e)]||0)+1;
+          // kept with its old meaning: <button> only
+          const btns=tgt.filter(e=>e.tagName==='BUTTON');
+          const small=btns.map(h).filter(x=>x<MIN);
+          // counted and reported, not enforced (inline links in running text are exempt in WCAG 2.2; fields need judgement)
+          const rep={};
+          for(const [k,sel] of [['a','a[href]'],['input','input:not([type=hidden])'],['select','select'],['textarea','textarea']]){
+            const els=[...__emuDeep(sel)].filter(notTerm).filter(vis).filter(e=>!tgt.includes(e));
+            rep[k]={count:els.length, under_min:els.map(h).filter(x=>x<MIN).length};
+          }
           const hits=[...__emuDeep('[data-term] > span[aria-hidden]')]
             .map(s=>Math.round(s.getBoundingClientRect().height)).filter(h=>h>0);
           return {buttons: btns.length, buttons_under_min: small.length,
+                  targets: tgt.length, targets_under_min: Object.values(by).reduce((a,b)=>a+b,0),
+                  under_min_by_tag: by, reported_not_enforced: rep,
                   term_hits: hits.length,
                   term_hit_min_px: hits.length?Math.min(...hits):null,
                   term_hit_status: hits.length?'checked'
@@ -180,7 +195,7 @@ async def main():
     print(json.dumps(R, ensure_ascii=False))
     ok = (not R["js_errors"]
           and R["checks"].get("h_overflow_px") == 0
-          and R["checks"].get("ergonomics", {}).get("buttons_under_min") == 0)
+          and R["checks"].get("ergonomics", {}).get("targets_under_min") == 0)
     return 0 if ok else 1
 
 sys.exit(asyncio.run(main()))
