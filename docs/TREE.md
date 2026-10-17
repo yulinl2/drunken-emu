@@ -70,6 +70,7 @@ that is never executed is not a regeneration command.
 |   |-- chain_verifiers.py
 |   |-- ci_claims.py
 |   |-- draft_publish_prediction.py
+|   |-- emu_loop.py
 |   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
@@ -83,6 +84,7 @@ that is never executed is not a regeneration command.
 |   |-- test_blind_audit_targets.py
 |   |-- test_chain.py
 |   |-- test_draft_publish_prediction.py
+|   |-- test_emu_loop.py
 |   |-- test_explore_run.py
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
@@ -244,5 +246,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 190 files tracked
+29 directories, 192 files tracked
 ```
