@@ -235,3 +235,26 @@ def test_install_keeps_a_command_that_shares_a_group_with_the_hook(tmp_path):
     L.install(str(p))
     cmds = [h["command"] for g in json.loads(p.read_text())["hooks"]["Stop"] for h in g["hooks"]]
     assert "echo mine" in cmds and sum("emu_loop.py" in c for c in cmds) == 1
+
+
+def test_a_new_arming_gets_its_own_rounds_even_within_the_same_second(loop, tmp_path, monkeypatch):
+    art, chain = loop                                           # the fixture's chain fails: every stop is refused
+    monkeypatch.setattr(L, "now", lambda: "2026-10-18T19:00:00+00:00")   # every record in one second
+    arm = ["arm", "--watch", str(art), "--chain", str(tmp_path / "{stem}.chain.json"), "--no-smoke", "--max-rounds", "2"]
+    L.main(arm)
+    assert [L.hook_stop({})[0] for _ in range(3)] == [2, 2, 0]  # two refusals, then the cap lets go
+    L.main(arm)                                                 # re-armed within the same second
+    rc, out, err = L.hook_stop({})
+    assert rc == 2 and "stop blocked 1/2" in err                # a fresh budget, not the old arming's spent one
+
+
+def test_a_pass_under_other_layers_is_no_baseline_for_a_regression(loop, monkeypatch):
+    art, chain = loop
+    monkeypatch.setattr(L, "plug_chain", fake_chain(1.0))
+    L.hook_post_edit({})                                        # a chain-only pass at load 1
+    L.write_armed({**L.load_armed(), "smoke": True})            # re-armed with smoke as well
+    monkeypatch.setattr(L, "plug_smoke", lambda art, timeout=60: {"status": "go", "json": {"ok": True}, "wall_s": 0})
+    art.write_text(art.read_text() + "// edited\n")             # a new candidate
+    monkeypatch.setattr(L, "plug_chain", fake_chain(2.0))       # passes both layers, at a higher load
+    assert "REGRESSION" not in context(L.hook_post_edit({}))    # never smoke-checked, the old pass proves nothing here
+    assert L.hook_stop({})[0] == 0

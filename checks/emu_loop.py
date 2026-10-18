@@ -171,8 +171,8 @@ def missing(cfg):
     """Watched artifacts that are gone (deleted or renamed): an exact --watch path, a file a pattern found when the
     loop was armed, or one a hook evaluated since. An absent artifact is not a pass: the stop gate holds on it."""
     exact = [p if os.path.isabs(p) else os.path.join(ROOT, p) for p in cfg.get("watch", []) if not MAGIC.search(p)]
-    since = [r["artifact"] for r in read_ledger()
-             if r.get("kind") == "eval" and r.get("trigger") != "manual" and r["ts"] >= cfg["armed_at"]]
+    since = [r["artifact"] for r in read_ledger()[cfg.get("since", 0):]
+             if r.get("kind") == "eval" and r.get("trigger") != "manual"]
     return [p for p in dict.fromkeys(exact + cfg.get("found", []) + since) if not os.path.isfile(p)]
 
 
@@ -287,10 +287,13 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
         same = [r for r in ledger if r.get("kind") == "eval" and r.get("artifact") == art]
         prev = same[-1] if same else None
         layers = sorted((["smoke"] if cfg.get("smoke", True) else []) + (["chain"] if chain else []))
-        # A verdict is reused only for the same bytes under the same layers: a chain-only PASS must not
+
+        def same_config(r):   # the same layers on the same trial path: only then are two verdicts comparable
+            return sorted(r["plugs"]) == layers and r.get("trial") == chain
+
+        # A verdict is reused only for the same bytes under the same config: a chain-only PASS must not
         # stand in for a run that now includes smoke (re-armed, artifact and trial unchanged).
-        if (prev and not force and (prev["sha"], prev.get("trial_sha")) == (sha, tsha)
-                and sorted(prev["plugs"]) == layers and prev.get("trial") == chain
+        if (prev and not force and (prev["sha"], prev.get("trial_sha")) == (sha, tsha) and same_config(prev)
                 and not (trigger == "stop" and prev["gate"] == "not_evaluated")):
             return None
         plugs = {}
@@ -306,7 +309,7 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
             vector["chain_findings"], vector["chain_load"] = c["findings"], c["load"]
         st = [p["status"] for p in plugs.values()]
         gate = "fail" if "fail" in st else "not_evaluated" if (not st or "not_evaluated" in st) else "pass"
-        passed = [r for r in same if r["gate"] == "pass"]
+        passed = [r for r in same if r["gate"] == "pass" and same_config(r)]   # a pass under other layers is no baseline
         dom = None
         if gate == "pass":
             dom = next((r["id"] for r in frontier(passed) if dominates(r["vector"], vector)), None)
@@ -321,7 +324,7 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
             "kind": "eval", "id": ident, "trigger": trigger, "session": session, "artifact": art,
             "sha": sha, "trial": chain, "trial_sha": tsha,
             "parent": prev["sha"] if prev else None, "supersedes": prev["id"] if prev else None,
-            "round": 1 + sum(1 for r in same if r["ts"] >= cfg["armed_at"]),
+            "round": 1 + sum(1 for r in ledger[cfg.get("since", 0):] if r.get("kind") == "eval" and r.get("artifact") == art),
             "plugs": plugs, "vector": vector, "gate": gate, "dominated_by": dom, "snapshot": snap})
 
 
@@ -412,7 +415,7 @@ def hook_stop(payload):
     if not unresolved:
         append({"kind": "stop_allowed", "reason": "gate pass", "session": sess})
         return 0, "", ""
-    used = sum(1 for r in read_ledger() if r.get("kind") == "stop_block" and r["ts"] >= cfg["armed_at"])
+    used = sum(1 for r in read_ledger()[cfg.get("since", 0):] if r.get("kind") == "stop_block")
     if used >= cfg["max_rounds"]:
         append({"kind": "stop_allowed", "reason": "round_cap", "unresolved": unresolved, "session": sess})
         return 0, (f"emu-loop: round cap {used}/{cfg['max_rounds']} reached; "
@@ -473,7 +476,8 @@ def keep_local(path):
 def cmd_arm(a):
     if a.no_smoke and not a.chain:
         sys.exit("arm: nothing to run (--no-smoke without --chain)")
-    cfg = {"armed_at": now(), "watch": a.watch, "chain": a.chain, "smoke": not a.no_smoke, "max_rounds": a.max_rounds}
+    cfg = {"armed_at": now(), "watch": a.watch, "chain": a.chain, "smoke": not a.no_smoke, "max_rounds": a.max_rounds,
+           "since": len(read_ledger())}   # this arming's first ledger position: its records are counted from here, not by clock
     cfg["found"] = watched(cfg)   # what the patterns find now; one of these going missing later is not a pass
     write_armed(cfg)
     append({"kind": "arm", "config": cfg})
@@ -509,7 +513,7 @@ def cmd_status():
 
 
 def cmd_eval(a):
-    cfg = dict(load_armed() or {"armed_at": now(), "watch": [], "smoke": True, "max_rounds": 3})
+    cfg = dict(load_armed() or {"armed_at": now(), "since": len(read_ledger()), "watch": [], "smoke": True, "max_rounds": 3})
     if a.chain:
         cfg["chain"] = a.chain
     if a.no_smoke:
