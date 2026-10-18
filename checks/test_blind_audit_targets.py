@@ -70,3 +70,31 @@ def test_form_fields_are_reported_but_do_not_fail_an_audit_whose_controls_are_al
     assert rc == 0 and e["targets"] == 1 and e["targets_under_min"] == 0               # report-only: nothing in the fields is enforced
     assert rep["input"] == {"count": 1, "under_min": 1}                                # two inputs on the page, the type=hidden one is not counted
     assert rep["select"] == {"count": 1, "under_min": 1} and rep["textarea"] == {"count": 1, "under_min": 1}
+
+
+CLOSED = ('<details><summary style={{ height: 44, lineHeight: "44px" }}>More</summary>'
+          '<button style={{ height: 18 }}>hidden tiny</button></details>')
+
+
+def test_a_control_in_a_closed_details_is_not_a_tap_target_until_it_opens(tmp_path):
+    # #76: Chromium gives content in a closed <details> a non-empty box and visibility:visible; only checkVisibility() is false
+    rc, e = audit(tmp_path, CLOSED + '<button style={{ height: 48 }}>big</button>')
+    assert rc == 0 and e["targets"] == 2 and e["targets_under_min"] == 0               # the summary and the big button only
+    rc, e = audit(tmp_path, CLOSED.replace("<details>", "<details open>") + '<button style={{ height: 48 }}>big</button>')
+    assert rc == 1 and e["targets"] == 3 and e["under_min_by_tag"] == {"button": 1}    # control: opened, the same button is enforced
+
+
+def _affordance_texts(tmp_path, details):
+    page = tmp_path / (details.strip("<>").replace(" ", "_") + ".html")
+    page.write_text('<!doctype html><html><body><div style="padding:12px;width:360px">' + details
+                    + '<summary style="height:44px;line-height:44px">More</summary><button style="height:18px">hidden tiny</button>'
+                    '</details><button style="height:48px">big</button></div></body></html>', encoding="utf-8")
+    r = subprocess.run(["python3", str(KIT / "checks" / "explore_step.py"), page.as_uri(), str(tmp_path / page.stem),
+                        str(tmp_path / (page.stem + ".trace.json"))], capture_output=True, text=True, timeout=120)
+    return [a["text"] for a in json.loads(r.stdout.strip().splitlines()[-1])["affordances"]]
+
+
+def test_affordances_do_not_offer_a_control_in_a_closed_details(tmp_path):
+    # the same fault in affordances.py, which tells explore_step (and so the explore layer) what a reader could act on
+    assert "hidden tiny" not in _affordance_texts(tmp_path, "<details>")
+    assert "hidden tiny" in _affordance_texts(tmp_path, "<details open>")             # control: opened, it is offered

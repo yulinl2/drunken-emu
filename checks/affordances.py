@@ -21,7 +21,7 @@ AFF_JS = r"""()=>{
   const vp={w:innerWidth,h:innerHeight};
   return cand.map(e=>{const r=e.getBoundingClientRect(); const cs=getComputedStyle(e);
     const x0=Math.max(r.left,0), x1=Math.min(r.right,vp.w), y0=Math.max(r.top,0), y1=Math.min(r.bottom,vp.h);
-    if(!(x1>x0&&y1>y0)||cs.visibility==='hidden') return null;
+    if(!(x1>x0&&y1>y0)||cs.visibility==='hidden'||(e.checkVisibility&&!e.checkVisibility())) return null;   // a closed <details> keeps a box (#76)
     const area=(x1-x0)*(y1-y0);
     const motion=(cs.animationName!=='none'||cs.transitionDuration!=='0s')?1.5:1;
     return {text:(e.getAttribute('aria-label')||e.textContent||e.value||e.placeholder||'').trim().replace(/\s+/g,' ').slice(0,48),
