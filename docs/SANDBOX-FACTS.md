@@ -123,3 +123,15 @@ third environment of the *non-project* kind is sampled on the same day.
   (`repr(open(p).read())`), not on screen.
 - Async Playwright: `p.chromium.launch()` returns a coroutine that fails only when awaited, so a try/except around the call
   catches nothing; `checks/browser.alaunch` awaits inside the try.
+
+## Added 2026-10-17 (Claude Code cloud session, not a claude.ai chat container)
+
+| Fact | Evidence |
+|---|---|
+| A different container class from the ones above. The repository's `.claude/settings.json` registers a SessionStart hook and the harness documents command hooks (PostToolUse, Stop and others), so the "no hook system at all" row above is true of claude.ai chat containers and not of this one. | `.claude/settings.json`; <https://code.claude.com/docs/en/hooks> |
+| Hooks registered mid-session in a new `.claude/settings.local.json` did **not** run: after two changes to a watched file the `emu_loop` ledger held its `arm` record and no evaluation. Whether a session that *starts* with the hooks fires them is not measured (P-dae1, question 3). One session, one container: a point, not a fact. | `out/loop/ledger.jsonl`, read after the changes |
+| `python3 -c "import playwright"` fails by default here; README's "preinstalled" is true of claude.ai chat containers. `pip install playwright` gave 1.64.0, and `bin/emu smoke` then exited 1 at `p.chromium.launch` (`checks/smoke.py:23`; `checks/browser.alaunch` is not used there). `pip install playwright==1.56.0`, the build that matches the shipped `chromium-1194` and `ffmpeg-1011`, made the same command exit 0 in 2.67 s. | the same command before and after, in one container |
+| `pip install` works here (playwright, pytest and the 1.56.0 pin). | the installs above |
+| A disarmed `emu_loop` hook costs 55.2 ms per tool call, mean of 20 runs, Python start-up included. | `python3 checks/emu_loop.py hook post-edit < /dev/null`, 20 times |
+| A hook outside this kit, `~/.claude/stop-hook-git-check.sh`, ran at the end of a turn and its stderr with exit code 2 reached the model as "Stop hook feedback". It reads `stop_hook_active` from the stdin JSON (exit 0 when true) and flags, in this order: uncommitted changes, untracked files (`git ls-files --others --exclude-standard`), commits GitHub would show as Unverified when signing is configured, unpushed commits. No settings file under `/etc/claude-code`, `/root/.claude` or `/home/user/.claude` registers it (none exists there). | the message received; the script, lines 7-10, 26-37, 77-124 |
+| `$CLAUDE_PROJECT_DIR` is unset in the Bash tool's environment (documented for command hooks, not for the Bash tool). | `echo "${CLAUDE_PROJECT_DIR-<unset>}"` |
