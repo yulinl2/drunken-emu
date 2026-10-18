@@ -288,3 +288,14 @@ def test_a_pass_that_a_later_verdict_replaced_is_no_baseline(loop, monkeypatch, 
     L.main(["status"])
     front = [x for x in capsys.readouterr().out.splitlines() if x.startswith("frontier for")]
     assert len(front) == 1 and L.latest(str(art))["id"] in front[0] and a_pass not in front[0]
+
+
+def test_the_restore_hint_never_restores_half_a_candidate(loop, monkeypatch):
+    art, chain = loop
+    monkeypatch.setattr(L, "plug_chain", fake_chain(1.0))
+    L.hook_post_edit({})                                        # candidate A: artifact a1 + trial t1, load 1
+    art.write_text(art.read_text() + "// a2\n")
+    chain.write_text(chain.read_text() + " ")                   # both halves change: candidate B
+    monkeypatch.setattr(L, "plug_chain", fake_chain(2.0))
+    ctx = context(L.hook_post_edit({}))
+    assert "REGRESSION" in ctx and "cp " not in ctx and "trial chain differed" in ctx

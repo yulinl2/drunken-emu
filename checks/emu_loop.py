@@ -374,8 +374,13 @@ def render(rec, cfg, where):
         out.append(f"vs previous @{prev['sha'][:8]}: {how}" + (f" ({', '.join(moved)})" if moved else ""))
     if rec.get("dominated_by"):
         b = next(r for r in same if r["id"] == rec["dominated_by"])
-        hint = (f" Restore it: cp {rel(b['snapshot'])} {rel(rec['artifact'])}"
-                if b["sha"] != rec["sha"] and b.get("snapshot") else "")
+        if b.get("trial_sha") != rec.get("trial_sha"):   # a candidate is artifact + trial: one cp would restore half
+            hint = (f" Its trial chain differed too (sha {str(b.get('trial_sha'))[:8]}), so copying the artifact back "
+                    "would not restore that candidate; no one-line restore is offered.")
+        elif b["sha"] != rec["sha"] and b.get("snapshot"):
+            hint = f" Restore it: cp {rel(b['snapshot'])} {rel(rec['artifact'])}"
+        else:
+            hint = ""
         out.append(f"REGRESSION: record {b['id']} ({fmtvec(b['vector'])}) is no worse on every axis and better on one.{hint}")
     s, c = rec["plugs"].get("smoke"), rec["plugs"].get("chain")
     if s and s["status"] == "fail":
