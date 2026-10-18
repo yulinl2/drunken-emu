@@ -477,4 +477,12 @@ identical block is intended; sharing can come back later by choice.
 
 **Closes when** a session that never runs `bin/emu` itself still receives a verdict on an artifact it edited, computed from a chain *captured* from a driven run (P-9d8b), and its Stop is refused while that verdict fails; one test drives the hooks from a payload to a verdict on a rendered fixture and goes red when the hook wiring is removed. Related: P1, P2, P-02be, P-b279, P-9d8b, P-2a7c; Oolong-Pro H02, H03, H06.
 
-**Update 2026-10-18 (a watch session, under the owner's instruction that day to merge the state of the art into main).** `checks/test_emu_loop.py` now runs in CI's `chains` job. No CI step ran it before: the same condition #64 fixed for two other test files (merged 2026-10-15). This settles "open: whether it should be" above for the unit tests only. Whether the hooks fire in a real session (question 3) is not changed by it, and neither is anything under "Not done, and why". The branch named in "What exists" is deleted when its pull request merges; commit `08b4637` is the prototype as written.
+**Update 2026-10-18 (a watch session, under the owner's instruction that day to merge the state of the art into main).** `checks/test_emu_loop.py` now runs in CI's `chains` job. No CI step ran it before: the same condition #64 fixed for two other test files (merged 2026-10-15). This settles "open: whether it should be" above for the unit tests only. Whether the hooks fire in a real session (question 3) is not changed by it, and neither is anything under "Not done, and why". The branch named in "What exists" is deleted when its pull request merges; commit `08b4637` is the prototype as written. Later the same day:
+- **C4 is fixed on main** by #78. Every launch goes through `checks/browser.py`, which tries the headless shell first, and `checks/test_launch_sites.py` guards that in CI.
+- **Review gaps.** Four Codex review rounds on #77 found nine real gaps in v0, and one more of the same kind was found alongside them. Each is fixed with a test that fails on the commit before it:
+  - a watched artifact that disappears holds the stop;
+  - a verdict is reused, compared, or taken as a baseline only under the same config (`config_of`) and at each candidate's newest verdict (`dominator`);
+  - an arming is a ledger position (`since`), not a second;
+  - the stop budget is counted in one place (`refusals`);
+  - `install` keeps a hook command that shares a group with this one.
+- `test_emu_loop.py` now has 23 tests.
