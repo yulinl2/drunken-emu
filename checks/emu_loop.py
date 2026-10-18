@@ -264,6 +264,12 @@ def dominates(a, b):
     return bool(keys) and all(a[k] <= b[k] for k in keys) and any(a[k] < b[k] for k in keys)
 
 
+def config_of(r):
+    """What a verdict was computed under: the layers that ran and the trial path. Verdicts under different configs are
+    not comparable: not for reuse, not as a dominance baseline, not as the "previous" in feedback, not in one frontier."""
+    return (tuple(sorted(r["plugs"])), r.get("trial"))
+
+
 def frontier(recs):
     newest = {}
     for r in recs:
@@ -286,10 +292,10 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
         tsha = sha256_file(chain) if chain and os.path.isfile(chain) else None
         same = [r for r in ledger if r.get("kind") == "eval" and r.get("artifact") == art]
         prev = same[-1] if same else None
-        layers = sorted((["smoke"] if cfg.get("smoke", True) else []) + (["chain"] if chain else []))
+        want = (tuple(sorted((["smoke"] if cfg.get("smoke", True) else []) + (["chain"] if chain else []))), chain)
 
-        def same_config(r):   # the same layers on the same trial path: only then are two verdicts comparable
-            return sorted(r["plugs"]) == layers and r.get("trial") == chain
+        def same_config(r):
+            return config_of(r) == want
 
         # A verdict is reused only for the same bytes under the same config: a chain-only PASS must not
         # stand in for a run that now includes smoke (re-armed, artifact and trial unchanged).
@@ -331,7 +337,8 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
 # ---- feedback -----------------------------------------------------------------------------
 
 def render(rec, cfg, where):
-    same = [r for r in read_ledger() if r.get("kind") == "eval" and r.get("artifact") == rec["artifact"]]
+    same = [r for r in read_ledger() if r.get("kind") == "eval" and r.get("artifact") == rec["artifact"]
+            and config_of(r) == config_of(rec)]   # "previous" and the dominating record come from the same config only
     i = next(k for k, r in enumerate(same) if r["id"] == rec["id"])
     prev = same[i - 1] if i else None
     out = [f"[emu-loop] {where} · round {rec['round']}/{cfg['max_rounds']} · {rel(rec['artifact'])} @ {rec['sha'][:8]}",
@@ -505,9 +512,10 @@ def cmd_status():
     print(f"{len(evals)} evaluation(s) in {_p('ledger.jsonl')}")
     for r in evals[-5:]:
         print(f"  {r['ts']} {r['trigger']:<9} {r['gate']:<14} {r['id']} @{r['sha'][:8]} {fmtvec(r['vector'])}")
-    for art in sorted({r["artifact"] for r in evals}):
-        fr = frontier([r for r in evals if r["artifact"] == art and r["gate"] == "pass"])
-        print(f"frontier for {rel(art)}: " + ("; ".join(f"{r['id']} {fmtvec(r['vector'])}" for r in fr) or "none yet"))
+    for art, conf in sorted({(r["artifact"], config_of(r)) for r in evals}, key=str):
+        fr = frontier([r for r in evals if r["artifact"] == art and r["gate"] == "pass" and config_of(r) == conf])
+        print(f"frontier for {rel(art)} under {'+'.join(conf[0]) or 'no layer'} on {rel(conf[1]) or 'no trial'}: "
+              + ("; ".join(f"{r['id']} {fmtvec(r['vector'])}" for r in fr) or "none yet"))
     stops = sorted({f"{r['kind']}:{r.get('reason', '')}" for r in ledger if str(r.get("kind", "")).startswith("stop_")})
     print("stop decisions: " + (", ".join(stops) or "none"))
 

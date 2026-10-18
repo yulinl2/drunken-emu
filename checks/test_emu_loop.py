@@ -248,7 +248,7 @@ def test_a_new_arming_gets_its_own_rounds_even_within_the_same_second(loop, tmp_
     assert rc == 2 and "stop blocked 1/2" in err                # a fresh budget, not the old arming's spent one
 
 
-def test_a_pass_under_other_layers_is_no_baseline_for_a_regression(loop, monkeypatch):
+def test_a_pass_under_other_layers_is_no_baseline_for_a_regression(loop, monkeypatch, capsys):
     art, chain = loop
     monkeypatch.setattr(L, "plug_chain", fake_chain(1.0))
     L.hook_post_edit({})                                        # a chain-only pass at load 1
@@ -256,5 +256,9 @@ def test_a_pass_under_other_layers_is_no_baseline_for_a_regression(loop, monkeyp
     monkeypatch.setattr(L, "plug_smoke", lambda art, timeout=60: {"status": "go", "json": {"ok": True}, "wall_s": 0})
     art.write_text(art.read_text() + "// edited\n")             # a new candidate
     monkeypatch.setattr(L, "plug_chain", fake_chain(2.0))       # passes both layers, at a higher load
-    assert "REGRESSION" not in context(L.hook_post_edit({}))    # never smoke-checked, the old pass proves nothing here
+    ctx = context(L.hook_post_edit({}))
+    assert "REGRESSION" not in ctx and "vs previous" not in ctx  # never smoke-checked: no baseline, and no "worse" either
     assert L.hook_stop({})[0] == 0
+    L.main(["status"])
+    fronts = [x for x in capsys.readouterr().out.splitlines() if x.startswith("frontier for")]
+    assert len(fronts) == 2 and not any("none yet" in x for x in fronts)   # one frontier per config, each keeps its pass
