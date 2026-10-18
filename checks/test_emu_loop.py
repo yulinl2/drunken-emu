@@ -262,3 +262,29 @@ def test_a_pass_under_other_layers_is_no_baseline_for_a_regression(loop, monkeyp
     L.main(["status"])
     fronts = [x for x in capsys.readouterr().out.splitlines() if x.startswith("frontier for")]
     assert len(fronts) == 2 and not any("none yet" in x for x in fronts)   # one frontier per config, each keeps its pass
+
+
+def test_the_feedback_counts_stop_refusals_against_the_cap_not_evaluations(loop, monkeypatch):
+    art, chain = loop                                           # armed with max_rounds 2
+    monkeypatch.setattr(L, "plug_chain", fake_chain(1.0))
+    for i in range(3):                                          # three edits before any stop
+        art.write_text(art.read_text() + f"// {i}\n")
+        ctx = context(L.hook_post_edit({}))
+    assert "3/2" not in ctx and "evaluation 3 this arming" in ctx and "stop refusals used 0/2" in ctx
+
+
+def test_a_pass_that_a_later_verdict_replaced_is_no_baseline(loop, monkeypatch, capsys):
+    art, chain = loop
+    monkeypatch.setattr(L, "plug_chain", fake_chain(1.0))
+    L.hook_post_edit({})                                        # candidate A passes at load 1
+    a_pass = L.latest(str(art))["id"]
+    monkeypatch.setattr(L, "plug_chain", lambda path, timeout=20: {"status": "fail", "findings": 3, "load": 9.0,
+                                                                "classes": {"x": 3}, "top": [], "wall_s": 0})
+    L.evaluate_if_changed(str(art), L.load_armed(), "manual", force=True)   # re-checked by a changed checker: A fails
+    art.write_text(art.read_text() + "// B\n")                  # candidate B
+    monkeypatch.setattr(L, "plug_chain", fake_chain(2.0))
+    assert "REGRESSION" not in context(L.hook_post_edit({}))    # A's PASS was replaced, so it is no baseline
+    assert L.hook_stop({})[0] == 0
+    L.main(["status"])
+    front = [x for x in capsys.readouterr().out.splitlines() if x.startswith("frontier for")]
+    assert len(front) == 1 and L.latest(str(art))["id"] in front[0] and a_pass not in front[0]

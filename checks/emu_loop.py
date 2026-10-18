@@ -271,15 +271,31 @@ def config_of(r):
 
 
 def frontier(recs):
+    """The passing candidates no other passing candidate dominates. A candidate (artifact bytes + trial bytes) counts
+    at its newest verdict: a re-evaluation supersedes, so a PASS a later FAIL replaced is no baseline (the older line
+    stays in the ledger). Callers pass every record of one artifact and config, not only the passes."""
     newest = {}
     for r in recs:
-        newest[(r["sha"], r.get("trial_sha"))] = r   # a re-evaluation supersedes; the older line stays in the ledger
-    items = list(newest.values())
+        newest[(r["sha"], r.get("trial_sha"))] = r
+    items = [r for r in newest.values() if r["gate"] == "pass"]
     return [r for r in items if not any(dominates(o["vector"], r["vector"]) for o in items if o is not r)]
+
+
+def dominator(rec, ledger):
+    """The id of a candidate that dominates rec now: same artifact and config, another candidate, passing at its newest
+    verdict. Computed when a decision needs it, so a verdict that changed after rec was recorded counts."""
+    pool = [r for r in ledger if r.get("kind") == "eval" and r.get("artifact") == rec["artifact"]
+            and config_of(r) == config_of(rec) and (r["sha"], r.get("trial_sha")) != (rec["sha"], rec.get("trial_sha"))]
+    return next((r["id"] for r in frontier(pool) if dominates(r["vector"], rec["vector"])), None)
 
 
 def latest(art):
     return next((r for r in reversed(read_ledger()) if r.get("kind") == "eval" and r.get("artifact") == art), None)
+
+
+def refusals(cfg):
+    """Stop refusals this arming has used: the budget --max-rounds caps (evaluations are not counted against it)."""
+    return sum(1 for r in read_ledger()[cfg.get("since", 0):] if r.get("kind") == "stop_block")
 
 
 def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
@@ -315,10 +331,10 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
             vector["chain_findings"], vector["chain_load"] = c["findings"], c["load"]
         st = [p["status"] for p in plugs.values()]
         gate = "fail" if "fail" in st else "not_evaluated" if (not st or "not_evaluated" in st) else "pass"
-        passed = [r for r in same if r["gate"] == "pass" and same_config(r)]   # a pass under other layers is no baseline
         dom = None
-        if gate == "pass":
-            dom = next((r["id"] for r in frontier(passed) if dominates(r["vector"], vector)), None)
+        if gate == "pass":   # a pass under other layers, or one a later verdict replaced, is no baseline
+            dom = dominator({"artifact": art, "plugs": plugs, "trial": chain, "sha": sha, "trial_sha": tsha,
+                             "vector": vector}, ledger)
         snap = None
         if os.path.getsize(art) <= SNAP_MAX:
             snap = os.path.join(state_dir(), "cand", sha[:12] + os.path.splitext(art)[1])
@@ -341,7 +357,8 @@ def render(rec, cfg, where):
             and config_of(r) == config_of(rec)]   # "previous" and the dominating record come from the same config only
     i = next(k for k, r in enumerate(same) if r["id"] == rec["id"])
     prev = same[i - 1] if i else None
-    out = [f"[emu-loop] {where} · round {rec['round']}/{cfg['max_rounds']} · {rel(rec['artifact'])} @ {rec['sha'][:8]}",
+    out = [f"[emu-loop] {where} · evaluation {rec['round']} this arming · stop refusals used "
+           f"{refusals(cfg)}/{cfg['max_rounds']} · {rel(rec['artifact'])} @ {rec['sha'][:8]}",
            f"verdict: {VERDICT[rec['gate']]}"]
     ran = [LAYER[k] for k, v in rec["plugs"].items() if v["status"] != "not_evaluated"]
     out.append("layers run: " + ("; ".join(ran) or "none"))
@@ -414,15 +431,18 @@ def hook_stop(payload):
         blocks.append(f"[emu-loop] stop gate · {rel(art)}\nverdict: {VERDICT['not_evaluated']}\n"
                       f"NOT run — every layer: the watched artifact is gone (deleted or renamed).{hint} "
                       "If it moved on purpose, disarm and arm the new path.")
+    failing = []
     for art in arts:
         rec = evaluate_if_changed(art, cfg, "stop", sess) or latest(art)
+        if rec["gate"] == "pass":   # dominance as of now: a baseline may have been re-evaluated since rec was recorded
+            rec = {**rec, "dominated_by": dominator(rec, read_ledger())}
         if rec["gate"] != "pass" or rec.get("dominated_by"):
             unresolved.append(rel(art))
-            blocks.append(render(rec, cfg, "stop gate"))
+            failing.append(rec)
     if not unresolved:
         append({"kind": "stop_allowed", "reason": "gate pass", "session": sess})
         return 0, "", ""
-    used = sum(1 for r in read_ledger()[cfg.get("since", 0):] if r.get("kind") == "stop_block")
+    used = refusals(cfg)
     if used >= cfg["max_rounds"]:
         append({"kind": "stop_allowed", "reason": "round_cap", "unresolved": unresolved, "session": sess})
         return 0, (f"emu-loop: round cap {used}/{cfg['max_rounds']} reached; "
@@ -431,6 +451,7 @@ def hook_stop(payload):
         append({"kind": "stop_block", "round": used + 1, "unresolved": unresolved, "session": sess})
     except OSError:
         return 0, "emu-loop: ledger not writable, so rounds cannot be counted; stop allowed (fail-open)", ""
+    blocks += [render(rec, cfg, "stop gate") for rec in failing]   # rendered after this refusal is counted
     head = (f"[emu-loop] stop blocked {used + 1}/{cfg['max_rounds']}: the latest candidate does not pass. "
             "Fix it, or say in your reply why the verdict is wrong.")
     return 2, "", head + "\n\n" + "\n\n".join(blocks)
@@ -513,7 +534,7 @@ def cmd_status():
     for r in evals[-5:]:
         print(f"  {r['ts']} {r['trigger']:<9} {r['gate']:<14} {r['id']} @{r['sha'][:8]} {fmtvec(r['vector'])}")
     for art, conf in sorted({(r["artifact"], config_of(r)) for r in evals}, key=str):
-        fr = frontier([r for r in evals if r["artifact"] == art and r["gate"] == "pass" and config_of(r) == conf])
+        fr = frontier([r for r in evals if r["artifact"] == art and config_of(r) == conf])   # newest verdict per candidate
         print(f"frontier for {rel(art)} under {'+'.join(conf[0]) or 'no layer'} on {rel(conf[1]) or 'no trial'}: "
               + ("; ".join(f"{r['id']} {fmtvec(r['vector'])}" for r in fr) or "none yet"))
     stops = sorted({f"{r['kind']}:{r.get('reason', '')}" for r in ledger if str(r.get("kind", "")).startswith("stop_")})
