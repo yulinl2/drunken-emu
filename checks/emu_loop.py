@@ -164,6 +164,18 @@ def watched(cfg):
     return list(dict.fromkeys(found))
 
 
+MAGIC = re.compile(r"[*?[]")
+
+
+def missing(cfg):
+    """Watched artifacts that are gone (deleted or renamed): an exact --watch path, a file a pattern found when the
+    loop was armed, or one a hook evaluated since. An absent artifact is not a pass: the stop gate holds on it."""
+    exact = [p if os.path.isabs(p) else os.path.join(ROOT, p) for p in cfg.get("watch", []) if not MAGIC.search(p)]
+    since = [r["artifact"] for r in read_ledger()
+             if r.get("kind") == "eval" and r.get("trigger") != "manual" and r["ts"] >= cfg["armed_at"]]
+    return [p for p in dict.fromkeys(exact + cfg.get("found", []) + since) if not os.path.isfile(p)]
+
+
 def chain_path_for(art, template):
     p = template.replace("{stem}", os.path.splitext(os.path.basename(art))[0])
     return p if os.path.isabs(p) else os.path.join(ROOT, p)
@@ -274,7 +286,11 @@ def evaluate_if_changed(art, cfg, trigger, session=None, force=False):
         tsha = sha256_file(chain) if chain and os.path.isfile(chain) else None
         same = [r for r in ledger if r.get("kind") == "eval" and r.get("artifact") == art]
         prev = same[-1] if same else None
+        layers = sorted((["smoke"] if cfg.get("smoke", True) else []) + (["chain"] if chain else []))
+        # A verdict is reused only for the same bytes under the same layers: a chain-only PASS must not
+        # stand in for a run that now includes smoke (re-armed, artifact and trial unchanged).
         if (prev and not force and (prev["sha"], prev.get("trial_sha")) == (sha, tsha)
+                and sorted(prev["plugs"]) == layers and prev.get("trial") == chain
                 and not (trigger == "stop" and prev["gate"] == "not_evaluated")):
             return None
         plugs = {}
@@ -375,11 +391,19 @@ def hook_stop(payload):
     if not cfg:
         return 0, "", ""
     sess = payload.get("session_id")
-    arts = watched(cfg)
-    if not arts:
+    arts, gone = watched(cfg), missing(cfg)
+    if not arts and not gone:
         append({"kind": "stop_allowed", "reason": "nothing watched", "session": sess})
         return 0, "", ""
     unresolved, blocks = [], []
+    for art in gone:
+        prev = latest(art)
+        hint = (f" Restore the last evaluated copy: cp {rel(prev['snapshot'])} {rel(art)}."
+                if prev and prev.get("snapshot") else "")
+        unresolved.append(rel(art))
+        blocks.append(f"[emu-loop] stop gate · {rel(art)}\nverdict: {VERDICT['not_evaluated']}\n"
+                      f"NOT run — every layer: the watched artifact is gone (deleted or renamed).{hint} "
+                      "If it moved on purpose, disarm and arm the new path.")
     for art in arts:
         rec = evaluate_if_changed(art, cfg, "stop", sess) or latest(art)
         if rec["gate"] != "pass" or rec.get("dominated_by"):
@@ -411,8 +435,14 @@ def install(path):
             cfg = json.load(f)
     hooks = cfg.setdefault("hooks", {})
     for event, (matcher, which, timeout) in WIRING.items():
-        keep = [g for g in hooks.get(event, [])
-                if not any("emu_loop.py" in h.get("command", "") for h in g.get("hooks", []))]
+        keep = []
+        for g in hooks.get(event, []):
+            ours = [h for h in g.get("hooks", []) if "emu_loop.py" in h.get("command", "")]
+            rest = [h for h in g.get("hooks", []) if h not in ours]
+            if not ours:
+                keep.append(g)
+            elif rest:   # another command shares the group: keep it, without this module's old hook
+                keep.append({**g, "hooks": rest})
         entry = {"hooks": [{"type": "command", "command": HOOK + which, "timeout": timeout}]}
         if matcher:
             entry["matcher"] = matcher
@@ -444,6 +474,7 @@ def cmd_arm(a):
     if a.no_smoke and not a.chain:
         sys.exit("arm: nothing to run (--no-smoke without --chain)")
     cfg = {"armed_at": now(), "watch": a.watch, "chain": a.chain, "smoke": not a.no_smoke, "max_rounds": a.max_rounds}
+    cfg["found"] = watched(cfg)   # what the patterns find now; one of these going missing later is not a pass
     write_armed(cfg)
     append({"kind": "arm", "config": cfg})
     print(f"armed: watching {a.watch}; layers {([] if a.no_smoke else ['smoke']) + (['chain'] if a.chain else [])}; "

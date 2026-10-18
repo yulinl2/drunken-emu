@@ -200,3 +200,38 @@ def test_install_keeps_the_local_file_out_of_what_the_harness_stop_hook_flags(tm
     L.keep_local(str(target))                                   # idempotent
     assert untracked() == ""
     assert (tmp_path / ".git" / "info" / "exclude").read_text().count("settings.local.json") == 1
+
+
+def test_a_watched_artifact_that_disappears_is_not_a_pass(loop, tmp_path):
+    art, chain = loop
+    shutil.copy(GOOD, chain)
+    assert L.hook_stop({})[0] == 0                              # control: present and passing
+    art.unlink()                                                # deleted, or renamed away
+    rc, out, err = L.hook_stop({})
+    assert rc == 2 and "gone" in err and "NOT EVALUATED" in err and "cp " in err
+    art.write_text("export default function A() { return null }\n")
+    L.main(["arm", "--watch", str(tmp_path / "*.jsx"), "--chain", str(tmp_path / "{stem}.chain.json"), "--no-smoke"])
+    art.unlink()                                                # a pattern that found it when armed now finds nothing
+    rc, out, err = L.hook_stop({})
+    assert rc == 2 and "gone" in err
+
+
+def test_a_verdict_is_reused_only_under_the_same_layers(loop, monkeypatch):
+    art, chain = loop
+    shutil.copy(GOOD, chain)
+    assert L.hook_stop({})[0] == 0                              # armed chain-only: PASS
+    L.write_armed({**L.load_armed(), "smoke": True})            # re-armed with smoke; the bytes are unchanged
+    monkeypatch.setattr(L, "plug_smoke", lambda art, timeout=60: {"status": "fail", "json": {"ok": False}, "wall_s": 0})
+    rc, out, err = L.hook_stop({})
+    assert rc == 2 and "smoke" in err                           # the new layer ran; the chain-only PASS was not reused
+
+
+def test_install_keeps_a_command_that_shares_a_group_with_the_hook(tmp_path):
+    p = tmp_path / "settings.json"
+    L.install(str(p))
+    cfg = json.loads(p.read_text())
+    cfg["hooks"]["Stop"][0]["hooks"].append({"type": "command", "command": "echo mine"})   # a user's own command
+    p.write_text(json.dumps(cfg))
+    L.install(str(p))
+    cmds = [h["command"] for g in json.loads(p.read_text())["hooks"]["Stop"] for h in g["hooks"]]
+    assert "echo mine" in cmds and sum("emu_loop.py" in c for c in cmds) == 1
