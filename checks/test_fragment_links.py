@@ -14,7 +14,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 pytest.importorskip("playwright") if not os.environ.get("CI") else None
-from fragment_links import check  # noqa: E402
+from fragment_links import check, launch  # noqa: E402  (the probe uses the launcher the check uses)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIX = os.path.join(HERE, "fixtures")
@@ -24,7 +24,7 @@ def _require_chromium():
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            b = p.chromium.launch(); b.close()
+            launch(p).close()
     except Exception as e:  # noqa: BLE001
         if os.environ.get("CI"):
             pytest.fail(f"Chromium must launch under CI: {e}")

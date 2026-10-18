@@ -69,3 +69,5 @@ jobs:
         run: python3 -m pytest -q checks/test_explore_run.py
       - name: svg_text_gates and figpipe --svg, the gates the tests pin
         run: python3 -m pytest -q checks/test_external_svg.py
+      - name: every Chromium launch goes through checks/browser.py (#72; reads the source, no browser)
+        run: python3 -m pytest -q checks/test_launch_sites.py

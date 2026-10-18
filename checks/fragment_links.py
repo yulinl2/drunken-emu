@@ -24,6 +24,9 @@ import json, os, subprocess, sys, time
 from urllib.parse import unquote
 
 KIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, KIT)
+from checks.browser import launch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+
 EXIT = {"PASS": 0, "FAIL": 1, "ERROR": 2, "EMPTY": 3}
 
 
@@ -40,7 +43,7 @@ def check(art: str, port: int = 8137, mount_timeout_ms: int = 15000) -> dict:
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            b = p.chromium.launch()
+            b = launch(p)
             page = b.new_page(viewport={"width": 390, "height": 844})
             page.on("pageerror", lambda e: out["page_errors"].append(str(e)))
             page.goto(f"http://127.0.0.1:{port}/harness/harness.html")
