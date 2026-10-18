@@ -24,9 +24,10 @@ Output: one JSON line {step, screenshot, affordances:[{text,x,y,w,h,salience,via
   via = "semantic" (button/a/input/...) | "pointer-only" (cursor:pointer with no role: a reader can find it,
   a keyboard or screen-reader user cannot). Page errors seen during the replay are returned in `errors`.
 """
-import asyncio, json, os, sys, time
+import asyncio, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from affordances import AFF_JS, settle
+from browser import alaunch
 from playwright.async_api import async_playwright
 
 URL, OUT, TRACE = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -44,10 +45,7 @@ async def main():
         tr["viewport"] = [w, h]; tr["touch"] = "--mouse" not in sys.argv
     if ACT: tr["actions"].append(ACT)
     async with async_playwright() as p:
-        try: b = await p.chromium.launch()
-        except Exception:                                         # pip's pinned revision != the container's (SANDBOX-FACTS)
-            import glob; exe = sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"), reverse=True)
-            b = await p.chromium.launch(executable_path=exe[0])
+        b = await alaunch(p)                                      # pip's pinned revision != the container's (SANDBOX-FACTS)
         touch = tr.get("touch", True)
         pg = await b.new_page(viewport={"width":tr["viewport"][0],"height":tr["viewport"][1]}, device_scale_factor=2 if touch else 1, has_touch=touch)
         errors = []

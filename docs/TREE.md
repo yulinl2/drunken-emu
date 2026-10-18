@@ -89,6 +89,7 @@ that is never executed is not a regeneration command.
 |   |-- test_explore_text.py
 |   |-- test_external_svg.py
 |   |-- test_fragment_links.py
+|   |-- test_launch_sites.py
 |   |-- test_prediction.py
 |   `-- test_sync_artifact.py
 |-- docs/
@@ -246,5 +247,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 192 files tracked
+29 directories, 193 files tracked
 ```

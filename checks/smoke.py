@@ -8,10 +8,14 @@ Prints one JSON line: phases (s), root child count, js errors, overflow px.
 """
 import asyncio
 import json
+import os
 import sys
 import time
 
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -20,7 +24,7 @@ async def main():
     t = {}
     t0 = time.monotonic()
     async with async_playwright() as p:
-        b = await p.chromium.launch(
+        b = await alaunch(p,
             args=["--ignore-certificate-errors", "--no-sandbox", "--disable-dev-shm-usage"])
         t["launch_chromium"] = round(time.monotonic() - t0, 2)
 
