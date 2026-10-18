@@ -16,10 +16,14 @@ Each anchor i produces <out_dir>/R_<i>_<slug>.png; prints found/not per anchor.
 """
 import asyncio
 import json
+import os
 import re
 import sys
 
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
 
 URL, OUT = sys.argv[1], sys.argv[2]
 ANCHORS = sys.argv[3:]
@@ -27,7 +31,7 @@ ANCHORS = sys.argv[3:]
 async def main():
     res = {}
     async with async_playwright() as p:
-        b = await p.chromium.launch(
+        b = await alaunch(p,
             args=["--ignore-certificate-errors", "--no-sandbox", "--disable-dev-shm-usage"])
         c = await b.new_context(viewport={"width": 390, "height": 844},
                                 has_touch=True, is_mobile=True, device_scale_factor=2)

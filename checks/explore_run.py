@@ -35,9 +35,10 @@ PolicyError: an action the runner silently downgraded or ignored would make the 
 Output: one table per run (rate of TRUE success per level, Wilson 95% interval, mean steps, hijacks, false completions)
 and OUT/sweep_<label>.json with every trial. `false completion` = the reader believed it was done but ground truth says no.
 """
-import argparse, asyncio, glob, importlib.util, json, math, os, random, sys
+import argparse, asyncio, importlib.util, json, math, os, random, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from affordances import AFF_JS, settle
+from browser import alaunch
 from playwright.async_api import async_playwright
 
 
@@ -153,9 +154,7 @@ async def main():
     pol = load_policy(args.policy); vp = tuple(int(v) for v in args.viewport.split("x")); touch = not args.mouse
     os.makedirs(args.out, exist_ok=True); results = []
     async with async_playwright() as pw:
-        try: browser = await pw.chromium.launch()
-        except Exception:                                          # pip's pinned revision != the container's (SANDBOX-FACTS)
-            exe = sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux*/chrome"), reverse=True); browser = await pw.chromium.launch(executable_path=exe[0])
+        browser = await alaunch(pw)                                # pip's pinned revision != the container's (SANDBOX-FACTS)
         print(f"goal: {pol.GOAL}\nviewport {vp} {'touch' if touch else 'mouse'} · budget {args.budget} · patience {args.patience} · trials/level {args.trials} · seed {args.seed}")
         print(f"{'p':>5} {'success':>9} {'95% CI':>13} {'mean steps':>11} {'hijacks':>8} {'false-done':>11} {'abandoned':>10} {'censored':>9}")
         for li, p in enumerate(float(x) for x in args.levels.split(",")):
