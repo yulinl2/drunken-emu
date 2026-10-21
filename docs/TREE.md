@@ -121,6 +121,9 @@ that is never executed is not a regeneration command.
 |   |   |-- hw2-sample-pass.measured-example-bank.json
 |   |   |-- hw2-sample-pass.measured.json
 |   |   `-- hw2-sample-pass.prediction.json
+|   |-- CLAUDE-CODE-PKM-HARNESS.md
+|   |-- CLAUDE-CODE-PKM-TOOLS.md
+|   |-- CLAUDE-CODE-PKM.md
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -247,5 +250,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 193 files tracked
+29 directories, 196 files tracked
 ```
