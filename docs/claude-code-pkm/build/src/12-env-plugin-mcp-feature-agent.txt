@@ -1,0 +1,117 @@
+# Environment variables (kind env), plugins, mods, MCP, features (INDEX unless marked), agent types (kind agent-type).
+env.claude-project-dir | env | VERIFIED | S2 | CLAUDE_PROJECT_DIR | Project root where the session started. Available to command hooks, to stdio MCP servers and to plugin LSP servers. It does not move into a worktree; use cwd for the current directory. Not set in the Bash tool here ([[obs.claude-project-dir-unset-in-bash]]).
+env.claude-plugin-root | env | VERIFIED | S2 | CLAUDE_PLUGIN_ROOT | Plugin installation directory, for command hooks. Substituted into command and exported to the process.
+env.claude-plugin-data | env | VERIFIED | S2 | CLAUDE_PLUGIN_DATA | Plugin persistent data directory, for command hooks.
+env.claude-plugin-option | env | VERIFIED | S2 | CLAUDE_PLUGIN_OPTION_<KEY> | A plugin's user-config value, for example CLAUDE_PLUGIN_OPTION_WEBHOOK_URL. Read it from exec-form or shell-form plugin hooks.
+env.claude-env-file | env | VERIFIED | S2, S6 | CLAUDE_ENV_FILE | A file path. In SessionStart hooks, export lines appended to it apply to later Bash commands. Set it before launch to make variables persist across Bash commands ([[tool.bash]]).
+env.claude-effort | env | VERIFIED | S2 | CLAUDE_EFFORT | The current effort level, available to hook commands and to the Bash tool.
+env.claude-code-remote | env | VERIFIED | S2 | CLAUDE_CODE_REMOTE | "true" in remote web environments; unset in the local CLI.
+env.claude-code-bridge-session-id | env | VERIFIED | S2 | CLAUDE_CODE_BRIDGE_SESSION_ID | The Remote Control session ID while connected (v2.1.199 or later).
+env.claude-code-subprocess-env-scrub | env | VERIFIED | S2 | CLAUDE_CODE_SUBPROCESS_ENV_SCRUB | Set to 1 to scrub more environment variables from hook processes. By default, OTEL exporter variables are removed.
+env.bash-default-timeout-ms | env | VERIFIED | S6 | BASH_DEFAULT_TIMEOUT_MS | The default timeout when Claude passes none; 2 minutes out of the box. Above 1,800,000 ms it also replaces the 30-minute background default.
+env.bash-max-timeout-ms | env | VERIFIED | S6 | BASH_MAX_TIMEOUT_MS | The ceiling on requested timeouts; 10 minutes out of the box. Above 7,200,000 ms it also raises the 2-hour background cap.
+env.bash-max-output-length | env | VERIFIED | S6 | BASH_MAX_OUTPUT_LENGTH | Characters read back from a command's output file: 30,000 by default, with a hard ceiling of 150,000. Replaced by the bashOutputMaxChars setting, which ignores it ([[setting.bash-output-max-chars]]).
+env.claude-code-tool-memory-limit | env | VERIFIED | S6 | CLAUDE_CODE_TOOL_MEMORY_LIMIT | On Linux and WSL, caps the memory that Bash, PowerShell and Monitor commands share, for example 4G (v2.1.233 or later).
+env.claude-code-tool-memory-cgroup-exclude | env | VERIFIED | S6 | CLAUDE_CODE_TOOL_MEMORY_CGROUP_EXCLUDE | A list of process kinds exempt from the memory cap: mcp, lsp, hooks, plugin, helper and agent. none caps every kind; all-new caps only the Bash, PowerShell and Monitor commands (v2.1.246 or later).
+env.claude-code-disable-background-tasks | env | VERIFIED | S6 | CLAUDE_CODE_DISABLE_BACKGROUND_TASKS | Set to 1 to disable auto-backgrounding and background task functionality. A command that reaches its timeout then stops.
+env.claude-bash-maintain-project-working-dir | env | VERIFIED | S6 | CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR | Set to 1 so every Bash command starts in the project directory, with no cd carry-over.
+env.claude-code-glob-no-ignore | env | VERIFIED | S6 | CLAUDE_CODE_GLOB_NO_IGNORE | Set to false before launch to make Glob respect .gitignore ([[tool.glob]]).
+env.claude-code-enable-tasks | env | VERIFIED | S6 | CLAUDE_CODE_ENABLE_TASKS | Set to 0 to re-enable TodoWrite in sessions that have the task-tracking tools, as worded in the tools reference ([[tool.todo-write]]).
+env.claude-code-use-powershell-tool | env | VERIFIED | S6 | CLAUDE_CODE_USE_POWERSHELL_TOOL | 1 enables the PowerShell tool on Bedrock, Agent Platform and Foundry, and 0 turns it off on Windows. Required on Linux, macOS and WSL, which also need pwsh 7 or later ([[tool.powershell]]).
+env.claude-code-powershell-respect-execution-policy | env | VERIFIED | S6 | CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY | Set to 1 to respect the machine's effective execution policy, instead of the process-scope bypass Claude Code uses by default.
+env.claude-config-dir | env | VERIFIED | S3 | CLAUDE_CONFIG_DIR | Moves the home config folder, where settings, session history and plugins are stored. See [[setting-file.global-config]].
+env.mcp-timeout | env | VERIFIED | S4, S6 | MCP_TIMEOUT | The MCP startup timeout, 30 seconds by default. Used by [[flag.mcp-config]] and [[flag.permission-prompt-tool]] when they wait for servers.
+env.claude-ax-screen-reader | env | VERIFIED | S4 | CLAUDE_AX_SCREEN_READER | Screen-reader output. The --ax-screen-reader flag takes precedence over it ([[flag.ax-screen-reader]]).
+env.claude-code-simple | env | VERIFIED | S4 | CLAUDE_CODE_SIMPLE | Set by --bare. Loads only shell and file tools ([[flag.bare]]).
+env.claude-code-safe-mode | env | VERIFIED | S4 | CLAUDE_CODE_SAFE_MODE | Set by --safe-mode ([[flag.safe-mode]]).
+env.claude-code-disable-nonessential-traffic | env | VERIFIED | S6 | CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC | When set, the Monitor tool is not available ([[tool.monitor]]).
+env.disable-telemetry | env | VERIFIED | S6 | DISABLE_TELEMETRY | When set, the Monitor tool is not available ([[tool.monitor]]).
+env.anthropic-model | env | VERIFIED | S2, S3 | ANTHROPIC_MODEL | A shell variable that overrides the model setting. It reflects the shell, not /model changes. See [[precedence.env-not-a-level]].
+env.claude-code-skip-prompt-history | env | VERIFIED | S4 | CLAUDE_CODE_SKIP_PROMPT_HISTORY | Same effect as [[flag.no-session-persistence]], in any mode.
+env.claude-code-provider-managed-by-host | env | VERIFIED | S3 | CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST | Set by an app that runs Claude Code inside itself. Its model configuration takes over the model keys from every managed source.
+env.claude-remote-control-session-name-prefix | env | VERIFIED | S4 | CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX | Same effect as [[flag.remote-control-session-name-prefix]].
+plugin.overview | plugin | INDEX | S1 | Plugins overview | A plugin bundles skills, hooks, MCP servers, agents and output styles. Use one instead of a skill or MCP server when several kinds of component need shipping together.
+plugin.components | plugin | INDEX | S1, S5 | Plugin components | Plugins add skills, hooks, MCP servers and other component types. /reload-plugins applies changes to hooks/, .mcp.json, agents/ and output-styles/ ([[cmd.reload-plugins]]).
+plugin.hooks-json | plugin | VERIFIED | S2 | Plugin hooks file | A plugin's hooks/hooks.json applies while the plugin is enabled ([[hook-rule.location-plugin]]).
+plugin.commands-cli | plugin | VERIFIED | S4 | claude plugin | The CLI entry point for plugins; alias plugins. See [[cli.plugin]].
+plugin.load-flags | plugin | VERIFIED | S4 | Plugin load flags | --plugin-dir loads a directory or .zip for one session; --plugin-url fetches a .zip from a URL for one session ([[flag.plugin-dir]], [[flag.plugin-url]]).
+plugin.install | plugin | INDEX | S1 | Install and manage plugins | Install from a marketplace, choose a scope, and update or remove plugins.
+plugin.marketplaces | plugin | INDEX | S1 | Plugin marketplaces | Anthropic's official, community and demo marketplaces, and how to add them. Hosting and maintenance are separate pages.
+plugin.dependencies | plugin | INDEX | S1 | Plugin dependencies | Declares dependencies with version ranges, and how Claude Code installs and prunes them.
+plugin.evals | plugin | INDEX | S1 | Plugin evals | Runs eval cases with claude plugin eval, compares against a no-plugin baseline, and can gate CI on the score.
+plugin.security | plugin | INDEX | S1 | Plugin security and trust | What a plugin can do on the machine, and how to review, trust or remove one.
+plugin.org-management | plugin | INDEX | S1 | Organization plugin controls | Controls which plugins are installed and allowed across an organization, through managed settings.
+plugin.loading | plugin | INDEX | S1 | Plugin loading | Where each plugin loads from, which settings file controls it, and why an update may change nothing.
+mod.overview | mod | INDEX | S1 | Mods overview | What mods can do: panes, commands and tool-call rules. How to get one, and where it runs.
+mod.panes | mod | INDEX | S1 | Mods: panes and interface | Draw panes, buttons and text fields; handle input; keep state across redraws and sessions.
+mod.hooks-module | mod | INDEX | S1 | Mods: hooks module | A mod's hooks module lays out its events, API methods and render sites. Its events observe, rewrite or answer tool calls, prompts and turns.
+mod.tool-call-rules | mod | INDEX | S1 | Mods: tool-call rules | Observe, rewrite or answer tool calls, prompts and turns; filter which events a hook handles.
+mod.admin | mod | INDEX | S1 | Mods: organization controls | Stops user-installed mods, allows only the organization's own mods, and enforces policy through managed settings.
+mcp.overview | mcp | INDEX | S1, S4 | MCP overview | Model Context Protocol servers add tools, resources and prompts. Configured with the claude mcp commands ([[cli.mcp]]).
+mcp.naming | mcp | VERIFIED | S2 | MCP tool names | MCP tools are named mcp__<server>__<tool>. Plugin-bundled servers use mcp__plugin_<plugin>_<server>__<tool>. See [[hook-rule.matcher-mcp-naming]].
+mcp.resources | mcp | VERIFIED | S6, S7 | MCP resources | Resources are read through ListMcpResourcesTool, ReadMcpResourceTool and ReadMcpResourceDirTool. The listing leaves out MCP Apps UI resources.
+mcp.tool-search | mcp | VERIFIED | S6 | MCP tool search | MCP tool schemas load on demand through ToolSearch. The WaitForMcpServers tool appears only when tool search is off ([[tool.wait-for-mcp-servers]]).
+mcp.channels | mcp | INDEX | S1, S4 | MCP channels | An MCP server can push messages, alerts and webhooks into a running session. Research-preview flag: [[flag.channels]].
+mcp.managed | mcp | INDEX | S1 | Managed MCP | Restricts or provides MCP servers through managed config files, settings, allowlists and denylists.
+mcp.connectors-and-plugin-servers | mcp | SESSION | S11 | Connectors and plugin servers | Harness notices distinguish claude.ai connectors, which are signed in through connector settings, from other servers, which cannot be signed in from the session. Names are not recorded here ([[question.q15]]).
+feature.session-management | feature | INDEX | S1 | Manage sessions | Name, resume, branch and switch conversations, and export transcripts. CLI flags: [[flag.resume]], [[flag.continue]].
+feature.output-styles | feature | INDEX | S1 | Output styles | Changes Claude's role, tone and format with a built-in style such as Concise or Explanatory, or a custom style.
+feature.status-line | feature | INDEX | S1 | Status line | A custom status bar showing context-window use, costs and git status. Configured by the statusline-setup agent ([[agent-type.statusline-setup]]).
+feature.keybindings | feature | INDEX | S1, S8 | Keyboard shortcuts | Remaps shortcuts through a keybindings configuration file. The keybindings skill points to ~/.claude/keybindings.json ([[skill.keybindings-help]]). The shortcut list was not fetched ([[gap.keybindings]]).
+feature.terminal-config | feature | INDEX | S1 | Terminal configuration | Fixes Shift+Enter, sets the bell, tmux and theme, and enables Vim mode.
+feature.fullscreen | feature | INDEX | S1 | Fullscreen rendering | Flicker-free rendering with mouse support and stable memory in long conversations.
+feature.accessibility | feature | INDEX | S1, S4 | Accessibility | Screen reader setup with VoiceOver and NVDA, magnifier, reduced-motion and colorblind-friendly themes. Flags: [[flag.ax-screen-reader]].
+feature.voice-dictation | feature | INDEX | S1 | Voice dictation | Speaks prompts in the CLI with hold-to-record or tap-to-record dictation.
+feature.checkpointing | feature | INDEX | S1, S5 | Checkpointing | Tracks, rewinds and summarizes edits and conversation. /rewind restores edited files ([[cmd.rewind]]).
+feature.context-window | feature | INDEX | S1 | Context window | An interactive view of how the context window fills and what each file read costs.
+feature.prompt-caching | feature | INDEX | S1 | Prompt caching | Why model switches and /compact cost what they do, and how to check the cache hit rate.
+feature.model-config | feature | INDEX | S1 | Model configuration | Choose the model, effort levels, extended context and the auto-compact window.
+feature.fast-mode | feature | INDEX | S1, S8 | Fast mode | Faster responses on a supported model, toggled with [[cmd.fast]].
+feature.advisor | feature | INDEX | S1, S4 | Advisor tool | Pairs the main model with a stronger advisor model that is consulted at key moments. Flag: [[flag.advisor]].
+feature.auto-mode | feature | INDEX | S1, S6 | Auto mode | A classifier decides most permission prompts. Its configuration page covers trusted repositories, buckets and domains. See [[permission-mode.auto]].
+feature.monitoring | feature | INDEX | S1 | Monitoring | Enables and configures OpenTelemetry for Claude Code.
+feature.costs | feature | INDEX | S1 | Costs | Tracks token usage, sets team spend limits, and reduces cost with context, model and thinking settings.
+feature.analytics | feature | INDEX | S1 | Analytics | Usage metrics, adoption tracking and engineering velocity in the analytics dashboard.
+feature.sandboxing | feature | INDEX | S1 | Sandboxed Bash tool | Restricts which files and network hosts shell commands can reach. The dangerouslyDisableSandbox parameter is on the Bash tool ([[tool.bash]]).
+feature.sandbox-environments | feature | INDEX | S1 | Sandbox environments | Compares the built-in sandbox, the sandbox runtime, dev containers, Docker and VMs.
+feature.agent-sdk | feature | INDEX | S1 | Agent SDK | Build agents with Claude Code as a library, in Python or TypeScript: sessions, hooks, permissions, MCP, subagents, plugins, cost tracking and hosting.
+feature.print-mode | feature | VERIFIED | S4 | Print mode | Runs one prompt with -p and exits. See [[cli-form.print]] and [[feature.agent-sdk]].
+feature.workflows | feature | VERIFIED | S1, S6, S8 | Dynamic workflows | A rerunnable script, written by Claude, that orchestrates many subagents for audits, migrations and research. Runs through [[tool.workflow]]. Opt-in, and its default size guideline is under 10 agents.
+feature.agent-teams | feature | INDEX | S1 | Agent teams | Coordinate instances as a team with shared tasks, inter-agent messaging and central management. Hooks: [[hook.teammate-idle]].
+feature.agent-view | feature | INDEX | S1, S4 | Agent view | Dispatch and manage many sessions from one screen, and see which ones need input. CLI: [[cli.agents]].
+feature.cross-session-messaging | feature | INDEX | S1, S6 | Cross-session messaging | Lets Claude list and message other sessions, on this machine or elsewhere. Tools: [[tool.list-agents]], [[tool.send-message]].
+feature.worktrees | feature | INDEX | S1, S6 | Worktrees | Isolates parallel sessions in git worktrees, with --worktree, subagent isolation and cleanup. Hooks: [[hook.worktree-create]].
+feature.scheduled-tasks | feature | INDEX | S1 | Scheduled prompts | Repeats prompts with /loop and cron tools, polls status, or sets one-time reminders. Tools: [[tool.cron-create]], [[tool.schedule-wakeup]].
+feature.routines | feature | INDEX | S1 | Cloud scheduled tasks (routines) | Cloud scheduled tasks, formerly called routines, triggered by a schedule, an API call or a GitHub event. Tool: [[tool.remote-trigger]].
+feature.goal | feature | INDEX | S1 | Goal mode | Sets a completion condition with /goal, so Claude keeps working until it is met or cannot be. See [[cmd.goal]].
+feature.channels | feature | INDEX | S1 | Channels | Pushes messages, alerts and webhooks from an MCP server into a live session. See [[mcp.channels]].
+feature.remote-control | feature | INDEX | S1, S4 | Remote Control | Continue a local session from a phone, tablet or browser through claude.ai/code or the mobile app. CLI: [[cli.remote-control]].
+feature.claude-code-on-the-web | feature | INDEX | S1, S10 | Claude Code on the web | Runs cloud sessions from a browser, phone, desktop or terminal. --cloud and --teleport move them ([[flag.cloud]], [[flag.teleport]]).
+feature.web-quickstart | feature | INDEX | S1 | Cloud quickstart | Connects a GitHub repository, submits a task and reviews the PR, with no local setup.
+feature.cloud-environments | feature | INDEX | S1, S3 | Cloud environments | Network access levels, environment variables, setup scripts and caching for cloud sessions. Settings rules: [[setting.cloud-repo-file-read]].
+feature.self-hosted-environments | feature | INDEX | S1, S4 | Self-hosted environments | Runs cloud sessions on your own infrastructure. Runner subcommand: [[cli.self-hosted-runner]].
+feature.desktop-app | feature | INDEX | S1 | Desktop app | Git-isolated parallel sessions, an integrated terminal and editor, computer use, diff review and PR monitoring.
+feature.vs-code | feature | INDEX | S1 | VS Code extension | Inline diffs, @-mentions, plan review and shortcuts in the editor.
+feature.jetbrains | feature | INDEX | S1 | JetBrains IDEs | Claude Code in IntelliJ, PyCharm, WebStorm and other JetBrains IDEs.
+feature.chrome | feature | INDEX | S1, S4 | Chrome integration | Tests web apps, debugs with console logs, fills forms and extracts data from pages. Flags: [[flag.chrome]], [[flag.no-chrome]].
+feature.computer-use-cli | feature | INDEX | S1 | Computer use from the CLI | Opens apps, clicks, types and sees the screen, on macOS.
+feature.slack | feature | INDEX | S1 | Claude Code in Slack | Delegates coding tasks from Slack. An earlier version was for Pro and Max accounts in workspaces not connected to Claude Tag.
+feature.claude-tag | feature | INDEX | S1 | Claude Tag | Brings Claude into a team's Slack channels.
+feature.github-actions | feature | INDEX | S1 | GitHub Actions | Responds to @claude mentions, automates tasks and turns issues into pull requests in Actions.
+feature.gitlab-ci-cd | feature | INDEX | S1 | GitLab CI/CD | Integrates Claude Code into GitLab CI/CD workflows.
+feature.mobile | feature | INDEX | S1 | Mobile | Starts, monitors and steers tasks from the Claude iOS and Android apps.
+feature.deep-links | feature | INDEX | S1 | Deep links | Opens a session from a claude-cli:// link that sets the repository and the prompt.
+feature.local-code-review | feature | INDEX | S1, S6 | Local code review | Finds bugs in the branch's changes, reviews a PR or path, and can apply fixes. Structured output: [[tool.report-findings]]. Command: [[cmd.code-review]].
+feature.ultrareview | feature | INDEX | S1, S4 | Ultrareview | Deep, multi-agent cloud review that finds and verifies bugs before merge. CLI: [[cli.ultrareview]].
+feature.code-review-prs | feature | INDEX | S1 | Code Review on pull requests | Claude reviews GitHub PRs, verifies its findings and comments inline (Team and Enterprise plans).
+feature.security-guidance | feature | INDEX | S1 | Security guidance plugin | Reviews Claude's changes for vulnerabilities and fixes them in the same session.
+feature.claude-security | feature | INDEX | S1 | Claude Security plugin | Scans a codebase and turns findings into patches to review and apply.
+feature.changelog | feature | INDEX | S1 | Changelog | Release notes by version: new features, improvements and fixes.
+feature.whats-new | feature | INDEX | S1 | What's new digest | A weekly digest of notable features, from Week 13 through Week 37 of 2026 in the index.
+agent-type.claude | agent-type | SESSION | S8 | claude | Catch-all agent type for the Agent tool. See [[tool.agent]].
+agent-type.claude-code-guide | agent-type | SESSION | S8 | claude-code-guide | Answers questions about Claude Code, the Agent SDK, the API and related products.
+agent-type.explore | agent-type | SESSION | S8 | Explore | Read-only search across many files. Hooks can match it by name ([[hook.subagent-start]]).
+agent-type.general-purpose | agent-type | SESSION | S8 | general-purpose | Research and multi-step work in a separate context.
+agent-type.plan | agent-type | SESSION | S8 | Plan | Designs implementation plans and identifies critical files.
+agent-type.statusline-setup | agent-type | SESSION | S8 | statusline-setup | Configures the user's status line. See [[feature.status-line]].
+agent-type.zapier-specialist | agent-type | SESSION | S8 | zapier:Zapier MCP Specialist | Plugin-provided. Discovers, enables, audits and runs Zapier actions while following the read and write confirmation rules.

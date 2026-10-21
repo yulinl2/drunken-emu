@@ -1,0 +1,47 @@
+# Official built-in tools (kind tool), from the tools reference (S6). "Here" is this session's status.
+tool.agent | tool | VERIFIED | S6, S8 | Agent | Permission: No. Spawns a subagent with its own context window. With agent teams on, a call with a name launches a teammate. Here: direct. See [[term.subagent]] and [[term.fork]].
+tool.artifact | tool | VERIFIED | S6, S8 | Artifact | Permission: Yes. Publishes an HTML or Markdown page to claude.ai. Needs a Pro, Max, Team or Enterprise plan and /login. Here: direct. See [[term.artifact]].
+tool.ask-user-question | tool | VERIFIED | S6, S8 | AskUserQuestion | Permission: No. Asks multiple-choice questions. Questions stay open until answered, unless [[setting.ask-user-question-timeout]] is set. Here: direct.
+tool.bash | tool | VERIFIED | S6, S8 | Bash | Permission: Yes. Runs shell commands, each in a separate process. Limits: [[process.bash-output-limits]] and [[process.background-time-limit]]. Environment: [[env.bash-default-timeout-ms]] and [[env.bash-max-timeout-ms]]. Here: direct.
+tool.cron-create | tool | VERIFIED | S6, S7 | CronCreate | Permission: No. Schedules a recurring or one-shot prompt in this session. Session-scoped; restored on resume if unexpired. Here: deferred. See [[feature.scheduled-tasks]].
+tool.cron-delete | tool | VERIFIED | S6, S7 | CronDelete | Permission: No. Cancels a session-scoped scheduled task by ID. Here: deferred.
+tool.cron-list | tool | VERIFIED | S6, S7 | CronList | Permission: No. Lists session-scoped scheduled tasks. Here: deferred.
+tool.edit | tool | VERIFIED | S6, S8 | Edit | Permission: Yes. Exact string replacement in a file. Path rules: [[permission-rule.edit-grants-read]]. Here: direct.
+tool.end-conversation | tool | VERIFIED | S6 | EndConversation | Permission: No. Ends the session in rare cases of sustained abusive input, or when asked to demonstrate. Not offered in cloud sessions, the SDK, -p runs or --bare. Here: absent; the gate matches ([[question.q3]]).
+tool.enter-plan-mode | tool | VERIFIED | S6, S7 | EnterPlanMode | Permission: No. Switches to plan mode to design an approach before coding. Here: deferred. See [[permission-mode.plan]].
+tool.enter-worktree | tool | VERIFIED | S6, S7 | EnterWorktree | Permission: Yes. Creates or enters a git worktree. A path outside .claude/worktrees/ needs approval. Here: deferred. See [[feature.worktrees]].
+tool.exit-plan-mode | tool | VERIFIED | S6, S7 | ExitPlanMode | Permission: Yes. Presents a plan for approval and exits plan mode. Here: deferred.
+tool.exit-worktree | tool | VERIFIED | S6, S7 | ExitWorktree | Permission: No. Leaves a worktree session. Refuses removal with uncommitted or unmerged work, unless discard_changes is set. Here: deferred.
+tool.glob | tool | VERIFIED | S6, S8 | Glob | Permission: No. Finds files by pattern. Sorted by modification time, capped at 100 files, and ignores .gitignore by default. Absent by default on macOS, Linux and WSL ([[question.q2]]). Here: direct.
+tool.grep | tool | VERIFIED | S6, S8 | Grep | Permission: No. Searches file contents with ripgrep syntax, and skips gitignored files. Absent by default on macOS, Linux and WSL ([[question.q2]]). Here: direct.
+tool.list-agents | tool | VERIFIED | S6, S8 | ListAgents | Permission: No. Lists the agents that SendMessage can reach. Appears only where cross-session messaging is enabled. Here: direct. See [[feature.cross-session-messaging]].
+tool.list-mcp-resources | tool | VERIFIED | S6, S7 | ListMcpResourcesTool | Permission: No. Lists resources from connected MCP servers, leaving out MCP Apps UI resources. Here: deferred. See [[mcp.resources]].
+tool.lsp | tool | VERIFIED | S6 | LSP | Permission: No. Language-server navigation and type errors. Needs a code-intelligence plugin, and is not started in cloud sessions. Here: absent ([[question.q3]]).
+tool.monitor | tool | VERIFIED | S6, S7 | Monitor | Permission: Yes. Runs a command in the background and feeds each output line back, or opens a WebSocket. Deadline: [[process.monitor-deadline]]. Cap question: [[question.q6]]. Here: deferred.
+tool.notebook-edit | tool | VERIFIED | S6, S7 | NotebookEdit | Permission: Yes. Edits Jupyter cells by cell_id, with replace, insert and delete modes. UTF-8 only. Here: deferred.
+tool.powershell | tool | VERIFIED | S6 | PowerShell | Permission: Yes. PowerShell commands. Default on Windows; opt-in on Linux, macOS and WSL. Here: absent.
+tool.push-notification | tool | VERIFIED | S6, S7 | PushNotification | Permission: No. Desktop notification, plus phone push when Remote Control is connected. Here: deferred.
+tool.read | tool | VERIFIED | S6, S8 | Read | Permission: No. Reads files, images, PDFs and notebooks. Reads 2,000 lines by default. Here: direct.
+tool.read-mcp-resource | tool | VERIFIED | S6, S7 | ReadMcpResourceTool | Permission: No. Reads one MCP resource by URI. Here: deferred. See [[mcp.resources]].
+tool.remote-trigger | tool | VERIFIED | S6 | RemoteTrigger | Permission: No. Creates, updates, runs and lists cloud scheduled tasks, and backs the /schedule command. Here: absent ([[question.q3]], [[question.q5]]).
+tool.report-findings | tool | VERIFIED | S6, S8 | ReportFindings | Permission: No. Reports code-review findings as a structured list. Here: direct. See [[feature.local-code-review]].
+tool.schedule-wakeup | tool | VERIFIED | S6, S8 | ScheduleWakeup | Permission: No. Sets the next /loop iteration, between 1 minute and 1 hour out. stop: true ends the loop. Here: direct.
+tool.send-feedback | tool | VERIFIED | S6 | SendFeedback | Permission: No. Drafts a feedback report for review. Sends nothing until the user approves it. Here: absent ([[question.q3]]).
+tool.send-message | tool | VERIFIED | S6, S7 | SendMessage | Permission: No. Messages a teammate, a resumed subagent, or another session. Here: deferred. See [[question.q9]].
+tool.send-user-file | tool | VERIFIED | S6, S8 | SendUserFile | Permission: No. Sends a file to the user, rendered inline or as a download. Needs a Remote Control client or a cloud session. Here: direct.
+tool.share-onboarding-guide | tool | VERIFIED | S6 | ShareOnboardingGuide | Permission: Yes. Uploads ONBOARDING.md for teammates. Team and Enterprise plans. Here: absent.
+tool.skill | tool | VERIFIED | S6, S8 | Skill | Permission: Yes. Runs a skill inside the main conversation. See [[term.skill]]. Here: direct.
+tool.subagent-handback | tool | VERIFIED | S6 | SubagentHandback | Permission: No. Delivers a subagent's final report. Auto mode only. Here: absent ([[question.q3]]).
+tool.task-create | tool | VERIFIED | S6, S7 | TaskCreate | Permission: No. Creates a task. On by default only for listed models, and opt-in elsewhere ([[question.q4]]). Here: deferred.
+tool.task-get | tool | VERIFIED | S6, S7 | TaskGet | Permission: No. Reads one task. Availability as for [[tool.task-create]]. Here: deferred.
+tool.task-list | tool | VERIFIED | S6, S7 | TaskList | Permission: No. Lists tasks with their status. Availability as for [[tool.task-create]]. Here: deferred.
+tool.task-output | tool | REMOVED | S6 | TaskOutput | Removed in v2.1.277. It used to retrieve a background task's output; Claude now reads the output file with [[tool.read]].
+tool.task-stop | tool | VERIFIED | S6, S7 | TaskStop | Permission: No. Stops a background task, an agent-team teammate, or a named agent. Here: deferred.
+tool.task-update | tool | VERIFIED | S6, S7 | TaskUpdate | Permission: No. Updates status, dependencies and details, or deletes a task. Availability as for [[tool.task-create]]. Here: deferred.
+tool.todo-write | tool | VERIFIED | S6 | TodoWrite | Permission: No. Checklist tool, disabled by default in favor of the Task tools. Here: absent.
+tool.tool-search | tool | VERIFIED | S6, S8 | ToolSearch | Permission: No. Loads deferred tool schemas when tool search is on. See [[term.toolsearch]]. Here: direct.
+tool.wait-for-mcp-servers | tool | VERIFIED | S6 | WaitForMcpServers | Permission: No. Waits for MCP servers that are still connecting. Appears only when tool search is off. Here: absent ([[question.q3]]).
+tool.web-fetch | tool | VERIFIED | S6, S7 | WebFetch | Permission: Yes. Fetches content from a URL. Parameters: url, prompt, offset. Here: deferred.
+tool.web-search | tool | VERIFIED | S6, S7 | WebSearch | Permission: Yes. Web search. Parameters: query, mode (standard or extended), allowed_domains, blocked_domains. Here: deferred.
+tool.workflow | tool | VERIFIED | S6, S8 | Workflow | Permission: Yes. Runs a dynamic workflow that orchestrates many subagents in the background and returns one result. Opt-in only ([[feature.workflows]]). Here: direct.
+tool.write | tool | VERIFIED | S6, S8 | Write | Permission: Yes. Creates or overwrites files. Read an existing file first. Here: direct.

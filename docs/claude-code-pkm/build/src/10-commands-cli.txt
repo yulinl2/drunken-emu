@@ -1,0 +1,85 @@
+# Slash commands (kind command), CLI subcommands (kind cli), CLI invocation forms (kind cli-form).
+cmd.permissions | command | VERIFIED | S5 | /permissions | Where you deny the Skill tool to turn off all skills.
+cmd.add-dir | command | VERIFIED | S5 | /add-dir | Adds a directory to the session and loads its .claude/skills/. See [[flag.add-dir]].
+cmd.cd | command | VERIFIED | S5 | /cd | Moves the session to another directory and adds that directory's project skills (v2.1.246 or later).
+cmd.usage | command | VERIFIED | S5 | /usage | Recommends changes that lower plan usage. The built-in alias is [[cmd.cost]].
+cmd.cost | command | VERIFIED | S5 | /cost | Built-in alias of [[cmd.usage]].
+cmd.rewind | command | VERIFIED | S5 | /rewind | Restores files that Claude had already edited in the conversation. See [[feature.checkpointing]].
+cmd.status | command | VERIFIED | S3, S5 | /status | Lists skills whose allowed-tools Claude ignored this session. Also opens the Status tab, whose Setting sources line lists the settings files loaded ([[setting-file.user]]).
+cmd.skills | command | VERIFIED | S5 | /skills | Lists skills. Synced claude.ai skills appear under the claude.ai sync group.
+cmd.context | command | VERIFIED | S5 | /context | Also groups synced skills under the claude.ai sync group.
+cmd.plugin | command | VERIFIED | S5 | /plugin | Manages plugins and marketplaces, including install, uninstall and update. See [[plugin.overview]].
+cmd.reload-plugins | command | VERIFIED | S5 | /reload-plugins | Applies changes to a plugin's hooks/, .mcp.json, agents/ and output-styles/.
+cmd.reload-skills | command | VERIFIED | S5 | /reload-skills | Picks up skills in a top-level skills directory created after the session started.
+cmd.skill-doctor | command | VERIFIED | S5 | /skill-doctor | Reports what each skill costs in context and how often it is used. See [[term.skill]].
+cmd.help | command | VERIFIED | S5 | /help | Named on the slash-commands page without a description.
+cmd.compact | command | VERIFIED | S5 | /compact | Named on the slash-commands page without a description. See [[term.compaction]].
+cmd.model | command | VERIFIED | S3, S5 | /model | Named without a description on the slash-commands page. Saves the chosen model as the default for new sessions. Pressing s in the picker switches without saving ([[setting-file.user]]).
+cmd.login | command | VERIFIED | S5 | /login | Named without a description. The CLI form is [[cli.auth-login]].
+cmd.feedback | command | VERIFIED | S5 | /feedback | Named without a description. Terminal only.
+cmd.init | command | VERIFIED | S5 | /init | Named without a description. Bundled as [[skill.init]].
+cmd.security-review | command | VERIFIED | S5 | /security-review | Named without a description. Claude can also run it through the Skill tool ([[skill.security-review]]).
+cmd.doctor | command | VERIFIED | S5, S4 | /doctor | Setup checkup that diagnoses problems and can fix them, after the user confirms. Alias: [[cmd.checkup]]. The read-only terminal version is [[cli.doctor]].
+cmd.checkup | command | VERIFIED | S5 | /checkup | Alias of [[cmd.doctor]].
+cmd.verify | command | VERIFIED | S5 | /verify | Bundled skill: builds and runs the app to confirm a code change works.
+cmd.run | command | VERIFIED | S5 | /run | Bundled skill: launches and drives the app to see a change working. Skill: [[skill.run]].
+cmd.run-skill-generator | command | VERIFIED | S5 | /run-skill-generator | Bundled skill: teaches /run and /verify how to build and launch the project.
+cmd.claude-api | command | VERIFIED | S5 | /claude-api | Bundled skill: loads the API reference for the project's language. Subcommands such as migrate start its workflows. Skill: [[skill.claude-api]].
+cmd.workflow-authoring | command | VERIFIED | S5 | /workflow-authoring | Bundled skill, available only when dynamic workflows are enabled. Skill: [[skill.workflow-authoring]].
+cmd.batch | command | VERIFIED | S5 | /batch | Named on the slash-commands page without a description.
+cmd.debug | command | VERIFIED | S5 | /debug | Named on the slash-commands page without a description.
+cmd.loop | command | VERIFIED | S5, S6 | /loop | Runs a prompt on a recurring interval, or self-paced through [[tool.schedule-wakeup]]. Skill: [[skill.loop]].
+cmd.simplify | command | VERIFIED | S5 | /simplify | Named on the slash-commands page without a description. Skill: [[skill.simplify]].
+cmd.code-review | command | VERIFIED | S5 | /code-review | Reviews changes and runs as a forked subagent. Alias: [[cmd.review]]. Skill: [[skill.code-review]]. The deep cloud review is [[cmd.ultrareview]].
+cmd.review | command | VERIFIED | S5 | /review | Alias of [[cmd.code-review]].
+cmd.goal | command | INDEX | S1 | /goal | Sets a completion condition. Claude keeps working until it is met or cannot be. See [[feature.goal]].
+cmd.schedule | command | VERIFIED | S6 | /schedule | Backs the RemoteTrigger tool, which creates and runs cloud scheduled tasks ([[tool.remote-trigger]]).
+cmd.list-agents | command | VERIFIED | S6 | /list-agents | Backs the ListAgents tool ([[tool.list-agents]]).
+cmd.tasks | command | VERIFIED | S6 | /tasks | Lists and stops background tasks ([[process.background-time-limit]]).
+cmd.autocompact | command | VERIFIED | S4 | /autocompact | Sets the auto-compact window, with the same values as the --autocompact flag ([[flag.autocompact]]).
+cmd.effort | command | VERIFIED | S3 | /effort | Changes effort mid-session. Its picks save as the default for the model in use, or apply to the current session only ([[setting.effort-level]]).
+cmd.fast | command | INDEX | S1, S8 | /fast | Toggles fast mode, which gives faster responses on a supported model. See [[feature.fast-mode]].
+cmd.clear | command | INDEX | S1 | /clear | Named in the What's new digest. Rewind can return the session to before a /clear ([[feature.checkpointing]]).
+cmd.ultrareview | command | INDEX | S1 | /ultrareview | Deep, multi-agent cloud review, run as /code-review ultra. CLI form: [[cli.ultrareview]].
+cmd.team-onboarding | command | INDEX | S1 | /team-onboarding | Named in the What's new digest. Its share step uses [[tool.share-onboarding-guide]].
+cmd.autofix-pr | command | INDEX | S1 | /autofix-pr | Named in the What's new digest.
+cmd.design | command | INDEX | S1 | /design | The design skill for editable UI artboards, per the What's new digest.
+cmd.radio | command | INDEX | S1 | /radio | Named in the What's new digest.
+cmd.diff | command | INDEX | S1 | /diff | A live diff panel, per the What's new digest.
+cmd.config | command | VERIFIED | S3 | /config | Opens the Config tab with personal options such as theme and editor mode. Saves to user settings, to local settings for a few options, or to ~/.claude.json for global keys. /config key=value sets one option directly. See [[setting-file.user]].
+cli.update | cli | VERIFIED | S4 | claude update | Updates Claude Code to the latest version.
+cli.gateway | cli | VERIFIED | S4 | claude gateway | Starts the self-hosted Claude apps gateway for administrators. Requires --config pointing at a gateway.yaml.
+cli.install | cli | VERIFIED | S4 | claude install [version] | Installs or reinstalls the native binary. Accepts a version, stable or latest.
+cli.auth-login | cli | VERIFIED | S4 | claude auth login | Signs in. Options: --email, --sso, and --console for API billing instead of a subscription.
+cli.auth-logout | cli | VERIFIED | S4 | claude auth logout | Signs out.
+cli.auth-status | cli | VERIFIED | S4 | claude auth status | Prints authentication status as JSON, or as text with --text. Exits 0 when logged in and 1 when not.
+cli.agents | cli | VERIFIED | S4 | claude agents | Opens agent view to monitor and dispatch parallel background sessions. Options: --cwd, --json, --all. See [[feature.agent-view]].
+cli.attach | cli | VERIFIED | S4 | claude attach <id or name> | Attaches this terminal to a background session.
+cli.auto-mode-defaults | cli | VERIFIED | S4 | claude auto-mode defaults | Prints the built-in auto-mode classifier rules as JSON. Use --label to filter. See [[permission-mode.auto]].
+cli.auto-mode-reset | cli | VERIFIED | S4 | claude auto-mode reset | Removes the autoMode section from user settings. Asks first; -y skips the prompt.
+cli.daemon-logs | cli | VERIFIED | S4 | claude daemon logs | Follows the background-session supervisor's log file.
+cli.daemon-run | cli | VERIFIED | S4 | claude daemon run | Runs the background-session supervisor in the foreground.
+cli.daemon-status | cli | VERIFIED | S4 | claude daemon status | Prints the supervisor's state and version. Exits 1 if the supervisor is not running.
+cli.daemon-stop | cli | VERIFIED | S4 | claude daemon stop --any | Stops the supervisor and the sessions it hosts. --keep-workers leaves background sessions running.
+cli.doctor | cli | VERIFIED | S4 | claude doctor | Prints read-only installation and settings diagnostics without starting a session. The in-session version is [[cmd.doctor]].
+cli.import | cli | VERIFIED | S4 | claude import [source] | Starts an interactive session that runs /import to bring configuration from other coding agents. Not on some cloud providers.
+cli.logs | cli | VERIFIED | S4 | claude logs <id or name> | Prints recent output from a background session.
+cli.mcp | cli | VERIFIED | S4 | claude mcp | Configures Model Context Protocol servers. See [[mcp.overview]].
+cli.mcp-login | cli | VERIFIED | S4 | claude mcp login <name> | Runs a configured MCP server's OAuth flow. --no-browser prints the authorization URL instead.
+cli.mcp-logout | cli | VERIFIED | S4 | claude mcp logout <name> | Clears stored OAuth credentials for an MCP server.
+cli.plugin | cli | VERIFIED | S4 | claude plugin | Manages plugins. Alias: plugins. See [[plugin.overview]].
+cli.purge | cli | VERIFIED | S4 | claude purge [path] | Deletes local Claude Code state for a project: transcripts, task lists, debug logs and history. Options: --dry-run, -y, -i and --all.
+cli.remote-control | cli | VERIFIED | S4 | claude remote-control | Starts a Remote Control server, in server mode with no local interactive session. See [[feature.remote-control]].
+cli.respawn | cli | VERIFIED | S4 | claude respawn <id> | Restarts a background session with its conversation intact. --all restarts every running session.
+cli.rm | cli | VERIFIED | S4 | claude rm <id> | Removes a background session from the list. The transcript stays on the machine.
+cli.self-hosted-runner | cli | VERIFIED | S4 | claude self-hosted-runner | Starts a runner that serves cloud sessions on your infrastructure. Subcommands: setup, doctor and orchestrator. See [[feature.self-hosted-environments]].
+cli.setup-token | cli | VERIFIED | S4 | claude setup-token | Generates a long-lived OAuth token for CI and scripts. Prints it without saving it.
+cli.stop | cli | VERIFIED | S4 | claude stop <id> | Stops a background session. Also accepts claude kill.
+cli.ultrareview | cli | VERIFIED | S4 | claude ultrareview [target] | Runs ultrareview without a session. Prints findings and exits 0 or 1. Options: --json, --timeout (45 minutes by default) and --post. See [[feature.ultrareview]].
+cli-form.interactive | cli-form | VERIFIED | S4 | claude | Starts an interactive session.
+cli-form.initial-prompt | cli-form | VERIFIED | S4 | claude "query" | Starts an interactive session with an initial prompt.
+cli-form.print | cli-form | VERIFIED | S4 | claude -p "query" | Queries through the SDK, then exits. See [[flag.print]].
+cli-form.pipe | cli-form | VERIFIED | S4 | cat file | claude -p "query" | Processes piped content in print mode.
+cli-form.continue | cli-form | VERIFIED | S4 | claude -c | Continues the most recent conversation in the current directory. See [[flag.continue]].
+cli-form.continue-print | cli-form | VERIFIED | S4 | claude -c -p "query" | Continues the most recent conversation through the SDK.
+cli-form.resume | cli-form | VERIFIED | S4 | claude -r "<session>" "query" | Resumes a session by ID or name, with a new prompt. See [[flag.resume]].
