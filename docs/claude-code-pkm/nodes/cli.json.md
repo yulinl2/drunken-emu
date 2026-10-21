@@ -1,0 +1,13 @@
+---
+id: cli.json
+kind: cli
+status: VERIFIED
+title: "--json"
+sources: [S52]
+---
+
+# --json
+
+**Sources:** [S52](src.s52.md)
+
+Print the result as one JSON object on the last line of stdout instead of the human-readable message, for use in scripts. See JSON result format. Requires Claude Code v2.1.268 or later

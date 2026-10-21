@@ -78,4 +78,4 @@ memory.load-reason-include | memory | VERIFIED | S2 | Load reason: include | One
 memory.load-reason-compact | memory | VERIFIED | S2 | Load reason: compact | One of the InstructionsLoaded matcher values. The meaning beyond the name is not expanded in this pass.
 memory.dynamic-prompt-sections | memory | VERIFIED | S4 | Dynamic system-prompt sections | --exclude-dynamic-system-prompt-sections moves per-user context, such as the auto-memory location, out of the system prompt and into the first user message. It improves prompt-cache reuse across users. See [[flag.exclude-dynamic-system-prompt-sections]].
 memory.connector-memory | memory | SESSION | S8 | Connector memory | A memory store reached through a connector is separate from Claude Code memory. The session's connector instructions describe its use.
-memory.import-syntax | memory | GAP | S1 | CLAUDE.md import syntax | Not read in this pass. The memory page is index-only ([[gap.memory-page]]).
+memory.import-syntax | memory | SUPERSEDED | S1 | CLAUDE.md import syntax | Closed. The memory page is read by build/extract_pages.py, so its import section is a memory node (the heading Import additional files).

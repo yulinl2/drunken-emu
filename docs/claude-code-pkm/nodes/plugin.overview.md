@@ -19,4 +19,3 @@ A plugin bundles skills, hooks, MCP servers, agents and output styles. Use one i
 - [Hook location: plugin hooks file](hook-rule.location-plugin.md)
 - [ListPlugins](tool.list-plugins.md)
 - [Plugin](term.plugin.md)
-- [Plugin and mod detail pages not fetched](gap.plugin-mod-pages.md)

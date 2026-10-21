@@ -1,7 +1,7 @@
 ---
 id: gap.keybindings
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Keyboard shortcuts not fetched"
 sources: [S1]
 ---
@@ -10,7 +10,7 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-The interactive-mode and keybindings pages were not fetched, so the shortcut list is missing. See [Keyboard shortcuts](feature.keybindings.md).
+Closed. build/extract_pages.py reads the keybindings page and the interactive-mode page: each shortcut row is a shortcut node, and each section heading is a feature node.
 
 ## Linked from
 

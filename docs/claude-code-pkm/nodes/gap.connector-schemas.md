@@ -1,7 +1,7 @@
 ---
 id: gap.connector-schemas
 kind: gap
-status: GAP
+status: DECIDED
 title: "Connector parameters not read"
 sources: [S7]
 ---
@@ -10,7 +10,7 @@ sources: [S7]
 
 **Sources:** [S7](src.s7.md)
 
-The 152 deferred tools have parameters that were not read in this pass. Load a family with ToolSearch when its parameters matter ([Q14 (concern): Connector schemas are listed by name only.](question.q14.md)).
+Out of scope under dec.d12. Connector tool parameters are not on an in-scope page. Each connector tool keeps its tool.* node.
 
 ## Linked from
 

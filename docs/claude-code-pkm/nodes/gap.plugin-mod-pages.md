@@ -1,7 +1,7 @@
 ---
 id: gap.plugin-mod-pages
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Plugin and mod detail pages not fetched"
 sources: [S1]
 ---
@@ -10,4 +10,4 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-Plugin and mod pages are index-only. See [Plugins overview](plugin.overview.md) and [Mods overview](mod.overview.md).
+Closed. build/extract_pages.py reads the in-scope plugin and mod pages: field rows are plugin-field nodes, and section headings are plugin or mod nodes.

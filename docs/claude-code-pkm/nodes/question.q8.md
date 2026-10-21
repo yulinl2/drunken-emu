@@ -15,4 +15,3 @@ Not fetched: sub-agents, memory, MCP, plugins, interactive mode and keybindings,
 ## Linked from
 
 - [D7: Pages not fetched are tagged INDEX, never VERIFIED](dec.d7.md)
-- [Most harness pages are index-only](gap.harness-pages-not-fetched.md)

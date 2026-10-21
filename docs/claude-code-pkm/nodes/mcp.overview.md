@@ -16,5 +16,4 @@ Model Context Protocol servers add tools, resources and prompts. Configured with
 
 - [claude mcp](cli.mcp.md)
 - [Elicitation](hook.elicitation.md)
-- [MCP detail pages not fetched](gap.mcp-page.md)
 - [MCP server](term.mcp-server.md)

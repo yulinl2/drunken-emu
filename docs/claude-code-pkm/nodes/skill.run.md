@@ -15,4 +15,3 @@ Launches and drives the project's app to see a change working. Also available as
 ## Linked from
 
 - [/run](cmd.run.md)
-- [Skill bodies not read](gap.skill-bodies.md)

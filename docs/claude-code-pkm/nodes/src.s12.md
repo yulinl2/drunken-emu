@@ -196,6 +196,7 @@ Official page https://code.claude.com/docs/en/settings-reference, read in five b
 - [sandbox.network.tlsTerminate](setting.sandbox-network-tls-terminate.md)
 - [sandbox.ripgrep](setting.sandbox-ripgrep.md)
 - [sandbox.socatPath](setting.sandbox-socat-path.md)
+- [Scope: which pages the PKM covers](dec.d12.md)
 - [showClearContextOnPlanAccept](setting.show-clear-context-on-plan-accept.md)
 - [showThinkingSummaries](setting.show-thinking-summaries.md)
 - [showTurnDuration](setting.show-turn-duration.md)

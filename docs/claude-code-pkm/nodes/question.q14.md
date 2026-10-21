@@ -14,5 +14,4 @@ There are 152 deferred tools, and their schemas load on demand ([ToolSearch](ter
 
 ## Linked from
 
-- [Connector parameters not read](gap.connector-schemas.md)
 - [D6: Connector tools are listed by name only](dec.d6.md)

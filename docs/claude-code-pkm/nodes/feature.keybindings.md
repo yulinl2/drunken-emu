@@ -15,4 +15,3 @@ Remaps shortcuts through a keybindings configuration file. The keybindings skill
 ## Linked from
 
 - [keybindings-help](skill.keybindings-help.md)
-- [Keyboard shortcuts not fetched](gap.keybindings.md)

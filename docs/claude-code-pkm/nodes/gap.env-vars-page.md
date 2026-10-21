@@ -1,7 +1,7 @@
 ---
 id: gap.env-vars-page
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Environment variables page not fetched"
 sources: [S1]
 ---
@@ -10,4 +10,4 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-The environment-variable nodes come from S2, S3, S4 and S6 only.
+Closed. build/extract_pages.py reads the env-vars page and the monitoring page: each variable row is an env node. Existing env nodes keep their text.

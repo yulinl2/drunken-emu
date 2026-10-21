@@ -74,6 +74,13 @@ KINDS = {
     "environment": "Environment classes",
     "gap": "Coverage gaps",
     "session-rule": "Session rules",
+    "shortcut": "Keyboard shortcuts",
+    "agent-field": "Subagent fields",
+    "skill-field": "Skill fields",
+    "hook-field": "Hook input and output fields",
+    "plugin-field": "Plugin and marketplace fields",
+    "output-style": "Output styles",
+    "statusline-field": "Status line fields",
 }
 STATUSES = {"VERIFIED", "INDEX", "SESSION", "REPO", "UNVERIFIED", "OPEN",
             "DEFINED", "DECIDED", "SUPERSEDED", "REMOVED", "GAP"}

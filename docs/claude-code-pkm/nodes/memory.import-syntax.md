@@ -1,7 +1,7 @@
 ---
 id: memory.import-syntax
 kind: memory
-status: GAP
+status: SUPERSEDED
 title: "CLAUDE.md import syntax"
 sources: [S1]
 ---
@@ -10,4 +10,4 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-Not read in this pass. The memory page is index-only ([Memory page not fetched](gap.memory-page.md)).
+Closed. The memory page is read by build/extract_pages.py, so its import section is a memory node (the heading Import additional files).

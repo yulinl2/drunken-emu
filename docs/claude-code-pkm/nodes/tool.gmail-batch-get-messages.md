@@ -1,7 +1,7 @@
 ---
 id: tool.gmail-batch-get-messages
 kind: tool
-status: GAP
+status: SESSION
 title: "mcp__Gmail__batch_get_messages"
 sources: [S7]
 ---

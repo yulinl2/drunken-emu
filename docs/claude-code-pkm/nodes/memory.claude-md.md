@@ -15,5 +15,4 @@ Persistent project instructions that load into context. The memory page covers t
 ## Linked from
 
 - [InstructionsLoaded](hook.instructions-loaded.md)
-- [Memory page not fetched](gap.memory-page.md)
 - [Project instructions reminder](injected.claude-md-reminder.md)

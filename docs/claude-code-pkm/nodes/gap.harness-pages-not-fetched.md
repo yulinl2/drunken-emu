@@ -1,7 +1,7 @@
 ---
 id: gap.harness-pages-not-fetched
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Most harness pages are index-only"
 sources: [S1]
 ---
@@ -10,7 +10,7 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-Pages that were not fetched are listed in [Q8 (concern): Most harness pages are index-only.](question.q8.md).
+Closed. build/extract_pages.py reads every in-scope page in dec.d12, and dec.d14 lists each English page that is out of scope, with its reason.
 
 ## Linked from
 

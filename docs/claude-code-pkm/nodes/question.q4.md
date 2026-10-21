@@ -15,4 +15,3 @@ sources: [S6]
 ## Linked from
 
 - [TaskCreate](tool.task-create.md)
-- [Tools reference tail not read](gap.tools-ref-tail.md)

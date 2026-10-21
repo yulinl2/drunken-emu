@@ -1,0 +1,72 @@
+---
+id: src.s26
+kind: source
+status: VERIFIED
+title: "S26: Manage multiple agents with agent view"
+---
+
+# S26: Manage multiple agents with agent view
+
+Official page https://code.claude.com/docs/en/agent-view, fetched 2026-10-21 as raw Markdown from its .md address. Read 0 table rows and 62 section headings (3 generic ones skipped). New concept nodes: 59; already present: 0.
+
+## Linked from
+
+- [.claude/worktrees/ is filling up](feature.claude-worktrees-is-filling-up.md)
+- [A background session shows No LLM gateway](feature.a-background-session-shows-no-llm-gateway.md)
+- [A session fails before starting with a possibly low memory note](feature.a-session-fails-before-starting-with-a-possibly-low-memory-n.md)
+- [A session is slow to respond after attaching](feature.a-session-is-slow-to-respond-after-attaching.md)
+- [Agent view opens with no sessions](feature.agent-view-opens-with-no-sessions.md)
+- [Agent view says the background service did not respond](feature.agent-view-says-the-background-service-did-not-respond.md)
+- [Attach to a session](feature.attach-to-a-session.md)
+- [Background sessions can't reach local-network hosts on macOS](feature.background-sessions-can-t-reach-local-network-hosts-on-macos.md)
+- [Background sessions can't read Desktop, Documents, or Downloads on macOS](feature.background-sessions-can-t-read-desktop-documents-or-download.md)
+- [Backgrounding shows a Background this session? dialog](feature.backgrounding-shows-a-background-this-session-dialog.md)
+- [Bring back a past session](feature.bring-back-a-past-session.md)
+- [claude agents lists subagents instead of opening agent view](feature.claude-agents-lists-subagents-instead-of-opening-agent-view.md)
+- [Copy the session with /fork](feature.copy-the-session-with-fork.md)
+- [Dispatch an agent from agent view](feature.dispatch-an-agent-from-agent-view.md)
+- [Dispatch an agent from your shell](feature.dispatch-an-agent-from-your-shell.md)
+- [Dispatch defaults](feature.dispatch-defaults.md)
+- [Dispatch fails with Could not resolve authentication method](feature.dispatch-fails-with-could-not-resolve-authentication-method.md)
+- [Dispatch new agents](feature.dispatch-new-agents.md)
+- [Dispatch to a specific directory](feature.dispatch-to-a-specific-directory.md)
+- [Filter sessions](feature.filter-sessions.md)
+- [How background sessions are hosted](feature.how-background-sessions-are-hosted.md)
+- [How file edits are isolated](feature.how-file-edits-are-isolated.md)
+- [Keep sessions running after the supervisor stops](feature.keep-sessions-running-after-the-supervisor-stops.md)
+- [Keyboard shortcuts](feature.keyboard-shortcuts.md)
+- [List sessions as JSON](feature.list-sessions-as-json.md)
+- [LLM gateway](feature.llm-gateway.md)
+- [Manage sessions from the shell](feature.manage-sessions-from-the-shell.md)
+- [Monitor sessions with agent view](feature.monitor-sessions-with-agent-view.md)
+- [Open agent view by default](feature.open-agent-view-by-default.md)
+- [Opening a session says it has no saved transcript](feature.opening-a-session-says-it-has-no-saved-transcript.md)
+- [Opening a session says the conversation is already open](feature.opening-a-session-says-the-conversation-is-already-open.md)
+- [Organize the list](feature.organize-the-list.md)
+- [Peek and reply](feature.peek-and-reply.md)
+- [Permission mode](feature.permission-mode.md)
+- [Permission mode, model, and effort](feature.permission-mode-model-and-effort.md)
+- [Prompt rejected as too short](feature.prompt-rejected-as-too-short.md)
+- [Prompts that contain --bg](feature.prompts-that-contain-bg.md)
+- [Pull request status](feature.pull-request-status.md)
+- [Quick start](feature.quick-start.md)
+- [Read session state](feature.read-session-state.md)
+- [Read session state from a script](feature.read-session-state-from-a-script.md)
+- [Row summaries](feature.row-summaries.md)
+- [Run a shell command](feature.run-a-shell-command.md)
+- [Send or copy a session to the background](feature.send-or-copy-a-session-to-the-background.md)
+- [Send the session to the background](feature.send-the-session-to-the-background.md)
+- [Sessions show as failed or stopped after shutdown](feature.sessions-show-as-failed-or-stopped-after-shutdown.md)
+- [Set the model, effort, and fast mode](feature.set-the-model-effort-and-fast-mode.md)
+- [Settings and provider](feature.settings-and-provider.md)
+- [Settings, plugins, and MCP servers](feature.settings-plugins-and-mcp-servers.md)
+- [Switch sessions without leaving the terminal](feature.switch-sessions-without-leaving-the-terminal.md)
+- [The conversation says a background agent was carried into this session and not resumed](feature.the-conversation-says-a-background-agent-was-carried-into-th.md)
+- [The supervisor process](feature.the-supervisor-process.md)
+- [The terminal host died or the session stopped responding](feature.the-terminal-host-died-or-the-session-stopped-responding.md)
+- [Turn off agent view](feature.turn-off-agent-view.md)
+- [Version history](feature.version-history.md)
+- [What carries over when you background](feature.what-carries-over-when-you-background.md)
+- [What deleting a session removes](feature.what-deleting-a-session-removes.md)
+- [What persists across restarts](feature.what-persists-across-restarts.md)
+- [Where state is stored](feature.where-state-is-stored.md)

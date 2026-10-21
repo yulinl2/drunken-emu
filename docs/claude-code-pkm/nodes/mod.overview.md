@@ -15,5 +15,4 @@ What mods can do: panes, commands and tool-call rules. How to get one, and where
 ## Linked from
 
 - [Mod](term.mod.md)
-- [Plugin and mod detail pages not fetched](gap.plugin-mod-pages.md)
 - [plugin-authoring](skill.plugin-authoring.md)

@@ -1,0 +1,73 @@
+---
+id: src.s20
+kind: source
+status: VERIFIED
+title: "S20: Manage sessions"
+---
+
+# S20: Manage sessions
+
+Official page https://code.claude.com/docs/en/sessions, fetched 2026-10-21 as raw Markdown from its .md address. Read 43 table rows and 18 section headings (1 generic ones skipped). New concept nodes: 60; already present: 0.
+
+## Linked from
+
+- ["Allow for this session" permission grants](feature.allow-for-this-session-permission-grants.md)
+- [/ or any printable character other than Space, j, k, or a digit](feature.or-any-printable-character-other-than-space-j-k-or-a-digit.md)
+- [/loop, -p, Agent SDK, and background sessions](feature.loop-p-agent-sdk-and-background-sessions.md)
+- [/resume](feature.resume.md)
+- [/resume](feature.resume-sessions.md)
+- [1 to 9](feature.1-to-9.md)
+- [Access conversations from scripts](feature.access-conversations-from-scripts.md)
+- [Any mode](feature.any-mode.md)
+- [At startup](feature.at-startup.md)
+- [auto](feature.auto.md)
+- [Branch a session](feature.branch-a-session.md)
+- [bypassPermissions](feature.bypasspermissions.md)
+- [Change the 30-day retention](feature.change-the-30-day-retention.md)
+- [claude --continue](feature.claude-continue.md)
+- [claude --from-pr](feature.claude-from-pr.md)
+- [claude --resume](feature.claude-resume.md)
+- [claude --resume](feature.claude-resume-sessions.md)
+- [claude --resume](feature.claude-resume-sessions-2.md)
+- [claude --resume](feature.claude-resume-sessions-3.md)
+- [Conversation history](feature.conversation-history.md)
+- [Ctrl+A](feature.ctrl-a.md)
+- [Ctrl+B](feature.ctrl-b.md)
+- [Ctrl+R](feature.ctrl-r.md)
+- [Ctrl+W](feature.ctrl-w.md)
+- [Delete session data](feature.delete-session-data.md)
+- [During a session](feature.during-a-session.md)
+- [Enter](feature.enter.md)
+- [Esc](feature.esc.md)
+- [Export and locate session data](feature.export-and-locate-session-data.md)
+- [From claude.ai or the Claude app](feature.from-claude-ai-or-the-claude-app.md)
+- [From the desktop app](feature.from-the-desktop-app.md)
+- [From the session picker](feature.from-the-session-picker.md)
+- [In-flight background subagents and background Bash commands](feature.in-flight-background-subagents-and-background-bash-commands.md)
+- [Limit how large a -p or Agent SDK session's transcript file grows](feature.limit-how-large-a-p-or-agent-sdk-session-s-transcript-file-g.md)
+- [Manage context within a session](feature.manage-context-within-a-session.md)
+- [Manual](feature.manual.md)
+- [Move storage off ~/.claude](feature.move-storage-off-claude.md)
+- [Name the directory yourself](feature.name-the-directory-yourself.md)
+- [Name the project directory yourself](feature.name-the-project-directory-yourself.md)
+- [Name your sessions](feature.name-your-sessions.md)
+- [On plan accept](feature.on-plan-accept.md)
+- [Permission mode on resume](feature.permission-mode-on-resume.md)
+- [plan](feature.plan.md)
+- [plan](feature.plan-sessions.md)
+- [plan](feature.plan-sessions-2.md)
+- [plan](feature.plan-sessions-3.md)
+- [Remote Control connection](feature.remote-control-connection.md)
+- [Resume a running background session](feature.resume-a-running-background-session.md)
+- [Resume a session](feature.resume-a-session.md)
+- [Resume by session ID or name](feature.resume-by-session-id-or-name.md)
+- [Sessions in other worktrees and projects](feature.sessions-in-other-worktrees-and-projects.md)
+- [Set an age limit for Claude Desktop and Cowork transcripts](feature.set-an-age-limit-for-claude-desktop-and-cowork-transcripts.md)
+- [Space](feature.space.md)
+- [Suppress transcript writes in all modes](feature.suppress-transcript-writes-in-all-modes.md)
+- [Suppress writes for one non-interactive run](feature.suppress-writes-for-one-non-interactive-run.md)
+- [Use the session picker](feature.use-the-session-picker.md)
+- [What a resumed session restores](feature.what-a-resumed-session-restores.md)
+- [Where the session picker looks](feature.where-the-session-picker-looks.md)
+- [Where transcripts are stored](feature.where-transcripts-are-stored.md)
+- [↑ / ↓ or k / j](feature.or-k-j.md)

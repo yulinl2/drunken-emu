@@ -58,8 +58,8 @@ tool.github-update-pull-request | tool | SESSION | S7 | mcp__github__update_pull
 tool.github-update-pull-request-branch | tool | SESSION | S7 | mcp__github__update_pull_request_branch | Deferred GitHub connector tool. Parameters: [[gap.connector-schemas]].
 tool.gmail-apply-sensitive-message-label | tool | SESSION | S7 | mcp__Gmail__apply_sensitive_message_label | Deferred Gmail connector tool. Parameters: [[gap.connector-schemas]].
 tool.gmail-apply-sensitive-thread-label | tool | SESSION | S7 | mcp__Gmail__apply_sensitive_thread_label | Deferred Gmail connector tool. Parameters: [[gap.connector-schemas]].
-tool.gmail-batch-get-messages | tool | GAP | S7 | mcp__Gmail__batch_get_messages | Deferred Gmail connector tool, listed at snapshot. A later notice in this session reported it unavailable after a disconnect. Not re-checked. Parameters: [[gap.connector-schemas]].
-tool.gmail-batch-get-threads | tool | GAP | S7 | mcp__Gmail__batch_get_threads | Deferred Gmail connector tool, listed at snapshot. A later notice in this session reported it unavailable after a disconnect. Not re-checked. Parameters: [[gap.connector-schemas]].
+tool.gmail-batch-get-messages | tool | SESSION | S7 | mcp__Gmail__batch_get_messages | Deferred Gmail connector tool, listed at snapshot. A later notice in this session reported it unavailable after a disconnect. Not re-checked. Parameters: [[gap.connector-schemas]].
+tool.gmail-batch-get-threads | tool | SESSION | S7 | mcp__Gmail__batch_get_threads | Deferred Gmail connector tool, listed at snapshot. A later notice in this session reported it unavailable after a disconnect. Not re-checked. Parameters: [[gap.connector-schemas]].
 tool.gmail-create-draft | tool | SESSION | S7 | mcp__Gmail__create_draft | Deferred Gmail connector tool. Parameters: [[gap.connector-schemas]].
 tool.gmail-create-label | tool | SESSION | S7 | mcp__Gmail__create_label | Deferred Gmail connector tool. Parameters: [[gap.connector-schemas]].
 tool.gmail-delete-draft | tool | SESSION | S7 | mcp__Gmail__delete_draft | Deferred Gmail connector tool. Parameters: [[gap.connector-schemas]].

@@ -11,7 +11,3 @@ sources: [S1]
 **Sources:** [S1](src.s1.md)
 
 Restricts which files and network hosts shell commands can reach. The dangerouslyDisableSandbox parameter is on the Bash tool ([Bash](tool.bash.md)).
-
-## Linked from
-
-- [Sandboxing and permissions pages not fetched](gap.sandbox-and-permission-pages.md)

@@ -1,7 +1,7 @@
 ---
 id: gap.memory-page
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Memory page not fetched"
 sources: [S1]
 ---
@@ -10,9 +10,8 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-The memory page (CLAUDE.md import syntax, rules folder details, auto-memory location) was not fetched. See [CLAUDE.md](memory.claude-md.md).
+Closed. build/extract_pages.py reads the memory page: each table row and each section heading is a memory or feature node.
 
 ## Linked from
 
 - [CLAUDE.md](memory.claude-md.md)
-- [CLAUDE.md import syntax](memory.import-syntax.md)

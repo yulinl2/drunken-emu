@@ -1,7 +1,7 @@
 ---
 id: gap.tools-ref-tail
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "Tools reference tail not read"
 sources: [S6]
 ---
@@ -10,7 +10,7 @@ sources: [S6]
 
 **Sources:** [S6](src.s6.md)
 
-Lines 511 to 708 of the saved tools-reference answer were not read: Task tool availability by model, Write, WebFetch and WebSearch behavior, and large-file rules. See [Q4: Which models get the Task tools by default?](question.q4.md).
+Closed. build/extract_pages.py reads the tools reference, including its tail sections, so each table row and each section heading there is a tool node. Existing tool nodes keep their text.
 
 ## Linked from
 

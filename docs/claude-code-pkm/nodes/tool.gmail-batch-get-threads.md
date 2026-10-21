@@ -1,7 +1,7 @@
 ---
 id: tool.gmail-batch-get-threads
 kind: tool
-status: GAP
+status: SESSION
 title: "mcp__Gmail__batch_get_threads"
 sources: [S7]
 ---

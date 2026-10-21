@@ -1,7 +1,7 @@
 ---
 id: gap.mcp-page
 kind: gap
-status: GAP
+status: SUPERSEDED
 title: "MCP detail pages not fetched"
 sources: [S1]
 ---
@@ -10,4 +10,4 @@ sources: [S1]
 
 **Sources:** [S1](src.s1.md)
 
-The MCP pages (transports, scopes, prompts) are index-only. See [MCP overview](mcp.overview.md).
+Closed. build/extract_pages.py reads the MCP page and the managed MCP page: table rows and section headings are mcp nodes.
