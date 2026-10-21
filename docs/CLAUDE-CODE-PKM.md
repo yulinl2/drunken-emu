@@ -25,6 +25,13 @@
 | What is unverified, contradicted or still open | [Open questions](claude-code-pkm/INDEX.md#open-questions), [Coverage gaps](claude-code-pkm/INDEX.md#coverage-gaps) |
 | Why the notes are shaped this way | [Decisions](claude-code-pkm/INDEX.md#decisions) |
 
+## Scope and done
+
+- **Scope (dec.d12, decided).** The PKM covers Claude Code as a harness: tools, commands, flags, settings, environment variables, hooks, memory, skills, subagents, plugins and mods, MCP, permissions, sandboxing, output styles, status line and keyboard shortcuts. The 72 in-scope reference pages are listed in `build/extract_pages.py`, and each has its own source node. See [dec.d12](claude-code-pkm/nodes/dec.d12.md).
+- **Out of scope (dec.d14).** The other 152 English pages on the docs index are listed with a reason each, grouped by reason. See [dec.d14](claude-code-pkm/nodes/dec.d14.md).
+- **Done (dec.d13).** No GAP-status node remains. Every table row and section heading on an in-scope page is a node or is already present. The English index pages split exactly into in-scope and out-of-scope, and both drift checks pass. See [dec.d13](claude-code-pkm/nodes/dec.d13.md).
+- **Regenerate.** Download the in-scope pages as described in `build/src/19-pages-tables.txt`, run `build/extract_pages.py`, then run `build/build_nodes.py`.
+
 ## Method
 
 - **Tags.** Each node's `status` is one tag: `VERIFIED`, `INDEX`, `SESSION`, `REPO`, `UNVERIFIED`, `OPEN`, `GAP`, `DECIDED`, `SUPERSEDED`, `REMOVED` or `DEFINED`. Their meanings are in [Legend tags](claude-code-pkm/INDEX.md#legend-tags).
@@ -34,7 +41,7 @@
 ## Refresh
 
 1. Fetch the [docs index](https://code.claude.com/docs/llms.txt) and diff its page list against the source lists.
-2. Re-fetch the pages that the [coverage-gap nodes](claude-code-pkm/INDEX.md#coverage-gaps) name. Change only the rows whose source changed, and record the date.
+2. Download the in-scope pages again, then rerun `build/extract_pages.py`. A generated row keeps its text when a hand-written node has the same id, so change that node by hand.
 3. Load the deferred schemas with ToolSearch, using `select:`, and resolve [gap.connector-schemas](claude-code-pkm/nodes/gap.connector-schemas.md).
 4. Edit `build/src/*.txt`, then run `python3 docs/claude-code-pkm/build/build_nodes.py`, then `python3 docs/claude-code-pkm/build/build_nodes.py --check`.
 5. From the repo root, run `python3 bin/gen_tree.py --write`, then `python3 bin/gen_tree.py --check`.
