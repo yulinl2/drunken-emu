@@ -1,0 +1,81 @@
+# CLI flags (kind flag), from the CLI reference (S4). Aliases are noted in the body.
+flag.add-dir | flag | VERIFIED | S4 | --add-dir | Adds working directories Claude can read and edit. Grants file access without loading most .claude configuration. Persist with permissions.additionalDirectories.
+flag.advisor | flag | VERIFIED | S4 | --advisor <model> | Enables the server-side advisor tool for the session. Takes precedence over the advisorModel setting.
+flag.agent | flag | VERIFIED | S4 | --agent | Specifies an agent for the session. Overrides the agent setting.
+flag.agents | flag | VERIFIED | S4 | --agents | Defines custom subagents from JSON. With -p, a file path can hold the object (v2.1.281 or later).
+flag.allow-dangerously-skip-permissions | flag | VERIFIED | S4 | --allow-dangerously-skip-permissions | Adds bypassPermissions to the Shift+Tab cycle without starting in it. See [[permission-mode.bypass-permissions]].
+flag.allowed-tools | flag | VERIFIED | S4 | --allowedTools (alias --allowed-tools) | Tools that run without a permission prompt, except reads from network paths. To restrict the available set, use [[flag.tools]].
+flag.append-subagent-system-prompt | flag | VERIFIED | S4 | --append-subagent-system-prompt | Appends text to every subagent's system prompt, nested ones included, except forked subagents. Only with -p.
+flag.append-subagent-system-prompt-file | flag | VERIFIED | S4 | --append-subagent-system-prompt-file | Loads the subagent text from a file (v2.1.261 or later). Cannot be combined with the text flag.
+flag.append-system-prompt | flag | VERIFIED | S4 | --append-system-prompt | Appends text to the end of the default system prompt.
+flag.append-system-prompt-file | flag | VERIFIED | S4 | --append-system-prompt-file | Appends a file's contents to the default system prompt.
+flag.autocompact | flag | VERIFIED | S4 | --autocompact <auto or tokens> | Sets the auto-compact window for this session without changing saved settings. See [[cmd.autocompact]].
+flag.ax-screen-reader | flag | VERIFIED | S4 | --ax-screen-reader | Flat text without decorative borders or animations. Forces the classic renderer, so the tui setting has no effect.
+flag.bare | flag | VERIFIED | S4 | --bare | Minimal mode: skips auto-discovery of hooks, skills, commands, subagents, plugins, MCP servers, auto memory and CLAUDE.md. Sets CLAUDE_CODE_SIMPLE. See [[env.claude-code-simple]].
+flag.betas | flag | VERIFIED | S4 | --betas | Beta headers to include in API requests. API key users only.
+flag.bg | flag | VERIFIED | S4 | --bg (alias --background) | Starts the session as a background agent and returns at once. Cannot be combined with -p. See [[feature.agent-view]].
+flag.channels | flag | VERIFIED | S4 | --channels | Research preview: MCP servers whose channel notifications the session should listen for. See [[feature.channels]].
+flag.chrome | flag | VERIFIED | S4 | --chrome | Enables Chrome browser integration. See [[feature.chrome]].
+flag.cloud | flag | VERIFIED | S4 | --cloud | With a task, creates a cloud session. With a session ID or URL and -p, queues a follow-up message. See [[feature.claude-code-on-the-web]].
+flag.continue | flag | VERIFIED | S4 | --continue (alias -c) | Loads the most recent conversation in the current directory, including a finished background session.
+flag.dangerously-load-development-channels | flag | VERIFIED | S4 | --dangerously-load-development-channels | Enables channels that are not on the approved allowlist, for local development. Prompts for confirmation.
+flag.dangerously-skip-permissions | flag | VERIFIED | S4 | --dangerously-skip-permissions | Skips permission prompts. Equal to --permission-mode bypassPermissions. See [[permission-mode.bypass-permissions]].
+flag.debug | flag | VERIFIED | S4 | --debug | Enables debug mode, with optional category filters such as --debug='mcp,startup'. The filter binds only in the = form.
+flag.debug-file | flag | VERIFIED | S4 | --debug-file <path> | Writes debug logs to a file path. Implies debug mode.
+flag.desktop | flag | VERIFIED | S4 | --desktop | Opens the Claude Desktop app on the current directory and exits. Add --continue or --resume to open a session there.
+flag.disable-slash-commands | flag | VERIFIED | S4 | --disable-slash-commands | Disables all skills and commands for the session.
+flag.disallowed-tools | flag | VERIFIED | S4 | --disallowedTools (alias --disallowed-tools) | Deny rules. A bare tool name removes the tool from context; a scoped rule denies only matching calls. See [[permission-rule.form]].
+flag.effort | flag | VERIFIED | S4 | --effort | Sets the effort level: low, medium, high, xhigh, max or ultracode. Overrides the modelSettings and effortLevel settings for this session. Ultracode requests xhigh effort with ultracode turned on (v2.1.203 or later). See [[setting.effort-level]].
+flag.enable-auto-mode | flag | REMOVED | S4 | --enable-auto-mode | Removed in v2.1.111. Auto mode is in the Shift+Tab cycle by default; use --permission-mode auto.
+flag.environment | flag | VERIFIED | S4 | --environment <environment-id> | Creates a cloud session on a self-hosted environment. Environment IDs start with ccpool_. See [[feature.self-hosted-environments]].
+flag.exclude-dynamic-system-prompt-sections | flag | VERIFIED | S4 | --exclude-dynamic-system-prompt-sections | Moves per-user context, such as the auto-memory location, into the first user message, for better cache reuse across users. See [[memory.dynamic-prompt-sections]].
+flag.exec | flag | VERIFIED | S4 | --exec | Runs a shell command as a PTY-backed background job instead of a Claude session. Use with --bg.
+flag.fallback-model | flag | VERIFIED | S4 | --fallback-model | Enables automatic fallback to the listed models when the primary model is overloaded or unavailable. Accepts a comma-separated list, tried in order.
+flag.fork-session | flag | VERIFIED | S4 | --fork-session | When resuming, creates a new session ID instead of reusing the original. Use with --resume or --continue.
+flag.forward-subagent-text | flag | VERIFIED | S4 | --forward-subagent-text | Emits subagent text and thinking blocks in stream-json output (v2.1.211 or later). Requires -p and stream-json.
+flag.from-pr | flag | VERIFIED | S4 | --from-pr | Opens the session picker filtered to sessions linked to a pull request or merge request.
+flag.ide | flag | VERIFIED | S4 | --ide | Connects to the IDE on startup when exactly one valid IDE is available.
+flag.init | flag | VERIFIED | S4 | --init | Runs Setup hooks with the init matcher before the session (print mode only). See [[hook.setup]].
+flag.init-only | flag | VERIFIED | S4 | --init-only | Runs Setup and SessionStart hooks, then exits without starting a conversation.
+flag.include-hook-events | flag | VERIFIED | S4 | --include-hook-events | Includes hook lifecycle events in the stream-json output. Requires stream-json.
+flag.include-partial-messages | flag | VERIFIED | S4 | --include-partial-messages | Includes partial streaming events in the output. Requires -p and stream-json.
+flag.input-format | flag | VERIFIED | S4 | --input-format | Input format for print mode: text or stream-json.
+flag.json-schema | flag | VERIFIED | S4 | --json-schema | Returns validated JSON that matches a JSON Schema after the workflow (print mode only).
+flag.maintenance | flag | VERIFIED | S4 | --maintenance | Runs Setup hooks with the maintenance matcher before the session (print mode only). See [[hook.setup]].
+flag.max-budget-usd | flag | VERIFIED | S4 | --max-budget-usd | Stops the run once estimated API spend reaches the amount (print mode). Subagent spend counts, and the cap can be exceeded.
+flag.max-turns | flag | VERIFIED | S4 | --max-turns | Limits agentic turns in print mode. Exits with an error when the limit is reached.
+flag.mcp-config | flag | VERIFIED | S4 | --mcp-config | Loads MCP servers from JSON files or strings. With -p, waits up to the MCP_TIMEOUT startup timeout for pending servers. See [[env.mcp-timeout]].
+flag.model | flag | VERIFIED | S4 | --model | Sets the model for the session, by alias or full name. Overrides the model setting and ANTHROPIC_MODEL.
+flag.name | flag | VERIFIED | S4 | --name (alias -n) | Sets a display name shown in /resume and the terminal title. Resume by name with --resume <name>.
+flag.no-chrome | flag | VERIFIED | S4 | --no-chrome | Disables Chrome integration for the session.
+flag.no-session-persistence | flag | VERIFIED | S4 | --no-session-persistence | Disables saving sessions to disk, so they cannot be resumed. Print mode only. The CLAUDE_CODE_SKIP_PROMPT_HISTORY variable does the same in any mode.
+flag.output-format | flag | VERIFIED | S4 | --output-format | Output format for print mode: text, json or stream-json.
+flag.permission-mode | flag | VERIFIED | S4 | --permission-mode | Starts in a permission mode: default, acceptEdits, plan, auto, dontAsk, bypassPermissions, or manual (an alias for default). Overrides defaultMode from settings. See [[setting.permissions-default-mode-limit]].
+flag.permission-prompt-tool | flag | VERIFIED | S4 | --permission-prompt-tool | Names an MCP tool that answers permission prompts in non-interactive runs. It cannot approve a tool that requires user interaction.
+flag.permission-prompts | flag | VERIFIED | S4 | --permission-prompts | Who answers permission prompts in print mode: host (the default) or none, which denies them (v2.1.259 or later).
+flag.plugin-dir | flag | VERIFIED | S4 | --plugin-dir | Loads a plugin directory or .zip archive for this session only. Repeat the flag for more paths.
+flag.plugin-url | flag | VERIFIED | S4 | --plugin-url | Fetches a plugin .zip archive from a URL for this session only.
+flag.print | flag | VERIFIED | S4 | --print (alias -p) | Prints the response without interactive mode. See [[cli-form.print]].
+flag.prompt-suggestions | flag | VERIFIED | S4 | --prompt-suggestions | Emits a predicted next prompt after each turn. Requires -p, stream-json and --verbose.
+flag.ref | flag | VERIFIED | S4 | --ref <branch> | With --environment, bases the new session's checkout on a named ref instead of local HEAD.
+flag.remote | flag | VERIFIED | S4 | --remote | Deprecated alias for --cloud, including the existing-session form.
+flag.remote-control | flag | VERIFIED | S4 | --remote-control (alias --rc) | Starts an interactive session with Remote Control enabled, optionally with a name. See [[feature.remote-control]].
+flag.remote-control-session-name-prefix | flag | VERIFIED | S4 | --remote-control-session-name-prefix <prefix> | Prefix for auto-generated Remote Control session names. The CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX variable has the same effect.
+flag.replay-user-messages | flag | VERIFIED | S4 | --replay-user-messages | Re-emits user messages from stdin back on stdout. Requires stream-json input and output.
+flag.restricted | flag | VERIFIED | S4 | --restricted | Restricted mode for evaluation harnesses: removes command-running tools, confines file tools, loads only managed settings and --settings, refuses bypassPermissions and refuses to create cloud sessions (v2.1.248 or later).
+flag.resume | flag | VERIFIED | S4 | --resume (alias -r) | Resumes a session by ID or name, or shows a picker. Accepts a transcript path. Background sessions appear marked bg. See [[cli-form.resume]].
+flag.safe-mode | flag | VERIFIED | S4 | --safe-mode | Starts with all customizations disabled: CLAUDE.md, skills, plugins, hooks, MCP servers, commands, output styles, workflows, keybindings, status line and auto memory. Sets CLAUDE_CODE_SAFE_MODE.
+flag.session-id | flag | VERIFIED | S4 | --session-id | Uses a specific session ID, which must be a valid UUID.
+flag.setting-sources | flag | VERIFIED | S4 | --setting-sources | Comma-separated list of setting sources to load: user, project, local.
+flag.settings | flag | VERIFIED | S4 | --settings | A settings JSON file or an inline JSON string. Values override the same keys in the settings files for this session, and sit below managed settings. See [[precedence.command-line]].
+flag.strict-mcp-config | flag | VERIFIED | S4 | --strict-mcp-config | Uses only the MCP servers from --mcp-config, ignoring every other MCP configuration.
+flag.system-prompt | flag | VERIFIED | S4 | --system-prompt | Replaces the entire default system prompt with the given text.
+flag.system-prompt-file | flag | VERIFIED | S4 | --system-prompt-file | Replaces the default system prompt with a file's contents.
+flag.system-prompt-snapshot | flag | VERIFIED | S4 | --system-prompt-snapshot | off rebuilds the prompt on every request. on, the default, reuses the prompt recorded on the conversation's first request, where recording applies (v2.1.257 or later).
+flag.teleport | flag | VERIFIED | S4 | --teleport | Resumes a cloud session in the local terminal.
+flag.teammate-mode | flag | VERIFIED | S4 | --teammate-mode | How agent-team teammates display: in-process (the default), auto, tmux or iterm2. See [[feature.agent-teams]].
+flag.tmux | flag | VERIFIED | S4 | --tmux | Creates a tmux session for the worktree. Requires --worktree. Pass --tmux=classic for traditional tmux.
+flag.tools | flag | VERIFIED | S4 | --tools | Restricts the built-in tools. An empty string disables all, default uses the default set, or a list such as Bash,Edit,Read. Does not affect MCP tools. See [[question.q2]].
+flag.verbose | flag | VERIFIED | S4 | --verbose | Enables verbose logging with full turn-by-turn output. Overrides the viewMode setting for this session.
+flag.version | flag | VERIFIED | S4 | --version (alias -v) | Outputs the version number.
+flag.worktree | flag | VERIFIED | S4 | --worktree (alias -w) | Starts Claude in an isolated git worktree at .claude/worktrees/<name>. Accepts a PR number or URL to branch from it. See [[feature.worktrees]].

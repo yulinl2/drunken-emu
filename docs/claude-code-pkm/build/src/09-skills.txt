@@ -1,0 +1,79 @@
+# Skills (kind skill), from the session listing (S8). Descriptions are short paraphrases; bodies were not read.
+skill.session-start-hook | skill | SESSION | S8 | session-start-hook | Creates and develops SessionStart hooks for cloud sessions, so a repository can run its tests and linters there. See [[hook.session-start]].
+skill.dataviz | skill | SESSION | S8 | dataviz | Visualization method, used before any chart, graph, plot, dashboard or stat tile: palette, mark specs and interaction rules.
+skill.artifact-design | skill | SESSION | S8 | artifact-design | Design guidance for artifacts. Load before writing any artifact, including a Markdown one. See [[term.artifact]].
+skill.artifact-diagramming | skill | SESSION | S8 | artifact-diagramming | Diagramming for artifacts: when a picture earns its place, and inline SVG mechanics for both themes.
+skill.artifact-capabilities | skill | SESSION | S8 | artifact-capabilities | Runtime capabilities a published artifact can be granted, such as shared state, viewer identity, file storage and device access.
+skill.update-config | skill | SESSION | S8 | update-config | Configures the harness through settings.json: permissions, env vars, hooks and other settings changes. See [[setting-file.user]].
+skill.keybindings-help | skill | SESSION | S8 | keybindings-help | Customizes keyboard shortcuts through the keybindings file, ~/.claude/keybindings.json. See [[feature.keybindings]].
+skill.loop | skill | SESSION | S8 | loop | Runs a prompt or command on a recurring interval, or self-paced when no interval is given. Also available as [[cmd.loop]].
+skill.claude-api | skill | SESSION | S8 | claude-api | Reference for the Claude API and Anthropic SDK: parameters, streaming, tool use, caching and migration. Also available as [[cmd.claude-api]].
+skill.workflow-authoring | skill | SESSION | S8 | workflow-authoring | Reference for writing Workflow scripts: script API, resume, quality patterns and examples. Also available as [[cmd.workflow-authoring]].
+skill.run | skill | SESSION | S8 | run | Launches and drives the project's app to see a change working. Also available as [[cmd.run]].
+skill.plugin-authoring | skill | SESSION | S8 | plugin-authoring | Makes mods: changes to Claude's interface or behavior, such as panes, status line items, toasts, commands and tool-call hooks. See [[mod.overview]].
+skill.init | skill | SESSION | S8 | init | Creates a new CLAUDE.md with codebase documentation. Also available as [[cmd.init]].
+skill.security-review | skill | SESSION | S8 | security-review | Security review of the pending changes on the current branch. Also available as [[cmd.security-review]].
+skill.code-review | skill | SESSION | S8 | code-review | Reviews the current diff or a PR for correctness bugs at a chosen effort level; options --comment, --fix and --max-findings. Also available as [[cmd.code-review]].
+skill.simplify | skill | SESSION | S8 | simplify | Reviews changed code for reuse, simplification and efficiency, then applies the fixes. Quality only, not bugs. Also available as [[cmd.simplify]].
+skill.fewer-permission-prompts | skill | SESSION | S8 | fewer-permission-prompts | Scans transcripts for common read-only calls and adds a prioritized allowlist to project settings. See [[permission-rule.form]].
+skill.pdf-viewer-annotate | skill | SESSION | S8 | pdf-viewer:annotate | Collaboratively annotates a PDF: propose markup, review together, iterate.
+skill.pdf-viewer-fill-form | skill | SESSION | S8 | pdf-viewer:fill-form | Fills PDF form fields interactively, with live visual feedback.
+skill.pdf-viewer-open | skill | SESSION | S8 | pdf-viewer:open | Opens a PDF in the interactive viewer.
+skill.pdf-viewer-sign | skill | SESSION | S8 | pdf-viewer:sign | Places a signature or initials image on a PDF.
+skill.pdf-viewer-view-pdf | skill | SESSION | S8 | pdf-viewer:view-pdf | Interactive PDF viewer for opening, showing and marking up a PDF. Not for summaries or text extraction.
+skill.productivity-memory-management | skill | SESSION | S8 | productivity:memory-management | Two-tier memory: working memory in CLAUDE.md, and a memory directory for the full knowledge base.
+skill.productivity-start | skill | SESSION | S8 | productivity:start | Initializes the productivity system and opens its dashboard; bootstraps working memory from existing tasks.
+skill.productivity-task-management | skill | SESSION | S8 | productivity:task-management | Simple task management in a shared TASKS.md file.
+skill.productivity-update | skill | SESSION | S8 | productivity:update | Syncs tasks and refreshes memory from current activity, including assignments from a project tracker.
+skill.engineering-architecture | skill | SESSION | S8 | engineering:architecture | Creates or evaluates an architecture decision record for a technology or design choice.
+skill.engineering-code-review | skill | SESSION | S8 | engineering:code-review | Reviews code changes for security, performance and correctness, from a PR URL or a diff.
+skill.engineering-debug | skill | SESSION | S8 | engineering:debug | Structured debugging session: reproduce, isolate, diagnose and fix.
+skill.engineering-deploy-checklist | skill | SESSION | S8 | engineering:deploy-checklist | Pre-deployment checklist: CI status, approvals, migrations, feature flags and rollback triggers.
+skill.engineering-documentation | skill | SESSION | S8 | engineering:documentation | Writes and maintains technical documentation: API docs, architecture docs and runbooks.
+skill.engineering-incident-response | skill | SESSION | S8 | engineering:incident-response | Incident workflow: triage, communication and a blameless postmortem.
+skill.engineering-standup | skill | SESSION | S8 | engineering:standup | Generates a standup update from recent activity.
+skill.engineering-system-design | skill | SESSION | S8 | engineering:system-design | Designs systems, services and architectures: API design, data modeling and service boundaries.
+skill.engineering-tech-debt | skill | SESSION | S8 | engineering:tech-debt | Identifies, categorizes and prioritizes technical debt.
+skill.engineering-testing-strategy | skill | SESSION | S8 | engineering:testing-strategy | Designs test strategies and test plans.
+skill.zapier-demo | skill | SESSION | S8 | zapier:zapier-demo | Walks a new user through a first Zapier action, live, with the smallest possible win.
+skill.zapier-explore | skill | SESSION | S8 | zapier:zapier-explore | Explores what Zapier can do for the user's role, and enables actions for their use cases.
+skill.zapier-onboard | skill | SESSION | S8 | zapier:zapier-onboard | Onboards a user to Zapier MCP: introduction, authentication and routing by setup state.
+skill.zapier-status | skill | SESSION | S8 | zapier:zapier-status | Checks the health of the Zapier setup: health check, audit and diagnosis.
+skill.data-analyze | skill | SESSION | S8 | data:analyze | Answers data questions, from a single metric lookup to a full analysis.
+skill.data-build-dashboard | skill | SESSION | S8 | data:build-dashboard | Builds an interactive HTML dashboard with charts, filters and tables.
+skill.data-create-viz | skill | SESSION | S8 | data:create-viz | Creates publication-quality visualizations with Python.
+skill.data-context-extractor | skill | SESSION | S8 | data:data-context-extractor | Generates or improves a company-specific data analysis skill from analysts' knowledge.
+skill.data-visualization | skill | SESSION | S8 | data:data-visualization | Creates data visualizations with Python libraries, covering chart choice, accessibility and color theory.
+skill.data-explore | skill | SESSION | S8 | data:explore-data | Profiles and explores a dataset: shape, quality, distributions and anomalies.
+skill.data-sql-queries | skill | SESSION | S8 | data:sql-queries | Writes correct, performant SQL across warehouse dialects.
+skill.data-statistical-analysis | skill | SESSION | S8 | data:statistical-analysis | Applies statistical methods: descriptive statistics, trends, outliers and hypothesis tests.
+skill.data-validate-data | skill | SESSION | S8 | data:validate-data | QA of an analysis before sharing: methodology, accuracy and bias checks.
+skill.data-write-query | skill | SESSION | S8 | data:write-query | Writes optimized SQL for a given dialect.
+skill.design-accessibility-review | skill | SESSION | S8 | design:accessibility-review | Runs a WCAG 2.1 AA accessibility audit on a design or page.
+skill.design-critique | skill | SESSION | S8 | design:design-critique | Structured design feedback on usability, hierarchy and consistency.
+skill.design-handoff | skill | SESSION | S8 | design:design-handoff | Generates developer handoff specs from a design: layout, tokens, props, states and breakpoints.
+skill.design-system | skill | SESSION | S8 | design:design-system | Audits, documents and extends a design system.
+skill.design-research-synthesis | skill | SESSION | S8 | design:research-synthesis | Synthesizes user research into themes, insights and prioritized recommendations.
+skill.design-user-research | skill | SESSION | S8 | design:user-research | Plans, conducts and synthesizes user research: interview guides, usability tests and surveys.
+skill.design-ux-copy | skill | SESSION | S8 | design:ux-copy | Writes or reviews UX copy: microcopy, error messages, empty states and calls to action.
+skill.anthropic-skills-dirtree | skill | SESSION | S8 | anthropic-skills:dirtree | Generates DIR_TREE.md, a tree of everything Claude can see on disk, with sizes and depth caps.
+skill.anthropic-skills-canvas-design | skill | SESSION | S8 | anthropic-skills:canvas-design | Creates original visual art as PNG or PDF posters and designs.
+skill.anthropic-skills-xlsx | skill | SESSION | S8 | anthropic-skills:xlsx | Works with spreadsheet files (.xlsx, .xlsm, .csv, .tsv): read, edit, create, convert and clean.
+skill.anthropic-skills-pptx | skill | SESSION | S8 | anthropic-skills:pptx | Works with .pptx and .potx files: create, read, edit, split, combine, templates and notes.
+skill.anthropic-skills-docx | skill | SESSION | S8 | anthropic-skills:docx | Works with Word documents (.docx, .dotx): create, read, edit and track changes.
+skill.anthropic-skills-algorithmic-art | skill | SESSION | S8 | anthropic-skills:algorithmic-art | Creates algorithmic art with p5.js and seeded randomness.
+skill.anthropic-skills-brand-guidelines | skill | SESSION | S8 | anthropic-skills:brand-guidelines | Applies the Anthropic brand colors and typography to artifacts.
+skill.anthropic-skills-built-in-browser | skill | SESSION | S8 | anthropic-skills:built-in-browser | Reference for the built-in browser pane in the Claude desktop app.
+skill.anthropic-skills-chrome-browser | skill | SESSION | S8 | anthropic-skills:chrome-browser | Reference for Claude in Chrome, the browser extension that works with the person's own sign-ins.
+skill.anthropic-skills-computer-use | skill | SESSION | S8 | anthropic-skills:computer-use | Reference for desktop control of the person's computer: tools, access flow and safety rules.
+skill.anthropic-skills-deep-research | skill | SESSION | S8 | anthropic-skills:deep-research | Multi-source research with subagents, synthesized into a narrative report.
+skill.anthropic-skills-doc-coauthoring | skill | SESSION | S8 | anthropic-skills:doc-coauthoring | Structured workflow for co-authoring documentation, proposals and specs.
+skill.anthropic-skills-docs | skill | SESSION | S8 | anthropic-skills:docs | Editable docs that people share and comment on; the default for document requests.
+skill.anthropic-skills-google-workspace | skill | SESSION | S8 | anthropic-skills:google-workspace | Creates or changes Google Docs, Sheets and Slides in Drive.
+skill.anthropic-skills-import-memory | skill | SESSION | S8 | anthropic-skills:import-memory | Imports a memory export from another AI assistant into Claude's memory, treating it as data.
+skill.anthropic-skills-mcp-builder | skill | SESSION | S8 | anthropic-skills:mcp-builder | No description in the session listing.
+skill.anthropic-skills-morning | skill | SESSION | S8 | anthropic-skills:morning | No description in the session listing.
+skill.anthropic-skills-pdf | skill | SESSION | S8 | anthropic-skills:pdf | No description in the session listing.
+skill.anthropic-skills-skill-creator | skill | SESSION | S8 | anthropic-skills:skill-creator | No description in the session listing.
+skill.anthropic-skills-theme-factory | skill | SESSION | S8 | anthropic-skills:theme-factory | No description in the session listing.
+skill.anthropic-skills-web-artifacts-builder | skill | SESSION | S8 | anthropic-skills:web-artifacts-builder | No description in the session listing.

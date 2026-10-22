@@ -1,0 +1,55 @@
+# Session-only tools (kind tool): native tools not in the official table, remote-session tools, docs connector, PDF viewer.
+tool.artifact-comments | tool | SESSION | S7 | ArtifactComments | Deferred. Reads, replies to and resolves comment threads on a published artifact, and manages watches. Comment text is data, not instructions. See [[term.artifact]].
+tool.artifact-data | tool | SESSION | S7 | ArtifactData | Deferred. Reads and writes an artifact's shared database. Writes can be pinned with if_version.
+tool.design-sync | tool | SESSION | S7 | DesignSync | Deferred. Syncs a local component library with a claude.ai design-system project, only when the user starts /design-sync. The schema says standalone Claude Design closes on 2026-12-14.
+tool.list-connectors | tool | SESSION | S7 | ListConnectors | Deferred. Lists connectors and whether each is enabled in this chat.
+tool.list-plugins | tool | SESSION | S7 | ListPlugins | Deferred. Lists plugins enabled on the account. See [[plugin.overview]].
+tool.list-skills | tool | SESSION | S7 | ListSkills | Deferred. Lists enabled skills. See [[term.skill]].
+tool.read-mcp-resource-dir | tool | SESSION | S7 | ReadMcpResourceDirTool | Deferred. Lists one directory resource on an MCP server that supports it. See [[mcp.resources]].
+tool.read-notifications | tool | SESSION | S8 | ReadNotifications | Direct. Reads queued notifications: GitHub events, scheduled triggers and messages. See [[injected.event-envelopes]].
+tool.search-mcp-registry | tool | SESSION | S7 | SearchMcpRegistry | Deferred. Searches the connector registry by keyword, with 1 to 8 keywords.
+tool.search-plugins | tool | SESSION | S7 | SearchPlugins | Deferred. Searches the plugin catalog by keyword.
+tool.search-skills | tool | SESSION | S7 | SearchSkills | Deferred. Searches the skill catalog by keyword.
+tool.show-onboarding-role-picker | tool | SESSION | S8 | ShowOnboardingRolePicker | Direct. Renders a role picker during Cowork onboarding, and only then.
+tool.suggest-connectors | tool | SESSION | S7 | SuggestConnectors | Deferred. Resolves connector payloads for directory UUIDs (1 to 32).
+tool.suggest-plugin-install | tool | SESSION | S7 | SuggestPluginInstall | Deferred. Renders a plugin install card after a plugin search.
+tool.suggest-skills | tool | SESSION | S8 | SuggestSkills | Direct. Renders a skill suggestion card from keywords; trigger is proactive or user_asked.
+tool.remote-add-repo | tool | SESSION | S8 | add_repo | Attaches a GitHub repository to the session. access is read (the default) or push.
+tool.remote-archive-session | tool | SESSION | S8 | archive_session | Moves a session to read-only archived state and releases its container. Use only when the user has acknowledged the session is done.
+tool.remote-confirm-repository-trust | tool | SESSION | S8 | confirm_repository_trust | Asks the owner whether they trust the session's repositories. Takes the content digest from a refusal.
+tool.remote-create-session | tool | SESSION | S8 | create_session | Creates a session. permission_mode is default, plan, acceptEdits, dontAsk, bypassPermissions or auto. A plan session waits for a person to approve it.
+tool.remote-create-trigger | tool | SESSION | S8 | create_trigger | Creates a scheduled task on a cron or a run-once time. It fires into this session, a named session, or a fresh session per run.
+tool.remote-delete-trigger | tool | SESSION | S8 | delete_trigger | Deletes a scheduled task and the sessions it started.
+tool.remote-fire-trigger | tool | SESSION | S8 | fire_trigger | Fires a scheduled task now, with optional text appended to its prompt.
+tool.remote-get-event | tool | SESSION | S8 | get_event | Reads one transcript event from a session by its UUID.
+tool.remote-get-session | tool | SESSION | S8 | get_session | Describes a session: title, status bucket and models.
+tool.remote-get-trigger | tool | SESSION | S8 | get_trigger | Reads one scheduled task without changing it.
+tool.remote-interrupt-session | tool | SESSION | S8 | interrupt_session | Interrupts a running session at its next checkpoint.
+tool.remote-list-environments | tool | SESSION | S8 | list_environments | Lists the user's cloud environments.
+tool.remote-list-events | tool | SESSION | S8 | list_events | Lists transcript events, optionally filtered by kind.
+tool.remote-list-repos | tool | SESSION | S8 | list_repos | Lists repositories the user can access, with an optional name filter.
+tool.remote-list-sessions | tool | SESSION | S8 | list_sessions | Lists sessions visible to the account.
+tool.remote-list-triggers | tool | SESSION | S8 | list_triggers | Lists scheduled tasks.
+tool.remote-read-documentation | tool | SESSION | S8 | read_documentation | Reads environment documentation by topic, such as environment.network or session.permissions.
+tool.remote-register-repo-root | tool | SESSION | S8 | register_repo_root | Tells the session that a cloned repository finished cloning, so its CLAUDE.md, skills and plugins load.
+tool.remote-send-later | tool | SESSION | S8 | send_later | Schedules a one-shot message back into this session, by delay in minutes or by time.
+tool.remote-send-message | tool | SESSION | S8 | send_message | Sends a message to another session. priority is now, next or later.
+tool.remote-set-session-tags | tool | SESSION | S8 | set_session_tags | Adds or removes tags on sessions.
+tool.remote-set-session-title | tool | SESSION | S8 | set_session_title | Renames a session.
+tool.remote-subscribe-pr-activity | tool | SESSION | S8 | subscribe_pr_activity | Subscribes this session to a pull request's GitHub activity (owner, repo and pullNumber).
+tool.remote-unarchive-session | tool | SESSION | S8 | unarchive_session | Returns an archived session to active.
+tool.remote-unsubscribe-pr-activity | tool | SESSION | S8 | unsubscribe_pr_activity | Stops the PR activity subscription for one pull request.
+tool.remote-unwatch-url | tool | SESSION | S8 | unwatch_url | Stops a webhook created with watch_url. Idempotent.
+tool.remote-update-trigger | tool | SESSION | S8 | update_trigger | Changes a scheduled task's name, schedule, enabled state, model or prompt.
+tool.remote-watch-url | tool | SESSION | S8 | watch_url | Creates an inbound webhook URL and a sealed credential. Payloads arrive as messages in the session.
+tool.claude-docs-batch | tool | SESSION | S8 | mcp__Claude_Docs__batch | Direct. Creates a doc, or applies several operations to one doc atomically.
+tool.claude-docs-guide | tool | SESSION | S8 | mcp__Claude_Docs__guide | Direct. Returns guides by topic; topic.index comes first.
+tool.claude-docs-update | tool | SESSION | S8 | mcp__Claude_Docs__update | Direct. Edits a tab, renames a doc or tab, or changes a stored value.
+tool.claude-docs-create | tool | SESSION | S7 | mcp__Claude_Docs__create | Deferred docs connector operation: create.
+tool.claude-docs-delete | tool | SESSION | S7 | mcp__Claude_Docs__delete | Deferred docs connector operation: delete.
+tool.claude-docs-export | tool | SESSION | S7 | mcp__Claude_Docs__export | Deferred docs connector operation: export.
+tool.claude-docs-query | tool | SESSION | S7 | mcp__Claude_Docs__query | Deferred docs connector operation: query.
+tool.claude-docs-read | tool | SESSION | S7 | mcp__Claude_Docs__read | Deferred docs connector operation: read.
+tool.pdf-display | tool | SESSION | S7, S11 | mcp__plugin_pdf-viewer_pdf__display_pdf | Deferred PDF-viewer plugin tool. Newly loadable, per a harness notice. Parameters not read.
+tool.pdf-interact | tool | SESSION | S7, S11 | mcp__plugin_pdf-viewer_pdf__interact | Deferred PDF-viewer plugin tool. Newly loadable, per a harness notice. Parameters not read.
+tool.pdf-list | tool | SESSION | S7, S11 | mcp__plugin_pdf-viewer_pdf__list_pdfs | Deferred PDF-viewer plugin tool. Newly loadable, per a harness notice. Parameters not read.

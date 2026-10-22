@@ -1,0 +1,19 @@
+# Sources (one node per citation ID) and legend tags.
+src.s1 | source | VERIFIED | - | S1: Docs index (llms.txt) | Official index of 228 English pages, each with a URL and a one-line description. Fetched 2026-10-21 from https://code.claude.com/docs/llms.txt. Used for the page inventory and for every INDEX-tagged claim.
+src.s2 | source | VERIFIED | - | S2: Hooks reference | Official page https://code.claude.com/docs/en/hooks, fetched 2026-10-21. The answer covered characters 0 to 100,000 of 269,866, so most per-event stdin schemas are unread (see gap.hook-stdin-schemas).
+src.s3 | source | VERIFIED | - | S3: Settings reference | Official page https://code.claude.com/docs/en/settings: settings files, scopes, precedence, live reload, cloud-session rules and managed exceptions. Fetched 2026-10-21 and read as returned.
+src.s4 | source | VERIFIED | - | S4: CLI reference | Official page https://code.claude.com/docs/en/cli-reference: commands, subcommands, flags, output formats and permission flags. Fetched 2026-10-21 and read as returned.
+src.s5 | source | VERIFIED | - | S5: Slash commands and skills | Official page https://code.claude.com/docs/en/slash-commands: skill files, frontmatter, argument placeholders and namespacing. Fetched 2026-10-21. The built-in command list is cut off, so see gap.commands-page.
+src.s6 | source | VERIFIED | - | S6: Tools reference | Official page https://code.claude.com/docs/en/tools-reference: the tool table with permissions, and per-tool behavior. Fetched 2026-10-21; the saved answer was read through line 510 of 708 (see gap.tools-ref-tail).
+src.s7 | source | SESSION | - | S7: Live deferred-tool schemas | Parameters and descriptions of the deferred tools, loaded with ToolSearch on 2026-10-21. No URL exists for this source.
+src.s8 | source | SESSION | - | S8: This session's system prompt and injected context | Directly loaded tool definitions, the skills listing, agent types, the Git and PR rules, and the reminder types. Read on 2026-10-21. No URL exists for this source.
+src.s9 | source | REPO | - | S9: Repository files | Files read on 2026-10-21: README.md, CLAUDE.md, docs/OPEN-PROBLEMS.md, docs/SANDBOX-FACTS.md, docs/EXPLORE-SPEC.md, and the .claude/ and .github/ listings. Repository observations carry this source, and each one names its container class.
+src.s10 | source | INDEX | - | S10: Claude Code on the web | Official page https://code.claude.com/docs/en/claude-code-on-the-web. Named in this session's environment notes. Not fetched.
+src.s11 | source | SESSION | - | S11: Harness notices | Notices delivered to this session on 2026-10-21 about the state of some connected servers. No URL exists. Server names are not recorded in these notes.
+tag.verified | tag | DEFINED | - | VERIFIED | Read from an official page fetched on 2026-10-21, such as [[src.s2]] through [[src.s6]].
+tag.index | tag | DEFINED | - | INDEX | Only the one-line description from the official index ([[src.s1]]). The detail page was not fetched.
+tag.session | tag | DEFINED | - | SESSION | Read from this session's live tool schemas or system prompt ([[src.s7]], [[src.s8]], [[src.s11]]). These sources have no URL.
+tag.repo | tag | DEFINED | - | REPO | Observed in this repository ([[src.s9]]). Usually one session in one container class, so a point, not a settled fact.
+tag.unverified | tag | DEFINED | - | UNVERIFIED | Prior knowledge only. Do not rely on it without a source.
+tag.open | tag | DEFINED | - | OPEN | A question, doubt, or conflict. Each one has its own question node.
+tag.gap | tag | DEFINED | - | GAP | Not read or not fetched in this pass. Each one has its own coverage-gap node.

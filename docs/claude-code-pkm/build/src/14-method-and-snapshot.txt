@@ -1,0 +1,19 @@
+# Facts that only the v1 hub held: the conflict rule, and the tool counts at the snapshot.
+@node process.conflict-rule
+kind: process
+status: DECIDED
+sources: S2, S3, S4, S6, S7, S8, S9
+title: Conflict rule: best of, not union
+body:
+When two sources disagree, keep the one closest to the behavior being described. Record the loser as an open question with both citations. Do not merge the two claims into one row.
+
+Priority order:
+
+1. Live schema or official page, for what a tool or setting does: [[src.s2]], [[src.s3]], [[src.s4]], [[src.s6]], [[src.s7]].
+2. This session's system prompt, for rules this session enforces: [[src.s8]].
+3. Repository observations, labeled by container class: [[src.s9]].
+4. Prior knowledge, never on its own: [[tag.unverified]].
+
+Conflicts recorded so far: [[question.q1]] (a hook added mid-session) and [[question.q2]] (Glob and Grep).
+@end
+injected.tool-listing-snapshot | injected | SESSION | S7, S8 | Tool counts at the snapshot: 50 direct, 152 deferred | At the 2026-10-21 snapshot, the session listed 50 tools as loaded directly and 152 as deferred, 202 in all. This is my own tally of the lists in the session context, so recount it in a refresh. The 152 includes two Gmail tools, [[tool.gmail-batch-get-messages]] and [[tool.gmail-batch-get-threads]], which a later notice reported unavailable. In a later listing on the same day, the deferred list had 150 names, without those two. Parameters: [[gap.connector-schemas]].

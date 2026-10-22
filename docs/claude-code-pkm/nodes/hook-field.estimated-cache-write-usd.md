@@ -1,0 +1,13 @@
+---
+id: hook-field.estimated-cache-write-usd
+kind: hook-field
+status: SUPERSEDED
+title: "estimated_cache_write_usd"
+sources: [S85]
+---
+
+# estimated_cache_write_usd
+
+**Sources:** [S85](src.s85.md)
+
+Superseded by [estimated_cache_write_usd](hook-field.estimated-cache-write-usd-hooks.md). Estimated cost in US dollars of writing `context_tokens` to the prompt cache on the session's model, excluding the response
