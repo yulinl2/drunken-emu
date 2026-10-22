@@ -1,7 +1,7 @@
 ---
 id: permission-rule.bash-npm-run-build
 kind: permission-rule
-status: VERIFIED
+status: SUPERSEDED
 title: "Bash(npm run build)"
 sources: [S66]
 ---
@@ -10,4 +10,4 @@ sources: [S66]
 
 **Sources:** [S66](src.s66.md)
 
-Matches the exact command `npm run build`
+Superseded by [Bash(npm run build)](permission-rule.bash-npm-run-build-permissions.md). Matches the exact command `npm run build`

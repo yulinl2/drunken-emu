@@ -1,7 +1,7 @@
 ---
 id: feature.type-headless
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "type"
 sources: [S38]
 ---
@@ -10,4 +10,4 @@ sources: [S38]
 
 **Sources:** [S38](src.s38.md)
 
-message type (type: `"system"`)
+Superseded by [type](feature.type.md). message type (type: `"system"`)

@@ -1,7 +1,7 @@
 ---
 id: shortcut.scroll-pagedown
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "scroll:pageDown"
 sources: [S79]
 ---
@@ -10,4 +10,4 @@ sources: [S79]
 
 **Sources:** [S79](src.s79.md)
 
-Scroll down half a viewport (default: PageDown)
+Superseded by [scroll:pageDown](shortcut.scroll-pagedown-keybindings.md). Scroll down half a viewport (default: PageDown)

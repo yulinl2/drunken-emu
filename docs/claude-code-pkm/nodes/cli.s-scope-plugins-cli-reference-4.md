@@ -11,3 +11,8 @@ sources: [S52]
 **Sources:** [S52](src.s52.md)
 
 Scope to update: `user`, `project`, `local`, or `managed`. Auto-detected when omitted
+
+## Linked from
+
+- [-s, --scope](cli.s-scope-plugins-cli-reference-2.md)
+- [-s, --scope](cli.s-scope-plugins-cli-reference-3.md)

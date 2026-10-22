@@ -1,7 +1,7 @@
 ---
 id: plugin-field.synced-plugins-loading
 kind: plugin-field
-status: VERIFIED
+status: SUPERSEDED
 title: "synced/"
 sources: [S49]
 ---
@@ -10,4 +10,4 @@ sources: [S49]
 
 **Sources:** [S49](src.s49.md)
 
-The plugins Claude Code synced from your claude.ai account
+Superseded by [@synced](plugin-field.synced.md). The plugins Claude Code synced from your claude.ai account

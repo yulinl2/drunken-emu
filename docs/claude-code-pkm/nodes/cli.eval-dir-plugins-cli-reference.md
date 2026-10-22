@@ -11,3 +11,7 @@ sources: [S52]
 **Sources:** [S52](src.s52.md)
 
 Directory below the current directory to write cases into (default: The manifest's `experimental.evals`, else `evals`)
+
+## Linked from
+
+- [--eval-dir](cli.eval-dir.md)

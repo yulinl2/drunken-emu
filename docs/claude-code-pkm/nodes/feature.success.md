@@ -11,3 +11,7 @@ sources: [S65]
 **Sources:** [S65](src.s65.md)
 
 `true` or `false`
+
+## Linked from
+
+- [success](feature.success-monitoring-usage.md)

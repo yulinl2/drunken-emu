@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Open line below; from mode: NORMAL
+
+## Linked from
+
+- [O](shortcut.o-interactive-mode.md)

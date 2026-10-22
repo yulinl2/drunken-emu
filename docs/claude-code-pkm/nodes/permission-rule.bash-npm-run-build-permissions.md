@@ -11,3 +11,7 @@ sources: [S66]
 **Sources:** [S66](src.s66.md)
 
 `npm run build --watch` (matches: `npm run build`)
+
+## Linked from
+
+- [Bash(npm run build)](permission-rule.bash-npm-run-build.md)

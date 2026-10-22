@@ -11,3 +11,8 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 Deprecated. Session-derived team name; will be removed in a future release
+
+## Linked from
+
+- [team_name](hook-field.team-name-hooks.md)
+- [team_name](hook-field.team-name-hooks-2.md)

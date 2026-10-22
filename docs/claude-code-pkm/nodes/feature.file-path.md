@@ -1,7 +1,7 @@
 ---
 id: feature.file-path
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "file_path"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-Target file path for Read, Edit, and Write tools (gated by: `OTEL_LOG_TOOL_DETAILS`)
+Superseded by [file_path](feature.file-path-monitoring-usage.md). Target file path for Read, Edit, and Write tools (gated by: `OTEL_LOG_TOOL_DETAILS`)

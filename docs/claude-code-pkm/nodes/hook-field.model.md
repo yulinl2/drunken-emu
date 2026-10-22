@@ -11,3 +11,7 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 Model to use for evaluation. Defaults to the model Claude Code uses for background functionality (required: no)
+
+## Linked from
+
+- [model](hook-field.model-hooks-3.md)

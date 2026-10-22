@@ -1,7 +1,7 @@
 ---
 id: plugin-field.metadata
 kind: plugin-field
-status: VERIFIED
+status: SUPERSEDED
 title: "metadata"
 sources: [S50]
 ---
@@ -10,4 +10,4 @@ sources: [S50]
 
 **Sources:** [S50](src.s50.md)
 
-Free-form object for your own data. Claude Code doesn't read it (type: Object)
+Superseded by [metadata](plugin.metadata.md). Free-form object for your own data. Claude Code doesn't read it (type: Object)

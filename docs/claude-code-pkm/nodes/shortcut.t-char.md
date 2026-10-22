@@ -1,7 +1,7 @@
 ---
 id: shortcut.t-char
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "t{char}"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Jump to just before next occurrence of character on the current line
+Superseded by [T{char}](shortcut.t-char-interactive-mode.md). action: Jump to just before next occurrence of character on the current line

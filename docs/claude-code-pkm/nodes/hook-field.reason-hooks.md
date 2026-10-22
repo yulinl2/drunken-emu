@@ -1,7 +1,7 @@
 ---
 id: hook-field.reason-hooks
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "reason"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Shown to the user when `decision` is `"block"`
+Superseded by [reason](hook-field.reason.md). Shown to the user when `decision` is `"block"`

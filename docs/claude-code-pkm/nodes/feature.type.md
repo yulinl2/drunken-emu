@@ -11,3 +11,7 @@ sources: [S38]
 **Sources:** [S38](src.s38.md)
 
 message type (type: `"system"`)
+
+## Linked from
+
+- [type](feature.type-headless.md)

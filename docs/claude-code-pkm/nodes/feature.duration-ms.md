@@ -1,7 +1,7 @@
 ---
 id: feature.duration-ms
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "duration_ms"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-Wall-clock duration including retries
+Superseded by [duration_ms](feature.duration-ms-monitoring-usage.md). Wall-clock duration including retries

@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Jump to just after previous occurrence of character on the current line
+
+## Linked from
+
+- [t{char}](shortcut.t-char.md)

@@ -1,7 +1,7 @@
 ---
 id: hook-field.timeout-hooks-3
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "timeout"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Timeout in seconds. Default: 30 (required: no)
+Superseded by [timeout](hook-field.timeout.md). Timeout in seconds. Default: 30 (required: no)

@@ -1,7 +1,7 @@
 ---
 id: hook-field.description
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "description"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Optional description of what the command does (type: string; example: `"Run test suite"`)
+Superseded by [description](hook-field.description-hooks.md). Optional description of what the command does (type: string; example: `"Run test suite"`)

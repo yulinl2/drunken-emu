@@ -1,7 +1,7 @@
 ---
 id: tool.cronlist
 kind: tool
-status: VERIFIED
+status: SUPERSEDED
 title: "CronList"
 sources: [S82]
 ---
@@ -10,4 +10,4 @@ sources: [S82]
 
 **Sources:** [S82](src.s82.md)
 
-Lists all session-scoped scheduled tasks (permission required: No)
+Superseded by [CronList](tool.cron-list.md). Lists all session-scoped scheduled tasks (permission required: No)

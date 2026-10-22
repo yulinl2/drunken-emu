@@ -11,3 +11,7 @@ sources: [S52]
 **Sources:** [S52](src.s52.md)
 
 Skip the `--prune` confirmation prompt. Required with `--prune` when stdin or stdout isn't a TTY
+
+## Linked from
+
+- [-y, --yes](cli.y-yes-plugins-cli-reference-3.md)

@@ -11,3 +11,7 @@ sources: [S65]
 **Sources:** [S65](src.s65.md)
 
 Name of the workflow that spawned this agent. User-authored names are replaced with `custom` unless the gate is set (gated by: `OTEL_LOG_TOOL_DETAILS`)
+
+## Linked from
+
+- [workflow.name](feature.workflow-name-monitoring-usage.md)

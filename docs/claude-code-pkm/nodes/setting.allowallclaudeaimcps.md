@@ -1,7 +1,7 @@
 ---
 id: setting.allowallclaudeaimcps
 kind: setting
-status: VERIFIED
+status: SUPERSEDED
 title: "allowAllClaudeAiMcps"
 sources: [S61]
 ---
@@ -10,4 +10,4 @@ sources: [S61]
 
 **Sources:** [S61](src.s61.md)
 
-Load the claude.ai connectors Claude Code fetches itself alongside a deployed `managed-mcp.json` instead of suppressing them
+Superseded by [allowAllClaudeAiMcps](setting.allow-all-claude-ai-mcps.md). Load the claude.ai connectors Claude Code fetches itself alongside a deployed `managed-mcp.json` instead of suppressing them

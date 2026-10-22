@@ -11,3 +11,7 @@ sources: [S65]
 **Sources:** [S65](src.s65.md)
 
 Identifier of the agent that spawned this one. Absent for the main session and for agents spawned directly from it
+
+## Linked from
+
+- [parent_agent_id](feature.parent-agent-id-monitoring-usage.md)

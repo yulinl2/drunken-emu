@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Replace every selected character with `{char}`
+
+## Linked from
+
+- [r{char}](shortcut.r-char.md)

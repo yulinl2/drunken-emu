@@ -1,7 +1,7 @@
 ---
 id: shortcut.v-interactive-mode-2
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "V"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Start line-wise visual selection; from mode: NORMAL
+Superseded by [v](shortcut.v-interactive-mode.md). action: Start line-wise visual selection; from mode: NORMAL

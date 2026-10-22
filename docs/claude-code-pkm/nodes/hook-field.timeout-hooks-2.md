@@ -1,7 +1,7 @@
 ---
 id: hook-field.timeout-hooks-2
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "timeout"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Optional timeout in milliseconds (type: number; example: `120000`)
+Superseded by [timeout](hook-field.timeout-hooks.md). Optional timeout in milliseconds (type: number; example: `120000`)

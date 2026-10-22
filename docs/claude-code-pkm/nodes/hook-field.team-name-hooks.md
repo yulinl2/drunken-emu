@@ -1,7 +1,7 @@
 ---
 id: hook-field.team-name-hooks
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "team_name"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Deprecated. Session-derived team name; will be removed in a future release
+Superseded by [team_name](hook-field.team-name.md). Deprecated. Session-derived team name; will be removed in a future release

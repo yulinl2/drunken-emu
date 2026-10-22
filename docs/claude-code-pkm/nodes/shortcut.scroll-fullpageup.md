@@ -1,7 +1,7 @@
 ---
 id: shortcut.scroll-fullpageup
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "scroll:fullPageUp"
 sources: [S79]
 ---
@@ -10,4 +10,4 @@ sources: [S79]
 
 **Sources:** [S79](src.s79.md)
 
-Scroll up a full viewport (default: Shift+Space, B)
+Superseded by [scroll:fullPageUp](shortcut.scroll-fullpageup-keybindings.md). Scroll up a full viewport (default: Shift+Space, B)

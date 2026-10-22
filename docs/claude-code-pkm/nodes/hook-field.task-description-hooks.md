@@ -1,7 +1,7 @@
 ---
 id: hook-field.task-description-hooks
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "task_description"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Detailed description of the task. May be absent
+Superseded by [task_description](hook-field.task-description.md). Detailed description of the task. May be absent

@@ -1,7 +1,7 @@
 ---
 id: feature.uuid-headless
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "uuid"
 sources: [S38]
 ---
@@ -10,4 +10,4 @@ sources: [S38]
 
 **Sources:** [S38](src.s38.md)
 
-unique event identifier (type: string)
+Superseded by [uuid](feature.uuid.md). unique event identifier (type: string)

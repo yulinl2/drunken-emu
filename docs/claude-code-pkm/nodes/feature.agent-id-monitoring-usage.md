@@ -1,7 +1,7 @@
 ---
 id: feature.agent-id-monitoring-usage
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "agent_id"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-Identifier of the subagent or teammate that ran the tool. Absent on the main session
+Superseded by [agent_id](feature.agent-id.md). Identifier of the subagent or teammate that ran the tool. Absent on the main session

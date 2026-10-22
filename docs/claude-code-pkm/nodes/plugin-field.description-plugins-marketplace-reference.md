@@ -11,3 +11,7 @@ sources: [S51]
 **Sources:** [S51](src.s51.md)
 
 Marketplace description shown to users. `claude plugin validate` warns when it's missing (type: string)
+
+## Linked from
+
+- [description](plugin-field.description-plugins-manifest-reference.md)

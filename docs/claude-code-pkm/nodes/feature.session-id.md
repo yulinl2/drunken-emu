@@ -11,3 +11,7 @@ sources: [S38]
 **Sources:** [S38](src.s38.md)
 
 session the event belongs to (type: string)
+
+## Linked from
+
+- [session_id](feature.session-id-headless.md)

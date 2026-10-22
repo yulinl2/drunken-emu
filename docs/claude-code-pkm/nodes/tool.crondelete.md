@@ -1,7 +1,7 @@
 ---
 id: tool.crondelete
 kind: tool
-status: VERIFIED
+status: SUPERSEDED
 title: "CronDelete"
 sources: [S82]
 ---
@@ -10,4 +10,4 @@ sources: [S82]
 
 **Sources:** [S82](src.s82.md)
 
-Cancels a session-scoped scheduled task by ID (permission required: No)
+Superseded by [CronDelete](tool.cron-delete.md). Cancels a session-scoped scheduled task by ID (permission required: No)

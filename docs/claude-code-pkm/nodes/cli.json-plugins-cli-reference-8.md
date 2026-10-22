@@ -1,7 +1,7 @@
 ---
 id: cli.json-plugins-cli-reference-8
 kind: cli
-status: VERIFIED
+status: SUPERSEDED
 title: "--json"
 sources: [S52]
 ---
@@ -10,4 +10,4 @@ sources: [S52]
 
 **Sources:** [S52](src.s52.md)
 
-Print whether the command succeeded, and its message, as one JSON object on the last line of stdout, in the JSON result format. Has no effect with `--claudeai`. Requires Claude Code v2.1.287 or later
+Superseded by [--json](cli.json-plugins-cli-reference-11.md). Print whether the command succeeded, and its message, as one JSON object on the last line of stdout, in the JSON result format. Has no effect with `--claudeai`. Requires Claude Code v2.1.287 or later

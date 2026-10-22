@@ -11,3 +11,7 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 when it fires: After auto-compact when the conversation reaches the auto-compact window, and after idle compaction
+
+## Linked from
+
+- [auto](hook-rule.auto.md)

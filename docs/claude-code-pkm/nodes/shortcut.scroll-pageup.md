@@ -1,7 +1,7 @@
 ---
 id: shortcut.scroll-pageup
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "scroll:pageUp"
 sources: [S79]
 ---
@@ -10,4 +10,4 @@ sources: [S79]
 
 **Sources:** [S79](src.s79.md)
 
-Scroll up half a viewport (default: PageUp)
+Superseded by [scroll:pageUp](shortcut.scroll-pageup-keybindings.md). Scroll up half a viewport (default: PageUp)

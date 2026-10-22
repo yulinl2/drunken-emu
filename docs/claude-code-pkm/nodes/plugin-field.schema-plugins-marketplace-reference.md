@@ -1,7 +1,7 @@
 ---
 id: plugin-field.schema-plugins-marketplace-reference
 kind: plugin-field
-status: VERIFIED
+status: SUPERSEDED
 title: "$schema"
 sources: [S51]
 ---
@@ -10,4 +10,4 @@ sources: [S51]
 
 **Sources:** [S51](src.s51.md)
 
-JSON Schema URL for editor autocomplete. Ignored at load time (type: string)
+Superseded by [$schema](plugin-field.schema.md). JSON Schema URL for editor autocomplete. Ignored at load time (type: string)

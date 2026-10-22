@@ -1,7 +1,7 @@
 ---
 id: feature.new-context
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "new_context"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-The user prompt (span: `claude_code.interaction`; gated by: `OTEL_LOG_USER_PROMPTS`)
+Superseded by [new_context](feature.new-context-monitoring-usage.md). The user prompt (span: `claude_code.interaction`; gated by: `OTEL_LOG_USER_PROMPTS`)

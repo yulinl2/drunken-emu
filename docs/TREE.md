@@ -117,7 +117,9 @@ that is never executed is not a regeneration command.
 |   |   |   |   |-- 19-pages-tables.txt
 |   |   |   |   |-- 20-pages-headings.txt
 |   |   |   |   |-- 21-scope-and-done.txt
-|   |   |   |   `-- 22-scope-out.txt
+|   |   |   |   |-- 22-scope-out.txt
+|   |   |   |   `-- 24-best-of.txt
+|   |   |   |-- best_of.py
 |   |   |   |-- build_nodes.py
 |   |   |   `-- extract_pages.py
 |   |   |-- nodes/
@@ -471,6 +473,7 @@ that is never executed is not a regeneration command.
 |   |   |   |-- dec.d12.md
 |   |   |   |-- dec.d13.md
 |   |   |   |-- dec.d14.md
+|   |   |   |-- dec.d15.md
 |   |   |   |-- dec.d2.md
 |   |   |   |-- dec.d3.md
 |   |   |   |-- dec.d4.md
@@ -5849,5 +5852,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-33 directories, 5791 files tracked
+33 directories, 5794 files tracked
 ```

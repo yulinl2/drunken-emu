@@ -11,3 +11,7 @@ sources: [S79]
 **Sources:** [S79](src.s79.md)
 
 Scroll up the full viewport height (default: (unbound))
+
+## Linked from
+
+- [scroll:fullPageUp](shortcut.scroll-fullpageup.md)

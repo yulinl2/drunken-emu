@@ -11,3 +11,7 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 when it fires: After `/compact`
+
+## Linked from
+
+- [manual](hook-rule.manual.md)

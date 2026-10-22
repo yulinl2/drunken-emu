@@ -1,7 +1,7 @@
 ---
 id: feature.session-id-headless
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "session_id"
 sources: [S38]
 ---
@@ -10,4 +10,4 @@ sources: [S38]
 
 **Sources:** [S38](src.s38.md)
 
-session the event belongs to (type: string)
+Superseded by [session_id](feature.session-id.md). session the event belongs to (type: string)

@@ -1,7 +1,7 @@
 ---
 id: plugin-field.url
 kind: plugin-field
-status: VERIFIED
+status: SUPERSEDED
 title: "url"
 sources: [S51]
 ---
@@ -10,4 +10,4 @@ sources: [S51]
 
 **Sources:** [S51](src.s51.md)
 
-Any git repository by URL (fields: `url`, `ref`, `sha`)
+Superseded by [url](plugin-field.url-plugins-marketplace-reference.md). Any git repository by URL (fields: `url`, `ref`, `sha`)

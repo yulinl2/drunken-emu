@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Join selected lines
+
+## Linked from
+
+- [J](shortcut.j.md)

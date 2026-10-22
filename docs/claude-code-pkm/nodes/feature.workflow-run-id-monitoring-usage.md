@@ -1,7 +1,7 @@
 ---
 id: feature.workflow-run-id-monitoring-usage
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "workflow.run_id"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-Run identifier of the Workflow tool run that spawned this agent, prefixed `wf_`. Absent for agents not spawned by a workflow
+Superseded by [workflow.run_id](feature.workflow-run-id.md). Run identifier of the Workflow tool run that spawned this agent, prefixed `wf_`. Absent for agents not spawned by a workflow

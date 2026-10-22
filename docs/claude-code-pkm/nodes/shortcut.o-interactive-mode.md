@@ -1,7 +1,7 @@
 ---
 id: shortcut.o-interactive-mode
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "O"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Open line above; from mode: NORMAL
+Superseded by [o](shortcut.o.md). action: Open line above; from mode: NORMAL

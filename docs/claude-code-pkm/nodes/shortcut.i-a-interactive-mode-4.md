@@ -1,7 +1,7 @@
 ---
 id: shortcut.i-a-interactive-mode-4
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "i{/a{"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Inner/around braces
+Superseded by [i"/a"](shortcut.i-a.md). action: Inner/around braces

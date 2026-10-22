@@ -14,4 +14,5 @@ Permission: Yes. Presents a plan for approval and exits plan mode. Here: deferre
 
 ## Linked from
 
+- [ExitPlanMode](tool.exitplanmode.md)
 - [Permission mode: plan](permission-mode.plan.md)

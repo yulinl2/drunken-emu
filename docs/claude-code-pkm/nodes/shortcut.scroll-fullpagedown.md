@@ -1,7 +1,7 @@
 ---
 id: shortcut.scroll-fullpagedown
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "scroll:fullPageDown"
 sources: [S79]
 ---
@@ -10,4 +10,4 @@ sources: [S79]
 
 **Sources:** [S79](src.s79.md)
 
-Scroll down a full viewport (default: Space)
+Superseded by [scroll:fullPageDown](shortcut.scroll-fullpagedown-keybindings.md). Scroll down a full viewport (default: Space)

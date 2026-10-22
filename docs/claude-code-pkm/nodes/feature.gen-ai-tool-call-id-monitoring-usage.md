@@ -1,7 +1,7 @@
 ---
 id: feature.gen-ai-tool-call-id-monitoring-usage
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "gen_ai.tool.call.id"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-Same value as `tool_use_id`. OpenTelemetry GenAI semantic convention
+Superseded by [gen_ai.tool.call.id](feature.gen-ai-tool-call-id.md). Same value as `tool_use_id`. OpenTelemetry GenAI semantic convention

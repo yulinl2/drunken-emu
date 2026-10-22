@@ -30,13 +30,14 @@
 - **Scope (dec.d12, decided).** The PKM covers Claude Code as a harness: tools, commands, flags, settings, environment variables, hooks, memory, skills, subagents, plugins and mods, MCP, permissions, sandboxing, output styles, status line and keyboard shortcuts. The 72 in-scope reference pages are listed in `build/extract_pages.py`, and each has its own source node. See [dec.d12](claude-code-pkm/nodes/dec.d12.md).
 - **Out of scope (dec.d14).** The other 152 English pages on the docs index are listed with a reason each, grouped by reason. See [dec.d14](claude-code-pkm/nodes/dec.d14.md).
 - **Done (dec.d13).** No GAP-status node remains. Every table row and section heading on an in-scope page is a node or is already present. The English index pages split exactly into in-scope and out-of-scope, and both drift checks pass. See [dec.d13](claude-code-pkm/nodes/dec.d13.md).
-- **Regenerate.** Download the in-scope pages as described in `build/src/19-pages-tables.txt`, run `build/extract_pages.py`, then run `build/build_nodes.py`.
+- **Regenerate.** Download the in-scope pages as described in `build/src/19-pages-tables.txt`, run `build/extract_pages.py`, run `build/best_of.py`, then run `build/build_nodes.py`.
 
 ## Method
 
 - **Tags.** Each node's `status` is one tag: `VERIFIED`, `INDEX`, `SESSION`, `REPO`, `UNVERIFIED`, `OPEN`, `GAP`, `DECIDED`, `SUPERSEDED`, `REMOVED` or `DEFINED`. Their meanings are in [Legend tags](claude-code-pkm/INDEX.md#legend-tags).
 - **Sources.** Each node cites its sources as `S<n>`, and each citation links to a source node. The list is in [Sources](claude-code-pkm/INDEX.md#sources).
 - **Conflicts.** Keep the source closest to the behavior, and record the loser as an open question. See [process.conflict-rule](claude-code-pkm/nodes/process.conflict-rule.md).
+- **Overlaps.** Nodes that describe the same thing on the same surface form one group. The winner is chosen by a stated order, and each loser is demoted to SUPERSEDED with its text kept behind a pointer. Nothing is merged. See [dec.d15](claude-code-pkm/nodes/dec.d15.md).
 
 ## Refresh
 

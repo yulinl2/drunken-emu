@@ -8,6 +8,12 @@ Row: one line, six fields split on ' | ' (the body keeps any later ' | '):
 
     <id> | <kind> | <status> | <sources> | <title> | <body>
 
+    replace <id> | <kind> | <status> | <sources> | <title> | <body>
+
+A row that starts with 'replace ' overrides the node with that id: kind, status,
+sources, title and body are replaced, so the node keeps its id and its links.
+best_of.py uses it to demote the losers of an overlap group.
+
 Block: for bodies that need several lines:
 
     @node <id>
@@ -145,31 +151,49 @@ def parse(path, errors):
                 block = {"id": text[len("@node "):].strip(), "where": where,
                          "meta": {}, "body": [], "in_body": False}
                 continue
-            fields = line.split(" | ", 5)
+            replace = text.startswith("replace ")
+            row = line.lstrip()[len("replace "):] if replace else line
+            fields = row.split(" | ", 5)
             if len(fields) != 6:
                 errors.append(f"{where}: a row needs six fields split on ' | '")
                 continue
             nid, kind, status, sources, title, body = (f.strip() for f in fields)
-            nodes.append(finish({"id": nid, "where": where,
-                                 "meta": {"kind": kind, "status": status,
-                                          "sources": sources, "title": title},
-                                 "body": [body]}, errors))
+            node = finish({"id": nid, "where": where,
+                           "meta": {"kind": kind, "status": status,
+                                    "sources": sources, "title": title},
+                           "body": [body]}, errors)
+            node["replace"] = replace
+            nodes.append(node)
     if block is not None:
         errors.append(f"{name}: @node {block['id']} is never closed with @end")
     return nodes
 
 
-def build(errors):
-    """Parse every source file and resolve links, sources and backlinks."""
+def build(errors, skip=()):
+    """Parse every source file and resolve links, sources and backlinks.
+
+    skip names source files to leave out. best_of.py skips its own output so
+    that it recomputes overlap groups from the base lists.
+    """
     nodes = []
     for name in sorted(os.listdir(SRC_DIR)):
-        if name.endswith(".txt"):
+        if name.endswith(".txt") and name not in skip:
             nodes.extend(parse(os.path.join(SRC_DIR, name), errors))
+    overrides = [node for node in nodes if node.get("replace")]
     by_id = {}
     for node in nodes:
+        if node.get("replace"):
+            continue
         if node["id"] in by_id:
             errors.append(f"{node['where']}: duplicate id '{node['id']}'")
         by_id[node["id"]] = node
+    for node in overrides:
+        target = by_id.get(node["id"])
+        if target is None:
+            errors.append(f"{node['where']}: replace target '{node['id']}' does not exist")
+            continue
+        for key in ("kind", "status", "title", "sources", "body"):
+            target[key] = node[key]
     for node in by_id.values():
         node["out"] = []
         for target in LINK_RE.findall(node["body"]):

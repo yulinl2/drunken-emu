@@ -11,3 +11,7 @@ sources: [S79]
 **Sources:** [S79](src.s79.md)
 
 Scroll up half the viewport height (default: PageUp)
+
+## Linked from
+
+- [scroll:pageUp](shortcut.scroll-pageup.md)

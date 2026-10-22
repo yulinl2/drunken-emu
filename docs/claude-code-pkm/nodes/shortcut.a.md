@@ -1,7 +1,7 @@
 ---
 id: shortcut.a
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "a"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Insert after cursor; from mode: NORMAL
+Superseded by [A](shortcut.a-interactive-mode.md). action: Insert after cursor; from mode: NORMAL

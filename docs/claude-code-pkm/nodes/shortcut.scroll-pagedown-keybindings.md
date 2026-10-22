@@ -11,3 +11,7 @@ sources: [S79]
 **Sources:** [S79](src.s79.md)
 
 Scroll down half the viewport height (default: PageDown)
+
+## Linked from
+
+- [scroll:pageDown](shortcut.scroll-pagedown.md)

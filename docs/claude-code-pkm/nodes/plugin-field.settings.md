@@ -1,7 +1,7 @@
 ---
 id: plugin-field.settings
 kind: plugin-field
-status: VERIFIED
+status: SUPERSEDED
 title: "settings"
 sources: [S50]
 ---
@@ -10,4 +10,4 @@ sources: [S50]
 
 **Sources:** [S50](src.s50.md)
 
-Settings Claude Code applies while the plugin is enabled. Only `agent` and `subagentStatusLine` take effect (type: Object)
+Superseded by [settings](plugin.settings.md). Settings Claude Code applies while the plugin is enabled. Only `agent` and `subagentStatusLine` take effect (type: Object)

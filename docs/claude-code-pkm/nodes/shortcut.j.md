@@ -1,7 +1,7 @@
 ---
 id: shortcut.j
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "J"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Join lines
+Superseded by [J](shortcut.j-interactive-mode.md). action: Join lines

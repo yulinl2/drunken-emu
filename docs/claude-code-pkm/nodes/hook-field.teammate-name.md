@@ -1,7 +1,7 @@
 ---
 id: hook-field.teammate-name
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "teammate_name"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Name of the teammate creating the task. May be absent
+Superseded by [teammate_name](hook-field.teammate-name-hooks.md). Name of the teammate creating the task. May be absent

@@ -1,7 +1,7 @@
 ---
 id: cli.s-scope-plugins-cli-reference-5
 kind: cli
-status: VERIFIED
+status: SUPERSEDED
 title: "-s, --scope"
 sources: [S52]
 ---
@@ -10,4 +10,4 @@ sources: [S52]
 
 **Sources:** [S52](src.s52.md)
 
-Prune at scope: `user`, `project`, or `local`. Defaults to `user`
+Superseded by [-s, --scope](cli.s-scope-plugins-cli-reference.md). Prune at scope: `user`, `project`, or `local`. Defaults to `user`

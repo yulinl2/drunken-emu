@@ -11,3 +11,7 @@ sources: [S65]
 **Sources:** [S65](src.s65.md)
 
 Wall-clock duration including permission wait and execution
+
+## Linked from
+
+- [duration_ms](feature.duration-ms.md)

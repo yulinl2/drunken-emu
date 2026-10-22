@@ -1,7 +1,7 @@
 ---
 id: tool.share-onboarding-guide
 kind: tool
-status: VERIFIED
+status: SUPERSEDED
 title: "ShareOnboardingGuide"
 sources: [S6]
 ---
@@ -10,7 +10,7 @@ sources: [S6]
 
 **Sources:** [S6](src.s6.md)
 
-Permission: Yes. Uploads ONBOARDING.md for teammates. Team and Enterprise plans. Here: absent.
+Superseded by [ShareOnboardingGuide](tool.shareonboardingguide.md). Permission: Yes. Uploads ONBOARDING.md for teammates. Team and Enterprise plans. Here: absent.
 
 ## Linked from
 

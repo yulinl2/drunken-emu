@@ -1,7 +1,7 @@
 ---
 id: cli.plugin-install
 kind: cli
-status: VERIFIED
+status: SUPERSEDED
 title: "/plugin install"
 sources: [S52]
 ---
@@ -10,4 +10,4 @@ sources: [S52]
 
 **Sources:** [S52](src.s52.md)
 
-Opens the Discover tab (aliases: `i`)
+Superseded by [/plugin install](cli.plugin-install-plugins-cli-reference.md). Opens the Discover tab (aliases: `i`)

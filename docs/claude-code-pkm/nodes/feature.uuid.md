@@ -11,3 +11,7 @@ sources: [S38]
 **Sources:** [S38](src.s38.md)
 
 unique event identifier (type: string)
+
+## Linked from
+
+- [uuid](feature.uuid-headless.md)

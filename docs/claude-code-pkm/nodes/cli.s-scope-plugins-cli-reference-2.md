@@ -1,7 +1,7 @@
 ---
 id: cli.s-scope-plugins-cli-reference-2
 kind: cli
-status: VERIFIED
+status: SUPERSEDED
 title: "-s, --scope"
 sources: [S52]
 ---
@@ -10,4 +10,4 @@ sources: [S52]
 
 **Sources:** [S52](src.s52.md)
 
-Scope to enable at: `user`, `project`, or `local`. Auto-detected when omitted
+Superseded by [-s, --scope](cli.s-scope-plugins-cli-reference-4.md). Scope to enable at: `user`, `project`, or `local`. Auto-detected when omitted

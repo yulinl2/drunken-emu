@@ -1,7 +1,7 @@
 ---
 id: feature.success-monitoring-usage
 kind: feature
-status: VERIFIED
+status: SUPERSEDED
 title: "success"
 sources: [S65]
 ---
@@ -10,4 +10,4 @@ sources: [S65]
 
 **Sources:** [S65](src.s65.md)
 
-`true` or `false`
+Superseded by [success](feature.success.md). `true` or `false`

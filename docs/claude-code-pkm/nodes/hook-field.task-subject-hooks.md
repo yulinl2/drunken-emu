@@ -1,7 +1,7 @@
 ---
 id: hook-field.task-subject-hooks
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "task_subject"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Title of the task
+Superseded by [task_subject](hook-field.task-subject.md). Title of the task

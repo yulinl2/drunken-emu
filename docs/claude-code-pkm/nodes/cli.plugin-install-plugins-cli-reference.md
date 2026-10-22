@@ -11,3 +11,7 @@ sources: [S52]
 **Sources:** [S52](src.s52.md)
 
 Opens the plugin's details in the Discover tab. With `name@marketplace`, opens them in that marketplace's list (aliases: `i`)
+
+## Linked from
+
+- [/plugin install](cli.plugin-install.md)

@@ -1,7 +1,7 @@
 ---
 id: hook-field.bash-git-hooks
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "Bash(git *)"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-bash command: `npm test && git push`; hook runs?: yes; why: each subcommand is checked; `git push` matches
+Superseded by [Bash(git *)](hook-field.bash-git.md). bash command: `npm test && git push`; hook runs?: yes; why: each subcommand is checked; `git push` matches

@@ -11,3 +11,7 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 Optional description of what the command does (type: string; example: `"List files recursively"`)
+
+## Linked from
+
+- [description](hook-field.description.md)

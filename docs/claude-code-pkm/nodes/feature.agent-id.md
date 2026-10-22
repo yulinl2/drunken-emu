@@ -11,3 +11,7 @@ sources: [S65]
 **Sources:** [S65](src.s65.md)
 
 Identifier of the subagent or teammate that issued the request. Absent on the main session
+
+## Linked from
+
+- [agent_id](feature.agent-id-monitoring-usage.md)

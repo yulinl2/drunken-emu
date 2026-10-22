@@ -11,3 +11,7 @@ sources: [S6, S7]
 **Sources:** [S6](src.s6.md), [S7](src.s7.md)
 
 Permission: No. Lists session-scoped scheduled tasks. Here: deferred.
+
+## Linked from
+
+- [CronList](tool.cronlist.md)

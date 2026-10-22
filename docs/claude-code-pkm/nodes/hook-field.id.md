@@ -1,7 +1,7 @@
 ---
 id: hook-field.id
 kind: hook-field
-status: VERIFIED
+status: SUPERSEDED
 title: "id"
 sources: [S85]
 ---
@@ -10,4 +10,4 @@ sources: [S85]
 
 **Sources:** [S85](src.s85.md)
 
-Task identifier
+Superseded by [id](hook-field.id-hooks.md). Task identifier

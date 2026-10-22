@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Paste before cursor
+
+## Linked from
+
+- [p](shortcut.p.md)

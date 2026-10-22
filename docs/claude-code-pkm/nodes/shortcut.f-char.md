@@ -1,7 +1,7 @@
 ---
 id: shortcut.f-char
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "f{char}"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Jump to next occurrence of character on the current line
+Superseded by [F{char}](shortcut.f-char-interactive-mode.md). action: Jump to next occurrence of character on the current line

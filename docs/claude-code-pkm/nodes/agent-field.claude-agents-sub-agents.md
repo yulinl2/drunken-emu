@@ -11,3 +11,7 @@ sources: [S25]
 **Sources:** [S25](src.s25.md)
 
 scope: All your projects; priority: 4; how to create: Ask Claude, or create the file manually
+
+## Linked from
+
+- [.claude/agents/](agent-field.claude-agents.md)

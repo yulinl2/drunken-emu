@@ -1,7 +1,7 @@
 ---
 id: shortcut.p
 kind: shortcut
-status: VERIFIED
+status: SUPERSEDED
 title: "p"
 sources: [S83]
 ---
@@ -10,4 +10,4 @@ sources: [S83]
 
 **Sources:** [S83](src.s83.md)
 
-action: Paste after cursor
+Superseded by [P](shortcut.p-interactive-mode.md). action: Paste after cursor

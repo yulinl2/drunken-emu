@@ -11,3 +11,7 @@ sources: [S85]
 **Sources:** [S85](src.s85.md)
 
 Detailed description of the task. May be absent
+
+## Linked from
+
+- [task_description](hook-field.task-description-hooks.md)

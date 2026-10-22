@@ -11,3 +11,7 @@ sources: [S83]
 **Sources:** [S83](src.s83.md)
 
 action: Insert at end of line; from mode: NORMAL
+
+## Linked from
+
+- [a](shortcut.a.md)

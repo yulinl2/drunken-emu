@@ -11,3 +11,7 @@ sources: [S66]
 **Sources:** [S66](src.s66.md)
 
 `lsof` (matches: `ls -la`, `ls`)
+
+## Linked from
+
+- [Bash(ls*)](permission-rule.bash-ls-permissions.md)

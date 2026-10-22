@@ -1,7 +1,7 @@
 ---
 id: tool.enterplanmode
 kind: tool
-status: VERIFIED
+status: SUPERSEDED
 title: "EnterPlanMode"
 sources: [S82]
 ---
@@ -10,4 +10,4 @@ sources: [S82]
 
 **Sources:** [S82](src.s82.md)
 
-Switches to plan mode to design an approach before coding (permission required: No)
+Superseded by [EnterPlanMode](tool.enter-plan-mode.md). Switches to plan mode to design an approach before coding (permission required: No)
