@@ -10,6 +10,10 @@ Renders a claude.ai single-file React artifact inside headless Chromium and
 audits it the way a first-time phone reader would meet it: blind taps found by
 visual affordance, screenshots judged by eye, mechanics asserted by script.
 
+`bin/emu` also accepts an unchanged static HTML file or an HTTP(S) URL. Local
+HTML is served on loopback from its own directory; it never passes through the
+JSX converter. See [Static pages](docs/STATIC-PAGES.md) for the scope and limits.
+
 > **Fresh session? Read in this order.** `docs/OPEN-PROBLEMS.md` (what is
 > unfinished and why) → this file's `## Falsified` (what was already tried and
 > killed) → `docs/SANDBOX-FACTS.md` (measured environment facts, so you do not
@@ -27,7 +31,7 @@ here as evidence of absence.
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots | step | chain; the first four run sync → serve → check → tidy on an artifact; chain needs none of that (no artifact, no server, no browser)
+│   ├── emu                    entry point: smoke | audit | shots | step | chain; JSX runs sync → serve → check → tidy; HTML uses a temporary local server, URLs go straight to checks; chain needs no browser
 │   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; exits 2 with a list for an import of anything but react, react-dom or react-dom/client that starts a line (single- or multi-line, with a default, side-effect). It matches text, not syntax: forms it does not see pass with exit 0 and can break in the browser, and a react import under any name but React (import R from "react", * as R, a as b) is bound wrongly (an undefined name, or a syntax error); the forms are listed in the script's docstring and pinned in test_sync_artifact.py
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
