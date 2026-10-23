@@ -13,6 +13,7 @@ sort is the fix.
 
 Usage: region_shots.py <url> <out_dir> "anchor1" "anchor2" ...
 Each anchor i produces <out_dir>/R_<i>_<slug>.png; prints found/not per anchor.
+EMU_MOUNT selects the mount element (default #root; bin/emu uses body for plain pages).
 """
 import asyncio
 import json
@@ -38,7 +39,8 @@ async def main():
         pg = await c.new_page()
         await pg.goto(URL, timeout=20000)
         await pg.wait_for_function(
-            "document.getElementById('root').children.length > 0", timeout=15000)
+            "s => { const el = document.querySelector(s); return !!el && (el.children.length > 0 || !!el.shadowRoot); }",
+            arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         await pg.wait_for_timeout(600)
         for i, a in enumerate(ANCHORS):
             ok = await pg.evaluate("""(t)=>{

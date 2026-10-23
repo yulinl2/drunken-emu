@@ -72,3 +72,5 @@ jobs:
         run: python3 -m pytest -q checks/test_external_svg.py
       - name: every Chromium launch goes through checks/browser.py (#72; reads the source, no browser)
         run: python3 -m pytest -q checks/test_launch_sites.py
+      - name: Static HTML and URL targets through the CLI, with small-control and page-error controls
+        run: python3 -m pytest -q checks/test_static_targets.py
