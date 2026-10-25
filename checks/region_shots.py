@@ -13,6 +13,7 @@ sort is the fix.
 
 Usage: region_shots.py <url> <out_dir> "anchor1" "anchor2" ...
 Each anchor i produces <out_dir>/R_<i>_<slug>.png; prints found/not per anchor.
+EMU_MOUNT selects the mount element (default #root; bin/emu uses body for plain pages).
 """
 import asyncio
 import json
@@ -24,6 +25,7 @@ from playwright.async_api import async_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+from checks.page_ready import READY_JS  # noqa: E402
 
 URL, OUT = sys.argv[1], sys.argv[2]
 ANCHORS = sys.argv[3:]
@@ -38,13 +40,15 @@ async def main():
         pg = await c.new_page()
         await pg.goto(URL, timeout=20000)
         await pg.wait_for_function(
-            "document.getElementById('root').children.length > 0", timeout=15000)
+            READY_JS,
+            arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         await pg.wait_for_timeout(600)
         for i, a in enumerate(ANCHORS):
             ok = await pg.evaluate("""(t)=>{
-              const cands=[...document.querySelectorAll('p,li,td,th,b,h1,h2,h3,span,pre,div')]
-                .filter(e=>e.textContent.includes(t));
-              cands.sort((x,y)=>x.textContent.length-y.textContent.length);
+          const text=e=>e.tagName==='BODY'?e.innerText:e.textContent;
+          const cands=[...document.querySelectorAll('p,li,td,th,b,h1,h2,h3,span,pre,div,body')]
+            .filter(e=>text(e).includes(t));
+          cands.sort((x,y)=>text(x).length-text(y).length);
               if(!cands.length) return false;
               cands[0].scrollIntoView({block:'center'});
               return true;}""", a)

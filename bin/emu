@@ -10,9 +10,9 @@
 #      && list and the cd happens in a throwaway subshell).
 #
 # Usage:
-#   bin/emu smoke  <artifact.jsx>
-#   bin/emu audit  <artifact.jsx> [read_stops] [min_px]
-#   bin/emu shots  <artifact.jsx> "anchor 1" "anchor 2" ...
+#   bin/emu smoke  <artifact.jsx|page.html|URL>
+#   bin/emu audit  <artifact.jsx|page.html|URL> [read_stops] [min_px]
+#   bin/emu shots  <artifact.jsx|page.html|URL> "anchor 1" "anchor 2" ...
 #   bin/emu chain check <chain.json> [--budget B] [--json]    (no artifact, no server, no browser)
 set -u
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -21,7 +21,34 @@ URL="http://127.0.0.1:${PORT}/harness/harness.html"
 MODE="${1:?mode: smoke|audit|shots|step|chain}"; shift
 # chain: the operation-chain layer reads recorded chains; it needs none of the steps below (docs/OPERATION-CHAINS.md)
 if [ "$MODE" = chain ]; then exec python3 "$KIT/checks/chain_check.py" "$@"; fi
-ART="${1:?path to artifact .jsx}"; shift || true
+ART="${1:?path to artifact .jsx, page .html, or URL}"; shift || true
+
+run_check() {
+  case "$MODE" in
+    smoke) timeout 90  python3 -u "$KIT/checks/smoke.py"       "$URL" "$KIT/out" ;;
+    audit) timeout 150 python3 -u "$KIT/checks/blind_audit.py" "$URL" "$KIT/out" "$@" ;;
+    shots) timeout 120 python3 -u "$KIT/checks/region_shots.py" "$URL" "$KIT/out" "$@" ;;
+    step)  timeout 90  python3 -u "$KIT/checks/explore_step.py" "$URL" "$KIT/out" "$@" ;;
+    *) echo "unknown mode: $MODE" >&2; return 64 ;;
+  esac
+}
+
+case "$MODE" in smoke|audit|shots|step) ;; *) echo "unknown mode: $MODE" >&2; exit 64 ;; esac
+mkdir -p "$KIT/out"
+
+# Plain pages already are browser inputs: preserve their bytes and relative assets.
+# Serve local HTML on an ephemeral loopback port, rooted at its own directory.
+case "$ART" in
+  http://*|https://*|file://*) URL="$ART"; export EMU_TARGET_KIND="${EMU_TARGET_KIND:-url}" ;;
+  *.[hH][tT][mM][lL]|*.[hH][tT][mM])
+    exec python3 "$KIT/checks/static_target.py" "$MODE" "$ART" "$@" ;;
+  *) export EMU_TARGET_KIND=jsx ;;
+esac
+if [ "$EMU_TARGET_KIND" != jsx ]; then
+  export EMU_MOUNT="${EMU_MOUNT:-body}"
+  run_check "$@"
+  exit $?
+fi
 
 # 1) sync
 python3 "$KIT/bin/sync_artifact.py" "$ART" "$KIT/harness/app.jsx" || exit $?
@@ -38,13 +65,7 @@ sleep 1
 cd "$KIT"
 
 # 3) run the requested check (rule 1: same invocation as the server)
-case "$MODE" in
-  smoke) timeout 90  python3 -u checks/smoke.py       "$URL" "$KIT/out" ;;
-  audit) timeout 150 python3 -u checks/blind_audit.py "$URL" "$KIT/out" "$@" ;;
-  shots) timeout 120 python3 -u checks/region_shots.py "$URL" "$KIT/out" "$@" ;;
-  step)  timeout 90  python3 -u checks/explore_step.py  "$URL" "$KIT/out" "$@" ;;
-  *) echo "unknown mode: $MODE"; exit 64 ;;
-esac
+run_check "$@"
 RC=$?
 
 # 4) tidy: stop the server we started

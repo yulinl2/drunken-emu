@@ -76,9 +76,11 @@ that is never executed is not a regeneration command.
 |   |-- explore_text.py
 |   |-- fragment_links.py
 |   |-- measure_sample_predictors.py
+|   |-- page_ready.py
 |   |-- prediction_score.py
 |   |-- region_shots.py
 |   |-- smoke.py
+|   |-- static_target.py
 |   |-- svg_legibility.py
 |   |-- svg_text_gates.py
 |   |-- test_blind_audit_targets.py
@@ -91,6 +93,7 @@ that is never executed is not a regeneration command.
 |   |-- test_fragment_links.py
 |   |-- test_launch_sites.py
 |   |-- test_prediction.py
+|   |-- test_static_targets.py
 |   `-- test_sync_artifact.py
 |-- docs/
 |   |-- evidence/
@@ -127,8 +130,10 @@ that is never executed is not a regeneration command.
 |   |-- OPERATION-CHAINS.md
 |   |-- OPERATION-MODEL.md
 |   |-- SANDBOX-FACTS.md
+|   |-- STATIC-PAGES.md
 |   |-- TREE.md
-|   `-- ZENODO-RUNBOOK.md
+|   |-- ZENODO-RUNBOOK.md
+|   `-- issue-sweep-2026-10-23.md
 |-- figbank/
 |   |-- app/
 |   |   |-- frontier-tree/
@@ -247,5 +252,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 193 files tracked
+29 directories, 198 files tracked
 ```

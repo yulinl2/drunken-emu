@@ -24,7 +24,8 @@ Checks, in order:
   F. read-through: screenshot at N evenly spaced scroll positions
 
 Usage: blind_audit.py <url> <out_dir> [n_read_stops=8] [min_px=38]
-Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness)
+Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness).
+       A document body can also be ready with nonempty text alone.
 Every query walks open shadow roots too (window.__emuDeep): userscripts and web components draw inside them, and a
 check that cannot see a control must not report it as fine. The report says how many shadow roots it walked.
 Prints one JSON line; screenshots land in <out_dir> as A_*.png ... F_*.png.
@@ -38,6 +39,7 @@ from playwright.async_api import async_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+from checks.page_ready import READY_JS  # noqa: E402
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -45,6 +47,9 @@ N_STOPS = int(sys.argv[3]) if len(sys.argv) > 3 else 8
 MIN_PX = int(sys.argv[4]) if len(sys.argv) > 4 else 38
 
 R = {"js_errors": [], "checks": {}}
+R["coverage"] = {"target_kind": os.environ.get("EMU_TARGET_KIND", "url"), "viewport": [390, 844],
+                 "actions": [], "read_stops_completed": 0, "tap_target_states": "initial state only",
+                 "not_evaluated": ["goal completion", "reader comprehension", "keyboard navigation", "closed details contents"]}
 
 async def main():
     async with async_playwright() as p:
@@ -63,10 +68,12 @@ async def main():
         pg.on("pageerror", lambda e: R["js_errors"].append(str(e)[:160]))
         pg.on("console", lambda x: R["js_errors"].append("console: " + x.text[:120])
               if x.type == "error" else None)
-        await pg.goto(URL, timeout=20000)
+        response = await pg.goto(URL, timeout=20000)
+        if response and response.status >= 400:
+            R["js_errors"].append(f"HTTP {response.status} during navigation")
         try:
             await pg.wait_for_function(
-                "(s) => { const el = document.querySelector(s); return !!el && (el.children.length > 0 || !!el.shadowRoot); }",
+                READY_JS,
                 arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         except Exception:
             R["checks"]["mounted"] = False
@@ -86,6 +93,7 @@ async def main():
               if(a.frac!=null) sc.scrollTop=(sc.scrollHeight-sc.clientHeight)*a.frac;
               if(a.delta!=null) sc.scrollTop+=a.delta;
             }""", {"frac": frac, "delta": delta})
+            R["coverage"]["actions"].append({"kind": "scroll", "fraction": frac, "delta": delta})
             await pg.wait_for_timeout(420)
 
         # B. ergonomics
@@ -128,12 +136,14 @@ async def main():
           } return null;}""")
         if pt:
             await pg.touchscreen.tap(pt["x"], pt["y"])
+            R["coverage"]["actions"].append({"kind": "tap", **pt})
             await pg.wait_for_timeout(500)
             opened = await pg.evaluate("""()=>[...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
               return cs.position==='fixed'&&r.bottom>800&&r.height>110;})""")
             await pg.screenshot(path=f"{OUT}/C_01_after_dashed_tap.png")
             await pg.touchscreen.tap(195, 140)
+            R["coverage"]["actions"].append({"kind": "tap", "x": 195, "y": 140})
             await pg.wait_for_timeout(420)
             closed = await pg.evaluate("""()=>![...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
@@ -156,6 +166,7 @@ async def main():
         if got:
             for _ in range(6):
                 await pg.touchscreen.tap(got["x"], got["y"])
+                R["coverage"]["actions"].append({"kind": "tap", "x": got["x"], "y": got["y"]})
                 await pg.wait_for_timeout(170)
             await pg.wait_for_timeout(300)
             await pg.screenshot(path=f"{OUT}/D_01_cluster_after_6taps.png")
@@ -177,6 +188,7 @@ async def main():
         await pg.wait_for_timeout(400)
         if got2:
             await pg.touchscreen.tap(got2["x"], got2["y"])
+            R["coverage"]["actions"].append({"kind": "tap", **got2})
             await pg.wait_for_timeout(1000)
             await pg.screenshot(path=f"{OUT}/E_01_toggle_second.png")
             R["checks"]["toggle"] = True
@@ -188,6 +200,7 @@ async def main():
             f = (i + 1) / N_STOPS
             await scroll_to(frac=f)
             await pg.screenshot(path=f"{OUT}/F_read_{i:02d}_{int(f*100)}.png")
+            R["coverage"]["read_stops_completed"] += 1
 
         R["checks"]["shadow_roots_walked"] = await pg.evaluate("window.__emuShadowRoots()")
         R["checks"]["h_overflow_px"] = await pg.evaluate(
