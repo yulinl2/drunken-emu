@@ -54,6 +54,30 @@ meaning. This session installed no hooks and made no causal claim about #81's
 provider internals. Code controls and a same-session source-aware screenshot
 reading are not independent human experiences.
 
+## What did the 2026-10-25 automatic review add?
+
+The independent code review of #83 found a valid plain page that the adapter
+rejected: `<body>Hello world</body>` has text and zero element children. The
+new CLI controls reproduced the failure in smoke, audit and shots on `3250508`
+(three failures, 48.37 seconds). The shared readiness predicate now permits
+nonempty document-body text while retaining the element/shadow-root check for
+React and custom mounts. Shots can locate body text, using rendered body text
+so that an anchor present only in a script is not reported as found.
+
+The paired controls retain failures for a whitespace-only body, a text-only
+custom mount, a missing anchor and a script-only anchor. Thirteen native-target
+cases passed after the initial correction; a further whitespace-body control
+was added before the final regression run. This is an operational correction
+and code-review response, not an unfamiliar-reader result. Does the readiness
+test need a stronger visibility contract beyond the current DOM-content check?
+That remains a separate question; this change does not claim it.
+
+The final full Python run after that additional control: **394 passed, zero
+skips** (Python 3.12, Playwright 1.62.0, headless shell 151.0.7922.34). This
+includes all 14 native-target cases. The generated tree contains 198 tracked
+files. The review finding and its original three failing controls are retained;
+passing these checks does not close #76's reader-understanding question.
+
 ## What was run on this patch?
 
 The full Python suite: **388 passed, zero skips** (Python 3.12, Playwright

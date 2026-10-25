@@ -76,6 +76,7 @@ that is never executed is not a regeneration command.
 |   |-- explore_text.py
 |   |-- fragment_links.py
 |   |-- measure_sample_predictors.py
+|   |-- page_ready.py
 |   |-- prediction_score.py
 |   |-- region_shots.py
 |   |-- smoke.py
@@ -251,5 +252,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 197 files tracked
+29 directories, 198 files tracked
 ```

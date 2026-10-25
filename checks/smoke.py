@@ -17,6 +17,7 @@ from playwright.async_api import async_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+from checks.page_ready import READY_JS  # noqa: E402
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -44,11 +45,11 @@ async def main():
             errs.append(f"HTTP {response.status} during navigation")
         t["goto_load"] = round(time.monotonic() - t1, 2)
 
-        # wait until React has actually mounted something (Babel compile included)
+        # React needs a mounted child; a plain body may contain only text.
         t2 = time.monotonic()
         try:
             await pg.wait_for_function(
-                "s => { const el = document.querySelector(s); return !!el && (el.children.length > 0 || !!el.shadowRoot); }",
+                READY_JS,
                 arg=MOUNT, timeout=15000)
             mounted = True
         except Exception:

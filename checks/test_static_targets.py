@@ -94,3 +94,37 @@ def test_missing_html_is_not_evaluated(tmp_path):
 def test_jsx_still_mounts_in_the_react_harness():
     rc, report = run("smoke", KIT / "checks/fixtures/fragment_links_clean.jsx")
     assert rc == 0 and report["mounted"] and report["mount_selector"] == "#root"
+
+
+@pytest.mark.parametrize("mode", ["smoke", "audit", "shots"])
+def test_text_only_html_is_a_ready_page_in_each_waiting_mode(tmp_path, mode):
+    page = tmp_path / "text-only.html"
+    page.write_text("<!doctype html><html><body>Hello world</body></html>")
+    args = {"smoke": [], "audit": ["1"], "shots": ["Hello world"]}
+    rc, report = run(mode, page, *args[mode])
+    assert rc == 0, report
+    if mode == "smoke":
+        assert report["mounted"] and report["root_children"] == 0
+    elif mode == "audit":
+        assert report["checks"]["mounted"]
+    else:
+        assert report == {"Hello world": True}
+
+
+@pytest.mark.parametrize("html,selector", [
+    ('<!doctype html><body> \n\t </body>', 'body'),
+    ('<!doctype html><body><div id="root">Unrendered fallback</div></body>', '#root'),
+])
+def test_empty_body_and_text_only_custom_mount_are_not_ready(tmp_path, monkeypatch, html, selector):
+    page = tmp_path / "unmounted.html"
+    page.write_text(html)
+    monkeypatch.setenv("EMU_MOUNT", selector)
+    rc, report = run("smoke", page)
+    assert rc == 1 and report["mounted"] is False
+
+
+def test_body_text_screenshots_do_not_find_missing_or_script_only_anchors(tmp_path):
+    page = tmp_path / "text-only.html"
+    page.write_text('<!doctype html><body>Hello world<script>const hidden="script only";</script></body>')
+    rc, report = run("shots", page, "Hello world", "absent", "script only")
+    assert rc == 1 and report == {"Hello world": True, "absent": False, "script only": False}

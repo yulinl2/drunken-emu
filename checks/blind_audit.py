@@ -24,7 +24,8 @@ Checks, in order:
   F. read-through: screenshot at N evenly spaced scroll positions
 
 Usage: blind_audit.py <url> <out_dir> [n_read_stops=8] [min_px=38]
-Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness)
+Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness).
+       A document body can also be ready with nonempty text alone.
 Every query walks open shadow roots too (window.__emuDeep): userscripts and web components draw inside them, and a
 check that cannot see a control must not report it as fine. The report says how many shadow roots it walked.
 Prints one JSON line; screenshots land in <out_dir> as A_*.png ... F_*.png.
@@ -38,6 +39,7 @@ from playwright.async_api import async_playwright
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+from checks.page_ready import READY_JS  # noqa: E402
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -71,7 +73,7 @@ async def main():
             R["js_errors"].append(f"HTTP {response.status} during navigation")
         try:
             await pg.wait_for_function(
-                "(s) => { const el = document.querySelector(s); return !!el && (el.children.length > 0 || !!el.shadowRoot); }",
+                READY_JS,
                 arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         except Exception:
             R["checks"]["mounted"] = False
