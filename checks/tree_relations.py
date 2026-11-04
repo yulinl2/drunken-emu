@@ -27,7 +27,9 @@
                       copy there is invisible to the append-only and manifest invariants and has
                       to be rediscovered by reading. STALE is not a failure — only the principal
                       can re-upload — but it must be visible without anyone looking for it.
-Writes RELATIONS.md next to RELATIONS.tsv. Usage: python3 tree_relations.py [--root R]
+Usage: python3 tree_relations.py [--root R] [--project DIR] [--out PATH | --out - | --in-place]
+The report goes to --out PATH (keep it outside ROOT), to stdout with --out - (the summary then goes to stderr), or, only with
+--in-place, to ROOT/RELATIONS.md next to RELATIONS.tsv (the old behaviour: it mutates the audited tree). With none of these nothing is written.
 """
 import os, re, sys, hashlib, collections, datetime
 ROOT = sys.argv[sys.argv.index('--root')+1] if '--root' in sys.argv else os.environ.get("EMU_ROOT", os.getcwd())
@@ -93,8 +95,10 @@ if os.path.isdir(PROJ):
             proj_rows.append((f, ph[:8], 'PROJECT-ONLY', 'no file of this name under the outputs root', os.path.getsize(pp)))
             continue
         same=[r for r in here if md5[r]==ph]
-        if same:
-            proj_rows.append((f, ph[:8], 'identical', f"{len(same)} of {len(here)} copies here match", os.path.getsize(pp)))
+        if same and len(same)==len(here):
+            proj_rows.append((f, ph[:8], 'identical', f"all {len(here)} copies here match", os.path.getsize(pp)))
+        elif same:
+            proj_rows.append((f, ph[:8], 'MIXED', f"{len(same)} of {len(here)} copies here match the mount; the others differ", os.path.getsize(pp)))
         else:
             sizes=sorted({os.path.getsize(os.path.join(ROOT,r)) for r in here})
             proj_rows.append((f, ph[:8], 'STALE', f"outputs copies hash {md5[here[0]][:8]} at {sizes[0]:,} B; the mount has {os.path.getsize(pp):,} B", os.path.getsize(pp)))
@@ -122,7 +126,7 @@ uncl_by_dir = collections.Counter(os.path.dirname(r) or '.' for r,k in cls.items
 rel_tsv=os.path.join(ROOT,'RELATIONS.tsv'); declared=[]
 if os.path.exists(rel_tsv):
     declared=[l.split('\t') for l in open(rel_tsv,encoding='utf-8').read().split('\n')[1:] if l.strip()]
-o=[f"# RELATIONS — what the tree implies (generated {datetime.datetime.now(datetime.timezone.utc):%Y-%m-%d %H:%M UTC} by `tools/emu_md/tree_relations.py`; regenerate, do not hand-edit)",""]
+o=[f"# RELATIONS — what the tree implies (generated {datetime.datetime.now(datetime.timezone.utc):%Y-%m-%d %H:%M UTC} by `checks/tree_relations.py`; regenerate, do not hand-edit)",""]
 o+=["## Workflow instances — the pipeline's shared shape","","| instance | has | lacks |","|---|---|---|"]
 for k,v in sorted(instances.items()):
     o.append(f"| `{k}` | {', '.join(sorted(v))} | {', '.join(sorted(set(LEDGER_NAMES)-v)) or '—'} |")
@@ -142,18 +146,25 @@ o+= [f"| `{d}` | {c} |" for d,c in uncl_by_dir.most_common(10)]
 o+=["","## Copies in the read-only project-knowledge mount",""]
 o+=[f"*Compared by checksum against every copy under the outputs root. The mount at `{PROJ}` cannot be written by an instance, so a STALE row is a re-upload for the principal, not a task — the point of the row is that nobody has to go looking for it.*",""]
 o+=["| file in the mount | md5 | state | detail |","|---|---|---|---|"]
-o+= [f"| `{f}` | `{h}` | **{st}** | {d} |" for f,h,st,d,_ in sorted(proj_rows, key=lambda x:(x[2]!='STALE', x[2]!='PROJECT-ONLY', x[0]))] or ["| — | — | — | — |"]
+o+= [f"| `{f}` | `{h}` | **{st}** | {d} |" for f,h,st,d,_ in sorted(proj_rows, key=lambda x:(x[2] not in ('STALE','MIXED'), x[2]!='PROJECT-ONLY', x[0]))] or ["| — | — | — | — |"]
 o+=["","## Byte-identical files under different names","",]
 o+= [f"- {' = '.join('`'+x+'`' for x in rs)}" for rs in dupes] or ["- none"]
 o+=["","## Derived files and their generators","",]
 o+= [f"- `{r}` ← `{g}`" for r,g in sorted(derived)] or ["- none declared"]
 o+=["","## Declared consumers (from `RELATIONS.tsv`, hand-maintained)","","| src | edge | dst | evidence |","|---|---|---|---|"]
 o+= [f"| {' | '.join(x[:4])} |" for x in declared] or ["| — | — | — | — |"]
-open(os.path.join(ROOT,'RELATIONS.md'),'w',encoding='utf-8').write('\n'.join(o)+'\n')
+OUT = sys.argv[sys.argv.index('--out')+1] if '--out' in sys.argv else None
+if '--in-place' in sys.argv: OUT = os.path.join(ROOT,'RELATIONS.md')
+report_md = '\n'.join(o)+'\n'
+if OUT == '-':
+    sys.stdout.write(report_md); sys.stdout = sys.stderr   # the report owns stdout; the summary lines below go to stderr
+elif OUT:
+    open(OUT,'w',encoding='utf-8').write(report_md)
+where = ('stdout' if OUT == '-' else OUT) if OUT else 'no report written (use --out PATH, --out - or --in-place)'
 mir=[p for p in pairs if p[2]=='mirror']
 print(f"storage class: " + ", ".join(f"{k}={cls_count[k]}" for k in ('ACCUMULATE','BURY','REGENERATE','UNCLASSIFIED')))
-print(f"project-mount: {sum(1 for r in proj_rows if r[2]=='STALE')} STALE, {sum(1 for r in proj_rows if r[2]=='PROJECT-ONLY')} project-only, {sum(1 for r in proj_rows if r[2]=='identical')} identical")
+print(f"project-mount: {sum(1 for r in proj_rows if r[2]=='STALE')} STALE, {sum(1 for r in proj_rows if r[2]=='MIXED')} MIXED, {sum(1 for r in proj_rows if r[2]=='PROJECT-ONLY')} project-only, {sum(1 for r in proj_rows if r[2]=='identical')} identical")
 for f,h,st,d,_ in proj_rows:
     if st!='identical': print(f"  project {st:<13} {f} — {d}")
-print(f"instances={len(instances)} mirror pairs={len(mir)} (DIVERGED={sum(1 for p in mir if p[3]=='DIVERGED')}) homonyms={len(pairs)-len(mir)} md5-dupes={len(dupes)} derived={len(derived)} declared={len(declared)} -> RELATIONS.md")
+print(f"instances={len(instances)} mirror pairs={len(mir)} (DIVERGED={sum(1 for p in mir if p[3]=='DIVERGED')}) homonyms={len(pairs)-len(mir)} md5-dupes={len(dupes)} derived={len(derived)} declared={len(declared)} -> {where}")
 for n,rs,kind,st in mir: print(f"  mirror {st:<10} {n}")

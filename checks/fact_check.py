@@ -192,6 +192,7 @@ def report(docs, root, as_json=False, strict=False):
             continue
         rows = check(doc, index, cache)
         allrows.append((doc, rows))
+        worst = max(worst, sum(1 for r in rows if r[0] == "MISMATCH"))   # before the JSON-only continue, or --json --strict could never fail
         if as_json:
             continue
         ok = sum(1 for s, *_ in rows if s == "OK")

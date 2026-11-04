@@ -92,6 +92,9 @@ def audit(path, kind='note', screen=7, min_plain=6, meta=None):
         if bare: f['bare_id_units'] = [u[:90] for u in bare]
         if demo: f['demonstratives'] = [u[:60] for u in demo]
         if acrs: f['unexpanded_acr'] = acrs
+        scr_low = ' '.join(scr).lower()
+        found_meta = sorted({k for k in meta if k.lower() in scr_low})
+        if found_meta and kind != 'ledger': f['meta_phrases'] = found_meta   # a defect in a note, expected in a ledger (the contract above)
         tot['bare_id_units'] += len(bare); tot['demonstratives'] += len(demo); tot['unexpanded_acr'] += len(acrs)
         if f: rep['screens_failing'][si] = f
     rep['first_screen_verdict'] = bool(VERDICT_RE.search(' '.join(screens[0]))) if screens[0] else False

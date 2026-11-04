@@ -74,10 +74,13 @@ that is never executed is not a regeneration command.
 |   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
+|   |-- fact_check.py
 |   |-- fragment_links.py
+|   |-- md_audit.py
 |   |-- measure_sample_predictors.py
 |   |-- page_ready.py
 |   |-- prediction_score.py
+|   |-- reader_load.py
 |   |-- region_shots.py
 |   |-- smoke.py
 |   |-- static_target.py
@@ -94,7 +97,8 @@ that is never executed is not a regeneration command.
 |   |-- test_launch_sites.py
 |   |-- test_prediction.py
 |   |-- test_static_targets.py
-|   `-- test_sync_artifact.py
+|   |-- test_sync_artifact.py
+|   `-- tree_relations.py
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -252,5 +256,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 198 files tracked
+29 directories, 202 files tracked
 ```
