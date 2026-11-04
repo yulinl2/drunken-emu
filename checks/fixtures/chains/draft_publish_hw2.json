@@ -1,0 +1,994 @@
+{
+ "format": "emu-chain/1",
+ "budget": 2,
+ "provenance": {
+  "source": "designed",
+  "date": "2026-10-12",
+  "who": "a coding-agent session (the one that owns the publisher), from the code and docs of the publisher and from content-blind measurements of its sheet on a mock Canvas in headless Chromium at 390x844 touch (python3 -m speedkit.rehearse); nobody has used this flow on a phone",
+  "note": "speeds-kit commit ab19308f5d7fe98f886d10839d73a154dc04fd97 (draft publisher 0.3.1), the file the owner holds: sha256 bcd2947ae99891fe21b2a7f508e24f30158692a14522297a9b1719711770b621 (reproducible from that commit's template and the data). Written BEFORE the owner's first run, so this file is a prediction and not a record. It replaces the fixture of the registration for 0.2.2 (drunken-emu 3e87f6f), which was for a build without the audit layer (A1-A4), at B = 3, and asked the owner for narration and screenshots, which the owner's rule 2 forbids. B = 2 is the primary budget; inside the sheet the goal, the numbers and the written student's name are shown by the sheet (the dock's button, the file line and the foot, the note), so they are not held: that is a hypothesis, and the registration says what would falsify it. The save-from-chat steps reuse the properties the owner STATED about HW1 (tapgrade_0_6_7_sample_pass.json, steps 2-7). Steps marked [guess] are not from anything the owner said; steps marked [declared] are judgments about what the screen says, made by the author of the publisher (P-02be: silence means nothing was declared wrong); [measured] is a number of docs/predictions/draft-publish-first-run.measured.json. The two Canvas-only chains (dp-manual-set, dp-manual-post) are the Gradebook routes the publisher's doc offers; they are written from the author's knowledge of Canvas, not from this owner."
+ },
+ "chains": [
+  {
+   "id": "dp-install-check",
+   "task": "From 'the file is ready' in the chat to the first read of the sheet (nothing is written yet)",
+   "setup": "The coordinating session sent hw2-drafts.user.js with one message: it replaces every earlier hw2 file, delete the old copies, what to do, what the sheet will say. The file reaches the phone as HW1's files did, is saved into the Userscripts folder next to TapGrade, and the SpeedGrader page of HW2 is reloaded.",
+   "notes": "Waiting for the chat message is not part of the segment. In the chat, Files and Safari the goal is held. Once the sheet is open the goal is the button in the dock and nothing needs holding; this is the hypothesis the registration tests.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "the chat message: the one file, every earlier one is void, delete the old copies, the three steps, the numbers to expect (57 to write, 2 held by the file check, 10 held)",
+     "note": "[declared] the message that came with the file (SendUserFile caption, 2026-10-12)",
+     "reading": "fine",
+     "amount": 4,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "open the file's card in the chat",
+     "note": "HW1 A1 (stated): fixed position, one card among text, no look-alike ('无混淆项'); a wrong card costs one overwrite ('幂等'). That this session's file reaches the phone as a card like HW1's is [carried: unstated].",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the three dots, top right",
+     "note": "HW1 A2 (stated): fixed position, the screen's physical edge as the anchor, a shape unlike any text, no look-alike.",
+     "anchor": "edge",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "'Save to Files' in the menu, below the fold, among look-alike lines",
+     "note": "HW1 A3 (stated): the item needs a scroll and sits among look-alike text; a coarse read of the lines then a fine read of one. Count 5 and similarity 0.8 are [guess].",
+     "anchor": "text-keyword",
+     "confusables": [
+      5,
+      0.8
+     ],
+     "amount": 8,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the one item found: Save to Files",
+     "note": "HW1 A3 (stated): the fine read.",
+     "reading": "fine",
+     "amount": 1,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the destination folder on the save sheet",
+     "note": "HW1 A4 (stated): the last folder is remembered, marginal cost 0 (need 0, no reading). The file must go to the Userscripts folder next to TapGrade.",
+     "kind": "consistency",
+     "need": 0,
+     "reading": "none",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "Save, top right",
+     "note": "HW1 A5 (stated): fixed position, the screen's physical edge, one step. The save is idempotent (HW1 A1, '幂等').",
+     "anchor": "edge",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "NAVIGATE",
+     "target": "back to Safari: the SpeedGrader tab of HW2 (any student)",
+     "note": "[declared]",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload the page so that the script runs",
+     "note": "[declared]",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "the page loads; nothing says the script is there until the blue 初稿 button appears at the top right",
+     "note": "userscripts/draft-publish.user.js mount(): the button is drawn after the page is idle [declared: nothing says the script is installed while the page loads]",
+     "progress_visible": false,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue 初稿 button, top right, fixed position; it can be dragged away if it covers the writing",
+     "note": "[measured] 390x844, one round blue button, 44 px; TapGrade's pill is bottom right. [guess: SpeedGrader has no other blue round control there]. Draggable since 0.3.1 (the owner's rule of 2026-09-23); tested with real touch events in Chromium, not on an iPhone.",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "the button: the sheet opens and reads Canvas at once",
+     "note": "the first open runs the read-only check",
+     "feedback": "immediate",
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "'正在读 Canvas…（不写任何东西）' while 3 to 4 pages of submissions are read",
+     "note": "[declared]; the sheet says what is happening and that nothing is written",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: get the HW2 drafts into Canvas"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the first screen of the sheet: the file line ('初稿 59 位，暂缓 10 位'), the counts (57 to write, 2 held by the file check, 10 held), and above the buttons the framed foot",
+     "note": "[measured] the counts, the foot and the main button are in view together: the dock is 289 to 329 px of the 692 px sheet and does not scroll. [measured] the framed foot is in the dock, in view in every state of the rehearsal (python3 -m speedkit.rehearse); the same lines come back in the confirmation and the record (A4)",
+     "reading": "coarse",
+     "amount": 7,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the sheet agrees with itself: the file's 59 drafts = 57 to write + 2 held by the file check",
+     "note": "[declared] both numbers are on the sheet, so the chat's numbers need not be held; the sheet does not add them up for the owner (a line saying '57 + 2 = 59' would remove this step)",
+     "kind": "consistency",
+     "reading": "fine",
+     "need": 2,
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-audit-look",
+   "task": "Optional: look at what will be written before the tap (the owner's rule: never trade the audit for one tap)",
+   "setup": "The sheet has been read. The rubric line and the list of the students to be written are on the scrolling part; the foot and the main button stay in the dock.",
+   "notes": "How far the owner goes is the owner's call; the chain is the full look. Nothing in it writes.",
+   "steps": [
+    {
+     "op": "SCAN",
+     "target": "the rubric line: '评分标准：Canvas 上 7 行，和文件逐行一致 ✓（点开看每一行）'",
+     "note": "A1: one summary line, 44 px bar, closed",
+     "anchor": "text-keyword",
+     "reading": "coarse",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the bar: it opens to the seven rows, each ticked",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the seven rows as Canvas holds them: title, points, rating levels, each ✓ or ✗ against the file",
+     "note": "A1 read-back",
+     "reading": "fine",
+     "amount": 7,
+     "held": [
+      "criterion: what makes a student or a row worth opening"
+     ]
+    },
+    {
+     "op": "INFER",
+     "target": "these are HW2's rows; none is red",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the bar '将写入的 57 位：总分和扣分一览': it opens to 57 bars",
+     "note": "A2",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "SCAN",
+     "target": "57 bars: 'name · total/100 · deductions' in Canvas's order (not sorted by anything)",
+     "note": "[measured] 44 px each; the list is a few screens of the scrolling part, and the dock does not move",
+     "anchor": "none",
+     "reading": "coarse",
+     "amount": 57,
+     "held": [
+      "criterion: what makes a student or a row worth opening"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "one bar: it opens to exactly the rows and comments that will be written",
+     "note": "A2",
+     "feedback": "immediate",
+     "held": [
+      "criterion: what makes a student or a row worth opening"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "that student's seven rows with their comments ('[Q2a] −3 reason', '[Key] …', the note)",
+     "note": "[measured] one open student is 2173 px, 5.6 screens of the scrolling part, because the [Key] lines are long",
+     "reading": "fine",
+     "amount": 7,
+     "held": [
+      "criterion: what makes a student or a row worth opening"
+     ]
+    },
+    {
+     "op": "INFER",
+     "target": "this is what the student will read; it looks right, or not",
+     "note": "[guess] nothing on the sheet says whether the machine read the work correctly: a judgment of looks",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-trial-write",
+   "task": "Posting is automatic: the first tap writes one student",
+   "setup": "The sheet has been read (dp-install-check) and the assignment posts grades at once, so the students would see what is written.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "the framed foot above the button: 'first only 1 student: <name> × 7 rows…; the range of the totals; who is not written; the rubric; the posting policy: automatic'",
+     "note": "[measured] the framed foot is in the dock, in view in every state of the rehearsal (python3 -m speedkit.rehearse); the same lines come back in the confirmation and the record (A4)",
+     "reading": "fine",
+     "amount": 5,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock, always on screen ('先试写 1 位')",
+     "note": "[measured] the dock does not scroll away, however long the lists are; it is 289 to 329 px of the 692 px sheet",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the first student's bar, open: the name, the total, the seven rows with their comments",
+     "note": "[measured] in trial mode the bar is open, it starts 439 px down a scrolling part that shows 364 px, and it is 2173 px tall (5.6 screens); the dock stays in view. The owner may read all of it, some of it, or none.",
+     "reading": "coarse",
+     "amount": 7,
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation (native text): the five foot lines again, the sentence about the one student, 'continue?'",
+     "note": "A4: the foot repeats in the confirmation",
+     "reading": "fine",
+     "amount": 6,
+     "boundary_visible": true,
+     "held": []
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] the student was shown open on the sheet before the tap, and the confirmation repeats the foot",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "one student is written and read back",
+     "note": "the status line in the dock counts '写入 1 / 1 · 失败 0'",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "'试写完成：已写入 <name>，已读回核对一致（逐题分数、评语、总分）。请刷新页面，打开这位学生看一眼；没问题，再点“写入剩下的 56 位”。记录见“运行记录”。'",
+     "note": "0.3.1 wording; six lines on a 390 px sheet, 0.3.2 shortens it",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says the write was read back and matched the draft (rows, comments, total)",
+     "note": "[declared] the system reports the check against the intent; the run's record (A3) holds every row before and after",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": []
+    },
+    {
+     "op": "HOLD",
+     "target": "the written student's name (the line has it)",
+     "note": "the sheet closes with the reload; after it the button reads 初稿·已试写 (a cue for the goal) and the sheet names the student again on the next open",
+     "need": 1,
+     "held": [
+      "who: the student written first"
+     ]
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload SpeedGrader, as the line says, so that the new scores show",
+     "note": "[declared] the reload closes the sheet; the label 初稿·已试写 cues the goal; the page returns to the first student (position lost)",
+     "restores": [
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": [
+      "who: the student written first"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-look-at-one",
+   "task": "Open the written student in SpeedGrader and judge what a student will see",
+   "setup": "After the reload; the student is usually the first on the list (the order of the sheet is the order of SpeedGrader), otherwise found by name. The button on the page reads 初稿·已试写.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "the written student in SpeedGrader (the first student, or the name picked from the student menu)",
+     "note": "[guess] about half of the time the student is not the first one; then a SCAN of the menu among look-alike names",
+     "restores": [
+      "goal",
+      "partial"
+     ],
+     "held": [
+      "who: the student written first"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the rubric panel: seven rows, points and comments",
+     "note": "[declared] the student's name is in SpeedGrader's header: it is no longer held",
+     "anchor": "text-keyword",
+     "reading": "coarse",
+     "amount": 7,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the comments of the rows with deductions: '[Q2a] −3 reason', '[Key] the answer', the note",
+     "note": "long: keys run to several hundred characters",
+     "reading": "fine",
+     "amount": 3,
+     "held": []
+    },
+    {
+     "op": "INFER",
+     "target": "these points and words are what students will see; they look right",
+     "note": "[guess] nothing on the page says whether the machine read the work correctly: a judgment of looks",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-write-rest",
+   "task": "Write the other students and see that it worked",
+   "setup": "One student has been written and looked at; the sheet is opened again after the reload.",
+   "steps": [
+    {
+     "op": "ANCHOR",
+     "target": "the blue button, now '初稿·已试写'",
+     "note": "the label is the cue for the goal",
+     "anchor": "unique-visual",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button: the sheet opens and reads Canvas again",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "the read",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the line 'you wrote only <name> last time. Look fine, tap «写入剩下的 56 位»', and the counts: 1 done, 56 to write",
+     "note": "0.3.1: the note and the label bring the goal and the name back",
+     "reading": "coarse",
+     "amount": 7,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock ('写入剩下的 56 位')",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation: the foot lines again",
+     "note": "A4",
+     "reading": "fine",
+     "amount": 5,
+     "boundary_visible": true,
+     "held": []
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] one student has been looked at in SpeedGrader, in the same layout as the others will have",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "56 students, one by one, each read back (about 1 to 3 minutes); '写入 n / 56 · 失败 k' counts up in place in the dock",
+     "note": "[declared] a locked phone or another app can stop the page: the next load says '上次写入没有写完' on the button and on the sheet",
+     "progress_visible": true,
+     "view_stable": true,
+     "partial_result_says_left": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 56 位，失败 0 位，还剩 0 位没写。（写入的每一位都已读回核对…）记录见“运行记录”。'",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says every written student was read back and matched the draft",
+     "note": "A3: the run's record holds every row before and after",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "1 + 56 = 57: the number the sheet gave at the first read",
+     "note": "the sheet's own number, no longer the chat's",
+     "kind": "consistency",
+     "reading": "fine",
+     "need": 2,
+     "held": []
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload SpeedGrader so that the scores show",
+     "restores": [
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-write-all",
+   "task": "Grades are hidden until posted (the Manual policy): one tap writes every student",
+   "setup": "The sheet has been read (dp-install-check) and the assignment's posting policy is Manual, so nothing is shown to students until they are posted in the Gradebook.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "the framed foot above the button: 'will write 57 students × 7 rows = 399 rows…; the range of the totals; who is not written; the rubric; the posting policy: manual'",
+     "note": "[measured] the framed foot is in the dock, in view in every state of the rehearsal (python3 -m speedkit.rehearse); the same lines come back in the confirmation and the record (A4)",
+     "reading": "fine",
+     "amount": 5,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock ('发布 57 位初稿')",
+     "note": "[measured] in view",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation: the five foot lines again; 'continue?'",
+     "note": "A4",
+     "reading": "fine",
+     "amount": 5,
+     "boundary_visible": true,
+     "held": []
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] nothing is shown to students until they are posted; no student has been looked at in SpeedGrader first (the policy is the safety here)",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "57 students, one by one, each read back; '写入 n / 57 · 失败 k' in the dock",
+     "progress_visible": true,
+     "view_stable": true,
+     "partial_result_says_left": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 57 位，失败 0 位，还剩 0 位没写。（写入的每一位都已读回核对…）记录见“运行记录”。'",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says every written student was read back and matched the draft",
+     "note": "A3",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "57 = the number the sheet gave at the first read",
+     "kind": "consistency",
+     "reading": "fine",
+     "need": 2,
+     "held": []
+    },
+    {
+     "op": "REFRESH",
+     "target": "reload SpeedGrader so that the scores show",
+     "restores": [
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-rubric-step",
+   "task": "Canvas holds no rubric for HW2: the sheet creates it as a step of its own (A1)",
+   "setup": "The first read says there is no rubric; the main button is '创建评分标准（7 行）' and the drafts cannot be written yet.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "'第 1 步（共 2 步）：创建评分标准': the seven rows to be created, with their points",
+     "note": "A1: every row is shown before the tap",
+     "reading": "fine",
+     "amount": 7,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock ('创建评分标准（7 行）')",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation: the rows again; 'this step writes no student's score'",
+     "reading": "fine",
+     "amount": 8,
+     "boundary_visible": true,
+     "held": []
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "[declared] the rubric can be edited or deleted in Canvas afterwards, outside the sheet; it sets the assignment's points",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "reversible",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "Canvas creates the rubric; the sheet reads it back",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "'评分标准已创建，从 Canvas 读回 7 行，和文件逐行一致。下一步：写入初稿。'",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the sheet read the rubric back, row by row, against the file",
+     "note": "A1",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the main button is now the write button ('发布 57 位初稿' or '先试写 1 位')",
+     "anchor": "fixed-position",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-failure-retry",
+   "task": "A run ends with failures: see which, understand why, write the rest again",
+   "setup": "A few students failed (Canvas answered an error); the status line is red and the failed list is open.",
+   "steps": [
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 53 位，失败 3 位，还剩 3 位没写。'",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the open list of the failed: a name and Canvas's own message for each",
+     "note": "[declared] the message is Canvas's, in English or a status code; it says why, not what to do",
+     "reading": "fine",
+     "amount": 3,
+     "origin_stated": true,
+     "exclusions_stated": true,
+     "held": []
+    },
+    {
+     "op": "INFER",
+     "target": "what to do: tap the same button again, only the three are written",
+     "note": "[declared] the button is labelled '写入剩下的 3 位'",
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the confirmation",
+     "note": "A4",
+     "reading": "fine",
+     "amount": 5,
+     "boundary_visible": true,
+     "held": []
+    },
+    {
+     "op": "COMMIT",
+     "target": "OK",
+     "note": "the same kind of write as before, only for the unwritten",
+     "preview_before": true,
+     "everything_on_screen": true,
+     "verify_after": "correctness",
+     "reversibility": "irreversible",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "three students",
+     "progress_visible": true,
+     "view_stable": true,
+     "partial_result_says_left": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "'完成：这次写入 3 位，失败 0 位，还剩 0 位没写。（… 已读回核对 …）'",
+     "reading": "fine",
+     "amount": 1,
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the line says the three were read back and matched",
+     "kind": "correctness",
+     "reading": "none",
+     "need": 0,
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-interrupted-run",
+   "task": "The phone locks or the page is reloaded in the middle of the long write; the owner comes back",
+   "setup": "56 students are being written. The page dies. Nothing was written twice and nothing is half written that the next run cannot recognise.",
+   "steps": [
+    {
+     "op": "REFRESH",
+     "target": "the page is loaded again (the phone woke, or the owner reloaded)",
+     "note": "the run's marker is still in the browser; start() reopens the sheet and reads Canvas by itself; the button reads 初稿·未完",
+     "restores": [
+      "position",
+      "goal",
+      "partial"
+     ],
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "WAIT",
+     "target": "the sheet reads Canvas",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": []
+    },
+    {
+     "op": "READ",
+     "target": "the red line 'the last run did not finish…', then the counts (some already the draft, the rest to write)",
+     "note": "the record of that run says '没有写完（页面中断了；n 位已记录）', not 'in progress'",
+     "reading": "fine",
+     "amount": 3,
+     "held": []
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the blue button in the dock ('写入剩下的 N 位')",
+     "anchor": "fixed-position",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "the button",
+     "feedback": "immediate",
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-move-button",
+   "task": "The blue button covers part of the student's writing: move it",
+   "setup": "On SpeedGrader's page, with a student's work under the button.",
+   "steps": [
+    {
+     "op": "INFER",
+     "target": "the button covers a corner of the writing; it can be dragged (the owner asked for this on 2026-09-23)",
+     "note": "rule 9 of speeds-kit CLAUDE.md; TapGrade's pill works the same way",
+     "held": []
+    },
+    {
+     "op": "TAP",
+     "target": "put the finger on the button, drag it to the side or to a corner, lift",
+     "note": "[guess] a drag past 6 px moves it; it snaps to the nearer side and keeps its place across reloads; the click that ends a drag is not a tap. Tested with real touch events in Chromium; not on an iPhone's WebKit.",
+     "feedback": "immediate",
+     "held": []
+    },
+    {
+     "op": "VERIFY",
+     "target": "the button is where it was put, and the writing is free",
+     "kind": "consistency",
+     "reading": "coarse",
+     "need": 1,
+     "held": []
+    }
+   ]
+  },
+  {
+   "id": "dp-manual-set",
+   "task": "Optional: set HW2's grade posting policy to Manual before writing (what docs/DRAFT-PUBLISH.md offers)",
+   "setup": "Done in Canvas, outside the script.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "Canvas: the Gradebook of the course",
+     "note": "[guess] a phone browser; the owner has not been narrated doing this",
+     "restores": [],
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the HW2 column among the assignment columns",
+     "note": "[guess] columns of other homeworks look alike",
+     "anchor": "text-keyword",
+     "confusables": [
+      4,
+      0.8
+     ],
+     "amount": 8,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the column's menu (three dots)",
+     "note": "[guess]",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the menu for 'Grade Posting Policy'",
+     "note": "[guess] about nine lines",
+     "anchor": "text-keyword",
+     "amount": 9,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "Grade Posting Policy",
+     "feedback": "immediate",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the two options (Automatically, Manually) and which is selected",
+     "reading": "fine",
+     "amount": 2,
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "select Manually, Save",
+     "note": "[declared] reversible: the policy can be changed back; nothing is posted or notified",
+     "preview_before": false,
+     "everything_on_screen": true,
+     "verify_after": "consistency",
+     "reversibility": "reversible",
+     "held": [
+      "goal: set the posting policy of HW2 to Manual"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dp-manual-post",
+   "task": "Manual route, last step: post the hidden grades to the students in the Gradebook",
+   "setup": "All students were written with the policy on Manual; one or more were looked at in SpeedGrader.",
+   "steps": [
+    {
+     "op": "NAVIGATE",
+     "target": "Canvas: the Gradebook of the course",
+     "restores": [],
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the HW2 column",
+     "anchor": "text-keyword",
+     "confusables": [
+      4,
+      0.8
+     ],
+     "amount": 8,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "ANCHOR",
+     "target": "the column's menu (three dots)",
+     "anchor": "unique-visual",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "SCAN",
+     "target": "the menu for 'Post grades'",
+     "anchor": "text-keyword",
+     "amount": 9,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "TAP",
+     "target": "Post grades",
+     "feedback": "immediate",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "READ",
+     "target": "the dialog: Everyone or Graded; the number of students",
+     "reading": "fine",
+     "amount": 3,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "COMMIT",
+     "target": "Post",
+     "note": "[declared] students are notified and see their scores; Canvas can hide them again, but the notification is sent",
+     "preview_before": false,
+     "everything_on_screen": true,
+     "verify_after": "none",
+     "reversibility": "irreversible",
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "WAIT",
+     "target": "Canvas posts the grades",
+     "progress_visible": true,
+     "view_stable": true,
+     "held": [
+      "goal: post the HW2 grades"
+     ]
+    },
+    {
+     "op": "VERIFY",
+     "target": "the column no longer shows the hidden-grade marks",
+     "kind": "consistency",
+     "reading": "fine",
+     "held": []
+    }
+   ]
+  }
+ ]
+}

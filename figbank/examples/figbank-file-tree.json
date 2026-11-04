@@ -1,0 +1,301 @@
+{
+ "id": "figbank-file-tree",
+ "message": "figbank's own tracked files, as a tree: the bank visualizing its own toolkit, laid out by treelayout.js from nothing but each file's directory.",
+ "provenance": {
+  "generated_by": "figbank/examples/gen_file_tree.py",
+  "source": "git ls-files figbank"
+ },
+ "canvas": {
+  "width": 1140,
+  "height": 1270
+ },
+ "word_budget": 20,
+ "must_not_contain": [
+  "…"
+ ],
+ "title": {
+  "text": "figbank/, as a tree — every tracked file, laid out from its own path.",
+  "x": 16,
+  "y": 12,
+  "w": 750
+ },
+ "tree": {
+  "nodes": [
+   {
+    "id": "figbank",
+    "parent": null,
+    "label": "figbank/"
+   },
+   {
+    "id": "figbank/README.md",
+    "parent": "figbank",
+    "label": "README.md"
+   },
+   {
+    "id": "figbank/app",
+    "parent": "figbank",
+    "label": "app/"
+   },
+   {
+    "id": "figbank/app/bundle.sh",
+    "parent": "figbank/app",
+    "label": "bundle.sh"
+   },
+   {
+    "id": "figbank/app/variable-model",
+    "parent": "figbank/app",
+    "label": "variable-model/"
+   },
+   {
+    "id": "figbank/app/variable-model/.gitignore",
+    "parent": "figbank/app/variable-model",
+    "label": ".gitignore"
+   },
+   {
+    "id": "figbank/app/variable-model/.parcelrc",
+    "parent": "figbank/app/variable-model",
+    "label": ".parcelrc"
+   },
+   {
+    "id": "figbank/app/variable-model/.postcssrc",
+    "parent": "figbank/app/variable-model",
+    "label": ".postcssrc"
+   },
+   {
+    "id": "figbank/app/variable-model/README.md",
+    "parent": "figbank/app/variable-model",
+    "label": "README.md"
+   },
+   {
+    "id": "figbank/app/variable-model/check_page.py",
+    "parent": "figbank/app/variable-model",
+    "label": "check_page.py"
+   },
+   {
+    "id": "figbank/app/variable-model/index.html",
+    "parent": "figbank/app/variable-model",
+    "label": "index.html"
+   },
+   {
+    "id": "figbank/app/variable-model/package.json",
+    "parent": "figbank/app/variable-model",
+    "label": "package.json"
+   },
+   {
+    "id": "figbank/app/variable-model/pnpm-lock.yaml",
+    "parent": "figbank/app/variable-model",
+    "label": "pnpm-lock.yaml"
+   },
+   {
+    "id": "figbank/app/variable-model/src",
+    "parent": "figbank/app/variable-model",
+    "label": "src/"
+   },
+   {
+    "id": "figbank/app/variable-model/src/App.tsx",
+    "parent": "figbank/app/variable-model/src",
+    "label": "App.tsx"
+   },
+   {
+    "id": "figbank/app/variable-model/src/Figure.tsx",
+    "parent": "figbank/app/variable-model/src",
+    "label": "Figure.tsx"
+   },
+   {
+    "id": "figbank/app/variable-model/src/data.ts",
+    "parent": "figbank/app/variable-model/src",
+    "label": "data.ts"
+   },
+   {
+    "id": "figbank/app/variable-model/src/index.css",
+    "parent": "figbank/app/variable-model/src",
+    "label": "index.css"
+   },
+   {
+    "id": "figbank/app/variable-model/src/main.tsx",
+    "parent": "figbank/app/variable-model/src",
+    "label": "main.tsx"
+   },
+   {
+    "id": "figbank/app/variable-model/tailwind.config.js",
+    "parent": "figbank/app/variable-model",
+    "label": "tailwind.config.js"
+   },
+   {
+    "id": "figbank/app/variable-model/tsconfig.app.json",
+    "parent": "figbank/app/variable-model",
+    "label": "tsconfig.app.json"
+   },
+   {
+    "id": "figbank/app/variable-model/tsconfig.json",
+    "parent": "figbank/app/variable-model",
+    "label": "tsconfig.json"
+   },
+   {
+    "id": "figbank/app/variable-model/tsconfig.node.json",
+    "parent": "figbank/app/variable-model",
+    "label": "tsconfig.node.json"
+   },
+   {
+    "id": "figbank/app/variable-model/vite.config.ts",
+    "parent": "figbank/app/variable-model",
+    "label": "vite.config.ts"
+   },
+   {
+    "id": "figbank/examples",
+    "parent": "figbank",
+    "label": "examples/"
+   },
+   {
+    "id": "figbank/examples/pipeline-workflow.json",
+    "parent": "figbank/examples",
+    "label": "pipeline-workflow.json"
+   },
+   {
+    "id": "figbank/examples/pipeline-workflow.png",
+    "parent": "figbank/examples",
+    "label": "pipeline-workflow.png"
+   },
+   {
+    "id": "figbank/examples/pipeline-workflow.svg",
+    "parent": "figbank/examples",
+    "label": "pipeline-workflow.svg"
+   },
+   {
+    "id": "figbank/examples/verdicts.jsonl",
+    "parent": "figbank/examples",
+    "label": "verdicts.jsonl"
+   },
+   {
+    "id": "figbank/lib",
+    "parent": "figbank",
+    "label": "lib/"
+   },
+   {
+    "id": "figbank/lib/components.js",
+    "parent": "figbank/lib",
+    "label": "components.js"
+   },
+   {
+    "id": "figbank/lib/figure.d.ts",
+    "parent": "figbank/lib",
+    "label": "figure.d.ts"
+   },
+   {
+    "id": "figbank/lib/figure.js",
+    "parent": "figbank/lib",
+    "label": "figure.js"
+   },
+   {
+    "id": "figbank/lib/palette.d.ts",
+    "parent": "figbank/lib",
+    "label": "palette.d.ts"
+   },
+   {
+    "id": "figbank/lib/palette.js",
+    "parent": "figbank/lib",
+    "label": "palette.js"
+   },
+   {
+    "id": "figbank/lib/text.js",
+    "parent": "figbank/lib",
+    "label": "text.js"
+   },
+   {
+    "id": "figbank/lib/vnode.d.ts",
+    "parent": "figbank/lib",
+    "label": "vnode.d.ts"
+   },
+   {
+    "id": "figbank/lib/vnode.js",
+    "parent": "figbank/lib",
+    "label": "vnode.js"
+   },
+   {
+    "id": "figbank/package.json",
+    "parent": "figbank",
+    "label": "package.json"
+   },
+   {
+    "id": "figbank/reader",
+    "parent": "figbank",
+    "label": "reader/"
+   },
+   {
+    "id": "figbank/reader/cold-reader.md",
+    "parent": "figbank/reader",
+    "label": "cold-reader.md"
+   },
+   {
+    "id": "figbank/render_svg.js",
+    "parent": "figbank",
+    "label": "render_svg.js"
+   },
+   {
+    "id": "figbank/schema",
+    "parent": "figbank",
+    "label": "schema/"
+   },
+   {
+    "id": "figbank/schema/figure.schema.json",
+    "parent": "figbank/schema",
+    "label": "figure.schema.json"
+   },
+   {
+    "id": "figbank/tests",
+    "parent": "figbank",
+    "label": "tests/"
+   },
+   {
+    "id": "figbank/tests/calibration.json",
+    "parent": "figbank/tests",
+    "label": "calibration.json"
+   },
+   {
+    "id": "figbank/tests/figure.test.js",
+    "parent": "figbank/tests",
+    "label": "figure.test.js"
+   },
+   {
+    "id": "figbank/tests/fixture-two-regions.json",
+    "parent": "figbank/tests",
+    "label": "fixture-two-regions.json"
+   },
+   {
+    "id": "figbank/tests/text.test.js",
+    "parent": "figbank/tests",
+    "label": "text.test.js"
+   }
+  ],
+  "origin": {
+   "x": 16,
+   "y": 50
+  },
+  "node_w": 195,
+  "node_h": 24,
+  "gap_x": 30,
+  "gap_y": 6,
+  "orientation": "horizontal",
+  "color": "meta",
+  "edge_color": "line"
+ },
+ "acceptance": {
+  "must_mention": [
+   [
+    "tree",
+    "file",
+    "directory",
+    "structure",
+    "hierarchy",
+    "nested"
+   ]
+  ],
+  "unreadable_max": 2,
+  "legibility": {
+   "width": 1140,
+   "min_px": 9,
+   "surface": "a reference diagram meant to be read near its native size and scrolled, not shrunk to a text column"
+  },
+  "rounds_max": 3
+ }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "fixture-two-regions",
+  "message": "Two boxes exchange an observation and an action; each variable has one home.",
+  "canvas": { "width": 600, "height": 300 },
+  "word_budget": 20,
+  "must_not_contain": ["lorem"],
+  "title": { "text": "Two boxes, one loop", "x": 20, "y": 12, "w": 560 },
+  "regions": [
+    { "id": "left", "title": "Left side", "color": "env", "box": { "x": 20, "y": 60, "w": 240, "h": 200 }, "layout": "list", "columns": 1,
+      "items": [ { "id": "a", "symbol": "A = (I, π, Φ)", "name": "artifact", "status": "measured" }, { "id": "b", "symbol": "q", "name": "demand", "status": "estimated" }, { "id": "c", "symbol": "C*(x)", "name": "intrinsic cost", "status": "defined" } ] },
+    { "id": "right", "title": "Right side", "color": "agent", "box": { "x": 340, "y": 60, "w": 240, "h": 200 }, "layout": "chips",
+      "items": [ { "id": "w", "symbol": "w", "status": "defined" }, { "id": "c2", "symbol": "c", "status": "measured" }, { "id": "pi", "symbol": "π_M(a | o, scratch)", "status": "spec" } ] }
+  ],
+  "arrows": [
+    { "id": "obs", "points": [[260, 100], [340, 100]], "label": "observation", "label_dy": -8 },
+    { "id": "act", "points": [[340, 220], [260, 220]], "label": "action", "label_dy": 18 }
+  ],
+  "legend": { "x": 580, "y": 285, "anchor": "end", "entries": [ { "status": "measured", "label": "measured" }, { "status": "estimated", "label": "estimated" }, { "status": "defined", "label": "defined only" } ] },
+  "acceptance": { "must_mention": [["observation", "observe"], ["action"]], "unreadable_max": 0, "legibility": { "width": 600, "min_px": 10 } }
+}

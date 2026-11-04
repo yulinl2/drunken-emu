@@ -3,3 +3,7 @@ out/*
 harness/app.jsx
 __pycache__/
 *.pyc
+figbank/app/*/node_modules/
+figbank/app/*/dist/
+figbank/app/*/.parcel-cache/
+figbank/app/*/bundle.html

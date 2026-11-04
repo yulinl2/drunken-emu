@@ -1,5 +1,7 @@
 # drunken-emu — attention-deficit emulator for claude.ai artifacts
 
+> New session, no instructions? Start with the "Fresh session?" order below; this repository stands on its own (P-6e35).
+
 [![README claims](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml/badge.svg)](https://github.com/yulinl2/drunken-emu/actions/workflows/claims.yml)
 
 Models the reader who will not wait. Offline, sandbox-hardened.
@@ -7,6 +9,10 @@ Models the reader who will not wait. Offline, sandbox-hardened.
 Renders a claude.ai single-file React artifact inside headless Chromium and
 audits it the way a first-time phone reader would meet it: blind taps found by
 visual affordance, screenshots judged by eye, mechanics asserted by script.
+
+`bin/emu` also accepts an unchanged static HTML file or an HTTP(S) URL. Local
+HTML is served on loopback from its own directory; it never passes through the
+JSX converter. See [Static pages](docs/STATIC-PAGES.md) for the scope and limits.
 
 > **Fresh session? Read in this order.** `docs/OPEN-PROBLEMS.md` (what is
 > unfinished and why) → this file's `## Falsified` (what was already tried and
@@ -16,6 +22,8 @@ visual affordance, screenshots judged by eye, mechanics asserted by script.
 > presents from outside like drunkenness, and an artifact that survives a drunk
 > emu survives everyone. It is not self-deprecation about the current code.
 
+## Layout
+
 Selected files, annotated for orientation. The complete and CI-asserted index is
 `docs/TREE.md`; this copy is deliberately partial, so do not read an absence
 here as evidence of absence.
@@ -23,25 +31,49 @@ here as evidence of absence.
 ```
 drunken-emu/
 ├── bin/
-│   ├── emu                    entry point: smoke | audit | shots | step
-│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx
+│   ├── emu                    entry point: smoke | audit | shots | step | chain; JSX runs sync → serve → check → tidy; HTML uses a temporary local server, URLs go straight to checks; chain needs no browser
+│   ├── sync_artifact.py       .jsx -> harness-mountable app.jsx; exits 2 with a list for an import of anything but react, react-dom or react-dom/client that starts a line (single- or multi-line, with a default, side-effect). It matches text, not syntax: forms it does not see pass with exit 0 and can break in the browser, and a react import under any name but React (import R from "react", * as R, a as b) is bound wrongly (an undefined name, or a syntax error); the forms are listed in the script's docstring and pinned in test_sync_artifact.py
 │   └── gen_tree.py            regenerates docs/TREE.md; --check asserts it in CI
 ├── checks/
-│   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors
-│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2)
-│   ├── explore_step.py        P1: one stateless step; the calling session decides
+│   ├── smoke.py               mounts, times phases, counts DOM, catches JS errors, measures horizontal overflow
+│   ├── blind_audit.py         SMOKE LAYER. content-blind AND intention-less (see P1/P2): touch ergonomics (buttons, summaries and role=button enforced; links and form fields reported), overlay open/close, control-cluster taps, toggle, N-stop read-through
+│   ├── explore_step.py        P1: one stateless step; the calling session decides (any page, desktop or phone)
+│   ├── explore_run.py         P1: scripted decider + impairment sweep (dose–response, no API key)
+│   ├── test_explore_run.py    its positive control: impairment bites at p=1, not at p=0 (needs Chromium; runs in CI); a policy that breaks the contract stops the run
+│   ├── explore_text.py        the explore loop on a text page (no Chromium); test_explore_text.py asserts it
+│   ├── test_sync_artifact.py  sync_artifact.py's import forms (single- and multi-line, side-effect, default beside named) and the limits it pins (no browser; runs in CI)
+│   ├── test_blind_audit_targets.py   blind_audit's tap targets: a small summary or role=button fails the audit, a small link or form field is only reported (Chromium; runs in CI)
+│   ├── affordances.py         what a reader could act on, extracted from the rendered page (rects clipped to the viewport; semantic vs pointer-only)
 │   ├── region_shots.py        content-aware camera: anchors choose where to look only
+│   ├── fragment_links.py      content-aware, intention-less: every a[href^="#"] lands on a visible target (P-246d)
+│   ├── chain.py               operation chains: JSON format, load/validate/normalise (no browser; docs/OPERATION-CHAINS.md)
+│   ├── chain_load.py          chain load + working-memory budget B
+│   ├── chain_verifiers.py     ten content-blind verifiers over a recorded chain
+│   ├── chain_check.py         the CLI behind `bin/emu chain check`
+│   ├── test_chain.py          must-fire / must-hold per verifier, mutation controls, the CLI (no browser)
+│   ├── prediction_score.py · test_prediction.py · measure_sample_predictors.py   the HW2 pre-registration: scorer, pin test, predictor measurement (docs/predictions/)
+│   ├── hw2_sample_prediction/ the HW2 pre-registration as code: `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` makes the chains, inputs, registration and text for a new TapGrade head
+│   ├── draft_publish_prediction.py · test_draft_publish_prediction.py   the second registration, made late and made again: the first run of speeds-kit's draft publisher 0.3.1 at B = 2, asking the owner for nothing; the registration for 0.2.2 is void (docs/predictions/draft-publish-first-run.md) **Void for the owner's runs (another build ran): `docs/predictions/draft-publish-first-run.outcome.md`; nothing was scored.**
 │   ├── svg_legibility.py      static SVG: rendered type size, label overlap, ink outside viewBox
+│   ├── svg_text_gates.py · test_external_svg.py   the figure bank's text gates on an external SVG: word budget, forbidden strings, ellipsis; box overflow and the other layout gates are reported as not applicable (see figbank/); the tests run in CI
+│   ├── browser.py             launches the Chromium that is actually installed (pip's pin ≠ the container's)
 │   └── ci_claims.py           asserts this README is still true; runs in CI
+├── figbank/                   the figure bank: schema, components (SVG + React), reader prompt, page app
+├── bin/figpipe                maker → render → cold reader → acceptance, one command, verdicts logged
 ├── docs/
 │   ├── OPEN-PROBLEMS.md       ledger, numbered, never renumbered
 │   ├── LATEST-CONCLUSIONS.md  one line per settled conclusion, tagged
 │   ├── EXPLORE-SPEC.md        P1 design: parameterised impairment, dose-response curve
+│   ├── OPERATION-MODEL.md     what a person does, step by step, and what it costs: primitives, budget, ten verifiers
+│   ├── OPERATION-CHAINS.md    the chain layer: format, load, verifiers, HW1 fixtures, the P-2a7c integration design
+│   ├── predictions/           the prediction registered before the HW2 blind sample pass (see OPERATION-CHAINS.md)
 │   ├── ZENODO-RUNBOOK.md      P5: ordering constraint, human part A then session part B
 │   ├── SANDBOX-FACTS.md       measured container facts
 │   └── TREE.md                complete tracked-file index (generated)
-├── harness/harness.html       offline React mount point
-├── vendor/                    unmodified upstream bundles (see THIRD_PARTY_NOTICES.md)
+├── harness/
+│   ├── harness.html           offline React mount point: loads the vendor bundles, then Babel-compiles app.jsx in the browser
+│   └── app.jsx                generated per run by bin/emu and checks/fragment_links.py; untracked and gitignored, not source
+├── vendor/                    unmodified upstream bundles: react.js · reactdom.js · tailwind.js · babel.js (see THIRD_PARTY_NOTICES.md); vendored because the egress proxy re-signs TLS, so CDNs never load headless
 └── out/                       screenshots and logs (gitignored)
 ```
 
@@ -63,9 +95,15 @@ A cold `bin/emu smoke` on a 4-node artifact measured 2.5 s wall clock, of which
 
 ## Authored surface
 
-638 lines across `bin/` (131), `checks/` (491), `harness/` (16), plus this
-README (133). `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed,
-not written here; see `THIRD_PARTY_NOTICES.md`.
+Not quoted as a bare number, because it drifts with every edit (`## Falsified`, row 4). Measure it:
+
+```
+for p in bin harness 'checks/**/*.py' README.md; do echo "$p $(git --glob-pathspecs ls-files -z -- "$p" | xargs -0 cat | wc -l)"; done | awk '{print; s += $NF} END {print "total", s}'
+```
+
+It counts tracked files only, so ignored ones cannot move it (`bin/emu` rewrites `harness/app.jsx` on every run, and `__pycache__` fills up beside the sources), and `checks/**/*.py` reaches subpackages. The four areas are the retired claim's, kept so the two compare: this is the kit's code, not the repository, and `docs/`, `figbank/`, `theory/` and `checks/fixtures/` are not in it.
+
+Last measured 2026-10-14 at `068d5fc` (check it out to reproduce these exactly; any later commit prints other numbers): `bin` 720, `harness` 16, `checks/**/*.py` 10,603 (3,391 of them in `checks/hw2_sample_prediction/`), `README.md` 315, total 11,654 lines. `vendor/` is 3.3 MB of unmodified upstream bundles — redistributed, not written here; see `THIRD_PARTY_NOTICES.md`.
 
 ## Falsified
 
@@ -77,6 +115,7 @@ a removed error is an error that can come back.
 | "the Babel phase is linear-ish in source bytes" | 80 KB of pure comments (2 DOM nodes) mounts in 0.20 s; 19 KB of 500 spans takes 0.55 s. Node count is the driver. `ci_claims.py` C1 now pins this comparison so the theory cannot revive. |
 | "mount ~ 0.18 s + 0.55 ms/node" *as a portable constant* | Re-measured in a different container with simpler span fixtures: 0.24 s + 0.17 ms/node. Same shape, 3x different slope. The relationship is the finding; the constant is fixture- and hardware-local. |
 | "Blind by default" as a complete model of a first-time reader | Not killed by measurement — killed by re-reading the original requirement, which asked for *long recursive click chains, each step with a stated intention, driven by common sense and by what is visible on the page*. The anti-leak rule licenses content-blindness only. Intention-lessness was a capability gap wearing a correct principle as a defence, and the defence was persuasive enough to be quoted back as the kit's core virtue before anyone re-read the requirement it displaced. Current state: 4 taps, recursion depth 0, zero feedback. Tracked as `explore`. |
+| "About 2.6 k lines, measured 2026-09-29: `bin/` 717, `checks/*.py` 1,573, `harness/` 22, README 277" (the earlier "638" died the same way) | Re-measured 2026-10-14 at `068d5fc`: `bin/` 720, `checks/**/*.py` 10,603, `harness/` 16, README 315, 11,654 lines in all, 4.5 times the claim. It was not a bad count: at the commit before it was written (`6d648d2`) the tree has `bin/` 717, `checks/*.py` 1,573 and README 277 exactly as stated (`harness/` 16, not 22), so what killed it was fifteen days of edits and one change of shape. `checks/*.py` alone is now 7,212 (8,263 in all, 3.2 times the claim), and `checks/hw2_sample_prediction/` (added 2026-10-05, 3,391 lines) lies outside that glob altogether. The README had said the number "drifts with every edit"; nothing flagged it, because `ci_claims.py` asserts timing orderings, not line counts, and `fact_check.py` (PR #4) recomputes only claims tied to a file path. `## Authored surface` now gives the command, which counts tracked files recursively, and a dated measurement. |
 
 The third row is a different species from the first two. Those were wrong
 numbers; a measurement killed them. This one was a wrong *justification* — it
@@ -99,6 +138,24 @@ All output (screenshots, server.log, one JSON line on stdout) lands in `out/`.
 > interpreter explicitly: `bash bin/emu smoke <artifact>`. Everything else —
 > reads, writes, nested dirs, screenshots — works normally there.
 
+## The figure bank (`figbank/`, `bin/figpipe`) — since 2026-09-28
+
+The kit's contract applied to *making* figures (issue #5): a figure is a JSON spec
+(`figbank/schema/figure.schema.json` — message, regions, symbols, arrows, status tags, word budget,
+acceptance rule), composed from a component bank whose one vnode tree renders to SVG for LaTeX and
+to React for pages, and accepted only when a blind cold reader (`claude -p`, the PNG and a fixed
+prompt, nothing else) can state its message. The verdict is a record, not a chat:
+
+```
+bin/figpipe SPEC.json --out figures/ --reader auto   # validate → render → png/pdf → legibility → cold read → accept → verdicts.jsonl
+node --test figbank/tests/                            # the bank's gates, no browser
+make page-variable-model OUT=DIR                      # the React shell of MetaProof's variable-model page (node + pnpm)
+```
+
+First instances: MetaProof fig4 and fig5, both accepted at round 1; the variable-model page ported
+to React from that repository's hand-written HTML with a scripted function checklist
+(`figbank/app/variable-model/check_page.py`). Details: `figbank/README.md`.
+
 ## The explore seed (text backend, no Chromium)
 
 The explore layer's *mechanics* exist now on the cheapest page there is — a Markdown heading
@@ -113,29 +170,20 @@ python3 -m pytest -q checks/test_explore_text.py     # 5 tests, < 1 s, no model 
 impairment knobs, pluggable policy. A scripted policy that *needs* affordances and memory passes;
 a stateless tapper fails. The browser backend is the same loop with different render/act.
 
-## Layout
+## Operation chains (no Chromium)
+
+The kit's original purpose, simulating the *person*: a task recorded as a chain of primitive operations
+(`docs/OPERATION-MODEL.md`), checked against a working-memory budget and ten content-blind verifiers.
 
 ```
-emu-kit/
-├── bin/
-│   ├── emu                 orchestrator: sync → serve → check → tidy, one invocation
-│   └── sync_artifact.py    artifact.jsx → browser-runnable app.jsx; rejects
-│                           imports the kit cannot satisfy (exit 2 + list)
-├── harness/
-│   ├── harness.html        loads vendor bundles then Babel-compiles app.jsx in-browser
-│   └── app.jsx             (generated per run)
-├── vendor/                 react.js · reactdom.js · tailwind.js · babel.js
-│                           vendored because the sandbox egress proxy re-signs TLS
-│                           and Chromium rejects its cert → CDNs never load headless
-├── checks/
-│   ├── smoke.py            render? errors? overflow? + per-phase wall clock
-│   ├── blind_audit.py      content-blind: ergonomics, overlay open/close,
-│   │                       control-cluster taps, toggle, N-stop read-through
-│   ├── region_shots.py     content-AWARE camera: text anchors decide only where
-│   │                       to look, never what counts as correct
-│   └── ci_claims.py        asserts this README is still true; runs in CI
-└── out/                    screenshots + logs (gitignore-able)
+bin/emu chain check checks/fixtures/chains/hw1_correction_pass.json         # exit 1: its `expensive` chain trips all ten verifiers
+bin/emu chain check checks/fixtures/chains/hw1_correction_pass_fixed.json   # exit 0
+python3 -m pytest -q checks/test_chain.py                                   # no browser, no model call; CI job `chains`
 ```
+
+Format, load, verifiers, fixtures: `docs/OPERATION-CHAINS.md`.
+
+A prediction registered before a real pass, and scored after it: `docs/predictions/hw2-sample-pass.md`; pinned by `python3 -m pytest -q checks/test_prediction.py` (no browser). Remade for a new speeds-kit head by one command, `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` (needs Chromium; the registration says what it does).
 
 ## Why it is shaped this way
 
@@ -147,8 +195,9 @@ emu-kit/
    reference artifact (measured) and buys zero toolchain.
 3. **sync as a boundary gate** — the transform (strip imports, rebind hooks,
    append a mount call) is exactly what claude.ai's runtime does implicitly;
-   anything beyond React itself (recharts, lucide-react, …) exits 2 with a
-   named list instead of a blank page.
+   an import of anything beyond React itself (recharts, lucide-react, …) that
+   starts a line exits 2 with a named list instead of a blank page; the forms the
+   text match does not see are listed in `sync_artifact.py`'s docstring.
 4. **Server + test in one shell invocation; port freed by PID file; `cd` on its
    own line** — three sandbox rules each purchased with a debugging round
    (background processes die between tool calls; `pkill -f` can match its own
@@ -188,7 +237,7 @@ emu-kit/
 Works for artifacts that: are single-file React (.jsx), import nothing beyond
 `react` / `react-dom`, use Tailwind core utility classes, hooks, inline styles,
 SVG, CSS animations. That is: this kit covers the plain-React slice of the
-artifact space, with the boundary enforced mechanically by `sync_artifact.py`.
+artifact space; `sync_artifact.py` checks the boundary for the imports its text match sees (its docstring lists the rest).
 
 Out of scope (exit 2 or no-op by design): npm libraries (recharts, lucide-react,
 d3, shadcn/ui, …) — vendoring UMD builds per library would extend this;

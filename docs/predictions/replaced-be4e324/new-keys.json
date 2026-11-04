@@ -1,0 +1,40 @@
+{
+ "what": "Measurements that did not exist when the registration against speeds-kit be4e324 was built, made on the be4e324 script (the one that registration measured) by the current checks/measure_sample_predictors.py, so that the registration that replaces it can say what moved for them too. Large bank, the same invented sample (seed 2). Only the keys that registration's measured file lacks are kept; checked_against_the_baseline says how many of the keys it has were measured again and found the same.",
+ "script_sha256": "d63dc263df7fdb77828eae1e74ae3603ce7d9a9d195a1153deca53ad74255423",
+ "command": "python3 checks/measure_sample_predictors.py <the be4e324 script> MOCK_URL --bank large",
+ "checked_against_the_baseline": {
+  "keys_compared": 321,
+  "keys_different": 0,
+  "not_compared": "timings (feedback_ms, loading, the seconds a message stays on screen)"
+ },
+ "predictors": {
+  "window": {
+   "part_headings_at_the_first_render": {
+    "parts": 6,
+    "saying_full": 0,
+    "heading_h_px": 18.9
+   }
+  },
+  "view_stability": {
+   "rebuild_with_ticks": {
+    "ticked_chips": 2,
+    "ticked_chips_after": 2,
+    "warnings_before": 1,
+    "warnings_above_the_window_before": 1,
+    "warnings_after_the_rebuild": 0,
+    "scroll_before_px": 2017.0,
+    "scroll_after_px": 2017.0,
+    "same_chip_shift_px": -53.1,
+    "stamp_bumps_right_after_the_rebuild": false
+   },
+   "sheet_at_its_floor": {
+    "stored_height_fraction": 0.05,
+    "sheet_h_with_the_load_message_px": 369.0,
+    "sheet_h_after_it_left_px": 369.0,
+    "sheet_h_after_a_rebuild_px": 313.0,
+    "raised_by_the_message_px": 56.0,
+    "stays_raised_after_it_left": true
+   }
+  }
+ }
+}

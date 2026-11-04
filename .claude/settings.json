@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/README.md\"; if [ -f \"$f\" ]; then echo \"=== drunken-emu: start here (README, Fresh session?) ===\"; awk \"/Fresh session\\\\? Read in this order/{p=1} p&&/^$/{exit} p{print}\" \"$f\"; fi; true'"
+          }
+        ]
+      }
+    ]
+  }
+}

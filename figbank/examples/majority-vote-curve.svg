@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 440" width="780" height="440" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" data-figure="majority-vote-curve" role="img" aria-label="Majority-vote accuracy climbs toward 1 with more independent voters, but when the voters' errors are correlated it saturates at a ceiling barely above one voter's 0.70 accuracy.">
+ <defs/>
+ <rect x="0" y="0" width="780" height="440" fill="#ffffff"/>
+ <text x="16" y="29.3" font-size="17" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" data-id="title"><tspan x="16" dy="0">Majority vote of m voters, each right 70% of the time; dotted lines: ceiling as</tspan><tspan x="16" dy="21.25">m grows without bound.</tspan></text>
+ <g class="plot-axes">
+  <line x1="71.80000000000001" y1="78" x2="71.80000000000001" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="71.80000000000001" y1="383.95" x2="71.80000000000001" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="71.80000000000001" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">0</text>
+  <line x1="164.192" y1="78" x2="164.192" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="164.192" y1="383.95" x2="164.192" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="164.192" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">5</text>
+  <line x1="256.584" y1="78" x2="256.584" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="256.584" y1="383.95" x2="256.584" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="256.584" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">10</text>
+  <line x1="348.976" y1="78" x2="348.976" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="348.976" y1="383.95" x2="348.976" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="348.976" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">15</text>
+  <line x1="441.368" y1="78" x2="441.368" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="441.368" y1="383.95" x2="441.368" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="441.368" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">20</text>
+  <line x1="533.76" y1="78" x2="533.76" y2="383.95" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="533.76" y1="383.95" x2="533.76" y2="387.95" stroke="#5e6570" stroke-width="1"/>
+  <text x="533.76" y="399.5" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="middle" data-tick="x">25</text>
+  <line x1="71.80000000000001" y1="364.82812500000006" x2="533.76" y2="364.82812500000006" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="364.82812500000006" x2="71.80000000000001" y2="364.82812500000006" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="368.78812500000004" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.70</text>
+  <line x1="71.80000000000001" y1="317.0234375" x2="533.76" y2="317.0234375" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="317.0234375" x2="71.80000000000001" y2="317.0234375" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="320.9834375" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.75</text>
+  <line x1="71.80000000000001" y1="269.21875" x2="533.76" y2="269.21875" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="269.21875" x2="71.80000000000001" y2="269.21875" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="273.17875" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.80</text>
+  <line x1="71.80000000000001" y1="221.41406250000003" x2="533.76" y2="221.41406250000003" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="221.41406250000003" x2="71.80000000000001" y2="221.41406250000003" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="225.37406250000004" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.85</text>
+  <line x1="71.80000000000001" y1="173.609375" x2="533.76" y2="173.609375" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="173.609375" x2="71.80000000000001" y2="173.609375" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="177.569375" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.90</text>
+  <line x1="71.80000000000001" y1="125.80468750000006" x2="533.76" y2="125.80468750000006" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="125.80468750000006" x2="71.80000000000001" y2="125.80468750000006" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="129.76468750000006" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">0.95</text>
+  <line x1="71.80000000000001" y1="78" x2="533.76" y2="78" stroke="#c9c4b8" stroke-width="0.6" opacity="0.6"/>
+  <line x1="67.80000000000001" y1="78" x2="71.80000000000001" y2="78" stroke="#5e6570" stroke-width="1"/>
+  <text x="64.80000000000001" y="81.96" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#5e6570" text-anchor="end" data-tick="y">1.00</text>
+  <path d="M71.80000000000001,78 L71.80000000000001,383.95 L533.76,383.95" fill="none" stroke="#1d2126" stroke-width="1.2"/>
+  <text x="302.78" y="420" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="middle" data-axis-label="x">number of voters m (odd)</text>
+ </g>
+ <text x="26" y="230.975" transform="rotate(-90 26 230.975)" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="middle" data-axis-label="y">majority-vote accuracy</text>
+ <g class="curve" data-id="rho-0.0">
+  <path d="M90.28,364.83 L127.24,284.52 L164.19,233.92 L201.15,198.50 L238.11,172.47 L275.06,152.79 L312.02,137.64 L348.98,125.82 L385.93,116.51 L422.89,109.12 L459.85,103.23 L496.80,98.51 L533.76,94.70" fill="none" stroke="#000000" stroke-width="1.7" stroke-linejoin="round"/>
+  <circle cx="90.28" cy="364.83" r="2.4" fill="#000000"/>
+  <circle cx="127.24" cy="284.52" r="2.4" fill="#000000"/>
+  <circle cx="164.19" cy="233.92" r="2.4" fill="#000000"/>
+  <circle cx="201.15" cy="198.50" r="2.4" fill="#000000"/>
+  <circle cx="238.11" cy="172.47" r="2.4" fill="#000000"/>
+  <circle cx="275.06" cy="152.79" r="2.4" fill="#000000"/>
+  <circle cx="312.02" cy="137.64" r="2.4" fill="#000000"/>
+  <circle cx="348.98" cy="125.82" r="2.4" fill="#000000"/>
+  <circle cx="385.93" cy="116.51" r="2.4" fill="#000000"/>
+  <circle cx="422.89" cy="109.12" r="2.4" fill="#000000"/>
+  <circle cx="459.85" cy="103.23" r="2.4" fill="#000000"/>
+  <circle cx="496.80" cy="98.51" r="2.4" fill="#000000"/>
+  <circle cx="533.76" cy="94.70" r="2.4" fill="#000000"/>
+ </g>
+ <g class="curve" data-id="rho-0.06">
+  <path d="M90.28,364.83 L127.24,297.88 L164.19,260.57 L201.15,236.43 L238.11,219.50 L275.06,206.96 L312.02,197.31 L348.98,189.66 L385.93,183.45 L422.89,178.31 L459.85,173.99 L496.80,170.31 L533.76,167.13" fill="none" stroke="#009E73" stroke-width="1.7" stroke-linejoin="round"/>
+  <circle cx="90.28" cy="364.83" r="2.4" fill="#009E73"/>
+  <circle cx="127.24" cy="297.88" r="2.4" fill="#009E73"/>
+  <circle cx="164.19" cy="260.57" r="2.4" fill="#009E73"/>
+  <circle cx="201.15" cy="236.43" r="2.4" fill="#009E73"/>
+  <circle cx="238.11" cy="219.50" r="2.4" fill="#009E73"/>
+  <circle cx="275.06" cy="206.96" r="2.4" fill="#009E73"/>
+  <circle cx="312.02" cy="197.31" r="2.4" fill="#009E73"/>
+  <circle cx="348.98" cy="189.66" r="2.4" fill="#009E73"/>
+  <circle cx="385.93" cy="183.45" r="2.4" fill="#009E73"/>
+  <circle cx="422.89" cy="178.31" r="2.4" fill="#009E73"/>
+  <circle cx="459.85" cy="173.99" r="2.4" fill="#009E73"/>
+  <circle cx="496.80" cy="170.31" r="2.4" fill="#009E73"/>
+  <circle cx="533.76" cy="167.13" r="2.4" fill="#009E73"/>
+ </g>
+ <g class="curve" data-id="rho-0.36">
+  <path d="M90.28,364.83 L127.24,340.64 L164.19,331.59 L201.15,326.89 L238.11,324.02 L275.06,322.08 L312.02,320.68 L348.98,319.63 L385.93,318.81 L422.89,318.15 L459.85,317.61 L496.80,317.16 L533.76,316.78" fill="none" stroke="#E69F00" stroke-width="1.7" stroke-linejoin="round"/>
+  <circle cx="90.28" cy="364.83" r="2.4" fill="#E69F00"/>
+  <circle cx="127.24" cy="340.64" r="2.4" fill="#E69F00"/>
+  <circle cx="164.19" cy="331.59" r="2.4" fill="#E69F00"/>
+  <circle cx="201.15" cy="326.89" r="2.4" fill="#E69F00"/>
+  <circle cx="238.11" cy="324.02" r="2.4" fill="#E69F00"/>
+  <circle cx="275.06" cy="322.08" r="2.4" fill="#E69F00"/>
+  <circle cx="312.02" cy="320.68" r="2.4" fill="#E69F00"/>
+  <circle cx="348.98" cy="319.63" r="2.4" fill="#E69F00"/>
+  <circle cx="385.93" cy="318.81" r="2.4" fill="#E69F00"/>
+  <circle cx="422.89" cy="318.15" r="2.4" fill="#E69F00"/>
+  <circle cx="459.85" cy="317.61" r="2.4" fill="#E69F00"/>
+  <circle cx="496.80" cy="317.16" r="2.4" fill="#E69F00"/>
+  <circle cx="533.76" cy="316.78" r="2.4" fill="#E69F00"/>
+ </g>
+ <g class="curve" data-id="rho-0.55">
+  <path d="M90.28,364.83 L127.24,354.34 L164.19,350.98 L201.15,349.36 L238.11,348.40 L275.06,347.77 L312.02,347.32 L348.98,346.99 L385.93,346.74 L422.89,346.53 L459.85,346.36 L496.80,346.23 L533.76,346.11" fill="none" stroke="#D55E00" stroke-width="1.7" stroke-linejoin="round"/>
+  <circle cx="90.28" cy="364.83" r="2.4" fill="#D55E00"/>
+  <circle cx="127.24" cy="354.34" r="2.4" fill="#D55E00"/>
+  <circle cx="164.19" cy="350.98" r="2.4" fill="#D55E00"/>
+  <circle cx="201.15" cy="349.36" r="2.4" fill="#D55E00"/>
+  <circle cx="238.11" cy="348.40" r="2.4" fill="#D55E00"/>
+  <circle cx="275.06" cy="347.77" r="2.4" fill="#D55E00"/>
+  <circle cx="312.02" cy="347.32" r="2.4" fill="#D55E00"/>
+  <circle cx="348.98" cy="346.99" r="2.4" fill="#D55E00"/>
+  <circle cx="385.93" cy="346.74" r="2.4" fill="#D55E00"/>
+  <circle cx="422.89" cy="346.53" r="2.4" fill="#D55E00"/>
+  <circle cx="459.85" cy="346.36" r="2.4" fill="#D55E00"/>
+  <circle cx="496.80" cy="346.23" r="2.4" fill="#D55E00"/>
+  <circle cx="533.76" cy="346.11" r="2.4" fill="#D55E00"/>
+ </g>
+ <g class="curve" data-id="rho-0.8">
+  <path d="M90.28,364.83 L127.24,363.04 L164.19,362.55 L201.15,362.33 L238.11,362.20 L275.06,362.12 L312.02,362.06 L348.98,362.02 L385.93,361.98 L422.89,361.96 L459.85,361.94 L496.80,361.92 L533.76,361.91" fill="none" stroke="#CC79A7" stroke-width="1.7" stroke-linejoin="round"/>
+  <circle cx="90.28" cy="364.83" r="2.4" fill="#CC79A7"/>
+  <circle cx="127.24" cy="363.04" r="2.4" fill="#CC79A7"/>
+  <circle cx="164.19" cy="362.55" r="2.4" fill="#CC79A7"/>
+  <circle cx="201.15" cy="362.33" r="2.4" fill="#CC79A7"/>
+  <circle cx="238.11" cy="362.20" r="2.4" fill="#CC79A7"/>
+  <circle cx="275.06" cy="362.12" r="2.4" fill="#CC79A7"/>
+  <circle cx="312.02" cy="362.06" r="2.4" fill="#CC79A7"/>
+  <circle cx="348.98" cy="362.02" r="2.4" fill="#CC79A7"/>
+  <circle cx="385.93" cy="361.98" r="2.4" fill="#CC79A7"/>
+  <circle cx="422.89" cy="361.96" r="2.4" fill="#CC79A7"/>
+  <circle cx="459.85" cy="361.94" r="2.4" fill="#CC79A7"/>
+  <circle cx="496.80" cy="361.92" r="2.4" fill="#CC79A7"/>
+  <circle cx="533.76" cy="361.91" r="2.4" fill="#CC79A7"/>
+ </g>
+ <g class="curve" data-id="ceiling-0.0">
+  <path d="M90.28,78.00 L533.76,78.00" fill="none" stroke="#000000" stroke-width="1.7" stroke-dasharray="2 3" stroke-linejoin="round"/>
+ </g>
+ <g class="curve" data-id="ceiling-0.06">
+  <path d="M90.28,125.08 L533.76,125.08" fill="none" stroke="#009E73" stroke-width="1.7" stroke-dasharray="2 3" stroke-linejoin="round"/>
+ </g>
+ <g class="curve" data-id="ceiling-0.36">
+  <path d="M90.28,312.14 L533.76,312.14" fill="none" stroke="#E69F00" stroke-width="1.7" stroke-dasharray="2 3" stroke-linejoin="round"/>
+ </g>
+ <g class="curve" data-id="ceiling-0.55">
+  <path d="M90.28,344.73 L533.76,344.73" fill="none" stroke="#D55E00" stroke-width="1.7" stroke-dasharray="2 3" stroke-linejoin="round"/>
+ </g>
+ <g class="curve" data-id="ceiling-0.8">
+  <path d="M90.28,361.74 L533.76,361.74" fill="none" stroke="#CC79A7" stroke-width="1.7" stroke-dasharray="2 3" stroke-linejoin="round"/>
+ </g>
+ <text x="539.76" y="81.96" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#000000" font-weight="bold" data-end-label="ceiling-0.0">1</text>
+ <text x="539.76" y="129.04379281250002" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#009E73" font-weight="bold" data-end-label="ceiling-0.06">0.951</text>
+ <text x="539.76" y="316.10066671875" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#E69F00" font-weight="bold" data-end-label="ceiling-0.36">0.755</text>
+ <text x="539.76" y="348.68816609375006" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#D55E00" font-weight="bold" data-end-label="ceiling-0.55">0.721</text>
+ <text x="539.76" y="365.69516171874994" font-size="11" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#CC79A7" font-weight="bold" data-end-label="ceiling-0.8">0.703</text>
+ <g class="plot-legend">
+  <rect x="586.3199999999999" y="78" width="163.68000000000004" height="98" rx="3" fill="#ffffff" fill-opacity="0.9" stroke="#c9c4b8" stroke-width="0.8"/>
+  <g class="plot-legend-entry" data-id="rho-0.0">
+   <line x1="596.3199999999999" y1="91" x2="618.3199999999999" y2="91" stroke="#000000" stroke-width="2"/>
+   <text x="624.3199999999999" y="95.32" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126">independent (ρ = 0)</text>
+  </g>
+  <g class="plot-legend-entry" data-id="rho-0.06">
+   <line x1="596.3199999999999" y1="109" x2="618.3199999999999" y2="109" stroke="#009E73" stroke-width="2"/>
+   <text x="624.3199999999999" y="113.32" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126">ρ = 0.06</text>
+  </g>
+  <g class="plot-legend-entry" data-id="rho-0.36">
+   <line x1="596.3199999999999" y1="127" x2="618.3199999999999" y2="127" stroke="#E69F00" stroke-width="2"/>
+   <text x="624.3199999999999" y="131.32" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126">ρ = 0.36</text>
+  </g>
+  <g class="plot-legend-entry" data-id="rho-0.55">
+   <line x1="596.3199999999999" y1="145" x2="618.3199999999999" y2="145" stroke="#D55E00" stroke-width="2"/>
+   <text x="624.3199999999999" y="149.32" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126">ρ = 0.55</text>
+  </g>
+  <g class="plot-legend-entry" data-id="rho-0.8">
+   <line x1="596.3199999999999" y1="163" x2="618.3199999999999" y2="163" stroke="#CC79A7" stroke-width="2"/>
+   <text x="624.3199999999999" y="167.32" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126">ρ = 0.80</text>
+  </g>
+ </g>
+</svg>

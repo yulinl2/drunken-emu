@@ -1,0 +1,3901 @@
+{
+ "schema": "emu-prediction/1",
+ "id": "hw2-sample-pass",
+ "title": "The HW2 blind sample pass on the owner's phone (TapGrade 0.6.7 sample mode): where it will be hard, how much, in which order",
+ "registered_by": "the commit that adds this version of this file: its commit time is the registration (theory/RECORD-THEORY.md section 8, step 2). This is the third registration. The version committed as da81743, the registration against speeds-kit be4e324, is superseded by it and stays in the history, with the earlier ones",
+ "drafted": "2026-10-05 06:25 EDT",
+ "spec": "theory/RECORD-THEORY.md section 8; issue #32, test point E5",
+ "artifact": {
+  "repository": "speeds-kit",
+  "commit": "4626522f4338c860c57d4539808e0c2b169f3a58",
+  "checkout_head": "4626522f4338c860c57d4539808e0c2b169f3a58",
+  "script": "userscripts/tapgrade.user.js",
+  "script_sha256": "ed4829993a4435176c73a534197e2b1fabb9243a52994c93e34871fbb18a180e",
+  "script_lines": 3409,
+  "version": "0.6.7",
+  "build": "10-05 05:36",
+  "mock_canvas": {
+   "path": "tests/tapgrade/mock_canvas.py",
+   "sha256": "d87bacec7942cfe2ebe8360f9143acb02b9e5d348fd5423431c00ae461b51fda"
+  },
+  "files_last_changed_by": {
+   "userscripts/tapgrade.user.js": "66eee2ae9e03d39eebce63a482a62453b81f9c38",
+   "tests/tapgrade/mock_canvas.py": "5eb99378130164c4350b320d98524a11fa3f62d6",
+   "speedkit/tapgrade.py": "ce8d31760c5cce58cca06f1d6dd909be7b53d371",
+   "speedkit/picks.py": "1e8b1d338ce3c1fbee56baba3d1cdd9b9216b098",
+   "docs/TAPGRADE.md": "4626522f4338c860c57d4539808e0c2b169f3a58",
+   "docs/HW2-HW3-RUNBOOK.md": "4626522f4338c860c57d4539808e0c2b169f3a58"
+  },
+  "docs_read": "docs/TAPGRADE.md (Blind sample mode, and the lines cited from its Install, Data from the kit and correction sections) and docs/HW2-HW3-RUNBOOK.md (steps 7 and 8, and the line cited from its sample-size section) at that commit"
+ },
+ "inputs": {
+  "path": "docs/predictions/hw2-sample-pass.inputs.json",
+  "sha256": "600d15751cdd0dd13dc52935dd75dc4a9bdcdc8e3f3cc0277f8511aa50031aec",
+  "what": "the commit, the sha256 of every file read from the speeds-kit checkout, and the place of every code line a note cites"
+ },
+ "fixture": {
+  "path": "checks/fixtures/chains/tapgrade_0_6_7_sample_pass.json",
+  "sha256": "1b29d966d09c18fd5d43924a534480c32a3c5cd22fb9fbedeed83ec3875e7906"
+ },
+ "measured": {
+  "path": "docs/predictions/hw2-sample-pass.measured.json",
+  "sha256": "917af3c96d7e00199c2d75d9f50b384b77db93c31c40e1492ddb14fa266fc855",
+  "bank": "large",
+  "tool": "checks/measure_sample_predictors.py",
+  "tool_sha256": "6e0ca39dc1cd88eb314c33828c8afec3e25963208dad91b76d9a0b7e26cea2d8",
+  "tool_command": "python3 checks/measure_sample_predictors.py userscripts/tapgrade.user.js MOCK_URL --bank large"
+ },
+ "measured_example_bank": {
+  "path": "docs/predictions/hw2-sample-pass.measured-example-bank.json",
+  "sha256": "5b79a9b5da82b8fb2b856d146c12279bd67320e42ee18f3eea207a34c550d710",
+  "bank": "example",
+  "why": "the same measurement with a bank of the size the runbook's example output gives (31 bank items, docs/HW2-HW3-RUNBOOK.md:132: 31 chips in all); the real size of HW2's bank is unknown",
+  "tool_command": "python3 checks/measure_sample_predictors.py userscripts/tapgrade.user.js MOCK_URL --bank example"
+ },
+ "scorer": {
+  "path": "checks/prediction_score.py",
+  "sha256": "b38eb27d5a33409063635fa2eda7e1c0e0d897ca4023d2a2b9fb7bc43d536b14"
+ },
+ "generator": {
+  "path": "checks/hw2_sample_prediction/",
+  "sha256": {
+   "__init__.py": "ca596378983d687b101387d691d356d30c32c80f8d016063566408f2bff825eb",
+   "__main__.py": "5997c4692afe86417e7874c4e1c26607b3b3834abcc5c3a0f17273241d610310",
+   "chains.py": "b2fd66ff23a565f3c8b5c4f9234224bc64b74768cf02e1ea6492a366d591e369",
+   "changes.py": "490d8e72c77ba62adb4b3b13302dee6a13804d3d57ec00fe68d5589b6f4ffaed",
+   "cites.py": "37aa144cb1ccdd10dba79f51599439c68e493021a4766157944f9e15c002469c",
+   "events.py": "02d829f3060432282240e141445ef987fd2ecb5123934cee443f0e03d5ed03a3",
+   "inputs.py": "6e0a7eaed1cf49fc00c63302682773976d771a07d8d498ccb33eb9246fa71969",
+   "markdown.py": "4decdedf5fe014c1cc1763630bf80d55a812795aa584a9a36ba9635d3a07fead",
+   "rebuild.py": "6e6514d6461621f17866f0931bc758cd85328eaff1bb21a9637832524a6e627c",
+   "registration.py": "11e107d49d37a16d69eac26fa3db35e128d8a802124a7cff1b1997a63f611a61"
+  },
+  "what": "the code that wrote the fixture, this file and the .md from the inputs, the measured files and the first-draft baseline: `python3 -m checks.hw2_sample_prediction build --check` rebuilds them in memory and compares"
+ },
+ "drunken_emu": {
+  "commit": "d46677cf933277adf8ba49bb93b5391306897c7e",
+  "note": "the parent of the registration commit, on branch wt/e5; an integration that rewrites commits changes this hash, the fixture's sha256 does not move"
+ },
+ "parameters": {
+  "budget": 3,
+  "budget_sensitivity": [
+   2,
+   4
+  ],
+  "lookalike": 0.5,
+  "weights": {
+   "read_fine": 1.0,
+   "read_coarse": 0.25,
+   "slot_step": 1.0,
+   "reload": 6.0,
+   "reorient": 3.0,
+   "discriminate": 3.0,
+   "loop": 2.0
+  },
+  "verifiers": [
+   "anchoring",
+   "memory_budget",
+   "candidate_set",
+   "interruption",
+   "colocation",
+   "progress",
+   "causal",
+   "single_path",
+   "commit_correctness",
+   "separators"
+  ],
+  "weights_source": "checks/chain_load.py WEIGHTS at the drunken-emu commit named above (unchanged since the branch point 6116f64)",
+  "rank_ties": {
+   "method": "each load weight scaled by a uniform draw in [0.5, 1.5]; two segments are tied when neither is above the other in at least 95% of the draws",
+   "draws": 2000,
+   "seed": 20261005,
+   "scale": [
+    0.5,
+    1.5
+   ],
+   "flip_above": 0.05,
+   "unstable_pairs": [
+    {
+     "a": "tapgrade-0.6.7-sample-export",
+     "b": "tapgrade-0.6.7-sample-handback",
+     "a_above_b_share": 0.5825
+    }
+   ]
+  },
+  "p_basis": [
+   "measured",
+   "declared",
+   "carried-from-HW1",
+   "guess"
+  ]
+ },
+ "chain_check_command": "bin/emu chain check checks/fixtures/chains/tapgrade_0_6_7_sample_pass.json --json",
+ "chain_check_report": [
+  "checks/fixtures/chains/tapgrade_0_6_7_sample_pass.json",
+  "  tapgrade-0.6.7-sample-install  Install: from 'the data script is ready' in the chat to the first SpeedGrader load that says the sample loaded  [designed 2026-10-05]",
+  "    12 steps · B 3 · peak 3 slot(s) (held 2) · RELOAD 0 · RE-ORIENT 0",
+  "    load 27.50 = reading 5.50 + slot-steps 22 + RELOAD 0 + RE-ORIENT 0 + discriminate 0.00 + loops 0",
+  "    2 finding(s)",
+  "      step 4   SCAN         anchoring          SCAN chooses among 5 look-alike(s) (similarity 0.80) by reading only (anchor: text-keyword); give the target an edge, fixed-position or unique-visual anchor, or remove the look-alikes  ['Save to Files' in the menu, below the fold, among look-a...]",
+  "      step 10  WAIT         progress           no visible progress during the wait  [the reloaded SpeedGrader page loads: Canvas first, then t...]",
+  "  tapgrade-0.6.7-sample-queue  Read the queue: from the first SpeedGrader page with the sample loaded to the tap on Next pair  [designed 2026-10-05]",
+  "    6 steps · B 3 · peak 2 slot(s) (held 1) · RELOAD 0 · RE-ORIENT 0",
+  "    load 8.00 = reading 4.00 + slot-steps 4 + RELOAD 0 + RE-ORIENT 0 + discriminate 0.00 + loops 0",
+  "    2 finding(s)",
+  "      step 1   READ         causal             the list or prompt shown here does not say where it came from  [the Grade view of a student outside the sample: 'A blind ...]",
+  "      step 4   READ         causal             the list or prompt shown here does not say where it came from  [the queue: one line per question ('Q1 0 of 5 recorded') a...]",
+  "  tapgrade-0.6.7-sample-pair  One sampled pair on a new student's page, nothing goes wrong: from the tap on Save and next (or on Next pair) to the next Save and next. The pass is 45 of these.  [designed 2026-10-05]",
+  "    9 steps · B 3 · peak 4 slot(s) (held 2) · RELOAD 0 · RE-ORIENT 0",
+  "    load 47.71 = reading 25.35 + slot-steps 19 + RELOAD 0 + RE-ORIENT 0 + discriminate 3.36 + loops 0",
+  "    4 finding(s)",
+  "      step 1   WAIT         progress           no visible progress during the wait  [the next student's page loads (Save and next, or Next pai...]",
+  "      step 7   DISCRIMINATE memory_budget      working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out  [the part's chips: which of them applies to what the stude...]",
+  "      step 9   COMMIT       colocation         not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)  [Save and next: the pick is recorded on this phone and the...]",
+  "      step 9   COMMIT       commit_correctness after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked  [Save and next: the pick is recorded on this phone and the...]",
+  "  tapgrade-0.6.7-sample-pair-reload  The same pair, but the page reloads after two of its four parts are picked: the picks are gone and the pair is done again from the work  [designed 2026-10-05]",
+  "    18 steps · B 3 · peak 4 slot(s) (held 2) · RELOAD 0 · RE-ORIENT 1",
+  "    load 76.44 = reading 39.40 + slot-steps 29 + RELOAD 0 + RE-ORIENT 3 + discriminate 5.04 + loops 0",
+  "    7 finding(s)",
+  "      step 1   WAIT         progress           no visible progress during the wait  [the next student's page loads (Save and next, or Next pai...]",
+  "      step 7   DISCRIMINATE memory_budget      working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out  [the part's chips: which of them applies to what the stude...]",
+  "      step 9   REFRESH      interruption       after REFRESH not restored: partial  [the page reloads in the middle of the pair (a refresh whe...]",
+  "      step 10  WAIT         progress           no visible progress during the wait  [the next student's page loads (Save and next, or Next pai...]",
+  "      step 16  DISCRIMINATE memory_budget      working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out  [the part's chips: which of them applies to what the stude...]",
+  "      step 18  COMMIT       colocation         not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)  [Save and next: the pick is recorded on this phone and the...]",
+  "      step 18  COMMIT       commit_correctness after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked  [Save and next: the pick is recorded on this phone and the...]",
+  "  tapgrade-0.6.7-sample-pair-lock  The first pair after the phone locked between two pairs: the page is where it was; the owner has to find the thread again  [designed 2026-10-05]",
+  "    10 steps · B 3 · peak 4 slot(s) (held 2) · RELOAD 0 · RE-ORIENT 1",
+  "    load 51.71 = reading 26.35 + slot-steps 19 + RELOAD 0 + RE-ORIENT 3 + discriminate 3.36 + loops 0",
+  "    3 finding(s)",
+  "      step 8   DISCRIMINATE memory_budget      working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out  [the part's chips: which of them applies to what the stude...]",
+  "      step 10  COMMIT       colocation         not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)  [Save and next: the pick is recorded on this phone and the...]",
+  "      step 10  COMMIT       commit_correctness after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked  [Save and next: the pick is recorded on this phone and the...]",
+  "  tapgrade-0.6.7-sample-export  Export: Check, Sample picks, read the counts and the warning, Copy as JSON  [designed 2026-10-05]",
+  "    7 steps · B 3 · peak 2 slot(s) (held 1) · RELOAD 0 · RE-ORIENT 0",
+  "    load 11.75 = reading 4.75 + slot-steps 7 + RELOAD 0 + RE-ORIENT 0 + discriminate 0.00 + loops 0",
+  "    no findings",
+  "  tapgrade-0.6.7-sample-handback  Hand-back: paste the copied JSON into the chat with the coordinating session and send it  [designed 2026-10-05]",
+  "    6 steps · B 3 · peak 2 slot(s) (held 1) · RELOAD 0 · RE-ORIENT 1",
+  "    load 11.50 = reading 2.50 + slot-steps 6 + RELOAD 0 + RE-ORIENT 3 + discriminate 0.00 + loops 0",
+  "    2 finding(s)",
+  "      step 6   COMMIT       colocation         not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)  [Send]",
+  "      step 6   COMMIT       commit_correctness after COMMIT the system offers 'none' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked  [Send]",
+  "",
+  "FAIL  20 finding(s) in 7 chain(s)"
+ ],
+ "chain_check_json": {
+  "ok": false,
+  "findings": 20,
+  "files": [
+   {
+    "file": "checks/fixtures/chains/tapgrade_0_6_7_sample_pass.json",
+    "chains": [
+     {
+      "id": "tapgrade-0.6.7-sample-install",
+      "budget": 3,
+      "steps": 12,
+      "peak_slots": 3,
+      "peak_held": 2,
+      "over_budget_steps": [],
+      "counts": {
+       "read_fine": 5.0,
+       "read_coarse": 2.0,
+       "slot_steps": 22,
+       "reloads": 0,
+       "reorients": 0,
+       "discriminate_similarity": 0.0,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 5.5,
+       "slot_steps": 22.0,
+       "reload": 0.0,
+       "reorient": 0.0,
+       "discriminate": 0.0,
+       "loops": 0.0
+      },
+      "load": 27.5,
+      "findings": [
+       {
+        "verifier": "anchoring",
+        "step": 4,
+        "message": "SCAN chooses among 5 look-alike(s) (similarity 0.80) by reading only (anchor: text-keyword); give the target an edge, fixed-position or unique-visual anchor, or remove the look-alikes"
+       },
+       {
+        "verifier": "progress",
+        "step": 10,
+        "message": "no visible progress during the wait"
+       }
+      ],
+      "ok": false
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-queue",
+      "budget": 3,
+      "steps": 6,
+      "peak_slots": 2,
+      "peak_held": 1,
+      "over_budget_steps": [],
+      "counts": {
+       "read_fine": 1.0,
+       "read_coarse": 12.0,
+       "slot_steps": 4,
+       "reloads": 0,
+       "reorients": 0,
+       "discriminate_similarity": 0.0,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 4.0,
+       "slot_steps": 4.0,
+       "reload": 0.0,
+       "reorient": 0.0,
+       "discriminate": 0.0,
+       "loops": 0.0
+      },
+      "load": 8.0,
+      "findings": [
+       {
+        "verifier": "causal",
+        "step": 1,
+        "message": "the list or prompt shown here does not say where it came from"
+       },
+       {
+        "verifier": "causal",
+        "step": 4,
+        "message": "the list or prompt shown here does not say where it came from"
+       }
+      ],
+      "ok": false
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-pair",
+      "budget": 3,
+      "steps": 9,
+      "peak_slots": 4,
+      "peak_held": 2,
+      "over_budget_steps": [
+       7
+      ],
+      "counts": {
+       "read_fine": 22.6,
+       "read_coarse": 11.0,
+       "slot_steps": 19,
+       "reloads": 0,
+       "reorients": 0,
+       "discriminate_similarity": 1.12,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 25.35,
+       "slot_steps": 19.0,
+       "reload": 0.0,
+       "reorient": 0.0,
+       "discriminate": 3.3600000000000003,
+       "loops": 0.0
+      },
+      "load": 47.71,
+      "findings": [
+       {
+        "verifier": "progress",
+        "step": 1,
+        "message": "no visible progress during the wait"
+       },
+       {
+        "verifier": "memory_budget",
+        "step": 7,
+        "message": "working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out"
+       },
+       {
+        "verifier": "colocation",
+        "step": 9,
+        "message": "not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)"
+       },
+       {
+        "verifier": "commit_correctness",
+        "step": 9,
+        "message": "after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked"
+       }
+      ],
+      "ok": false
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-pair-reload",
+      "budget": 3,
+      "steps": 18,
+      "peak_slots": 4,
+      "peak_held": 2,
+      "over_budget_steps": [
+       7,
+       16
+      ],
+      "counts": {
+       "read_fine": 33.4,
+       "read_coarse": 24.0,
+       "slot_steps": 29,
+       "reloads": 0,
+       "reorients": 1,
+       "discriminate_similarity": 1.6800000000000002,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 39.4,
+       "slot_steps": 29.0,
+       "reload": 0.0,
+       "reorient": 3.0,
+       "discriminate": 5.040000000000001,
+       "loops": 0.0
+      },
+      "load": 76.44000000000001,
+      "findings": [
+       {
+        "verifier": "progress",
+        "step": 1,
+        "message": "no visible progress during the wait"
+       },
+       {
+        "verifier": "memory_budget",
+        "step": 7,
+        "message": "working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out"
+       },
+       {
+        "verifier": "interruption",
+        "step": 9,
+        "message": "after REFRESH not restored: partial"
+       },
+       {
+        "verifier": "progress",
+        "step": 10,
+        "message": "no visible progress during the wait"
+       },
+       {
+        "verifier": "memory_budget",
+        "step": 16,
+        "message": "working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out"
+       },
+       {
+        "verifier": "colocation",
+        "step": 18,
+        "message": "not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)"
+       },
+       {
+        "verifier": "commit_correctness",
+        "step": 18,
+        "message": "after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked"
+       }
+      ],
+      "ok": false
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-pair-lock",
+      "budget": 3,
+      "steps": 10,
+      "peak_slots": 4,
+      "peak_held": 2,
+      "over_budget_steps": [
+       8
+      ],
+      "counts": {
+       "read_fine": 22.6,
+       "read_coarse": 15.0,
+       "slot_steps": 19,
+       "reloads": 0,
+       "reorients": 1,
+       "discriminate_similarity": 1.12,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 26.35,
+       "slot_steps": 19.0,
+       "reload": 0.0,
+       "reorient": 3.0,
+       "discriminate": 3.3600000000000003,
+       "loops": 0.0
+      },
+      "load": 51.71,
+      "findings": [
+       {
+        "verifier": "memory_budget",
+        "step": 8,
+        "message": "working set is 4 slots (the step needs 2, 2 held across it), more than B=3: something falls out"
+       },
+       {
+        "verifier": "colocation",
+        "step": 10,
+        "message": "not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)"
+       },
+       {
+        "verifier": "commit_correctness",
+        "step": 10,
+        "message": "after COMMIT the system offers 'consistency' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked"
+       }
+      ],
+      "ok": false
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-export",
+      "budget": 3,
+      "steps": 7,
+      "peak_slots": 2,
+      "peak_held": 1,
+      "over_budget_steps": [],
+      "counts": {
+       "read_fine": 0.0,
+       "read_coarse": 19.0,
+       "slot_steps": 7,
+       "reloads": 0,
+       "reorients": 0,
+       "discriminate_similarity": 0.0,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 4.75,
+       "slot_steps": 7.0,
+       "reload": 0.0,
+       "reorient": 0.0,
+       "discriminate": 0.0,
+       "loops": 0.0
+      },
+      "load": 11.75,
+      "findings": [],
+      "ok": true
+     },
+     {
+      "id": "tapgrade-0.6.7-sample-handback",
+      "budget": 3,
+      "steps": 6,
+      "peak_slots": 2,
+      "peak_held": 1,
+      "over_budget_steps": [],
+      "counts": {
+       "read_fine": 0.0,
+       "read_coarse": 10.0,
+       "slot_steps": 6,
+       "reloads": 0,
+       "reorients": 1,
+       "discriminate_similarity": 0.0,
+       "loops": 0
+      },
+      "terms": {
+       "reading": 2.5,
+       "slot_steps": 6.0,
+       "reload": 0.0,
+       "reorient": 3.0,
+       "discriminate": 0.0,
+       "loops": 0.0
+      },
+      "load": 11.5,
+      "findings": [
+       {
+        "verifier": "colocation",
+        "step": 6,
+        "message": "not everything the decision depends on is on screen (a review that cannot show what each row becomes is a formality)"
+       },
+       {
+        "verifier": "commit_correctness",
+        "step": 6,
+        "message": "after COMMIT the system offers 'none' only (verify_after); it should re-read the target and report correctness against intent; no later VERIFY step of kind correctness: the person is never shown the result checked"
+       }
+      ],
+      "ok": false
+     }
+    ]
+   }
+  ]
+ },
+ "over_budget_steps": {
+  "2": {
+   "tapgrade-0.6.7-sample-install": [
+    4,
+    5,
+    11,
+    12
+   ],
+   "tapgrade-0.6.7-sample-queue": [],
+   "tapgrade-0.6.7-sample-pair": [
+    7
+   ],
+   "tapgrade-0.6.7-sample-pair-reload": [
+    7,
+    16
+   ],
+   "tapgrade-0.6.7-sample-pair-lock": [
+    8
+   ],
+   "tapgrade-0.6.7-sample-export": [],
+   "tapgrade-0.6.7-sample-handback": []
+  },
+  "3": {
+   "tapgrade-0.6.7-sample-install": [],
+   "tapgrade-0.6.7-sample-queue": [],
+   "tapgrade-0.6.7-sample-pair": [
+    7
+   ],
+   "tapgrade-0.6.7-sample-pair-reload": [
+    7,
+    16
+   ],
+   "tapgrade-0.6.7-sample-pair-lock": [
+    8
+   ],
+   "tapgrade-0.6.7-sample-export": [],
+   "tapgrade-0.6.7-sample-handback": []
+  },
+  "4": {
+   "tapgrade-0.6.7-sample-install": [],
+   "tapgrade-0.6.7-sample-queue": [],
+   "tapgrade-0.6.7-sample-pair": [],
+   "tapgrade-0.6.7-sample-pair-reload": [],
+   "tapgrade-0.6.7-sample-pair-lock": [],
+   "tapgrade-0.6.7-sample-export": [],
+   "tapgrade-0.6.7-sample-handback": []
+  }
+ },
+ "predictors": [
+  {
+   "family": "anchor",
+   "what": "Save and next across the states of a pair (toast, nothing picked, one chip, many chips, scrolled to the end, half point, saved, changed after saving)",
+   "value": "edges move 0 px over 8 states: fixed-position. With normal grading present (a student outside the sample) it sits 8 px higher",
+   "used_at": "S3:9; S4:18; S5:10",
+   "label": "measured",
+   "key": "primary_action.Save and next"
+  },
+  {
+   "family": "anchor",
+   "what": "Next pair against Save and next (same place for two jobs)",
+   "value": "Next pair moves 0 px over 2 states; right and bottom edges are 0 px from where Save and next sits, the overlap is 100% of the smaller button",
+   "used_at": "S2:5",
+   "label": "measured",
+   "key": "primary_action.Next pair"
+  },
+  {
+   "family": "anchor",
+   "what": "the bar's four buttons: distance to a screen edge",
+   "value": "8 px from the bottom, 12 px from the sides (inset 0 px in this browser)",
+   "used_at": "S6:1",
+   "label": "measured",
+   "key": "primary_action.bar_buttons"
+  },
+  {
+   "family": "confusables",
+   "what": "chips of one part: how many, how alike (label x shape similarity, 0 to 1)",
+   "value": "3.4 chips per part (2-6); at most 3 fully in view together at the default sheet (mean 1.4); mean of the largest pair in a part 0.28; 1 of 40 parts hold a pair at 0.5 or more; at the largest sheet 38 same-label pairs are in view together",
+   "used_at": "S3:7; S4:7, 16; S5:8",
+   "label": "measured",
+   "key": "chips.at_the_default_sheet"
+  },
+  {
+   "family": "confusables",
+   "what": "the twelve reason labels, in the simulated frequency of the sample",
+   "value": "3 of 66 label pairs score 0.5 or more (CONC~HYP, HYP~ASSUME, SETUP~CRIT); 9% of simulated parts hold such a pair",
+   "used_at": "S3:7 (P12)",
+   "label": "measured",
+   "key": "chips.reason_labels"
+  },
+  {
+   "family": "confusables",
+   "what": "Save against Save and next; the five Check tabs",
+   "value": "0.21 (0.47 by label alone), 8 px apart; tabs: largest pair 0.31",
+   "used_at": "S3:9; S6:2",
+   "label": "measured",
+   "key": "primary_action, export.check_sub_tabs"
+  },
+  {
+   "family": "co-location",
+   "what": "the key of a part against its chips: is the key in view while a chip of the part is?",
+   "value": "in 32% of the views in which a chip is in view (58% in the example-size bank); 23% of part groups (header, key, chips) fit the open body whole (82%); mean group 275 px (174 px)",
+   "used_at": "S3:6, 7; S4:6, 7, 15, 16; S5:7, 8",
+   "label": "measured",
+   "key": "chips.at_the_default_sheet.key_in_view_with_a_chip"
+  },
+  {
+   "family": "feedback",
+   "what": "DOM change after each tap (chip, half point, No deductions, Save, Save and next, Check, Sample picks, Copy as JSON)",
+   "value": "4-17 ms in every case in headless Chromium (immediate means under 300 ms); a phone is slower: not measured",
+   "used_at": "S3:8, 9; S6:3, 6",
+   "label": "measured",
+   "key": "feedback_ms"
+  },
+  {
+   "family": "view stability",
+   "what": "what moves under the finger",
+   "value": "a message floats above the sheet: it moves the content 0 px when it goes and 0 px when an error message comes, and covers 56 px of the student's work above the sheet (14% of it) for about four seconds after a page load; a second chip in a part pushes the content below down 41 px; a chip tap moves it 0 px; none of None, No deductions, the Grade button, hiding and resizing the sheet throws the list back to the top (None at 1,572 px stays at 1,572 px) and the ticks stay; the load message leaving with the list scrolled to 600 px leaves it at 600 px",
+   "used_at": "S3:3, 5, 8",
+   "label": "measured",
+   "key": "view_stability"
+  },
+  {
+   "family": "window",
+   "what": "the sheet on a 390x844 screen",
+   "value": "sheet 439 px (52% of the screen); its one scroller 188 px (22%; 188 px in the example-size bank), 188 px with a message up (it floats above the sheet); the head is 70 px; no chip on the first screen in either bank; 10.1 screens per question (median; 6.2-11.9), 4.1 in the example-size bank (2.2-4.2); pulled to its largest the sheet leaves the work 127 px (15%); the Queue button is 9.6 screens down from a pair (3.5 in the example-size bank)",
+   "used_at": "S3:3, 5, 6; S2:2",
+   "label": "measured",
+   "key": "window"
+  },
+  {
+   "family": "first contact",
+   "what": "the first page for a student outside the sample (about 42 to 44% of first pages)",
+   "value": "the note 'Save writes to Canvas' is the first element of the open body (index 0; the purpose line, 'Changes Canvas', is 1); its 'Open the sample queue' button is 100% inside the open part with the load message up and 100% without it; the normal foot is there too (Save and next present: yes, disabled until Mark rest full: yes); no sub tabs",
+   "used_at": "S2:1, 2",
+   "label": "measured",
+   "key": "first_contact.outside_sample"
+  },
+  {
+   "family": "page load",
+   "what": "the sheet's states while the next student's page loads (the mock's read slowed by 1.2 s)",
+   "value": "4 states: 'Changes Canvas' with a bare student number, then 'Pick a student in SpeedGrader' for 1.15 s, then the pair; 1.67 s from the tap to a ready pair (0.76 s on the mock alone); the save's toast shows on the next page",
+   "used_at": "S3:1; S4:1, 10; S1:10",
+   "label": "measured",
+   "key": "loading"
+  },
+  {
+   "family": "interruption",
+   "what": "reload and app switch in the middle of a pair",
+   "value": "a reload with one chip ticked leaves 0 ticked and no note, the same pair shown again; an app switch without a reload keeps the 1 tick; a saved pair comes back recorded",
+   "used_at": "S4:9; S5:1",
+   "label": "measured",
+   "key": "interruption"
+  },
+  {
+   "family": "two pages",
+   "what": "two pages of one phone (a stale page saves; a page is put away and comes back)",
+   "value": "a save from a page that did not know of another page's pick keeps both (1 pick, then 2); a page that comes back shows the other page's save with no reload (the queue line '0 of 5 recorded' becomes '1 of 5 recorded'). The first-draft script lost the other page's pick in the same test",
+   "used_at": "S3:9; S5:1",
+   "label": "measured",
+   "key": "two_pages"
+  },
+  {
+   "family": "export",
+   "what": "the Sample picks view and the copy",
+   "value": "Check opens on another tab; Sample picks is the fifth of 5; Copy as JSON sits 135 px below the open 252 px body (no foot); the missing-pairs warning shows; a complete export is about 9,705 characters in 690 lines",
+   "used_at": "S6:2-7; S7:5",
+   "label": "measured",
+   "key": "export"
+  },
+  {
+   "family": "progress",
+   "what": "whether the sheet shows progress while a page loads",
+   "value": "the second loading state tells the owner to pick a student: progress_visible false",
+   "used_at": "S3:1; S4:1, 10; S1:10",
+   "label": "declared",
+   "key": ""
+  },
+  {
+   "family": "commit",
+   "what": "what Save and next leaves on the screen",
+   "value": "the picks are spread over 6-12 screens of a 188 px window: everything_on_screen false; the save can be changed afterwards (reversible, not idempotent); the only check is the foot's 'Recorded HH:MM' and the head's tally (consistency)",
+   "used_at": "S3:9; S4:18; S5:10",
+   "label": "declared",
+   "key": ""
+  },
+  {
+   "family": "origin",
+   "what": "whether the queue and the note say where the sample came from",
+   "value": "neither does (origin_stated false)",
+   "used_at": "S2:1, 4",
+   "label": "declared",
+   "key": ""
+  },
+  {
+   "family": "interruption",
+   "what": "what a reload keeps",
+   "value": "position (the same student) and the recorded pairs; not a half-picked pair (dropped on purpose, userscripts/tapgrade.user.js:2799)",
+   "used_at": "S4:9",
+   "label": "declared",
+   "key": ""
+  },
+  {
+   "family": "memory",
+   "what": "the dataflow items (section 2) and the held lists derived from them",
+   "value": "at most 2 items held across a step; the chip decision needs 2 and holds 2: working set 4",
+   "used_at": "all chains",
+   "label": "declared",
+   "key": ""
+  },
+  {
+   "family": "install",
+   "what": "the save-from-chat steps (card, three dots, Save to Files, folder, Save)",
+   "value": "HW1's stated properties: fixed or edge anchors, no look-alike on the card, a scroll and a two-part read for the menu item, the remembered folder costs nothing",
+   "used_at": "S1:2-7",
+   "label": "carried-from-HW1",
+   "key": ""
+  },
+  {
+   "family": "amounts",
+   "what": "the real bank's size, parts per pair (4), taps per pair (3), pages read per pair, the chat steps, the paste, the clipboard",
+   "value": "not measured and not stated by anyone. The invented bank has 137 chips in 40 parts; the runbook's example output says 31 bank items (docs/HW2-HW3-RUNBOOK.md:132), 31 chips in all, so a bank of that size (31 chips in 17 parts) was measured too (section 3b)",
+   "used_at": "S3:3-8; S7; S6:6",
+   "label": "guess",
+   "key": ""
+  }
+ ],
+ "segments": [
+  {
+   "id": "tapgrade-0.6.7-sample-install",
+   "short": "S1",
+   "name": "install",
+   "comparable_by_duration": false,
+   "not_comparable_because": "starts when a person (the coordinating session) says the file is ready, and runs through Files, Safari and Canvas pages whose state is unknown; only the part after the owner's first touch could be dated, and a screenshot of it may not exist",
+   "noted_limit": "",
+   "steps": 12,
+   "load": 27.5,
+   "rank": 4.0,
+   "predicted_loss_onsets_at_B": {
+    "2": [
+     4,
+     5,
+     11,
+     12
+    ],
+    "3": [],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "goal: put the data script in the Userscripts folder and see it load",
+     "produced_at": 1,
+     "produced_on": "the chat",
+     "needed_at": [
+      12
+     ],
+     "needed_on": "Safari (the SpeedGrader page)"
+    },
+    {
+     "item": "expected: the numbers the chat gave (questions, pairs)",
+     "produced_at": 1,
+     "produced_on": "the chat",
+     "needed_at": [
+      12
+     ],
+     "needed_on": "Safari (the toast)"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-queue",
+   "short": "S2",
+   "name": "read the queue",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "under a minute: below the one-minute resolution of a screenshot clock, so it ties with any other short segment",
+   "steps": 6,
+   "load": 8.0,
+   "rank": 7.0,
+   "predicted_loss_onsets_at_B": {
+    "2": [],
+    "3": [],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "plan: open the queue, then Next pair",
+     "produced_at": 1,
+     "produced_on": "the first screen, with the runbook's plan (docs/HW2-HW3-RUNBOOK.md:147)",
+     "needed_at": [
+      5
+     ],
+     "needed_on": "TapGrade sheet"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-pair",
+   "short": "S3",
+   "name": "one pair",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "",
+   "steps": 9,
+   "load": 47.71,
+   "rank": 3.0,
+   "predicted_loss_onsets_at_B": {
+    "2": [
+     7
+    ],
+    "3": [
+     7
+    ],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "what the student wrote for this part",
+     "produced_at": 4,
+     "produced_on": "the student's work (the Canvas page above the sheet)",
+     "needed_at": [
+      7
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "what the key says for this part",
+     "produced_at": 6,
+     "produced_on": "TapGrade sheet (the key)",
+     "needed_at": [
+      7
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "which chips of this part were judged",
+     "produced_at": 7,
+     "produced_on": "TapGrade sheet (the chip list, scrolled)",
+     "needed_at": [
+      8
+     ],
+     "needed_on": "TapGrade sheet (the taps)"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-pair-reload",
+   "short": "S4",
+   "name": "pair with a reload",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "a reload is only dated if the narration or a screenshot says when it happened",
+   "steps": 18,
+   "load": 76.44000000000001,
+   "rank": 1.0,
+   "predicted_loss_onsets_at_B": {
+    "2": [
+     7,
+     16
+    ],
+    "3": [
+     7,
+     16
+    ],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "what the student wrote for this part",
+     "produced_at": 4,
+     "produced_on": "the student's work (the Canvas page above the sheet)",
+     "needed_at": [
+      7
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "what the key says for this part",
+     "produced_at": 6,
+     "produced_on": "TapGrade sheet (the key)",
+     "needed_at": [
+      7
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "which chips of this part were judged",
+     "produced_at": 7,
+     "produced_on": "TapGrade sheet (the chip list, scrolled)",
+     "needed_at": [
+      8
+     ],
+     "needed_on": "TapGrade sheet (the taps)"
+    },
+    {
+     "item": "what the student wrote for this part",
+     "produced_at": 13,
+     "produced_on": "the student's work (the Canvas page above the sheet)",
+     "needed_at": [
+      16
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "what the key says for this part",
+     "produced_at": 15,
+     "produced_on": "TapGrade sheet (the key)",
+     "needed_at": [
+      16
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "which chips of this part were judged",
+     "produced_at": 16,
+     "produced_on": "TapGrade sheet (the chip list, scrolled)",
+     "needed_at": [
+      17
+     ],
+     "needed_on": "TapGrade sheet (the taps)"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-pair-lock",
+   "short": "S5",
+   "name": "pair after a lock",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "the lock itself (minutes to hours) is outside the segment: measured from the unlock to the next Save and next",
+   "steps": 10,
+   "load": 51.71,
+   "rank": 2.0,
+   "predicted_loss_onsets_at_B": {
+    "2": [
+     8
+    ],
+    "3": [
+     8
+    ],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "what the student wrote for this part",
+     "produced_at": 5,
+     "produced_on": "the student's work (the Canvas page above the sheet)",
+     "needed_at": [
+      8
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "what the key says for this part",
+     "produced_at": 7,
+     "produced_on": "TapGrade sheet (the key)",
+     "needed_at": [
+      8
+     ],
+     "needed_on": "TapGrade sheet (the chips)"
+    },
+    {
+     "item": "which chips of this part were judged",
+     "produced_at": 8,
+     "produced_on": "TapGrade sheet (the chip list, scrolled)",
+     "needed_at": [
+      9
+     ],
+     "needed_on": "TapGrade sheet (the taps)"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-export",
+   "short": "S6",
+   "name": "export",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "",
+   "steps": 7,
+   "load": 11.75,
+   "rank": 5.5,
+   "predicted_loss_onsets_at_B": {
+    "2": [],
+    "3": [],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "goal: copy the picks and hand them to the chat",
+     "produced_at": 0,
+     "produced_on": "the person (the plan made earlier)",
+     "needed_at": [
+      7
+     ],
+     "needed_on": "TapGrade sheet (the toast)"
+    }
+   ]
+  },
+  {
+   "id": "tapgrade-0.6.7-sample-handback",
+   "short": "S7",
+   "name": "hand-back",
+   "comparable_by_duration": true,
+   "not_comparable_because": "",
+   "noted_limit": "ends at Send; the session's answer is outside the segment (waiting for a person)",
+   "steps": 6,
+   "load": 11.5,
+   "rank": 5.5,
+   "predicted_loss_onsets_at_B": {
+    "2": [],
+    "3": [],
+    "4": []
+   },
+   "dataflow": [
+    {
+     "item": "goal: copy the picks and hand them to the chat",
+     "produced_at": 0,
+     "produced_on": "the person (the plan made earlier)",
+     "needed_at": [
+      6
+     ],
+     "needed_on": "the chat (Send)"
+    }
+   ]
+  }
+ ],
+ "ranking": {
+  "by": "load of one instance of the segment (ordinal only: not minutes, not a threshold)",
+  "groups_longest_first": [
+   [
+    "tapgrade-0.6.7-sample-pair-reload"
+   ],
+   [
+    "tapgrade-0.6.7-sample-pair-lock"
+   ],
+   [
+    "tapgrade-0.6.7-sample-pair"
+   ],
+   [
+    "tapgrade-0.6.7-sample-install"
+   ],
+   [
+    "tapgrade-0.6.7-sample-export",
+    "tapgrade-0.6.7-sample-handback"
+   ],
+   [
+    "tapgrade-0.6.7-sample-queue"
+   ]
+  ],
+  "rank": {
+   "tapgrade-0.6.7-sample-pair-reload": 1.0,
+   "tapgrade-0.6.7-sample-pair-lock": 2.0,
+   "tapgrade-0.6.7-sample-pair": 3.0,
+   "tapgrade-0.6.7-sample-install": 4.0,
+   "tapgrade-0.6.7-sample-export": 5.5,
+   "tapgrade-0.6.7-sample-handback": 5.5,
+   "tapgrade-0.6.7-sample-queue": 7.0
+  },
+  "excluded_from_tau": [
+   "tapgrade-0.6.7-sample-install"
+  ],
+  "baseline_by_step_count": {
+   "note": "the simplest competitor, fixed now: rank the segments by the number of steps the chain lists (no weights). P-67a1 asks whether the weights add anything over counting steps. It orders 2 of the 15 comparable pairs differently from the load, so this pass tells the two apart only there",
+   "steps": {
+    "tapgrade-0.6.7-sample-install": 12,
+    "tapgrade-0.6.7-sample-queue": 6,
+    "tapgrade-0.6.7-sample-pair": 9,
+    "tapgrade-0.6.7-sample-pair-reload": 18,
+    "tapgrade-0.6.7-sample-pair-lock": 10,
+    "tapgrade-0.6.7-sample-export": 7,
+    "tapgrade-0.6.7-sample-handback": 6
+   },
+   "rank": {
+    "tapgrade-0.6.7-sample-pair-reload": 1.0,
+    "tapgrade-0.6.7-sample-install": 2.0,
+    "tapgrade-0.6.7-sample-pair-lock": 3.0,
+    "tapgrade-0.6.7-sample-pair": 4.0,
+    "tapgrade-0.6.7-sample-export": 5.0,
+    "tapgrade-0.6.7-sample-queue": 6.5,
+    "tapgrade-0.6.7-sample-handback": 6.5
+   }
+  }
+ },
+ "events": [
+  {
+   "id": "I1",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 6,
+     "op": "VERIFY"
+    }
+   ],
+   "event": "the file does not reach the Userscripts folder on the first try (wrong folder, unsure which one, or saved again)",
+   "observable": "the narration says the file went to another folder, had to be moved or saved again, or that the folder was a worry",
+   "p": 0.25,
+   "basis": "guess",
+   "rests_on": "HW1 A4 says the remembered folder costs nothing, for another destination; nothing on the save sheet says which folder is right"
+  },
+  {
+   "id": "I2",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 4,
+     "op": "SCAN"
+    }
+   ],
+   "event": "the owner hesitates between two similarly named files (a .user.js and a .json, or an older data script)",
+   "observable": "the narration names two similar file names and a choice between them",
+   "p": 0.15,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 E3d: a look-alike script file existed and was NOT confused with the wanted one (stated); the runbook makes one file (docs/HW2-HW3-RUNBOOK.md:127), so a second one is not certain"
+  },
+  {
+   "id": "I3",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 9,
+     "op": "REFRESH"
+    }
+   ],
+   "event": "the owner refreshes more than once, or says they are unsure the page refreshed",
+   "observable": "two or more refreshes, or a stated doubt, in the narration or the screenshots",
+   "p": 0.5,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 B2 (the usual pattern: refresh, hesitate, refresh) and H3 (a doubt whether the page was refreshed); outcomes, used as base rates only: the chain declares one plain refresh"
+  },
+  {
+   "id": "I4",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 11,
+     "op": "READ"
+    }
+   ],
+   "event": "the load toast is missed (it is on screen about four seconds) and the owner checks the load another way",
+   "observable": "the narration says the message vanished or was missed, or shows a check under Files, Loaded or in the queue",
+   "p": 0.4,
+   "basis": "declared",
+   "rests_on": "code: the toast leaves after 4200 ms by itself; [measured: view_stability.load_toast, first_contact.load_toast_seconds_on_screen] 3.9 s and 4.2 s on screen in two runs"
+  },
+  {
+   "id": "I5",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 10,
+     "op": "WAIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 11,
+     "op": "READ"
+    }
+   ],
+   "event": "the sample does not show on the first load after the file is placed, and a second route is needed (reload, save again, Load a file)",
+   "observable": "the narration says nothing appeared, or the first screenshot after the file shows no sample",
+   "p": 0.35,
+   "basis": "guess",
+   "rests_on": "nobody has run the data-script route on an iPhone (docs/TAPGRADE.md:544); if the browser would not keep the file the page says so in the head and at the top of Grade (docs/TAPGRADE.md:554), which makes this event easier to code, not less likely"
+  },
+  {
+   "id": "I6",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 4,
+     "op": "SCAN"
+    }
+   ],
+   "event": "friction at 'Save to Files' (reading the menu for it)",
+   "observable": "the narration says the menu item was hard to find",
+   "p": 0.1,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 A3 (a scroll, and a coarse then a fine read: about two steps in all, A) and A6 (nothing was missed this way); the chain's anchoring finding rests on carried placeholders"
+  },
+  {
+   "id": "I7",
+   "segment": "tapgrade-0.6.7-sample-install",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 12,
+     "op": "VERIFY"
+    }
+   ],
+   "event": "the owner goes back to the chat to re-read what to do during the install (a RELOAD)",
+   "observable": "an app switch to the chat in the narration that is not the first read or the last hand-back",
+   "p": 0.2,
+   "basis": "declared",
+   "rests_on": "the dataflow items stay within B=3 (peak 3): the model predicts no loss here; HW1's base rate (E3: a RELOAD from the chat) would say more, and that disagreement is the test"
+  },
+  {
+   "id": "Q1",
+   "segment": "tapgrade-0.6.7-sample-queue",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 2,
+     "op": "SCAN"
+    }
+   ],
+   "event": "cannot find the way to the first pair at first, or it takes several tries (the queue: 'Open the sample queue' on a page outside the sample; 'Queue' at the end of a pair's page)",
+   "observable": "the narration says the queue, the Sample tab or Next pair was not found, or took several tries",
+   "p": 0.15,
+   "basis": "declared",
+   "rests_on": "The runbook says the Sample tab is not in the Grade view (docs/HW2-HW3-RUNBOOK.md:146) and names the route: from a page outside the sample, Open the sample queue, then Next pair, 2 taps and no scroll (docs/HW2-HW3-RUNBOOK.md:147); from a pair, scroll to the end, Queue, then Next pair, 2 taps and one long scroll (docs/HW2-HW3-RUNBOOK.md:148). [measured: first_contact.outside_sample, window.queue_button_from_pair] on a student outside the sample the 'Open the sample queue' button is the first note of the page and 100% in view with the message up (it floats above the sheet and takes no room from it, userscripts/tapgrade.user.js:1846-1847); from a pair the Queue button is 9.6 screens down (3.5 in the example-size bank). p is a judgment from two guessed terms: about 42 to 44% of first pages are outside the sample (38 sampled students in the runbook's example, docs/HW2-HW3-RUNBOOK.md:132, over HW1's class of 68, docs/HW2-HW3-RUNBOOK.md:327, or over 66, the first draft's divisor; trouble about 0.10: the button is first, in view, and named) and about 56 to 58% inside it (trouble about 0.20: the runbook says where Queue is, but it is a long scroll): 0.16 at either end of the range, set at 0.15"
+  },
+  {
+   "id": "Q2",
+   "segment": "tapgrade-0.6.7-sample-queue",
+   "kind": "path",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 1,
+     "op": "READ"
+    }
+   ],
+   "event": "the first page after the load is a student inside the sample (a pair header, no queue note), so the owner starts on a pair",
+   "observable": "the first screenshot or sentence after the toast shows 'Sample Qn, pair k of 5'",
+   "p": 0.58,
+   "basis": "declared",
+   "rests_on": "38 sampled students in the runbook's example (docs/HW2-HW3-RUNBOOK.md:132) over HW1's class of 68 (docs/HW2-HW3-RUNBOOK.md:327) is 56% of first pages; over 66, the first draft's divisor (the students HW1's correction touched, docs/TAPGRADE.md:240), 58%. p keeps the upper end. A path prediction, not a friction; the real numbers will differ"
+  },
+  {
+   "id": "Q3",
+   "segment": "tapgrade-0.6.7-sample-queue",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 1,
+     "op": "READ"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 4,
+     "op": "READ"
+    }
+   ],
+   "event": "unsure which sample or file is loaded, or whether it is the current one",
+   "observable": "the narration questions where the list came from or whether it is the right sample",
+   "p": 0.1,
+   "basis": "declared",
+   "rests_on": "two causal findings: neither the note nor the queue says where the sample came from"
+  },
+  {
+   "id": "Q4",
+   "segment": "tapgrade-0.6.7-sample-queue",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 6,
+     "op": "TAP"
+    }
+   ],
+   "event": "Next pair does not open Q1, pair 1, or the owner is surprised by where it goes",
+   "observable": "the narration says it opened something unexpected",
+   "p": 0.05,
+   "basis": "declared",
+   "rests_on": "code: sampleNext opens the first pair not recorded (userscripts/tapgrade.user.js:3015), by question then by user id (userscripts/tapgrade.user.js:2849-2851); a nothing-goes-wrong prediction"
+  },
+  {
+   "id": "Q5",
+   "segment": "tapgrade-0.6.7-sample-queue",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-queue",
+     "step": 1,
+     "op": "READ"
+    }
+   ],
+   "event": "the owner is confused by 'Changes Canvas' and a Save and next on a student outside the sample (normal grading)",
+   "observable": "the narration mentions the normal grading page, its Save and next, or fear of writing to Canvas",
+   "p": 0.12,
+   "basis": "measured",
+   "rests_on": "[measured: first_contact.outside_sample, primary_action] purpose tag 'Changes Canvas' and a Save and next with the same label, 8 px from where the pass-mode one sits; the note that says what the page is ('Save writes to Canvas') is the first thing in the body, before the purpose line (index 0 against 1), and its button is 100% in view with the message up (it floats above the sheet: userscripts/tapgrade.user.js:1846-1847). p is a judgment, lower than it would be with the note out of view or after the purpose line. A question that names Canvas stands before the write; it comes only after Mark rest full and Save and next, so p is not lowered for it"
+  },
+  {
+   "id": "P1",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 7,
+     "op": "DISCRIMINATE"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 7,
+     "op": "DISCRIMINATE"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 16,
+     "op": "DISCRIMINATE"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 8,
+     "op": "DISCRIMINATE"
+    }
+   ],
+   "event": "within a pair the owner forgets what the work or the key said while choosing chips, and goes back to re-read (a loss at the chip decision)",
+   "observable": "the narration says they forgot, lost, or had to go back to the work or the key inside one question",
+   "p": 0.55,
+   "basis": "declared",
+   "rests_on": "dataflow: working set 4 > B=3 at the chip decision (the step needs 2, two items are held); [measured: chips.at_the_default_sheet.key_in_view_with_a_chip] the key is out of view while a chip of its part is in view in 68% of the views in the invented large bank and 42% in the example-size bank, so p is between 0.63 (large) and 0.46 (small): p follows the rule at the top of events.py: the line through the two judgments of the cec1bba registration (0.65 at 71%, 0.45 at 41%, for the share of chip views in which the key of the part is out of view) reads 0.63 at the large bank's 68% and 0.46 at the example-size bank's 42%; the middle, rounded to 0.05, is 0.55 (that registration set 0.55); HW1 B5 and B6 state the same shape for chips (hold the conclusions, forget one, scroll back)"
+  },
+  {
+   "id": "P2",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 5,
+     "op": "SCAN"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 6,
+     "op": "READ"
+    }
+   ],
+   "event": "the small chip window (scrolling, no chip on the first screen) is reported as slow or tiring, or the owner resizes or hides the sheet",
+   "observable": "the narration mentions the size of the sheet, the scrolling in it, dragging it, or hiding it",
+   "p": 0.7,
+   "basis": "measured",
+   "rests_on": "[measured: window] 188 px open (22% of the screen; 188 px with a message up: it floats above the sheet and takes no room, userscripts/tapgrade.user.js:1846-1847; the cec1bba build had 173 px in the large bank, and 111 px with the message up), median 10.1 screens per question in the invented large bank and 4.1 in the example-size bank, no chip on the first screen in either; p is between 0.78 (large) and 0.60 (small): p follows the rule at the top of events.py: the line through the two judgments of the cec1bba registration (0.80 at 10.9 screens, 0.60 at 4 screens, for the median number of screens per question) reads 0.78 at the large bank's 10.1 screens and 0.60 at the example-size bank's 4.1 screens; the middle, rounded to 0.05, is 0.70 (that registration set 0.70). The window is taller and the list is kept in place when the owner hides or resizes the sheet ([measured: view_stability.sheet_at_its_floor] a sheet pulled down to its lowest height is raised 0 px by the load message: userscripts/tapgrade.user.js:1982-1988), but the scrolling stays: the fix is not expected to remove this event"
+  },
+  {
+   "id": "P3",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 3,
+     "op": "SCAN"
+    }
+   ],
+   "event": "finding the answer to the question inside the student's submission is described as the slow part of a pair",
+   "observable": "the narration says finding the question, the part or the page in the student's work takes the time",
+   "p": 0.6,
+   "basis": "guess",
+   "rests_on": "outside TapGrade and unmeasured; HW1 I3 names the same kind of cost in another task"
+  },
+  {
+   "id": "P4",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 8,
+     "op": "TAP"
+    }
+   ],
+   "event": "a tap lands on the wrong chip, or content moves under the finger (a warning line appearing under a part when a second chip is ticked)",
+   "observable": "the narration says something moved, jumped, or a wrong chip was tapped",
+   "p": 0.2,
+   "basis": "measured",
+   "rests_on": "[measured: view_stability] a message floats above the sheet and moves the list 0 px when it goes and 0 px when an error message comes (userscripts/tapgrade.user.js:1846-1847; the cec1bba build moved it 62 px at each, 45 times in a pass); a second chip in a part pushes everything below down 41 px and a chip tap moves the chips 0 px; a rebuild of the sheet with 2 chips ticked in a part moves a chip far below 0 px against the top of the window ([measured: view_stability.rebuild_with_ticks], userscripts/tapgrade.user.js:2169). p is a judgment (0.30 in the cec1bba registration) of the author of that registration, who has now seen the third round's change: the message part is gone on the mock, the warning line stays and was probably the larger share (the message left 4 s after a load, when the owner is usually still reading the work), so one third was taken off. It is 0.20 in the registrations for be4e324 and for this snapshot: the fourth round removes one more source of movement, a rebuild that landed off the chip (S-1), which the earlier measurement did not see and the 0.20 never counted, so nothing is lowered for it. The fix is expected to remove the message part of this event, not the warning line"
+  },
+  {
+   "id": "P5",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 8,
+     "op": "TAP"
+    }
+   ],
+   "event": "the owner uses None (a part not attempted) and the sheet jumps to the top, and says so",
+   "observable": "the narration says the list jumped back to the top after a tap",
+   "p": 0.05,
+   "basis": "measured",
+   "rests_on": "[measured: view_stability.none_tap] a None tap at 1,572 px leaves the list at 1,572 px (jumps to the top: no; the build put the list back, userscripts/tapgrade.user.js:2172-2176; the cec1bba build threw it to the top); whether None is used at all is a guess (about one in two). p is a judgment (0.20 in the cec1bba registration: None used about half of the time, and said so about four times in ten) of the author of that registration, who has now seen the change: the jump is gone on the mock, so what is left is the chance that a phone still jumps, taken as one in four, which makes 0.05. This event now tests the fix on a phone: a jump narrated after a None tap means it did not hold. The fix is expected to remove this event. [measured: view_stability.rebuild_with_ticks] the list is put back at the same pixels and, with 2 chips ticked in a part, on the same chip too (a chip far below moved 0 px against the top of the window; userscripts/tapgrade.user.js:2169). The build for be4e324 put the list back at the same pixels but not on the same chip when a part had two ticks (the sample reviewer's S-1); the measurement for that registration did not tick chips before a rebuild and did not see it. p stays 0.05 in this registration: it was not lowered for a fix that was found incomplete once, and it was not raised for it either, because the event is the jump to the top and the jump was already gone"
+  },
+  {
+   "id": "P6",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 1,
+     "op": "WAIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 1,
+     "op": "WAIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 10,
+     "op": "WAIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-install",
+     "step": 10,
+     "op": "WAIT"
+    }
+   ],
+   "event": "the owner reports a wrong or confusing message while a page loads ('Pick a student in SpeedGrader', 'Changes Canvas', a bare student number)",
+   "observable": "the narration or a screenshot shows and mentions one of those messages",
+   "p": 0.2,
+   "basis": "measured",
+   "rests_on": "[measured: loading] with the mock's read of one student slowed by 1.2 s, the sheet says 'Pick a student' for 1.15 s and 'Changes Canvas' first; their length on a real Canvas is unknown"
+  },
+  {
+   "id": "P7",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 1,
+     "op": "WAIT"
+    }
+   ],
+   "event": "the wait between pairs is reported as slow or stuck at least once",
+   "observable": "the narration says loading was slow or stuck, or a refresh was made because of it",
+   "p": 0.55,
+   "basis": "declared",
+   "rests_on": "code: every pair is a full SpeedGrader page load; [measured: loading] the mock alone needs 0.76 s; HW1 reports 'stuck' three times (E5, G1, G7)"
+  },
+  {
+   "id": "P8",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 9,
+     "op": "COMMIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 18,
+     "op": "COMMIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 10,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "before saving, the owner scrolls back through the list to check what was picked, or is unsure every part was done",
+   "observable": "the narration says they checked or re-scrolled before Save, or doubted completeness",
+   "p": 0.3,
+   "basis": "declared",
+   "rests_on": "colocation finding: the picks are spread over 6 to 12 screens in the invented large bank, 2 to 4 in the example-size one ([measured: window.screens_per_question]); only the head stamp totals them; p is between 0.38 (large) and 0.25 (small): p follows the rule at the top of events.py: the line through the two judgments of the cec1bba registration (0.40 at 10.9 screens, 0.25 at 4 screens, for the median number of screens per question) reads 0.38 at the large bank's 10.1 screens and 0.25 at the example-size bank's 4.1 screens; the middle, rounded to 0.05, is 0.30 (that registration set 0.30)"
+  },
+  {
+   "id": "P9",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 9,
+     "op": "COMMIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 18,
+     "op": "COMMIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 10,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "the owner doubts a save registered, or reopens a recorded pair to check",
+   "observable": "the narration says they were unsure it saved, or a screenshot shows a reopened pair",
+   "p": 0.25,
+   "basis": "declared",
+   "rests_on": "commit_correctness finding: the only check is the read-back; HW1 H3 states a doubt of this kind (is the display wrong because I did not refresh)"
+  },
+  {
+   "id": "P10",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 9,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "the owner taps Save instead of Save and next (or the reverse)",
+   "observable": "the narration says the wrong one of the two was tapped",
+   "p": 0.1,
+   "basis": "measured",
+   "rests_on": "[measured: primary_action] 8 px apart, 67 and 151 px wide, label x shape similarity 0.21"
+  },
+  {
+   "id": "P11",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 9,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "the owner saves a student outside the sample in normal mode (a write to Canvas)",
+   "observable": "the narration or the Canvas gradebook shows a grade written for a student not in the sample",
+   "p": 0.01,
+   "basis": "measured",
+   "rests_on": "[measured: first_contact.outside_sample.tap_save_and_next, first_contact.outside_sample.save_and_next_disabled] Save and next is disabled until 'Mark rest full' is tapped, and after it Save and next asks first (answer: yes); the question names the blind pass (yes) and says it writes to Canvas (yes); Cancel sends 0 requests that write, OK sends 1. A write through Save and next takes at least three taps (Mark rest full, Save and next, OK), the last on a question that says what it does (a nothing-goes-wrong prediction; the question is asked in save(), userscripts/tapgrade.user.js:1088, so a plain Save asks too: code). p is a judgment, lower than it was when the first draft's script let Save and next write with no question (the section on what changed in TapGrade lists the values). The docs say that Save on a sampled pair cannot write and that three doors can, each asking once first: Save and next on a student outside the sample (this event), Update Canvas, Remove older summary comments; they name a fourth, Set up rubric from a file, offered only when Canvas holds no rubric, which asks first too (docs/TAPGRADE.md:513; docs/HW2-HW3-RUNBOOK.md:41)"
+  },
+  {
+   "id": "P12",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 7,
+     "op": "DISCRIMINATE"
+    }
+   ],
+   "event": "the owner dithers between look-alike chips (two similarly worded reasons in one part)",
+   "observable": "the narration says two chips looked alike or the right one was hard to tell",
+   "p": 0.2,
+   "basis": "measured",
+   "rests_on": "[measured: chips.reason_labels] 3 of 66 reason pairs score 0.5 or more (CONC~HYP, HYP~ASSUME, SETUP~CRIT); about 9% of parts and 34% of pairs (at 4.4 parts per pair) hold one in the invented large bank, 1% and 2% in the example-size one (about two chips per part); p is a guess between the two, low because few pairs of labels look alike"
+  },
+  {
+   "id": "P13",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 9,
+     "op": "COMMIT"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 1,
+     "op": "NAVIGATE"
+    }
+   ],
+   "event": "a pick recorded on one page is lost, or a page shows an old count, after the owner goes back to an earlier page (the back swipe) or opens a second tab",
+   "observable": "the narration says a recorded pair showed as not recorded, a count went back, or a pick was gone after going back or switching tabs",
+   "p": 0.05,
+   "basis": "measured",
+   "rests_on": "[measured: two_pages] a save from a page that did not know of another page's pick kept both (1 pick, then 2: none lost, userscripts/tapgrade.user.js:3184), and a page that came back showed the other page's save with no reload (the queue line '0 of 5 recorded' became '1 of 5 recorded', userscripts/tapgrade.user.js:3366, userscripts/tapgrade.user.js:3359-3365); every Save and next is a full page load (go(), location.assign), so a back swipe does return to the previous student's page [declared from code]. Headless Chromium on a mock, not Safari's back/forward cache: not tried. A nothing-goes-wrong prediction: the first-draft script lost the other page's pick in this same test"
+  },
+  {
+   "id": "P14",
+   "segment": "tapgrade-0.6.7-sample-pair",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair",
+     "step": 3,
+     "op": "SCAN"
+    }
+   ],
+   "event": "the message that floats over the student's work after each page load covers what the owner is reading, and the owner says so or waits for it to go",
+   "observable": "the narration says the message covered the work, or that they waited for it to go before reading",
+   "p": 0.15,
+   "basis": "guess",
+   "rests_on": "[measured: view_stability.next_pair_message, window.pair_view_with_toast.msg_over_page_px] a message floats above the sheet (userscripts/tapgrade.user.js:1846-1847; docs/TAPGRADE.md:509) and covers 56 px of the 405 px of the student's work above the sheet (14%) for about 4.2 s after each page load ('Recorded on this phone ...' after Save and next, 56 px high); a tap goes through it, and the list keeps its place. At the sheet's largest height the work area is 127 px and the same message covers 44% of it. Nobody has seen this on a phone: p is a guess (0.15) of the author who has seen the third round's change, for the one friction it may add. The pass may show other frictions that nothing here predicts"
+  },
+  {
+   "id": "R1",
+   "segment": "tapgrade-0.6.7-sample-pair-reload",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 9,
+     "op": "REFRESH"
+    }
+   ],
+   "event": "a reload (a refresh, or a page the phone discarded) happens in the middle of a pair at least once",
+   "observable": "the narration or a screenshot shows a reload while a pair was half picked",
+   "p": 0.55,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1: refreshes at E6, G3 and H on 2026-10-03 (and B2, the usual pattern); here 45 page loads give 45 chances"
+  },
+  {
+   "id": "R2",
+   "segment": "tapgrade-0.6.7-sample-pair-reload",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 9,
+     "op": "REFRESH"
+    }
+   ],
+   "event": "after a reload the half-picked pair is found empty and the owner says the picks were lost",
+   "observable": "the narration says the ticks or the note were gone after a reload",
+   "p": 0.4,
+   "basis": "declared",
+   "rests_on": "code: a half-picked pair is not kept on purpose; [measured: interruption] ticked 1 before and 0 after, the note gone, the foot says nothing is picked"
+  },
+  {
+   "id": "R3",
+   "segment": "tapgrade-0.6.7-sample-pair-reload",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-reload",
+     "step": 11,
+     "op": "RE-ORIENT"
+    }
+   ],
+   "event": "after a reload or a return the owner says they did not know where they were (which part, which pair)",
+   "observable": "the narration says they had to find the place again",
+   "p": 0.35,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 G4: after a refresh the narrator found the place by reading the chips again"
+  },
+  {
+   "id": "L1",
+   "segment": "tapgrade-0.6.7-sample-pair-lock",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 1,
+     "op": "NAVIGATE"
+    }
+   ],
+   "event": "the phone locks between pairs at least once and the owner says so",
+   "observable": "the narration says the phone locked or the owner left and came back",
+   "p": 0.35,
+   "basis": "guess",
+   "rests_on": "auto-lock is a setting nobody has stated; a long pass makes a lock likely, a mention less so"
+  },
+  {
+   "id": "L2",
+   "segment": "tapgrade-0.6.7-sample-pair-lock",
+   "kind": "fine",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 1,
+     "op": "NAVIGATE"
+    }
+   ],
+   "event": "picks are lost across a lock or an app switch that did not reload the page",
+   "observable": "the narration says picks were gone after a lock or app switch with no reload",
+   "p": 0.1,
+   "basis": "measured",
+   "rests_on": "[measured: interruption.app_switch_without_reload] ticks kept when the page is hidden and shown again; the handler that reads the picks again on a visible page drops only a draft nobody touched (a nothing-goes-wrong prediction; a page the phone discarded is S4)"
+  },
+  {
+   "id": "L3",
+   "segment": "tapgrade-0.6.7-sample-pair-lock",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 1,
+     "op": "NAVIGATE"
+    }
+   ],
+   "event": "Canvas asks for a new login after a lock or a long pause",
+   "observable": "the narration or a screenshot shows a login page mid-pass",
+   "p": 0.12,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 E5 states the worry that the login had timed out"
+  },
+  {
+   "id": "L4",
+   "segment": "tapgrade-0.6.7-sample-pair-lock",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-pair-lock",
+     "step": 2,
+     "op": "RE-ORIENT"
+    }
+   ],
+   "event": "after a lock the owner says they had to find the thread again",
+   "observable": "the narration says they re-found the pair, the student or the place in the work",
+   "p": 0.4,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 G4; the header names the pair, which makes it easier than after a reload"
+  },
+  {
+   "id": "E1",
+   "segment": "tapgrade-0.6.7-sample-export",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 2,
+     "op": "SCAN"
+    }
+   ],
+   "event": "cannot find Sample picks at first",
+   "observable": "the narration says the tab was hard to find",
+   "p": 0.25,
+   "basis": "measured",
+   "rests_on": "[measured: export.check_sub_tabs] Check opens on Review; Sample picks is the fifth of 5 tabs in 11.5 px type (all fit without scrolling)"
+  },
+  {
+   "id": "E2",
+   "segment": "tapgrade-0.6.7-sample-export",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 5,
+     "op": "SCAN"
+    }
+   ],
+   "event": "Copy as JSON is not in view when the tab opens and the owner scrolls looking for it",
+   "observable": "the narration says the button was below or hidden",
+   "p": 0.4,
+   "basis": "measured",
+   "rests_on": "[measured: export.sample_picks_view] 135 px below the open part of a 252 px body; the view has no foot"
+  },
+  {
+   "id": "E3",
+   "segment": "tapgrade-0.6.7-sample-export",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 6,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "'Copy blocked here' appears (the clipboard is refused)",
+   "observable": "a screenshot or the narration shows that message or a manual copy",
+   "p": 0.25,
+   "basis": "guess",
+   "rests_on": "the clipboard in an iPhone userscript extension has not been tried"
+  },
+  {
+   "id": "E4",
+   "segment": "tapgrade-0.6.7-sample-export",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 4,
+     "op": "READ"
+    }
+   ],
+   "event": "the export is made while pairs are still missing (the warning is on screen)",
+   "observable": "a screenshot shows 'N of 45 pairs are not recorded', N above 0",
+   "p": 0.3,
+   "basis": "guess",
+   "rests_on": "the owner may test the export early; nothing forces it"
+  },
+  {
+   "id": "E5",
+   "segment": "tapgrade-0.6.7-sample-export",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 1,
+     "op": "ANCHOR"
+    },
+    {
+     "chain": "tapgrade-0.6.7-sample-export",
+     "step": 7,
+     "op": "VERIFY"
+    }
+   ],
+   "event": "the export is done with no narrated difficulty",
+   "observable": "the export is narrated and no difficulty is stated in it",
+   "p": 0.25,
+   "basis": "measured",
+   "rests_on": "no verifier fires on this chain, but two measured frictions (E1, E2) make a clean run unlikely: a nothing-goes-wrong prediction at p=0.25, so friction is predicted at 75%"
+  },
+  {
+   "id": "H1",
+   "segment": "tapgrade-0.6.7-sample-handback",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-handback",
+     "step": 5,
+     "op": "VERIFY"
+    }
+   ],
+   "event": "the long paste is shortened, becomes an attachment, or needs a second try",
+   "observable": "the narration says the paste failed, was cut, or was done twice",
+   "p": 0.3,
+   "basis": "guess",
+   "rests_on": "[measured: export.complete_export_estimate] about 9,705 characters in about 690 lines (estimated from a 3-pick copy); what the chat app does with that is not known"
+  },
+  {
+   "id": "H2",
+   "segment": "tapgrade-0.6.7-sample-handback",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-handback",
+     "step": 2,
+     "op": "RE-ORIENT"
+    }
+   ],
+   "event": "the owner has to search for the coordinating session's conversation",
+   "observable": "the narration says they looked for the chat",
+   "p": 0.4,
+   "basis": "carried-from-HW1",
+   "rests_on": "HW1 E3: open the chat app, find the conversation, locate the line"
+  },
+  {
+   "id": "H3",
+   "segment": "tapgrade-0.6.7-sample-handback",
+   "kind": "friction",
+   "steps": [
+    {
+     "chain": "tapgrade-0.6.7-sample-handback",
+     "step": 6,
+     "op": "COMMIT"
+    }
+   ],
+   "event": "the owner is unsure the paste arrived whole until the session answers",
+   "observable": "the narration says they were unsure it went through intact",
+   "p": 0.3,
+   "basis": "declared",
+   "rests_on": "commit_correctness finding: the chat app offers no check after Send"
+  }
+ ],
+ "changes_since_first_draft": {
+  "scripts": {
+   "before": {
+    "commit": "ca80695808bc135aacfa3b0dab100c397b07cb08",
+    "sha256": "786bddeed40a06b8ecd738397957877939e51572060e0e24f681c89cd45e2490",
+    "lines": 3233,
+    "build": "10-04 20:04",
+    "version": "0.6.7",
+    "events": 39,
+    "findings": 20
+   },
+   "this": {
+    "commit": "4626522f4338c860c57d4539808e0c2b169f3a58",
+    "sha256": "ed4829993a4435176c73a534197e2b1fabb9243a52994c93e34871fbb18a180e",
+    "lines": 3409,
+    "build": "10-05 05:36",
+    "version": "0.6.7",
+    "events": 41,
+    "findings": 20
+   }
+  },
+  "baseline": {
+   "path": "docs/predictions/first-draft-ca80695/",
+   "sha256": {
+    "measured.json": "287d1df5c394ddc14259bf6eea12f2214a6312d1704a7738c8fc5b20f537ff92",
+    "measured-example-bank.json": "7318c9daa3f4ef5a9553e1315c88766207bb9b284a3b58032c24705c0d936c8d",
+    "declared.json": "ee21193b1b55e9258c71681ce2c87304acd7d226cbb92925eb2423012bef56f8",
+    "summary.json": "081818baee40e14865e77f022d6e311c77ecf3bcf4a300243074108d525553bf",
+    "new-keys.json": "cfc7328be73294d3e10fa81e7ebf5b0f8a1e9a46797c55e139a04f2df5cb5516"
+   },
+   "registered_in": null,
+   "registered_before": [],
+   "new_keys_check": {
+    "keys_compared": 298,
+    "keys_different": 0,
+    "not_compared": "timings (feedback_ms, loading, the seconds a message stays on screen)"
+   }
+  },
+  "changes": [
+   {
+    "id": "schema-and-key",
+    "change": "The sample's data file has its own schema (tapgrade-blind-sample/1) and its own storage key (tapgrade:sampleauto:...); a machine data file and the sample never replace each other; the refusal sentence stays on the phone (head, top of Grade, Files > Loaded); the load toast is one short line",
+    "effect": "The install notes cite the new lines and say which entry the data script writes. Nothing else moved: the toast's text and its own height are the same as in the first draft (what it takes from the sheet is the third round's, below), and the chains assume the machine's data script is out of the folder, as the runbook advises for a quiet pass (docs/HW2-HW3-RUNBOOK.md:138), so the refusal sentences are not on a chain.",
+    "moved": [
+     {
+      "key": "measured:sample.file",
+      "what": "the sample file's schema id (`sample.file`)",
+      "before": "tapgrade-proposals/2 with a sample key",
+      "after": "tapgrade-blind-sample/1",
+      "delta": "",
+      "why": "the file's schema id changed"
+     }
+    ]
+   },
+   {
+    "id": "bank-closed",
+    "change": "The Bank is closed while a sample is loaded (the strip is This student | Sample; no Bank tab, no 'Edit the bank', no 'Add deduction' or 'Add credit item'), and the shared bank page is not pushed",
+    "effect": "The queue's note says so. Nothing moved: the queue view fits the sheet as before, and no chain used the Bank.",
+    "moved": []
+   },
+   {
+    "id": "asks-before-writing",
+    "change": "What can still write asks once, naming the blind pass, while a sample is loaded: Update Canvas (Apply, Resume, Retry failed), Remove older summary comments (and Retry failed removals), and Save and next or Accept & next for a student outside the sample",
+    "effect": "The one tap of the pass that could reach Canvas by mistake, Save and next on a page outside the sample, is measured on both scripts: the first draft's wrote at the first tap and asked nothing; this one asks, names the blind pass and Canvas, and sends nothing on Cancel. P11 falls, and this registration backs it with that measurement. The other asks are on no chain: the owner is told not to use Update Canvas (docs/HW2-HW3-RUNBOOK.md:162), and a tap on the bar's red button only reads.",
+    "moved": [
+     {
+      "key": "measured:first_contact.outside_sample.tap_save_and_next.asks_first",
+      "what": "Save and next, after Mark rest full, on a page outside the sample asks before it writes (`first_contact.outside_sample.tap_save_and_next.asks_first`), large bank",
+      "before": "no",
+      "after": "yes",
+      "delta": "",
+      "why": "Save and next on a page outside the sample asks once before it writes, naming the blind pass and Canvas (measured on both scripts)"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.tap_save_and_next.names_the_blind_pass",
+      "what": "the question names the blind pass (`first_contact.outside_sample.tap_save_and_next.names_the_blind_pass`), large bank",
+      "before": "none",
+      "after": "yes",
+      "delta": "",
+      "why": "Save and next on a page outside the sample asks once before it writes, naming the blind pass and Canvas (measured on both scripts)"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.tap_save_and_next.says_it_writes_to_canvas",
+      "what": "the question says it writes to Canvas (`first_contact.outside_sample.tap_save_and_next.says_it_writes_to_canvas`), large bank",
+      "before": "none",
+      "after": "yes",
+      "delta": "",
+      "why": "Save and next on a page outside the sample asks once before it writes, naming the blind pass and Canvas (measured on both scripts)"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.tap_save_and_next.writes_after_cancel",
+      "what": "requests that write to Canvas after the tap, Cancel chosen when asked (`first_contact.outside_sample.tap_save_and_next.writes_after_cancel`), large bank",
+      "before": "1",
+      "after": "0",
+      "delta": "-1",
+      "why": "Save and next on a page outside the sample asks once before it writes, naming the blind pass and Canvas (measured on both scripts)"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.tap_save_and_next.writes_after_ok",
+      "what": "requests that write to Canvas after the tap, OK chosen (`first_contact.outside_sample.tap_save_and_next.writes_after_ok`), large bank",
+      "before": "none",
+      "after": "1",
+      "delta": "",
+      "why": "Save and next on a page outside the sample asks once before it writes, naming the blind pass and Canvas (measured on both scripts)"
+     },
+     {
+      "key": "event:P11:p",
+      "what": "P11 p",
+      "before": "0.03",
+      "after": "0.01",
+      "delta": "-0.02",
+      "why": "a write takes a third tap, on a question that names the blind pass and Canvas, and Cancel sends nothing (measured)"
+     },
+     {
+      "key": "event:P11:basis",
+      "what": "P11 basis",
+      "before": "declared",
+      "after": "measured",
+      "delta": "",
+      "why": "the question and what Cancel does are measured, not read from the code"
+     }
+    ]
+   },
+   {
+    "id": "review-clear-export",
+    "change": "Check > Review leaves the sample out; a pick whose deduction value changed is stale; Clear sample data leaves nothing behind; a half point alone is exported as a signed question-level deduction",
+    "effect": "The export notes cite them. Nothing moved: the copy holds the same picks, characters and lines, and Sample picks is still the fifth tab.",
+    "moved": []
+   },
+   {
+    "id": "merge-and-reload",
+    "change": "Picks are merged from storage at save time (a stale page cannot erase another page's pick) and read again when a page comes back (pageshow, visibilitychange); a note typed on a student outside the sample is kept when another tab changes the sample",
+    "effect": "One new measured predictor and one new event. The lock chain's note, which said there was no visibilitychange handler, is rewritten, and the pair chain's save note cites the merge. No declared property or load moved.",
+    "moved": [
+     {
+      "key": "measured:two_pages.return_to_a_stale_page.queue_line_for_the_pair_the_other_page_recorded.after",
+      "what": "queue line for the pair the other page recorded, after the page came back (`two_pages.return_to_a_stale_page.queue_line_for_the_pair_the_other_page_recorded.after`), large bank",
+      "before": "0 of 5 recorded",
+      "after": "1 of 5 recorded",
+      "delta": "",
+      "why": "the merge at save time and the re-read when a page returns (the first-draft script lost the other page's pick)"
+     },
+     {
+      "key": "measured:two_pages.return_to_a_stale_page.sees_it_without_a_reload",
+      "what": "a page that comes back shows the other page's save, no reload (`two_pages.return_to_a_stale_page.sees_it_without_a_reload`), large bank",
+      "before": "no",
+      "after": "yes",
+      "delta": "",
+      "why": "the merge at save time and the re-read when a page returns (the first-draft script lost the other page's pick)"
+     },
+     {
+      "key": "measured:two_pages.stale_page_save.picks_after_this_page_saved",
+      "what": "picks on the phone after a stale page saved (the other page had saved one) (`two_pages.stale_page_save.picks_after_this_page_saved`), large bank",
+      "before": "1",
+      "after": "2",
+      "delta": "+1",
+      "why": "the merge at save time and the re-read when a page returns (the first-draft script lost the other page's pick)"
+     },
+     {
+      "key": "measured:two_pages.stale_page_save.the_other_pages_pick_is_kept",
+      "what": "the other page's pick kept after a stale page saved (`two_pages.stale_page_save.the_other_pages_pick_is_kept`), large bank",
+      "before": "no",
+      "after": "yes",
+      "delta": "",
+      "why": "the merge at save time and the re-read when a page returns (the first-draft script lost the other page's pick)"
+     },
+     {
+      "key": "event:P13:added",
+      "what": "new event P13: a pick recorded on one page is lost, or a page shows an old count, after the owner goes back to an earlier page (the back swipe) or opens a second tab",
+      "before": "none",
+      "after": "p 0.05, measured",
+      "delta": "",
+      "why": "the merge at save time and the re-read when a page returns are new, and measured"
+     }
+    ]
+   },
+   {
+    "id": "first-line-note",
+    "change": "A student outside the sample gets a first-line note (above the purpose line) that says Save writes to Canvas, with an 'Open the sample queue' button",
+    "effect": "The button is in view with the load message up (it was cut off in the first draft), the note comes before 'Changes Canvas', and the owner has less to read before the button. The queue's SCAN amount, and so the queue's load, go down; the order of the segments does not change. The foot of such a student is as it was: Save and next present, disabled until Mark rest full.",
+    "moved": [
+     {
+      "key": "measured:first_contact.outside_sample.hint_button_visible_fraction_with_toast",
+      "what": "'Open the sample queue' button: share inside the open part, load toast up (`first_contact.outside_sample.hint_button_visible_fraction_with_toast`)",
+      "before": "0.61",
+      "after": "1",
+      "delta": "+0.39",
+      "why": "the note sits first in the body, so the load toast no longer pushes its button out of the open part"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.notice.before_the_purpose_line",
+      "what": "the note comes before the purpose line (`first_contact.outside_sample.notice.before_the_purpose_line`), large bank",
+      "before": "no",
+      "after": "yes",
+      "delta": "",
+      "why": "the note moved from after the purpose line to before it"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.notice.index_in_body",
+      "what": "the note's place in the body (0 = first) (`first_contact.outside_sample.notice.index_in_body`), large bank",
+      "before": "1",
+      "after": "0",
+      "delta": "-1",
+      "why": "the note moved from after the purpose line to before it"
+     },
+     {
+      "key": "measured:first_contact.outside_sample.notice.purpose_line_index",
+      "what": "the purpose line's place in the body (`first_contact.outside_sample.notice.purpose_line_index`), large bank",
+      "before": "0",
+      "after": "1",
+      "delta": "+1",
+      "why": "the note moved from after the purpose line to before it"
+     },
+     {
+      "key": "declared:queue:2:amount",
+      "what": "queue step 2 (SCAN): amount",
+      "before": "4",
+      "after": "2",
+      "delta": "-2",
+      "why": "the toast, then the note with its button: fewer things to read before the button"
+     },
+     {
+      "key": "number:queue:load",
+      "what": "queue: load",
+      "before": "8.50",
+      "after": "8.00",
+      "delta": "-0.50",
+      "why": "follows from the amount"
+     },
+     {
+      "key": "event:Q5:p",
+      "what": "Q5 p",
+      "before": "0.20",
+      "after": "0.12",
+      "delta": "-0.08",
+      "why": "the sentence that says what the page is now comes before 'Changes Canvas' and is in view"
+     }
+    ]
+   },
+   {
+    "id": "route-in-the-docs",
+    "change": "The runbook and docs/TAPGRADE.md were corrected to give the way to the first pair as it is: 2 taps from a page outside the sample (Open the sample queue, then Next pair); from a pair, Queue is the last row of a long page, then Next pair; the Sample tab is not in the Grade view and exists only inside the queue",
+    "effect": "At ca80695 the runbook said \"The pass: Grade, then the Sample tab, then Next pair\", and the Grade view has no such tab. At 4626522 the runbook gives the route (docs/HW2-HW3-RUNBOOK.md:146; docs/HW2-HW3-RUNBOOK.md:147; docs/HW2-HW3-RUNBOOK.md:148) and so does docs/TAPGRADE.md (docs/TAPGRADE.md:423-435), so the owner is told where to look and the chance of trouble finding the queue falls. Q1 and the queue notes cite the docs as they are at 4626522. This change is in the docs: no declared property or load moved because of it.",
+    "moved": [
+     {
+      "key": "event:Q1:p",
+      "what": "Q1 p",
+      "before": "0.45",
+      "after": "0.15",
+      "delta": "-0.30",
+      "why": "the 4626522 runbook names the route (the ca80695 one sent the owner to a Sample tab the Grade view does not have) and the button is first and in view; the long scroll to Queue from a pair is still there, and for a student inside the sample the trouble was never the tab alone"
+     }
+    ]
+   },
+   {
+    "id": "not-on-the-path",
+    "change": "Everything else in the diff of the script up to cec1bba (Update Canvas's grade arithmetic, a Grade row with a comment and no points opening undecided, the Files line about the bank, the build stamp)",
+    "effect": "Not on the path of a sampled pair.",
+    "moved": []
+   },
+   {
+    "id": "message-floats",
+    "change": "A message (the load message, a refusal, 'Recorded on this phone ...', an error) floats above the sheet instead of sitting in it: it takes no room from the open part, moves no chip when it comes or goes, lets a tap through to the page, and its timer takes it away without rebuilding the sheet; a long one is cut off at the room above the sheet",
+    "effect": "At 4626522 the message is out of the flow (userscripts/tapgrade.user.js:1846-1847; docs/TAPGRADE.md:509): the content under it does not move when it comes or goes, and the open part of the sheet is the same with the message up as without it. Before, it sat in the sheet, took its height from the list while it showed, and moved every chip when it came and again when it went. The notes of the steps that wait for a message or read around it say so (the page load, the load message, the button under it, the export's message). One cost goes and one appears. A message can no longer push a chip from under the finger. It now covers the top of the student's work for the seconds it shows, so a new event, P14, predicts that. P4 loses its message part, and its p falls by judgment: the same author set the earlier value and has now seen the change; the value it had is in the table. Checked: the message's own height, the warning line that a second chip pushes down, the foot and the bar are as they were; no declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:view_stability.load_toast.content_moves_when_it_goes_px",
+      "what": "the content moves when the load message goes (px) (`view_stability.load_toast.content_moves_when_it_goes_px`)",
+      "before": "61.8",
+      "after": "0",
+      "delta": "-61.8",
+      "why": "the message floats above the sheet: it takes no room and moves nothing when it comes or goes"
+     },
+     {
+      "key": "measured:view_stability.load_toast.open_body_grows_px",
+      "what": "the open part grows when the load message goes (px) (`view_stability.load_toast.open_body_grows_px`)",
+      "before": "62",
+      "after": "0",
+      "delta": "-62",
+      "why": "the message floats above the sheet: it takes no room and moves nothing when it comes or goes"
+     },
+     {
+      "key": "measured:view_stability.load_toast_leaves_with_the_list_scrolled.scroll_after_px",
+      "what": "list position (px) after the load message leaves, the list scrolled before it (`view_stability.load_toast_leaves_with_the_list_scrolled.scroll_after_px`), large bank",
+      "before": "0",
+      "after": "600",
+      "delta": "+600",
+      "why": "the message's timer takes it away without rebuilding the sheet, so the list stays where the reader had scrolled it; on the earlier script the message leaving rebuilt the sheet and threw the list to the top (measured on that script by the current tool)"
+     },
+     {
+      "key": "measured:view_stability.next_pair_message.over_the_page_px",
+      "what": "the message after Save and next: px of the student's work above the sheet that it covers (`view_stability.next_pair_message.over_the_page_px`), large bank",
+      "before": "0",
+      "after": "55.8",
+      "delta": "+55.8",
+      "why": "the message after Save and next now floats over the top of the student's work instead of pushing the work down; the earlier script covered none of it (measured on that script by the current tool)"
+     },
+     {
+      "key": "measured:view_stability.next_pair_message.share_of_the_work_area_pct",
+      "what": "the message after Save and next: share of the student's work above the sheet that it covers (%) (`view_stability.next_pair_message.share_of_the_work_area_pct`), large bank",
+      "before": "0",
+      "after": "13.8",
+      "delta": "+13.8",
+      "why": "the message after Save and next now floats over the top of the student's work instead of pushing the work down; the earlier script covered none of it (measured on that script by the current tool)"
+     },
+     {
+      "key": "measured:view_stability.refusal_toast.content_moves_when_it_comes_px",
+      "what": "the content moves when an error message comes (px) (`view_stability.refusal_toast.content_moves_when_it_comes_px`)",
+      "before": "80.7",
+      "after": "0",
+      "delta": "-80.7",
+      "why": "the message floats above the sheet: it takes no room and moves nothing when it comes or goes"
+     },
+     {
+      "key": "measured:window.pair_view_with_toast.body_h",
+      "what": "open part of the sheet on a pair, load message up (px) (`window.pair_view_with_toast.body_h`)",
+      "before": "111",
+      "after": "188",
+      "delta": "+77",
+      "banks": {
+       "large": [
+        "111",
+        "188"
+       ],
+       "example": [
+        "126",
+        "188"
+       ]
+      },
+      "why": "with a message up the open part is no longer smaller by the message's height, because the message floats; in the large bank it also gets what the whole head gives back (see the head change)"
+     },
+     {
+      "key": "measured:window.pair_view_with_toast.msg_over_page_px",
+      "what": "px of the page above the sheet that the load message covers (`window.pair_view_with_toast.msg_over_page_px`), large bank",
+      "before": "0",
+      "after": "55.8",
+      "delta": "+55.8",
+      "why": "the message now covers this much of the page above the sheet; the earlier script's message covered none of it (it pushed the content and shrank the list instead; measured on that script by the current tool)"
+     },
+     {
+      "key": "event:P4:p",
+      "what": "P4 p",
+      "before": "0.30",
+      "after": "0.20",
+      "delta": "-0.10",
+      "why": "the message part of this event is gone on the mock (a message no longer moves the content); the warning line, the chip taps and the rest stay. A judgment, not a rule: the same author's, who has now seen the change; one third taken off"
+     },
+     {
+      "key": "event:P14:added",
+      "what": "new event P14: the message that floats over the student's work after each page load covers what the owner is reading, and the owner says so or waits for it to go",
+      "before": "none",
+      "after": "p 0.15, guess",
+      "delta": "",
+      "why": "the message now covers the top of the student's work for the seconds it shows: the friction this fix may add; a guess"
+     }
+    ]
+   },
+   {
+    "id": "list-keeps-its-place",
+    "change": "A rebuild of the sheet puts the list back where it was when the view, the row and (in Grade) the student are the same, as the last step of the rebuild, and hiding the sheet remembers where the list was: a tap on None or on No deductions, hiding and opening the sheet, a resize drag and the bar's Grade button no longer throw the list to the top; another student or another row starts at the top; and (the fourth round) the rebuild draws a sampled pair's part tallies and warnings too, so with ticks in a part the list lands on the same chip",
+    "effect": "userscripts/tapgrade.user.js:2172-2176; docs/TAPGRADE.md:508. At 4626522 the list stays where the reader had it after each of those taps. Before, every one of them threw it to the top and the reader had to find the part again. The notes of the steps where the owner scrolls, hides or resizes the sheet say so. P5, the event that predicted the jump, loses its reason on the mock: its p falls by judgment (the same author, who has now seen the change), it becomes a prediction that nothing goes wrong, and it now tests whether the fix holds on a phone. The fourth round finished what the third began. The third round put the list back at the same pixels, but only a tap drew a pair's part tallies and warnings, so a rebuild blanked them and, with two ticks in a part, the same pixels showed another chip (the sample reviewer's S-1). At 4626522 the rebuild draws them (userscripts/tapgrade.user.js:2169; docs/TAPGRADE.md:508) and the list lands on the same chip. The tool's new probe ticks two chips in a part and rebuilds (`view_stability.rebuild_with_ticks`): on the first draft's script the list goes to the top, and the table gives how far a chip far below the top of the window moved. Checked: the ticks stay, the sheet is as high after a resize as before, the stamp does not bump on a rebuild; no declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:view_stability.grade_button_on_a_pair.scroll_after_px",
+      "what": "list position (px) after the bar's Grade button, tapped on a pair (`view_stability.grade_button_on_a_pair.scroll_after_px`)",
+      "before": "0",
+      "after": "500",
+      "delta": "+500",
+      "why": "the list is put back where it was after the sheet is rebuilt"
+     },
+     {
+      "key": "measured:view_stability.hide_and_reopen_the_sheet.scroll_after_px",
+      "what": "list position (px) after hiding the sheet and opening it by its pill (`view_stability.hide_and_reopen_the_sheet.scroll_after_px`)",
+      "before": "0",
+      "after": "600",
+      "delta": "+600",
+      "banks": {
+       "large": [
+        "0",
+        "600"
+       ],
+       "example": [
+        "0",
+        "574"
+       ]
+      },
+      "why": "hiding the sheet remembers where the list was and opening it puts the list back there (held by the end of the list where the list is short)"
+     },
+     {
+      "key": "measured:view_stability.no_deductions_tap.scroll_after_px",
+      "what": "list position (px) after a tap on No deductions (`view_stability.no_deductions_tap.scroll_after_px`)",
+      "before": "0",
+      "after": "58",
+      "delta": "+58",
+      "why": "the list is put back where it was after the sheet is rebuilt"
+     },
+     {
+      "key": "measured:view_stability.none_tap.jumps_to_the_top",
+      "what": "a tap on None throws the list to the top (`view_stability.none_tap.jumps_to_the_top`)",
+      "before": "yes",
+      "after": "no",
+      "delta": "",
+      "why": "the list is put back where it was after the sheet is rebuilt"
+     },
+     {
+      "key": "measured:view_stability.none_tap.scroll_after_px",
+      "what": "list position (px) after a tap on None (`view_stability.none_tap.scroll_after_px`)",
+      "before": "0",
+      "after": "1,572",
+      "delta": "+1,572",
+      "banks": {
+       "large": [
+        "0",
+        "1,572"
+       ],
+       "example": [
+        "0",
+        "124"
+       ]
+      },
+      "why": "the list is put back where it was after the sheet is rebuilt"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.same_chip_shift_px",
+      "what": "how far a chip far below the ticked part sits from where it was after a rebuild (px; 0 = the same chip) (`view_stability.rebuild_with_ticks.same_chip_shift_px`), large bank",
+      "before": "1,971",
+      "after": "0",
+      "delta": "-1,971",
+      "why": "the list is put back (the first draft threw it to the top) and the rebuild draws the warnings of the ticked parts, so the position put back shows the same chip"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.scroll_after_px",
+      "what": "list position (px) after a rebuild with ticks in a part (`view_stability.rebuild_with_ticks.scroll_after_px`), large bank",
+      "before": "0",
+      "after": "2,017",
+      "delta": "+2,017",
+      "why": "the list is put back where it was after the sheet is rebuilt"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.warnings_after_the_rebuild",
+      "what": "warnings drawn after the sheet was rebuilt, two chips ticked in a part (one was drawn before) (`view_stability.rebuild_with_ticks.warnings_after_the_rebuild`), large bank",
+      "before": "0",
+      "after": "1",
+      "delta": "+1",
+      "why": "the rebuild draws the warnings of the ticked parts; before the fourth round only a tap did, and a rebuild blanked them"
+     },
+     {
+      "key": "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px",
+      "what": "list position (px) after pulling the sheet up by its head (`view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px`)",
+      "before": "0",
+      "after": "600",
+      "delta": "+600",
+      "banks": {
+       "large": [
+        "0",
+        "600"
+       ],
+       "example": [
+        "0",
+        "374"
+       ]
+      },
+      "why": "the list is put back where it was after the sheet is rebuilt (held by the end of the list where a taller sheet leaves less to scroll)"
+     },
+     {
+      "key": "event:P5:p",
+      "what": "P5 p",
+      "before": "0.20",
+      "after": "0.05",
+      "delta": "-0.15",
+      "why": "the list no longer jumps to the top on the mock; what is left is the chance that a phone still does it, so p falls. A judgment, not a rule: the same author's, who has now seen the change; the event now tests the fix on a phone"
+     },
+     {
+      "key": "event:P5:kind",
+      "what": "P5 kind",
+      "before": "friction",
+      "after": "fine",
+      "delta": "",
+      "why": "p is now at or below the line the registration draws for a prediction that nothing goes wrong"
+     }
+    ]
+   },
+   {
+    "id": "pair-view-layout",
+    "change": "The head of a pair names it whole at 390 px and keeps its height whatever the points (a stamp of four or more characters is set smaller, so the tag stays on one line and the title is not cut off), and (the fourth round) a rebuild draws a pair's part tallies, so each part heading holds its tally from the first render",
+    "effect": "userscripts/tapgrade.user.js:2965-2966; userscripts/tapgrade.user.js:3331-3332; docs/TAPGRADE.md:510. At 4626522 the head is one height whatever the points. Before, a stamp of five characters made the tag wrap, the head grew a line, and every row under it moved by that growth; with a longer stamp the title was cut off. The open part of the sheet is taller by what the wrapped head took. That moves the numbers of the large invented bank, whose questions carry stamps long enough to wrap. In the example-size bank the window was already this tall, so only the large bank's window numbers are in the table; what moves in the example-size bank is a chip tap: the shift it measured before is the head growing as the points changed. The fourth round adds a smaller step the other way. A rebuild draws a pair's part tallies (userscripts/tapgrade.user.js:2169; docs/TAPGRADE.md:508), so the parts say `full` from the first render, and a heading that holds a tally is taller than one that held none. Each part is longer by that, so each list is longer, the Queue button is further down it, and the first tap in a part no longer grows a heading under the finger: a chip tap moves nothing now, in either bank. The step shows in both banks; the Why column says, for each number, which round moved it. A taller window shows more chips at once and makes each list a little shorter in screens. It does not remove the scrolling: no chip is on the first screen in either bank, and P2, which follows the rule at the top of events.py, keeps its p. No declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.mean_fully_visible",
+      "what": "chips fully in view at once, mean over scroll windows (default sheet) (`chips.at_the_default_sheet.in_view.mean_fully_visible`), large bank",
+      "before": "1.2",
+      "after": "1.4",
+      "delta": "+0.2",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.mean_fully_visible_when_any",
+      "what": "chips fully in view at once, mean over windows with at least one (default sheet) (`chips.at_the_default_sheet.in_view.mean_fully_visible_when_any`)",
+      "before": "1.51",
+      "after": "1.61",
+      "delta": "+0.1",
+      "banks": {
+       "large": [
+        "1.51",
+        "1.61"
+       ],
+       "example": [
+        "1.32",
+        "1.33"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.mean_similarity_seen_together",
+      "what": "look-alike score of chips seen together, mean (default sheet) (`chips.at_the_default_sheet.in_view.mean_similarity_seen_together`), large bank",
+      "before": "0.21",
+      "after": "0.22",
+      "delta": "+0.01",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.pairs_seen_together",
+      "what": "pairs of chips in view together over the scroll windows (default sheet) (`chips.at_the_default_sheet.in_view.pairs_seen_together`), large bank",
+      "before": "112",
+      "after": "143",
+      "delta": "+31",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.share_of_windows_with_two_or_more",
+      "what": "share of scroll windows with two chips or more in view (default sheet) (`chips.at_the_default_sheet.in_view.share_of_windows_with_two_or_more`), large bank",
+      "before": "0.4",
+      "after": "0.48",
+      "delta": "+0.08",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.windows",
+      "what": "scroll windows looked at (default sheet) (`chips.at_the_default_sheet.in_view.windows`)",
+      "before": "2270",
+      "after": "2265",
+      "delta": "-5",
+      "banks": {
+       "large": [
+        "2270",
+        "2265"
+       ],
+       "example": [
+        "786",
+        "791"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.key_in_view_with_a_chip.chip_views",
+      "what": "chip views counted for the key's visibility (default sheet) (`chips.at_the_default_sheet.key_in_view_with_a_chip.chip_views`)",
+      "before": "2776",
+      "after": "3058",
+      "delta": "+282",
+      "banks": {
+       "large": [
+        "2776",
+        "3058"
+       ],
+       "example": [
+        "679",
+        "680"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.key_in_view_with_a_chip.share",
+      "what": "share of chip views in which the key of the part is in view (default sheet) (`chips.at_the_default_sheet.key_in_view_with_a_chip.share`)",
+      "before": "0.29",
+      "after": "0.32",
+      "delta": "+0.03",
+      "banks": {
+       "large": [
+        "0.29",
+        "0.32"
+       ],
+       "example": [
+        "0.59",
+        "0.58"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.part_group_height_px.max",
+      "what": "height of a part group (header, key, chips), tallest (px) (`chips.at_the_default_sheet.part_group_height_px.max`)",
+      "before": "444",
+      "after": "446",
+      "delta": "+2",
+      "banks": {
+       "large": [
+        "444",
+        "446"
+       ],
+       "example": [
+        "202",
+        "204"
+       ]
+      },
+      "why": "a part's heading holds its tally from the first render and is taller by it (the fourth round)"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.part_group_height_px.mean",
+      "what": "height of a part group (header, key, chips), mean (px) (`chips.at_the_default_sheet.part_group_height_px.mean`)",
+      "before": "273",
+      "after": "275",
+      "delta": "+2",
+      "banks": {
+       "large": [
+        "273",
+        "275"
+       ],
+       "example": [
+        "172",
+        "174"
+       ]
+      },
+      "why": "a part's heading holds its tally from the first render and is taller by it (the fourth round)"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.part_group_height_px.share_that_fit_in_the_open_body",
+      "what": "share of part groups (header, key, chips) that fit the open part whole (`chips.at_the_default_sheet.part_group_height_px.share_that_fit_in_the_open_body`), large bank",
+      "before": "0.1",
+      "after": "0.23",
+      "delta": "+0.13",
+      "why": "the open part of the sheet is taller, so more parts fit whole"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.mean_fully_visible",
+      "what": "chips fully in view at once, mean over scroll windows (largest sheet) (`chips.at_the_largest_sheet.in_view.mean_fully_visible`), large bank",
+      "before": "4.3",
+      "after": "4.4",
+      "delta": "+0.1",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.mean_fully_visible_when_any",
+      "what": "chips fully in view at once, mean over windows with at least one (largest sheet) (`chips.at_the_largest_sheet.in_view.mean_fully_visible_when_any`)",
+      "before": "4.28",
+      "after": "4.4",
+      "delta": "+0.12",
+      "banks": {
+       "large": [
+        "4.28",
+        "4.4"
+       ],
+       "example": [
+        "2.9",
+        "2.89"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.pairs_seen_together",
+      "what": "pairs of chips in view together over the scroll windows (largest sheet) (`chips.at_the_largest_sheet.in_view.pairs_seen_together`), large bank",
+      "before": "456",
+      "after": "460",
+      "delta": "+4",
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.windows",
+      "what": "scroll windows looked at (largest sheet) (`chips.at_the_largest_sheet.in_view.windows`)",
+      "before": "1852",
+      "after": "1849",
+      "delta": "-3",
+      "banks": {
+       "large": [
+        "1852",
+        "1849"
+       ],
+       "example": [
+        "378",
+        "383"
+       ]
+      },
+      "why": "in the large bank the open part of the sheet is taller, so more of the list is in view at once; in both banks the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:first_contact.pair_title_slack_px_one_pair_per_question.borderline_under_2px",
+      "what": "questions with under 2 px to spare beside the pair's title (`first_contact.pair_title_slack_px_one_pair_per_question.borderline_under_2px`), large bank",
+      "before": "7",
+      "after": "0",
+      "delta": "-7",
+      "why": "the stamp is set smaller when it is long, so it leaves the title its room"
+     },
+     {
+      "key": "measured:first_contact.pair_title_slack_px_one_pair_per_question.clipped",
+      "what": "questions whose pair title is cut off in the head (`first_contact.pair_title_slack_px_one_pair_per_question.clipped`), large bank",
+      "before": "7",
+      "after": "0",
+      "delta": "-7",
+      "why": "the stamp is set smaller when it is long, so it leaves the title its room"
+     },
+     {
+      "key": "measured:first_contact.pair_title_slack_px_one_pair_per_question.min",
+      "what": "room left beside the pair's title in the head, tightest question (px; below 0 = cut off) (`first_contact.pair_title_slack_px_one_pair_per_question.min`), large bank",
+      "before": "-0.3",
+      "after": "28.7",
+      "delta": "+29",
+      "why": "the stamp is set smaller when it is long, so it leaves the title its room"
+     },
+     {
+      "key": "measured:view_stability.chip_tap.max_chip_shift_px",
+      "what": "the most a chip moves when a chip is tapped (px) (`view_stability.chip_tap.max_chip_shift_px`)",
+      "before": "2",
+      "after": "0",
+      "delta": "-2",
+      "banks": {
+       "large": [
+        "2",
+        "0"
+       ],
+       "example": [
+        "15.2",
+        "0"
+       ]
+      },
+      "why": "a chip tap changes the stamp's points and its part's heading: before, a longer stamp made the tag wrap and the head grow, which moved every chip under it (the shift measured in the example-size bank), and the first tap in a part grew the heading, which the rebuild now draws at the start (the shift measured in the large bank); neither moves anything now"
+     },
+     {
+      "key": "measured:view_stability.chip_tap.scroll_jump_px",
+      "what": "the list's own movement when a chip is tapped (px) (`view_stability.chip_tap.scroll_jump_px`)",
+      "before": "2",
+      "after": "0",
+      "delta": "-2",
+      "banks": {
+       "large": [
+        "2",
+        "0"
+       ],
+       "example": [
+        "4",
+        "0"
+       ]
+      },
+      "why": "the list moved at a chip tap, while the chips under the finger moved; a chip tap no longer changes the head or the part's heading, so nothing moves"
+     },
+     {
+      "key": "measured:view_stability.hide_and_reopen_the_sheet.scroll_before_px",
+      "what": "list position (px) before hiding the sheet (the tool scrolls to a set offset) (`view_stability.hide_and_reopen_the_sheet.scroll_before_px`), example bank",
+      "before": "600",
+      "after": "574",
+      "delta": "-26",
+      "why": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position"
+     },
+     {
+      "key": "measured:view_stability.no_deductions_tap.scroll_before_px",
+      "what": "list position (px) before a tap on No deductions (where the tool put the button) (`view_stability.no_deductions_tap.scroll_before_px`)",
+      "before": "65",
+      "after": "58",
+      "delta": "-7",
+      "why": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position"
+     },
+     {
+      "key": "measured:view_stability.none_tap.scroll_before_px",
+      "what": "list position (px) before a tap on None (where the tool put the row) (`view_stability.none_tap.scroll_before_px`)",
+      "before": "1,603",
+      "after": "1,572",
+      "delta": "-31",
+      "banks": {
+       "large": [
+        "1,603",
+        "1,572"
+       ],
+       "example": [
+        "155",
+        "124"
+       ]
+      },
+      "why": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.scroll_before_px",
+      "what": "list position (px) before a rebuild with ticks (where the tool put a chip far below the ticked part) (`view_stability.rebuild_with_ticks.scroll_before_px`), large bank",
+      "before": "2,024",
+      "after": "2,017",
+      "delta": "-7",
+      "why": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position"
+     },
+     {
+      "key": "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px",
+      "what": "list position (px) before pulling the sheet up (the tool scrolls to a set offset) (`view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px`), example bank",
+      "before": "600",
+      "after": "574",
+      "delta": "-26",
+      "why": "where the tool had put the row before the tap (the middle of the open part, or a set offset, held by the end of the list): the open part, the head over it and the headings above the row changed, so the same row sits at another scroll position"
+     },
+     {
+      "key": "measured:window.pair_view.body_h",
+      "what": "open part of the sheet on a pair (px) (`window.pair_view.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.pair_view.body_pct_of_screen",
+      "what": "open part of the sheet on a pair (% of the screen) (`window.pair_view.body_pct_of_screen`), large bank",
+      "before": "20.5",
+      "after": "22.3",
+      "delta": "+1.8",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.pair_view.head_h",
+      "what": "head of the sheet on a pair (px) (`window.pair_view.head_h`), large bank",
+      "before": "84.8",
+      "after": "69.6",
+      "delta": "-15.2",
+      "why": "the tag stays on one line, so the head keeps its height"
+     },
+     {
+      "key": "measured:window.pair_view_largest_sheet.body_h",
+      "what": "open part of the sheet at its largest height (px) (`window.pair_view_largest_sheet.body_h`), large bank",
+      "before": "451",
+      "after": "466",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.pair_view_largest_sheet.screens_for_first_question",
+      "what": "screens of the open part for the first question's list, sheet at its largest (`window.pair_view_largest_sheet.screens_for_first_question`), large bank",
+      "before": "4.2",
+      "after": "4.1",
+      "delta": "-0.1",
+      "why": "the open part is taller, so the same list is fewer screens of it; the headings' growth gives a little back"
+     },
+     {
+      "key": "measured:window.pair_view_with_toast.head_h",
+      "what": "head of the sheet on a pair, load message up (px) (`window.pair_view_with_toast.head_h`), large bank",
+      "before": "84.8",
+      "after": "69.6",
+      "delta": "-15.2",
+      "why": "the tag stays on one line, so the head keeps its height"
+     },
+     {
+      "key": "measured:window.part_headings_at_the_first_render.heading_h_px",
+      "what": "height of a part heading at the first render, mean (px) (`window.part_headings_at_the_first_render.heading_h_px`), large bank",
+      "before": "18.9",
+      "after": "20.9",
+      "delta": "+2",
+      "why": "a heading that holds its tally is a little taller than one that held none"
+     },
+     {
+      "key": "measured:window.part_headings_at_the_first_render.saying_full",
+      "what": "part headings that say `full` at the first render (of the parts of the first pair opened) (`window.part_headings_at_the_first_render.saying_full`), large bank",
+      "before": "0",
+      "after": "6",
+      "delta": "+6",
+      "why": "a rebuild draws the part tallies, so the parts say `full` from the first render; before the fourth round only a tap drew them"
+     },
+     {
+      "key": "measured:window.per_question.Q1.body_h",
+      "what": "Q1, the pair opened: open part of the sheet (px) (`window.per_question.Q1.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q1.screens",
+      "what": "Q1, the pair opened: screens of the open part that its list is (`window.per_question.Q1.screens`)",
+      "before": "11",
+      "after": "10.2",
+      "delta": "-0.8",
+      "banks": {
+       "large": [
+        "11",
+        "10.2"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q1.scroll_h",
+      "what": "Q1, the pair opened: length of its list (px) (`window.per_question.Q1.scroll_h`)",
+      "before": "1899",
+      "after": "1911",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "1899",
+        "1911"
+       ],
+       "example": [
+        "758",
+        "762"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q2.body_h",
+      "what": "Q2, the pair opened: open part of the sheet (px) (`window.per_question.Q2.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q2.screens",
+      "what": "Q2, the pair opened: screens of the open part that its list is (`window.per_question.Q2.screens`)",
+      "before": "7.6",
+      "after": "7",
+      "delta": "-0.6",
+      "banks": {
+       "large": [
+        "7.6",
+        "7"
+       ],
+       "example": [
+        "4.1",
+        "4.2"
+       ]
+      },
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q2.scroll_h",
+      "what": "Q2, the pair opened: length of its list (px) (`window.per_question.Q2.scroll_h`)",
+      "before": "1313",
+      "after": "1319",
+      "delta": "+6",
+      "banks": {
+       "large": [
+        "1313",
+        "1319"
+       ],
+       "example": [
+        "779",
+        "783"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q3.scroll_h",
+      "what": "Q3, the pair opened: length of its list (px) (`window.per_question.Q3.scroll_h`), large bank",
+      "before": "1171",
+      "after": "1175",
+      "delta": "+4",
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q4.body_h",
+      "what": "Q4, the pair opened: open part of the sheet (px) (`window.per_question.Q4.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q4.screens",
+      "what": "Q4, the pair opened: screens of the open part that its list is (`window.per_question.Q4.screens`)",
+      "before": "12.8",
+      "after": "11.9",
+      "delta": "-0.9",
+      "banks": {
+       "large": [
+        "12.8",
+        "11.9"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q4.scroll_h",
+      "what": "Q4, the pair opened: length of its list (px) (`window.per_question.Q4.scroll_h`)",
+      "before": "2219",
+      "after": "2231",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "2219",
+        "2231"
+       ],
+       "example": [
+        "758",
+        "762"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q5.body_h",
+      "what": "Q5, the pair opened: open part of the sheet (px) (`window.per_question.Q5.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q5.screens",
+      "what": "Q5, the pair opened: screens of the open part that its list is (`window.per_question.Q5.screens`), large bank",
+      "before": "10.9",
+      "after": "10.1",
+      "delta": "-0.8",
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q5.scroll_h",
+      "what": "Q5, the pair opened: length of its list (px) (`window.per_question.Q5.scroll_h`)",
+      "before": "1883",
+      "after": "1893",
+      "delta": "+10",
+      "banks": {
+       "large": [
+        "1883",
+        "1893"
+       ],
+       "example": [
+        "781",
+        "785"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q6.body_h",
+      "what": "Q6, the pair opened: open part of the sheet (px) (`window.per_question.Q6.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q6.screens",
+      "what": "Q6, the pair opened: screens of the open part that its list is (`window.per_question.Q6.screens`), large bank",
+      "before": "7.9",
+      "after": "7.3",
+      "delta": "-0.6",
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q6.scroll_h",
+      "what": "Q6, the pair opened: length of its list (px) (`window.per_question.Q6.scroll_h`)",
+      "before": "1365",
+      "after": "1373",
+      "delta": "+8",
+      "banks": {
+       "large": [
+        "1365",
+        "1373"
+       ],
+       "example": [
+        "763",
+        "767"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q7.body_h",
+      "what": "Q7, the pair opened: open part of the sheet (px) (`window.per_question.Q7.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q7.screens",
+      "what": "Q7, the pair opened: screens of the open part that its list is (`window.per_question.Q7.screens`), large bank",
+      "before": "11.4",
+      "after": "10.6",
+      "delta": "-0.8",
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q7.scroll_h",
+      "what": "Q7, the pair opened: length of its list (px) (`window.per_question.Q7.scroll_h`)",
+      "before": "1977",
+      "after": "1987",
+      "delta": "+10",
+      "banks": {
+       "large": [
+        "1977",
+        "1987"
+       ],
+       "example": [
+        "718",
+        "722"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q8.scroll_h",
+      "what": "Q8, the pair opened: length of its list (px) (`window.per_question.Q8.scroll_h`)",
+      "before": "1300",
+      "after": "1306",
+      "delta": "+6",
+      "banks": {
+       "large": [
+        "1300",
+        "1306"
+       ],
+       "example": [
+        "706",
+        "710"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.per_question.Q9.body_h",
+      "what": "Q9, the pair opened: open part of the sheet (px) (`window.per_question.Q9.body_h`), large bank",
+      "before": "173",
+      "after": "188",
+      "delta": "+15",
+      "why": "the head keeps its height, so the open part of the sheet is taller"
+     },
+     {
+      "key": "measured:window.per_question.Q9.screens",
+      "what": "Q9, the pair opened: screens of the open part that its list is (`window.per_question.Q9.screens`), large bank",
+      "before": "11.8",
+      "after": "10.9",
+      "delta": "-0.9",
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.per_question.Q9.scroll_h",
+      "what": "Q9, the pair opened: length of its list (px) (`window.per_question.Q9.scroll_h`)",
+      "before": "2045",
+      "after": "2057",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "2045",
+        "2057"
+       ],
+       "example": [
+        "698",
+        "702"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum (the fourth round)"
+     },
+     {
+      "key": "measured:window.queue_button_from_pair.offset_in_body_px",
+      "what": "Queue button, px down from the top of a pair's list (`window.queue_button_from_pair.offset_in_body_px`)",
+      "before": "1,788",
+      "after": "1,800",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "1,788",
+        "1,800"
+       ],
+       "example": [
+        "647",
+        "651"
+       ]
+      },
+      "why": "Queue is the last row of a list that is longer by the part headings' growth (the fourth round)"
+     },
+     {
+      "key": "measured:window.queue_button_from_pair.screens_down",
+      "what": "Queue button, screens down from the top of a pair's list (`window.queue_button_from_pair.screens_down`)",
+      "before": "10.3",
+      "after": "9.6",
+      "delta": "-0.7",
+      "banks": {
+       "large": [
+        "10.3",
+        "9.6"
+       ],
+       "example": [
+        "3.4",
+        "3.5"
+       ]
+      },
+      "why": "Queue is further down a longer list (the headings' growth); the open part is taller in the large bank, so the distance in screens is shorter there, and a little longer in the example-size bank, where the open part is as it was"
+     },
+     {
+      "key": "measured:window.screens_per_question.max",
+      "what": "screens of the open part per question's list, longest (`window.screens_per_question.max`), large bank",
+      "before": "12.8",
+      "after": "11.9",
+      "delta": "-0.9",
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     },
+     {
+      "key": "measured:window.screens_per_question.median",
+      "what": "screens of the open part per question's list, median (`window.screens_per_question.median`)",
+      "before": "10.9",
+      "after": "10.1",
+      "delta": "-0.8",
+      "banks": {
+       "large": [
+        "10.9",
+        "10.1"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the open part is taller in the large bank, so the same list is fewer screens of it; the headings' growth lengthens the list a little and gives a little back, in both banks"
+     }
+    ]
+   },
+   {
+    "id": "docs-third-round",
+    "change": "The runbook (step 7) and docs/TAPGRADE.md give the stop rule as three signs, one per kind of first page, any one missing meaning stop; say that the history route and the export differ for a half point that changes no points, so the blind pass uses the export; and count the third round's checks",
+    "effect": "The install note cites the three signs (docs/HW2-HW3-RUNBOOK.md:141-144: docs/HW2-HW3-RUNBOOK.md:142; docs/HW2-HW3-RUNBOOK.md:143; docs/HW2-HW3-RUNBOOK.md:144; docs/TAPGRADE.md says the same: docs/TAPGRADE.md:452), and the notes of the pages that carry a sign name it. The runbook already told the owner to look for three things; it now says which page shows which. The half-point sentence is at docs/HW2-HW3-RUNBOOK.md:176 and docs/TAPGRADE.md:541; the export chain already says the export keeps a half point as a signed deduction. Nothing measured moved and no declared property: the owner was to check the load message after the reload (install step 11) and read the header of the first pair, as before.",
+    "moved": []
+   },
+   {
+    "id": "not-on-the-path-third-round",
+    "change": "Everything else in the third round (cec1bba to be4e324): the new checks of the kit's audit and their twins that test the checks (they test the kit, not the owner's phone), the build stamp, a comment in the script about the way to the queue, the counts and the changelog in the docs",
+    "effect": "Not on the path of a sampled pair.",
+    "moved": []
+   },
+   {
+    "id": "floor-ignores-the-message",
+    "change": "The sheet's lowest height no longer counts a message that floats above it: a sheet pulled down to its floor is not raised when a message comes and does not stay raised when it goes (SF2)",
+    "effect": "userscripts/tapgrade.user.js:1982-1988; docs/TAPGRADE.md:509. At 4626522 a message does not count in the lowest height the sheet may be dragged to. Before, a reader who had dragged the sheet to its floor saw it grow by the message's height while the load message showed (the first draft's script), and from the third round on it also stayed taller after the message had gone (the build for be4e324). That matters only to a reader who dragged the sheet to its floor: the pass starts at the default height, and nothing in the runbook asks for the floor. The tool's new probe pulls the sheet to its floor and shows the load message (`view_stability.sheet_at_its_floor`; the table gives the heights). No chain has a step that does this and no event rests on it, so the registration reports the number and moves nothing for it. No declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.raised_by_the_message_px",
+      "what": "px that the load message raises a sheet pulled down to its lowest height (`view_stability.sheet_at_its_floor.raised_by_the_message_px`), large bank",
+      "before": "56",
+      "after": "0",
+      "delta": "-56",
+      "why": "a message that floats above the sheet is not counted in the sheet's lowest height"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.sheet_h_after_a_rebuild_px",
+      "what": "sheet pulled down to its lowest height, after a rebuild with no message (px) (`view_stability.sheet_at_its_floor.sheet_h_after_a_rebuild_px`), large bank",
+      "before": "328",
+      "after": "313",
+      "delta": "-15",
+      "why": "the head keeps its height, so the strips that set the lowest height are lower"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.sheet_h_after_it_left_px",
+      "what": "sheet pulled down to its lowest height, after the load message left (px) (`view_stability.sheet_at_its_floor.sheet_h_after_it_left_px`), large bank",
+      "before": "328",
+      "after": "313",
+      "delta": "-15",
+      "why": "the head keeps its height, so the strips that set the lowest height are lower"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px",
+      "what": "sheet pulled down to its lowest height, load message up (px) (`view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px`), large bank",
+      "before": "384",
+      "after": "313",
+      "delta": "-71",
+      "why": "a message is not counted in the lowest height, and the head keeps its height, so the strips that set the floor are lower"
+     }
+    ]
+   },
+   {
+    "id": "update-view",
+    "change": "Two things at the end of an update: a sheet that was hidden while an update ended opens at the report, and the Update foot's button says `Checking…` while the students are read back (SF1 and the foot's label)",
+    "effect": "userscripts/tapgrade.user.js:1584; userscripts/tapgrade.user.js:1454; userscripts/tapgrade.user.js:1546; docs/TAPGRADE.md:166; docs/TAPGRADE.md:160. Both are in Update Canvas, which the owner is told not to use during the pass (docs/HW2-HW3-RUNBOOK.md:162). Nothing on the path of a sampled pair moved, and no measured number: the tool does not run an update. If one is run by mistake, the report is at the top and the button says what it is doing.",
+    "moved": []
+   },
+   {
+    "id": "docs-fourth-round",
+    "change": "The runbook and docs/TAPGRADE.md say what is true about writing during the pass (Save and Save and next on a sampled pair write nothing; three other doors can write, and a fourth, Set up rubric from a file, is offered only when Canvas holds no rubric; each asks once first), give the limits below 390 px, for a late data script and in landscape, and count the fourth round's checks; the runbook's step 10 says what to do on the phone before the bulk pass",
+    "effect": "The docs say it (docs/TAPGRADE.md:513; docs/HW2-HW3-RUNBOOK.md:41). The docs name four doors: the first three are counted in the same sentence, the fourth follows it, and the sentence that names the fourth, in the runbook's decision row and in the docs' paragraph, was added by a docs-only commit after `66eee2a` (the head of the fourth round). P11, the event about a stray write, rests on the measured question and on this, and its p does not change: the fourth door, which creates a rubric on Canvas, is offered only when Canvas holds none, and this registration did not try it with a sample loaded (the docs say so too). The three limits are now written down, and they are the reviewers' and the kit author's numbers, not this tool's, which does not measure them: narrower than 390 px the head is cut (docs/TAPGRADE.md:558); in landscape the Grade view's bar is below the screen (docs/TAPGRADE.md:557); a data script that fires late moves the list, because the position put back is of pixels, not of a place (docs/TAPGRADE.md:559). This registration measures at 390 by 844 in portrait and says so in its limits. The runbook's step 10 now tells the owner what to do on the phone before the bulk pass (docs/HW2-HW3-RUNBOOK.md:222-227): copy the picks and keep them as `sample/picks.json`, then clear the sample data, which asks first when picks are recorded and changes nothing on Canvas. That is after the pass and on no chain of this registration. Nothing measured moved and no declared property: the owner reads the same pages in the same order as before.",
+    "moved": []
+   },
+   {
+    "id": "not-on-the-path-fourth-round",
+    "change": "Everything else in the fourth round (be4e324 to 4626522): the audit's new checks (they test the kit, not the owner's phone; S-2 is a check that a guard in Accept & next, which already held, holds), the build stamp, the counts and the changelog in the docs",
+    "effect": "Not on the path of a sampled pair.",
+    "moved": []
+   }
+  ],
+  "moved_count": 106
+ },
+ "changes_since_replaced_registration": {
+  "scripts": {
+   "before": {
+    "commit": "be4e32432f494bf73b6f565bc74cd54a6cd5fb6b",
+    "sha256": "d63dc263df7fdb77828eae1e74ae3603ce7d9a9d195a1153deca53ad74255423",
+    "lines": 3406,
+    "build": "10-05 03:02",
+    "version": "0.6.7",
+    "events": 41,
+    "findings": 20
+   },
+   "this": {
+    "commit": "4626522f4338c860c57d4539808e0c2b169f3a58",
+    "sha256": "ed4829993a4435176c73a534197e2b1fabb9243a52994c93e34871fbb18a180e",
+    "lines": 3409,
+    "build": "10-05 05:36",
+    "version": "0.6.7",
+    "events": 41,
+    "findings": 20
+   }
+  },
+  "baseline": {
+   "path": "docs/predictions/replaced-be4e324/",
+   "sha256": {
+    "measured.json": "25054cfd3c7bcbc7add5b682ef9757ce10b7361080a8c67217d599e66e122646",
+    "measured-example-bank.json": "02698aa185219d0c6da636a47a236ea115ae1d8c221009e66b079df71264efab",
+    "declared.json": "cfe0889512de290108b7cf80c6cf24997d257ddbc22ebb6a06b89a943d26d7b7",
+    "summary.json": "918f47fc28555dafb13db15a38caa295ca88d6e6a4c2f9353e2cdc04d715dd71",
+    "new-keys.json": "92a45a619bea3dd231f9b9af4ad59ac1cfc1d403d0d12671cfc35c5cd73d71c2"
+   },
+   "registered_in": "da817431ca9e305bb9e51184069099bf8a704be0",
+   "registered_before": [
+    {
+     "commit": "74118b521fada830b44f12531acad568b4b2afaf",
+     "speeds_kit": "cec1bbaa904a4b2b2f053cde95f2aa175f82ba92"
+    }
+   ],
+   "new_keys_check": {
+    "keys_compared": 321,
+    "keys_different": 0,
+    "not_compared": "timings (feedback_ms, loading, the seconds a message stays on screen)"
+   }
+  },
+  "changes": [
+   {
+    "id": "tallies-on-rebuild",
+    "change": "A rebuild of the sheet draws a sampled pair's part tallies and warnings, as a tap does, so the parts say `full` from the first render and the position put back lands on the same chip when parts have ticks (the sample reviewer's S-1); the stamp does not bump on a rebuild",
+    "effect": "userscripts/tapgrade.user.js:2169; docs/TAPGRADE.md:508. At 4626522 the list stays on the same chip after a rebuild when parts have ticks. Before, only a tap drew a pair's part tallies and warnings, so a rebuild blanked them: the list above the window was shorter by what was left undrawn, and the position the rebuild put back showed another chip (the sample reviewer's S-1). The registration for be4e324 did not see it, because its probes never ticked a chip before a rebuild; this one's tool does (`view_stability.rebuild_with_ticks`, measured on this script and, with the same tool, on the script of that registration, whose folder holds those numbers in new-keys.json). Two small things follow. A heading that holds a tally is taller than one that held none, and the parts hold theirs from the first render, so every part is longer, each list is longer by the sum, and the Queue button is further down it (the docs name the same cause on the kit's own pages: docs/TAPGRADE.md:432); the open part of the sheet did not change. And the first tap in a part no longer grows its heading, so a chip tap moves nothing under the finger. Those are the numbers that moved: the parts' headings, the length of each list and the screens it is, the Queue distance, the chips in view, and the positions where the tool puts a row. The stamp does not bump on a rebuild, before or after (the tool reads it). Checked: the window (the head, the open part, the strips of the sheet), the messages and the pair's first-contact numbers did not move; no declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.mean_fully_visible_when_any",
+      "what": "chips fully in view at once, mean over windows with at least one (default sheet) (`chips.at_the_default_sheet.in_view.mean_fully_visible_when_any`), example bank",
+      "before": "1.32",
+      "after": "1.33",
+      "delta": "+0.01",
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.in_view.windows",
+      "what": "scroll windows looked at (default sheet) (`chips.at_the_default_sheet.in_view.windows`)",
+      "before": "2252",
+      "after": "2265",
+      "delta": "+13",
+      "banks": {
+       "large": [
+        "2252",
+        "2265"
+       ],
+       "example": [
+        "786",
+        "791"
+       ]
+      },
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.key_in_view_with_a_chip.chip_views",
+      "what": "chip views counted for the key's visibility (default sheet) (`chips.at_the_default_sheet.key_in_view_with_a_chip.chip_views`)",
+      "before": "3056",
+      "after": "3058",
+      "delta": "+2",
+      "banks": {
+       "large": [
+        "3056",
+        "3058"
+       ],
+       "example": [
+        "679",
+        "680"
+       ]
+      },
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.key_in_view_with_a_chip.share",
+      "what": "share of chip views in which the key of the part is in view (default sheet) (`chips.at_the_default_sheet.key_in_view_with_a_chip.share`), example bank",
+      "before": "0.59",
+      "after": "0.58",
+      "delta": "-0.01",
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.part_group_height_px.max",
+      "what": "height of a part group (header, key, chips), tallest (px) (`chips.at_the_default_sheet.part_group_height_px.max`)",
+      "before": "444",
+      "after": "446",
+      "delta": "+2",
+      "banks": {
+       "large": [
+        "444",
+        "446"
+       ],
+       "example": [
+        "202",
+        "204"
+       ]
+      },
+      "why": "a part's heading holds its tally from the first render and is taller by it"
+     },
+     {
+      "key": "measured:chips.at_the_default_sheet.part_group_height_px.mean",
+      "what": "height of a part group (header, key, chips), mean (px) (`chips.at_the_default_sheet.part_group_height_px.mean`)",
+      "before": "273",
+      "after": "275",
+      "delta": "+2",
+      "banks": {
+       "large": [
+        "273",
+        "275"
+       ],
+       "example": [
+        "172",
+        "174"
+       ]
+      },
+      "why": "a part's heading holds its tally from the first render and is taller by it"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.mean_fully_visible_when_any",
+      "what": "chips fully in view at once, mean over windows with at least one (largest sheet) (`chips.at_the_largest_sheet.in_view.mean_fully_visible_when_any`)",
+      "before": "4.43",
+      "after": "4.4",
+      "delta": "-0.03",
+      "banks": {
+       "large": [
+        "4.43",
+        "4.4"
+       ],
+       "example": [
+        "2.9",
+        "2.89"
+       ]
+      },
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.pairs_seen_together",
+      "what": "pairs of chips in view together over the scroll windows (largest sheet) (`chips.at_the_largest_sheet.in_view.pairs_seen_together`), large bank",
+      "before": "461",
+      "after": "460",
+      "delta": "-1",
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:chips.at_the_largest_sheet.in_view.windows",
+      "what": "scroll windows looked at (largest sheet) (`chips.at_the_largest_sheet.in_view.windows`)",
+      "before": "1835",
+      "after": "1849",
+      "delta": "+14",
+      "banks": {
+       "large": [
+        "1835",
+        "1849"
+       ],
+       "example": [
+        "378",
+        "383"
+       ]
+      },
+      "why": "the list is a little longer, so the scroll windows looked at, and what is in view in them, differ a little"
+     },
+     {
+      "key": "measured:view_stability.chip_tap.max_chip_shift_px",
+      "what": "the most a chip moves when a chip is tapped (px) (`view_stability.chip_tap.max_chip_shift_px`)",
+      "before": "2",
+      "after": "0",
+      "delta": "-2",
+      "why": "the heading of the part already holds its tally at the first render, so the first tap in a part grows nothing under the finger (before, it grew the heading)"
+     },
+     {
+      "key": "measured:view_stability.chip_tap.scroll_jump_px",
+      "what": "the list's own movement when a chip is tapped (px) (`view_stability.chip_tap.scroll_jump_px`)",
+      "before": "2",
+      "after": "0",
+      "delta": "-2",
+      "banks": {
+       "large": [
+        "2",
+        "0"
+       ],
+       "example": [
+        "4",
+        "0"
+       ]
+      },
+      "why": "the heading of the part already holds its tally at the first render, so the first tap in a part grows nothing under the finger (before, it grew the heading)"
+     },
+     {
+      "key": "measured:view_stability.hide_and_reopen_the_sheet.scroll_after_px",
+      "what": "list position (px) after hiding the sheet and opening it by its pill (`view_stability.hide_and_reopen_the_sheet.scroll_after_px`), example bank",
+      "before": "570",
+      "after": "574",
+      "delta": "+4",
+      "why": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down"
+     },
+     {
+      "key": "measured:view_stability.load_toast_leaves_with_the_list_scrolled.scroll_after_px",
+      "what": "list position (px) after the load message leaves, the list scrolled before it (`view_stability.load_toast_leaves_with_the_list_scrolled.scroll_after_px`), example bank",
+      "before": "570",
+      "after": "574",
+      "delta": "+4",
+      "why": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down"
+     },
+     {
+      "key": "measured:view_stability.load_toast_leaves_with_the_list_scrolled.scroll_before_px",
+      "what": "list position (px) before the load message leaves (the tool scrolls to a set offset) (`view_stability.load_toast_leaves_with_the_list_scrolled.scroll_before_px`), example bank",
+      "before": "570",
+      "after": "574",
+      "delta": "+4",
+      "why": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down"
+     },
+     {
+      "key": "measured:view_stability.none_tap.scroll_after_px",
+      "what": "list position (px) after a tap on None (`view_stability.none_tap.scroll_after_px`), large bank",
+      "before": "1,564",
+      "after": "1,572",
+      "delta": "+8",
+      "why": "the row sits lower in the list: each part above it has a heading that holds its tally from the first render, taller by it (where the tool put the row, and where the list is put back)"
+     },
+     {
+      "key": "measured:view_stability.none_tap.scroll_before_px",
+      "what": "list position (px) before a tap on None (where the tool put the row) (`view_stability.none_tap.scroll_before_px`), large bank",
+      "before": "1,564",
+      "after": "1,572",
+      "delta": "+8",
+      "why": "the row sits lower in the list: each part above it has a heading that holds its tally from the first render, taller by it (where the tool put the row, and where the list is put back)"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.same_chip_shift_px",
+      "what": "how far a chip far below the ticked part sits from where it was after a rebuild (px; 0 = the same chip) (`view_stability.rebuild_with_ticks.same_chip_shift_px`), large bank",
+      "before": "-53.1",
+      "after": "0",
+      "delta": "+53.1",
+      "why": "with the warnings drawn by the rebuild the list above the window is as long as it was, so the position put back shows the same chip (before, it landed off by what the rebuild had left undrawn)"
+     },
+     {
+      "key": "measured:view_stability.rebuild_with_ticks.warnings_after_the_rebuild",
+      "what": "warnings drawn after the sheet was rebuilt, two chips ticked in a part (one was drawn before) (`view_stability.rebuild_with_ticks.warnings_after_the_rebuild`), large bank",
+      "before": "0",
+      "after": "1",
+      "delta": "+1",
+      "why": "the rebuild draws the warnings of the ticked parts; before, only a tap did, and a rebuild blanked them"
+     },
+     {
+      "key": "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px",
+      "what": "list position (px) after pulling the sheet up by its head (`view_stability.resize_the_sheet_by_dragging_its_head.scroll_after_px`), example bank",
+      "before": "370",
+      "after": "374",
+      "delta": "+4",
+      "why": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down"
+     },
+     {
+      "key": "measured:view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px",
+      "what": "list position (px) before pulling the sheet up (the tool scrolls to a set offset) (`view_stability.resize_the_sheet_by_dragging_its_head.scroll_before_px`), example bank",
+      "before": "570",
+      "after": "574",
+      "delta": "+4",
+      "why": "the tool scrolls to a set offset and the end of the list holds it (the example-size bank's list is short): the list is longer by the headings' growth, so its end is further down"
+     },
+     {
+      "key": "measured:window.part_headings_at_the_first_render.heading_h_px",
+      "what": "height of a part heading at the first render, mean (px) (`window.part_headings_at_the_first_render.heading_h_px`), large bank",
+      "before": "18.9",
+      "after": "20.9",
+      "delta": "+2",
+      "why": "a heading that holds its tally is a little taller than one that held none"
+     },
+     {
+      "key": "measured:window.part_headings_at_the_first_render.saying_full",
+      "what": "part headings that say `full` at the first render (of the parts of the first pair opened) (`window.part_headings_at_the_first_render.saying_full`), large bank",
+      "before": "0",
+      "after": "6",
+      "delta": "+6",
+      "why": "a rebuild draws the part tallies now, so the parts say `full` from the first render; before, only a tap drew them"
+     },
+     {
+      "key": "measured:window.per_question.Q1.screens",
+      "what": "Q1, the pair opened: screens of the open part that its list is (`window.per_question.Q1.screens`)",
+      "before": "10.1",
+      "after": "10.2",
+      "delta": "+0.1",
+      "banks": {
+       "large": [
+        "10.1",
+        "10.2"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.per_question.Q1.scroll_h",
+      "what": "Q1, the pair opened: length of its list (px) (`window.per_question.Q1.scroll_h`)",
+      "before": "1899",
+      "after": "1911",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "1899",
+        "1911"
+       ],
+       "example": [
+        "758",
+        "762"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q2.screens",
+      "what": "Q2, the pair opened: screens of the open part that its list is (`window.per_question.Q2.screens`), example bank",
+      "before": "4.1",
+      "after": "4.2",
+      "delta": "+0.1",
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.per_question.Q2.scroll_h",
+      "what": "Q2, the pair opened: length of its list (px) (`window.per_question.Q2.scroll_h`)",
+      "before": "1313",
+      "after": "1319",
+      "delta": "+6",
+      "banks": {
+       "large": [
+        "1313",
+        "1319"
+       ],
+       "example": [
+        "779",
+        "783"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q3.scroll_h",
+      "what": "Q3, the pair opened: length of its list (px) (`window.per_question.Q3.scroll_h`), large bank",
+      "before": "1171",
+      "after": "1175",
+      "delta": "+4",
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q4.screens",
+      "what": "Q4, the pair opened: screens of the open part that its list is (`window.per_question.Q4.screens`)",
+      "before": "11.8",
+      "after": "11.9",
+      "delta": "+0.1",
+      "banks": {
+       "large": [
+        "11.8",
+        "11.9"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.per_question.Q4.scroll_h",
+      "what": "Q4, the pair opened: length of its list (px) (`window.per_question.Q4.scroll_h`)",
+      "before": "2219",
+      "after": "2231",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "2219",
+        "2231"
+       ],
+       "example": [
+        "758",
+        "762"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q5.screens",
+      "what": "Q5, the pair opened: screens of the open part that its list is (`window.per_question.Q5.screens`), large bank",
+      "before": "10",
+      "after": "10.1",
+      "delta": "+0.1",
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.per_question.Q5.scroll_h",
+      "what": "Q5, the pair opened: length of its list (px) (`window.per_question.Q5.scroll_h`)",
+      "before": "1883",
+      "after": "1893",
+      "delta": "+10",
+      "banks": {
+       "large": [
+        "1883",
+        "1893"
+       ],
+       "example": [
+        "781",
+        "785"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q6.scroll_h",
+      "what": "Q6, the pair opened: length of its list (px) (`window.per_question.Q6.scroll_h`)",
+      "before": "1365",
+      "after": "1373",
+      "delta": "+8",
+      "banks": {
+       "large": [
+        "1365",
+        "1373"
+       ],
+       "example": [
+        "763",
+        "767"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q7.screens",
+      "what": "Q7, the pair opened: screens of the open part that its list is (`window.per_question.Q7.screens`), large bank",
+      "before": "10.5",
+      "after": "10.6",
+      "delta": "+0.1",
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.per_question.Q7.scroll_h",
+      "what": "Q7, the pair opened: length of its list (px) (`window.per_question.Q7.scroll_h`)",
+      "before": "1977",
+      "after": "1987",
+      "delta": "+10",
+      "banks": {
+       "large": [
+        "1977",
+        "1987"
+       ],
+       "example": [
+        "718",
+        "722"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q8.scroll_h",
+      "what": "Q8, the pair opened: length of its list (px) (`window.per_question.Q8.scroll_h`)",
+      "before": "1300",
+      "after": "1306",
+      "delta": "+6",
+      "banks": {
+       "large": [
+        "1300",
+        "1306"
+       ],
+       "example": [
+        "706",
+        "710"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.per_question.Q9.scroll_h",
+      "what": "Q9, the pair opened: length of its list (px) (`window.per_question.Q9.scroll_h`)",
+      "before": "2045",
+      "after": "2057",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "2045",
+        "2057"
+       ],
+       "example": [
+        "698",
+        "702"
+       ]
+      },
+      "why": "each part heading holds its tally from the first render and is taller by it, so the list is longer by the sum"
+     },
+     {
+      "key": "measured:window.queue_button_from_pair.offset_in_body_px",
+      "what": "Queue button, px down from the top of a pair's list (`window.queue_button_from_pair.offset_in_body_px`)",
+      "before": "1,788",
+      "after": "1,800",
+      "delta": "+12",
+      "banks": {
+       "large": [
+        "1,788",
+        "1,800"
+       ],
+       "example": [
+        "647",
+        "651"
+       ]
+      },
+      "why": "Queue is the last row of a list that is longer by the part headings' growth"
+     },
+     {
+      "key": "measured:window.queue_button_from_pair.screens_down",
+      "what": "Queue button, screens down from the top of a pair's list (`window.queue_button_from_pair.screens_down`)",
+      "before": "9.5",
+      "after": "9.6",
+      "delta": "+0.1",
+      "banks": {
+       "large": [
+        "9.5",
+        "9.6"
+       ],
+       "example": [
+        "3.4",
+        "3.5"
+       ]
+      },
+      "why": "Queue is further down a longer list, and the open part is the same"
+     },
+     {
+      "key": "measured:window.screens_per_question.max",
+      "what": "screens of the open part per question's list, longest (`window.screens_per_question.max`), large bank",
+      "before": "11.8",
+      "after": "11.9",
+      "delta": "+0.1",
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     },
+     {
+      "key": "measured:window.screens_per_question.median",
+      "what": "screens of the open part per question's list, median (`window.screens_per_question.median`)",
+      "before": "10",
+      "after": "10.1",
+      "delta": "+0.1",
+      "banks": {
+       "large": [
+        "10",
+        "10.1"
+       ],
+       "example": [
+        "4",
+        "4.1"
+       ]
+      },
+      "why": "the list is longer (the part headings are taller) and the open part is the same, so it is a little more screens"
+     }
+    ]
+   },
+   {
+    "id": "floor-ignores-the-message",
+    "change": "The sheet's lowest height no longer counts a message that floats above it: a sheet pulled down to its floor is not raised when a message comes and does not stay raised when it goes (SF2)",
+    "effect": "userscripts/tapgrade.user.js:1982-1988; docs/TAPGRADE.md:509. At 4626522 a message does not count in the lowest height the sheet may be dragged to. Before, a reader who had dragged the sheet to its floor saw it grow by the message's height while the load message showed (the first draft's script), and from the third round on it also stayed taller after the message had gone (the build for be4e324). That matters only to a reader who dragged the sheet to its floor: the pass starts at the default height, and nothing in the runbook asks for the floor. The tool's new probe pulls the sheet to its floor and shows the load message (`view_stability.sheet_at_its_floor`; the table gives the heights). No chain has a step that does this and no event rests on it, so the registration reports the number and moves nothing for it. No declared property, load or finding of the install, pair, reload, lock, export or hand-back chain moved.",
+    "moved": [
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.raised_by_the_message_px",
+      "what": "px that the load message raises a sheet pulled down to its lowest height (`view_stability.sheet_at_its_floor.raised_by_the_message_px`), large bank",
+      "before": "56",
+      "after": "0",
+      "delta": "-56",
+      "why": "a message that floats above the sheet is not counted in the sheet's lowest height now, so a sheet at its floor does not rise with the message and does not stay raised after it"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.sheet_h_after_it_left_px",
+      "what": "sheet pulled down to its lowest height, after the load message left (px) (`view_stability.sheet_at_its_floor.sheet_h_after_it_left_px`), large bank",
+      "before": "369",
+      "after": "313",
+      "delta": "-56",
+      "why": "a message that floats above the sheet is not counted in the sheet's lowest height now, so a sheet at its floor does not rise with the message and does not stay raised after it"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px",
+      "what": "sheet pulled down to its lowest height, load message up (px) (`view_stability.sheet_at_its_floor.sheet_h_with_the_load_message_px`), large bank",
+      "before": "369",
+      "after": "313",
+      "delta": "-56",
+      "why": "a message that floats above the sheet is not counted in the sheet's lowest height now, so a sheet at its floor does not rise with the message and does not stay raised after it"
+     },
+     {
+      "key": "measured:view_stability.sheet_at_its_floor.stays_raised_after_it_left",
+      "what": "the sheet stays raised after the load message has left (`view_stability.sheet_at_its_floor.stays_raised_after_it_left`), large bank",
+      "before": "yes",
+      "after": "no",
+      "delta": "",
+      "why": "a message that floats above the sheet is not counted in the sheet's lowest height now, so a sheet at its floor does not rise with the message and does not stay raised after it"
+     }
+    ]
+   },
+   {
+    "id": "update-view",
+    "change": "Two things at the end of an update: a sheet that was hidden while an update ended opens at the report, and the Update foot's button says `Checking…` while the students are read back (SF1 and the foot's label)",
+    "effect": "userscripts/tapgrade.user.js:1584; userscripts/tapgrade.user.js:1454; userscripts/tapgrade.user.js:1546; docs/TAPGRADE.md:166; docs/TAPGRADE.md:160. Both are in Update Canvas, which the owner is told not to use during the pass (docs/HW2-HW3-RUNBOOK.md:162). Nothing on the path of a sampled pair moved, and no measured number: the tool does not run an update. If one is run by mistake, the report is at the top and the button says what it is doing.",
+    "moved": []
+   },
+   {
+    "id": "docs-fourth-round",
+    "change": "The runbook and docs/TAPGRADE.md say what is true about writing during the pass (Save and Save and next on a sampled pair write nothing; three other doors can write, and a fourth, Set up rubric from a file, is offered only when Canvas holds no rubric; each asks once first), give the limits below 390 px, for a late data script and in landscape, and count the fourth round's checks; the runbook's step 10 says what to do on the phone before the bulk pass",
+    "effect": "The docs say it (docs/TAPGRADE.md:513; docs/HW2-HW3-RUNBOOK.md:41). The docs name four doors: the first three are counted in the same sentence, the fourth follows it, and the sentence that names the fourth, in the runbook's decision row and in the docs' paragraph, was added by a docs-only commit after `66eee2a` (the head of the fourth round). P11, the event about a stray write, rests on the measured question and on this, and its p does not change: the fourth door, which creates a rubric on Canvas, is offered only when Canvas holds none, and this registration did not try it with a sample loaded (the docs say so too). The three limits are now written down, and they are the reviewers' and the kit author's numbers, not this tool's, which does not measure them: narrower than 390 px the head is cut (docs/TAPGRADE.md:558); in landscape the Grade view's bar is below the screen (docs/TAPGRADE.md:557); a data script that fires late moves the list, because the position put back is of pixels, not of a place (docs/TAPGRADE.md:559). This registration measures at 390 by 844 in portrait and says so in its limits. The runbook's step 10 now tells the owner what to do on the phone before the bulk pass (docs/HW2-HW3-RUNBOOK.md:222-227): copy the picks and keep them as `sample/picks.json`, then clear the sample data, which asks first when picks are recorded and changes nothing on Canvas. That is after the pass and on no chain of this registration. Nothing measured moved and no declared property: the owner reads the same pages in the same order as before.",
+    "moved": []
+   },
+   {
+    "id": "not-on-the-path-fourth-round",
+    "change": "Everything else in the fourth round (be4e324 to 4626522): the audit's new checks (they test the kit, not the owner's phone; S-2 is a check that a guard in Accept & next, which already held, holds), the build stamp, the counts and the changelog in the docs",
+    "effect": "Not on the path of a sampled pair.",
+    "moved": []
+   },
+   {
+    "id": "what-did-not-move",
+    "change": "Everything the be4e324 registration rests on that the fourth round did not touch",
+    "effect": "Stated so that a reader need not look: no declared property of any chain moved, no load, peak, finding, rank, tie or onset moved, and the five friction events with the highest p are the same five. No event changed. P1, P2 and P8 follow the rule at the top of events.py from numbers that moved a little (the key out of view in the large bank, the screens per question), and the rule gives the p they had; the table in section 4d says so for each. P4 and P5 keep theirs: a rebuild that landed off the chip (S-1) was real on the build for be4e324 and was in neither p, and it is gone at 4626522, so nothing is lowered for it. No measured number of the export, the buttons, the interruptions, the two pages, the messages, the window or the first page outside the sample moved (timings aside).",
+    "moved": []
+   }
+  ],
+  "moved_count": 44
+ },
+ "scoring": {
+  "script": "checks/prediction_score.py",
+  "outcomes_schema": "emu-outcomes/1",
+  "coding": "the transcriber codes each event from the narration and the screenshots using the event and observable columns only, writes the outcomes file, and only then runs the script; the p column is not read while coding",
+  "outcome": {
+   "1": "the observable condition is met by the narration or the screenshots",
+   "0": "the event's segment is narrated or shown and the condition is not met",
+   "null": "the segment is neither narrated nor shown: the event is not scored"
+  },
+  "brier": {
+   "formula": "mean over scored events of (p - o)^2",
+   "references": [
+    "the constant forecast at the mean p of the scored events",
+    "the constant forecast 0.5 (score 0.25)"
+   ],
+   "also_reported": [
+    "per basis, with how often p was on the right side of 0.5",
+    "per segment"
+   ]
+  },
+  "kendall": {
+   "variant": "tau-b",
+   "predicted": "ranking.rank (average ranks; a lower rank is a longer segment)",
+   "measured": "per segment, the median over its dated instances of the minutes from its first event to its last, read from clocks (resolution one minute)",
+   "ties": "measured minutes are rounded to whole minutes; equal means tied",
+   "min_segments": 4,
+   "excluded": [
+    "tapgrade-0.6.7-sample-install"
+   ],
+   "p": "exact one-sided permutation p over the orders of the measured values",
+   "baseline": "ranking.baseline_by_step_count, scored the same way",
+   "reversal": "a pair the weights order stably (not in parameters.rank_ties.unstable_pairs) that is measured the other way by at least 1 minute and 25% of the longer one"
+  },
+  "durations": {
+   "sources": [
+    "the status-bar clock of a screenshot",
+    "the foot's 'Recorded HH:MM' of a recorded pair",
+    "the History screen's save times",
+    "chat message times"
+   ],
+   "instances": {
+    "pair": "between two consecutive saves with no reload, lock or break between them",
+    "pair-reload": "a pair interval that contains a narrated reload",
+    "pair-lock": "from the unlock to the next save",
+    "queue": "from the first page after the load toast to the first pair header after Next pair",
+    "export": "from the tap on Check to the toast 'Copied N picks as JSON'",
+    "handback": "from the toast to the message in the chat",
+    "break": "a gap over 10 minutes between two consecutive saves is a break and is not an instance; the lock interval is removed"
+   }
+  },
+  "onsets": {
+   "window_steps": 2,
+   "B": "scored at B=3 as the primary and, as they were registered, at B=2 and B=4; none is chosen after the pass",
+   "hit": "a loss (forgot, lost the goal, went back to re-read) is narrated at a moment the transcriber maps, from the chains' step targets and before reading p, to a step within 2 steps of a predicted onset of the same chain",
+   "chance": "for each narrated loss, the share of that chain's steps that lie within 2 steps of a predicted onset (5 of 9 in the pair chain at B=3)",
+   "false_alarm": "a loss narrated in a chain with no predicted onset at that B"
+  },
+  "p02be": "the observed rate of events whose steps carry a verifier finding against events whose steps carry none; unregistered frictions (a friction no event describes) and whether their step is silent; false findings (a finding whose step is narrated as smooth)",
+  "owner_leaves": "a narration written right after, in their own words (as on 2026-10-03), and screenshots with clock times; nothing else"
+ },
+ "falsifiers": {
+  "P-67a1": {
+   "claim": "the chain load, with ordinal weights, orders segments of one task by their duration",
+   "falsified_on_this_pass_if": [
+    "tau-b of the load ranking is 0 or below over the comparable segments that have a measured duration (4 are needed to score)",
+    "any pair the weights order stably is measured the other way by at least 1 minute and 25% (kendall.reversals)",
+    "tau-b of the step-count baseline is at least that of the load: the weights add nothing over counting steps"
+   ],
+   "limit": "the two rankings differ on 2 of 15 comparable pairs, so the third test can only fail or pass on those"
+  },
+  "P-02be": {
+   "claim": "a chain can pass by omission: the silence of the verifiers does not mean a step is smooth",
+   "shown_on_this_pass_if": [
+    "an unregistered friction sits at a step where no verifier fired (p02be.unregistered_at_a_silent_step above 0)",
+    "a finding sits at a step the narration calls smooth (p02be.false_findings above 0)",
+    "events at steps with no finding occur at least as often as events at steps with one (p02be: the rate without a finding is not below the rate with one)"
+   ],
+   "falsified_on_this_pass_if": [
+    "none of the three holds over at least 15 scored events"
+   ]
+  },
+  "memory model (theory section 10)": {
+   "claim": "pressure above B marks where goals are lost",
+   "falsified_on_this_pass_if": [
+    "at B=3 the narrated losses in the chains with a predicted onset hit within two steps no more often than chance gives (onsets.3: hits_within_two_steps at or below hits_expected_by_chance)"
+   ],
+   "also_reported": "the same at B=2 and B=4; B is not chosen from them"
+  },
+  "measured predictors (theory section 10)": {
+   "claim": "what is measured on the artifact says what people perceive",
+   "falsified_on_this_pass_if": [
+    "for events with basis 'measured', p was on the wrong side of 0.5 more often than on the right side (brier.by_basis.measured: agree below half of n)"
+   ]
+  }
+ },
+ "limits": [
+  "written by the same author as the builder of the chain layer, the fixture and the measurement script: not independent",
+  "the load weights are ordinal and uncalibrated (P-67a1); amounts, parts per pair and taps per pair are guesses",
+  "the pass has not happened: every p is a belief, none is fitted",
+  "the artifact was measured on a mock Canvas in headless Chromium at 390x844 touch with this container's fonts, not on an iPhone, not on a real Canvas, with an invented sample",
+  "the snapshot is speeds-kit 4626522, the sample fixer's follow-up and third and fourth rounds included; a further review round may change the sample mode again, and what it changes is not predicted here: if this registration is already pushed when it does, the new code is a new dated registration (the earlier registrations stay in the history)",
+  "the sample fixer's fixes (the list kept where it was and drawn the same, a message that floats over the page, the head kept whole, the sheet's floor) were measured in headless Chromium only; whether Safari on an iPhone does the same is what P5 and P14 test",
+  "the owner's iPhone is not known and the layout was measured at 390x844: the docs say that narrower than 390 px the head is cut (docs/TAPGRADE.md:558), that in landscape the Grade bar is below the screen (docs/TAPGRADE.md:557), and that a data script that fires late over a scrolled list moves the list (docs/TAPGRADE.md:559); no chain has a step for these and no event predicts them",
+  "HW1's outcomes are base rates only (basis carried-from-HW1): one pass by one person",
+  "the real bank's size is unknown: the measured layout is for an invented bank of 137 chips (15 per question), and a bank of the runbook's example size (31 bank items, docs/HW2-HW3-RUNBOOK.md:132: 31 chips in all) was measured too; events P1, P2, P8 and P12 state a p between the two",
+  "+-2 steps covers 5 of the 9 steps of the pair chain: a loss placed at random hits more often than not",
+  "silence in a narration is ambiguous: an event coded 0 may be a difficulty that was not mentioned",
+  "the transcriber is the coordinating session, which has read this file: coding blind to p is a rule, not a guarantee",
+  "one pass by one person: the protocol accumulates across tasks, and each new account is held out until scored (theory section 8)"
+ ]
+}

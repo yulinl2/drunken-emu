@@ -112,3 +112,38 @@ are not facts. Sample twice, or in two environments, before writing it down.
 
 Scope: two dates, one container type. By this file's own rule these are two points, not a settled fact, until a
 third environment of the *non-project* kind is sampled on the same day.
+
+## Editing pitfalls seen 2026-10-02 (TapGrade sessions)
+
+- `open(p, "w").write(open(p).read())` truncates the file **before** it is read: the result is an empty file. Read into a
+  variable first, then open for writing.
+- `re.sub(pattern, repl, s)` interprets backslash escapes in `repl`: `"\n"` becomes a real newline. Patching JavaScript
+  that way split `lines.join("\n")` across two lines (a syntax error). Pass a function (`lambda m: repl`) or escape it.
+- Tool output is JSON-escaped: a file containing two backslashes shows four in the transcript. Count escapes in the file
+  (`repr(open(p).read())`), not on screen.
+- Async Playwright: `p.chromium.launch()` returns a coroutine that fails only when awaited, so a try/except around the call
+  catches nothing; `checks/browser.alaunch` awaits inside the try.
+
+## Added 2026-10-17 (Claude Code cloud session, not a claude.ai chat container)
+
+| Fact | Evidence |
+|---|---|
+| A different container class from the ones above. The repository's `.claude/settings.json` registers a SessionStart hook and the harness documents command hooks (PostToolUse, Stop and others), so the "no hook system at all" row above is true of claude.ai chat containers and not of this one. | `.claude/settings.json`; <https://code.claude.com/docs/en/hooks> |
+| Hooks registered mid-session in a new `.claude/settings.local.json` did **not** run: after two changes to a watched file the `emu_loop` ledger held its `arm` record and no evaluation. Whether a session that *starts* with the hooks fires them is not measured (P-dae1, question 3). One session, one container: a point, not a fact. | `out/loop/ledger.jsonl`, read after the changes |
+| `python3 -c "import playwright"` fails by default here; README's "preinstalled" is true of claude.ai chat containers. `pip install playwright` gave 1.64.0, and `bin/emu smoke` then exited 1 at `p.chromium.launch` (`checks/smoke.py:23`; `checks/browser.alaunch` is not used there). `pip install playwright==1.56.0`, the build that matches the shipped `chromium-1194` and `ffmpeg-1011`, made the same command exit 0 in 2.67 s. | the same command before and after, in one container |
+| `pip install` works here (playwright, pytest and the 1.56.0 pin). | the installs above |
+| A disarmed `emu_loop` hook costs 55.2 ms per tool call, mean of 20 runs, Python start-up included. | `python3 checks/emu_loop.py hook post-edit < /dev/null`, 20 times |
+| A hook outside this kit, `~/.claude/stop-hook-git-check.sh`, ran at the end of a turn and its stderr with exit code 2 reached the model as "Stop hook feedback". It reads `stop_hook_active` from the stdin JSON (exit 0 when true) and flags, in this order: uncommitted changes, untracked files (`git ls-files --others --exclude-standard`), commits GitHub would show as Unverified when signing is configured, unpushed commits. No settings file under `/etc/claude-code`, `/root/.claude` or `/home/user/.claude` registers it (none exists there). | the message received; the script, lines 7-10, 26-37, 77-124 |
+| `$CLAUDE_PROJECT_DIR` is unset in the Bash tool's environment (documented for command hooks, not for the Bash tool). | `echo "${CLAUDE_PROJECT_DIR-<unset>}"` |
+
+## Added 2026-10-18 (Claude Code cloud session, the same container class)
+
+| Fact | Evidence |
+|---|---|
+| `git push origin --delete <branch>` through the session's git proxy prints "Everything up-to-date", exits 0 and **deletes nothing**: `git fetch --prune` still lists the branch. On 2026-09-28 the same attempt ended "remote end hung up" (#24). The session's GitHub tools have no branch delete either. Deleting a branch is the owner's job, on GitHub. | `attempt/plot-native` and `theory/record-model` (both merged), 2026-10-18 |
+| The 2026-10-17 row's smoke failure (`p.chromium.launch` with pip's Playwright 1.64 against Chromium 1194) is fixed on main. Every launch now goes through `checks/browser.py`, and `checks/test_launch_sites.py` fails on one that does not. | #78 |
+| The full Chromium 1194, launched headless by `executable_path`, fetches `/favicon.ico`; the headless shell of the same build (141.0.7390.37) does not. The harness server answers 404, and `smoke.py` counted that console error against every page. `browser.py` now tries `chromium_headless_shell-*` first for a headless launch, as Playwright's own default does. | `out/server.log`: `GET /favicon.ico → 404`; with `PW_CHROMIUM=…/headless_shell`, `js_errors` was `[]` |
+| In Chromium 141, a control inside a **closed `<details>`** keeps a non-empty box (18 × 80.5 px) and computed `visibility: visible`; only `checkVisibility()` returns false. A check that tests the box counts it as visible. | #76, #79 |
+| None of `/usr/bin/python3` 3.11, 3.12 or 3.13 has `pytest` or `playwright`. This works: `python3 -m venv DIR` (it rejects `-q`), then `DIR/bin/pip install pytest pyyaml playwright`, then `DIR/bin` first on `PATH`, because `bin/emu` runs whichever `python3` it finds there. | this session's setup |
+| After a merge conflict in `docs/TREE.md`, run `bin/gen_tree.py --write` only once the index is clean. While the conflict stands, the index holds the file's stage 1, 2 and 3 entries, and the generated index is wrong (`--check` failed right after `--write`). Resolve the conflict, `git add`, then regenerate. | the merge of #78 into #77 |
+| The GitHub merge tool's `expectedHeadSha` takes the full 40-character SHA; a 7-character one is refused before any merge is tried. | 2026-10-18 |

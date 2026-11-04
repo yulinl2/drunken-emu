@@ -11,7 +11,10 @@ error? no overflow?).
 
 Checks, in order:
   A. render + zero JS errors + zero horizontal overflow
-  B. touch ergonomics: every visible non-decorative <button> >= min_px tall;
+  B. touch ergonomics: every visible non-decorative <button>, <summary> and [role=button] >= min_px tall (links and
+     form fields are counted and reported, not enforced: inline links in running text are exempt in WCAG 2.2);
+     visible = a non-empty box, a computed visibility that is not hidden, and checkVisibility() (content in a closed <details>
+     keeps a box while no reader can see it, #76); heights are compared unrounded (37.6 px is under 38);
      every [data-term] hit-span >= min_px (convention-specific, skipped if absent)
   C. tap the first dashed-decorated element in view -> did a fixed bottom
      layer appear? tap outside it -> did it close?
@@ -21,13 +24,22 @@ Checks, in order:
   F. read-through: screenshot at N evenly spaced scroll positions
 
 Usage: blind_audit.py <url> <out_dir> [n_read_stops=8] [min_px=38]
+Env:   EMU_MOUNT   CSS selector whose children (or open shadow root) mean "mounted" (default #root, the harness).
+       A document body can also be ready with nonempty text alone.
+Every query walks open shadow roots too (window.__emuDeep): userscripts and web components draw inside them, and a
+check that cannot see a control must not report it as fine. The report says how many shadow roots it walked.
 Prints one JSON line; screenshots land in <out_dir> as A_*.png ... F_*.png.
 """
 import asyncio
 import json
+import os
 import sys
 
 from playwright.async_api import async_playwright
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from checks.browser import alaunch  # noqa: E402  (the installed Chromium, whatever revision playwright pins)
+from checks.page_ready import READY_JS  # noqa: E402
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/harness.html"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -35,50 +47,78 @@ N_STOPS = int(sys.argv[3]) if len(sys.argv) > 3 else 8
 MIN_PX = int(sys.argv[4]) if len(sys.argv) > 4 else 38
 
 R = {"js_errors": [], "checks": {}}
+R["coverage"] = {"target_kind": os.environ.get("EMU_TARGET_KIND", "url"), "viewport": [390, 844],
+                 "actions": [], "read_stops_completed": 0, "tap_target_states": "initial state only",
+                 "not_evaluated": ["goal completion", "reader comprehension", "keyboard navigation", "closed details contents"]}
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(
+        b = await alaunch(p,
             args=["--ignore-certificate-errors", "--no-sandbox", "--disable-dev-shm-usage"])
         c = await b.new_context(viewport={"width": 390, "height": 844},
                                 has_touch=True, is_mobile=True, device_scale_factor=2)
+        # one query that sees inside open shadow roots; every check below uses it instead of document.querySelectorAll
+        await c.add_init_script("""window.__emuDeep = (sel) => { const out = [];
+          const walk = (root) => { out.push(...root.querySelectorAll(sel));
+            for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot); };
+          walk(document); return out; };
+          window.__emuShadowRoots = () => { let n = 0; const walk = (root) => { for (const el of root.querySelectorAll('*'))
+            if (el.shadowRoot) { n++; walk(el.shadowRoot); } }; walk(document); return n; };""")
         pg = await c.new_page()
         pg.on("pageerror", lambda e: R["js_errors"].append(str(e)[:160]))
         pg.on("console", lambda x: R["js_errors"].append("console: " + x.text[:120])
               if x.type == "error" else None)
-        await pg.goto(URL, timeout=20000)
+        response = await pg.goto(URL, timeout=20000)
+        if response and response.status >= 400:
+            R["js_errors"].append(f"HTTP {response.status} during navigation")
         try:
             await pg.wait_for_function(
-                "document.getElementById('root').children.length > 0", timeout=15000)
+                READY_JS,
+                arg=os.environ.get("EMU_MOUNT", "#root"), timeout=15000)
         except Exception:
             R["checks"]["mounted"] = False
             print(json.dumps(R, ensure_ascii=False))
             await b.close()
             return 1
         R["checks"]["mounted"] = True
+        R["checks"]["mount_selector"] = os.environ.get("EMU_MOUNT", "#root")
         await pg.wait_for_timeout(800)
         await pg.screenshot(path=f"{OUT}/A_00_landing.png")
 
         async def scroll_to(frac=None, delta=None):
             await pg.evaluate("""(a)=>{
-              const sc=[...document.querySelectorAll('*')]
+              const sc=[...__emuDeep('*')]
                 .filter(e=>e.scrollHeight>e.clientHeight+1000)
                 .sort((x,y)=>y.scrollHeight-x.scrollHeight)[0] || document.scrollingElement;
               if(a.frac!=null) sc.scrollTop=(sc.scrollHeight-sc.clientHeight)*a.frac;
               if(a.delta!=null) sc.scrollTop+=a.delta;
             }""", {"frac": frac, "delta": delta})
+            R["coverage"]["actions"].append({"kind": "scroll", "fraction": frac, "delta": delta})
             await pg.wait_for_timeout(420)
 
         # B. ergonomics
         R["checks"]["ergonomics"] = await pg.evaluate("""(MIN)=>{
-          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
-          const btns=[...document.querySelectorAll('button')]
-            .filter(b=>!b.hasAttribute('data-term')).filter(vis);
-          const small=btns.map(b=>Math.round(b.getBoundingClientRect().height))
-                          .filter(h=>h<MIN);
-          const hits=[...document.querySelectorAll('[data-term] > span[aria-hidden]')]
+          const vis=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'&&(!e.checkVisibility||e.checkVisibility())};
+          const h=e=>e.getBoundingClientRect().height;   // raw: a 37.6 px target is under a 38 px floor
+          const notTerm=e=>!e.hasAttribute('data-term');
+          // enforced: the button-like controls a reader taps. A check that cannot see a control must not report it as fine.
+          const tgt=[...new Set(__emuDeep('button,summary,[role=button]'))].filter(notTerm).filter(vis);
+          const tag=e=>e.tagName==='BUTTON'?'button':e.tagName==='SUMMARY'?'summary':'role=button';
+          const by={}; for(const e of tgt) if(h(e)<MIN) by[tag(e)]=(by[tag(e)]||0)+1;
+          // kept with its old meaning: <button> only
+          const btns=tgt.filter(e=>e.tagName==='BUTTON');
+          const small=btns.map(h).filter(x=>x<MIN);
+          // counted and reported, not enforced (inline links in running text are exempt in WCAG 2.2; fields need judgement)
+          const rep={};
+          for(const [k,sel] of [['a','a[href]'],['input','input:not([type=hidden])'],['select','select'],['textarea','textarea']]){
+            const els=[...__emuDeep(sel)].filter(notTerm).filter(vis).filter(e=>!tgt.includes(e));
+            rep[k]={count:els.length, under_min:els.map(h).filter(x=>x<MIN).length};
+          }
+          const hits=[...__emuDeep('[data-term] > span[aria-hidden]')]
             .map(s=>Math.round(s.getBoundingClientRect().height)).filter(h=>h>0);
           return {buttons: btns.length, buttons_under_min: small.length,
+                  targets: tgt.length, targets_under_min: Object.values(by).reduce((a,b)=>a+b,0),
+                  under_min_by_tag: by, reported_not_enforced: rep,
                   term_hits: hits.length,
                   term_hit_min_px: hits.length?Math.min(...hits):null,
                   term_hit_status: hits.length?'checked'
@@ -88,7 +128,7 @@ async def main():
         # C. dashed-element tap -> sheet open -> outside tap -> closed
         await scroll_to(delta=700)
         pt = await pg.evaluate("""()=>{
-          for(const el of document.querySelectorAll('span,button,a')){
+          for(const el of __emuDeep('span,button,a')){
             const cs=getComputedStyle(el), r=el.getBoundingClientRect();
             if(r.top>110&&r.bottom<790&&r.width>4&&
                (cs.textDecorationStyle==='dashed'||cs.borderBottomStyle==='dashed'))
@@ -96,14 +136,16 @@ async def main():
           } return null;}""")
         if pt:
             await pg.touchscreen.tap(pt["x"], pt["y"])
+            R["coverage"]["actions"].append({"kind": "tap", **pt})
             await pg.wait_for_timeout(500)
-            opened = await pg.evaluate("""()=>[...document.querySelectorAll('div')].some(d=>{
+            opened = await pg.evaluate("""()=>[...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
               return cs.position==='fixed'&&r.bottom>800&&r.height>110;})""")
             await pg.screenshot(path=f"{OUT}/C_01_after_dashed_tap.png")
             await pg.touchscreen.tap(195, 140)
+            R["coverage"]["actions"].append({"kind": "tap", "x": 195, "y": 140})
             await pg.wait_for_timeout(420)
-            closed = await pg.evaluate("""()=>![...document.querySelectorAll('div')].some(d=>{
+            closed = await pg.evaluate("""()=>![...__emuDeep('div')].some(d=>{
               const cs=getComputedStyle(d),r=d.getBoundingClientRect();
               return cs.position==='fixed'&&r.bottom>800&&r.height>110;})""")
             await pg.screenshot(path=f"{OUT}/C_02_after_outside_tap.png")
@@ -113,7 +155,7 @@ async def main():
 
         # D. control cluster (3-6 sibling buttons): tap 3rd x6
         got = await pg.evaluate("""()=>{
-          for(const d of document.querySelectorAll('div')){
+          for(const d of __emuDeep('div')){
             const bs=[...d.children].filter(c=>c.tagName==='BUTTON'&&!c.hasAttribute('data-term'));
             if(bs.length>=3&&bs.length<=6){
               d.scrollIntoView({block:'center'});
@@ -124,6 +166,7 @@ async def main():
         if got:
             for _ in range(6):
                 await pg.touchscreen.tap(got["x"], got["y"])
+                R["coverage"]["actions"].append({"kind": "tap", "x": got["x"], "y": got["y"]})
                 await pg.wait_for_timeout(170)
             await pg.wait_for_timeout(300)
             await pg.screenshot(path=f"{OUT}/D_01_cluster_after_6taps.png")
@@ -133,7 +176,7 @@ async def main():
 
         # E. 2-button toggle (excluding term buttons and rows that contain terms)
         got2 = await pg.evaluate("""()=>{
-          for(const d of document.querySelectorAll('div')){
+          for(const d of __emuDeep('div')){
             const kids=[...d.children];
             const bs=kids.filter(c=>c.tagName==='BUTTON'&&!c.hasAttribute('data-term'));
             const terms=kids.filter(c=>c.hasAttribute&&c.hasAttribute('data-term'));
@@ -145,6 +188,7 @@ async def main():
         await pg.wait_for_timeout(400)
         if got2:
             await pg.touchscreen.tap(got2["x"], got2["y"])
+            R["coverage"]["actions"].append({"kind": "tap", **got2})
             await pg.wait_for_timeout(1000)
             await pg.screenshot(path=f"{OUT}/E_01_toggle_second.png")
             R["checks"]["toggle"] = True
@@ -156,14 +200,16 @@ async def main():
             f = (i + 1) / N_STOPS
             await scroll_to(frac=f)
             await pg.screenshot(path=f"{OUT}/F_read_{i:02d}_{int(f*100)}.png")
+            R["coverage"]["read_stops_completed"] += 1
 
+        R["checks"]["shadow_roots_walked"] = await pg.evaluate("window.__emuShadowRoots()")
         R["checks"]["h_overflow_px"] = await pg.evaluate(
             "document.documentElement.scrollWidth - window.innerWidth")
         await b.close()
     print(json.dumps(R, ensure_ascii=False))
     ok = (not R["js_errors"]
           and R["checks"].get("h_overflow_px") == 0
-          and R["checks"].get("ergonomics", {}).get("buttons_under_min") == 0)
+          and R["checks"].get("ergonomics", {}).get("targets_under_min") == 0)
     return 0 if ok else 1
 
 sys.exit(asyncio.run(main()))

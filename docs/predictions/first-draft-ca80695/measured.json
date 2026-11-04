@@ -1,0 +1,834 @@
+{
+ "schema": "emu-sample-predictors/1",
+ "tool": "checks/measure_sample_predictors.py",
+ "script": {
+  "path": "userscripts/tapgrade.user.js",
+  "sha256": "786bddeed40a06b8ecd738397957877939e51572060e0e24f681c89cd45e2490",
+  "bytes": 236867,
+  "version": "0.6.7",
+  "build": "10-04 20:04"
+ },
+ "mock": {
+  "base": "http://127.0.0.1:8881"
+ },
+ "viewport": {
+  "width": 390,
+  "height": 844,
+  "device_scale_factor": 2,
+  "touch": true,
+  "fonts": "the container's default sans-serif, wider than San Francisco"
+ },
+ "sample": {
+  "invented": true,
+  "bank": "large",
+  "seed": 2,
+  "questions": 9,
+  "pairs": 45,
+  "students": 35,
+  "students_with_two_or_more_pairs": 8,
+  "consecutive_pairs_on_the_same_student": 0,
+  "parts": 40,
+  "chips": 137
+ },
+ "predictors": {
+  "window": {
+   "viewport_h": 844,
+   "pair_view_with_toast": {
+    "sheet_h": 438.9,
+    "head_h": 84.8,
+    "msg_h": 55.8,
+    "tabs_h": 54,
+    "body_h": 111,
+    "foot_h": 63,
+    "bar_h": 62.2
+   },
+   "pair_view": {
+    "sheet_h": 438.9,
+    "head_h": 84.8,
+    "tabs_h": 54,
+    "body_h": 173,
+    "foot_h": 63,
+    "bar_h": 62.2,
+    "sheet_pct": 52.0,
+    "body_pct_of_screen": 20.5,
+    "work_area_above_sheet_h": 405.1,
+    "work_area_pct": 48.0
+   },
+   "first_screen_shows_a_chip": false,
+   "sticky_headers_off_at_this_height": true,
+   "tap_targets_on_a_pair": {
+    "controls": 42,
+    "min_height_px": 41.5,
+    "under_44px": 1
+   },
+   "per_question": {
+    "Q1": {
+     "chips": 17,
+     "groups": 6,
+     "none_buttons": 3,
+     "scroll_h": 1899,
+     "body_h": 173,
+     "screens": 11.0
+    },
+    "Q2": {
+     "chips": 11,
+     "groups": 3,
+     "none_buttons": 2,
+     "scroll_h": 1313,
+     "body_h": 173,
+     "screens": 7.6
+    },
+    "Q3": {
+     "chips": 10,
+     "groups": 2,
+     "none_buttons": 1,
+     "scroll_h": 1171,
+     "body_h": 188,
+     "screens": 6.2
+    },
+    "Q4": {
+     "chips": 22,
+     "groups": 6,
+     "none_buttons": 3,
+     "scroll_h": 2219,
+     "body_h": 173,
+     "screens": 12.8
+    },
+    "Q5": {
+     "chips": 17,
+     "groups": 5,
+     "none_buttons": 3,
+     "scroll_h": 1883,
+     "body_h": 173,
+     "screens": 10.9
+    },
+    "Q6": {
+     "chips": 10,
+     "groups": 4,
+     "none_buttons": 2,
+     "scroll_h": 1365,
+     "body_h": 173,
+     "screens": 7.9
+    },
+    "Q7": {
+     "chips": 18,
+     "groups": 5,
+     "none_buttons": 3,
+     "scroll_h": 1977,
+     "body_h": 173,
+     "screens": 11.4
+    },
+    "Q8": {
+     "chips": 11,
+     "groups": 3,
+     "none_buttons": 3,
+     "scroll_h": 1300,
+     "body_h": 188,
+     "screens": 6.9
+    },
+    "Q9": {
+     "chips": 21,
+     "groups": 6,
+     "none_buttons": 2,
+     "scroll_h": 2045,
+     "body_h": 173,
+     "screens": 11.8
+    }
+   },
+   "screens_per_question": {
+    "min": 6.2,
+    "median": 10.9,
+    "max": 12.8
+   },
+   "queue_button_from_pair": {
+    "offset_in_body_px": 1787.9,
+    "screens_down": 10.3
+   },
+   "pair_view_largest_sheet": {
+    "took_effect": true,
+    "sheet_h": 717,
+    "body_h": 451,
+    "work_area_above_sheet_h": 127.0,
+    "work_area_pct": 15.0,
+    "screens_for_first_question": 4.2
+   }
+  },
+  "primary_action": {
+   "gap_between_save_and_save_and_next_px": 8.0,
+   "tap_target_px": {
+    "Save and next": [
+     150.6,
+     44.0
+    ],
+    "Save": [
+     66.8,
+     44.0
+    ]
+   },
+   "buttons_with_the_same_fill_on_a_pair": {
+    "Save and next": [
+     "Save and next",
+     "Update Canvas1"
+    ],
+    "Next pair": null
+   },
+   "save_vs_save_and_next_similarity": 0.21,
+   "save_vs_save_and_next_label_similarity": 0.47,
+   "bar_buttons": {
+    "largest_label_x_shape_similarity": 0.2,
+    "rects": [
+     [
+      12,
+      790,
+      82,
+      46
+     ],
+     [
+      100,
+      790,
+      102,
+      46
+     ],
+     [
+      208,
+      790,
+      82,
+      46
+     ],
+     [
+      296,
+      790,
+      82,
+      46
+     ]
+    ],
+    "distance_to_bottom_edge_px": 8.0,
+    "distance_to_left_edge_px": 12.0,
+    "distance_to_right_edge_px": 12.0
+   },
+   "queue_sheet": {
+    "sheet_h": 595.3,
+    "tall": true,
+    "fits_without_scrolling": true
+   },
+   "buttons_with_the_same_fill_in_the_queue": [
+    "Next pair",
+    "Update Canvas1"
+   ],
+   "collapsed_pill_rect": [
+    261.9,
+    788.0,
+    116.1,
+    44.0
+   ],
+   "Save and next": {
+    "pass": {
+     "states": 8,
+     "right_edge_px": [
+      378.0,
+      378.0
+     ],
+     "bottom_edge_px": [
+      771.8,
+      771.8
+     ],
+     "centre_x_px": [
+      302.7,
+      302.7
+     ],
+     "centre_y_px": [
+      749.8,
+      749.8
+     ],
+     "width_px": [
+      150.6,
+      150.6
+     ],
+     "height_px": [
+      44.0,
+      44.0
+     ],
+     "distance_to_right_edge_px": 12.0,
+     "distance_to_bottom_edge_px": 72.2,
+     "edge_move_px": 0.0,
+     "centre_move_px": 0.0,
+     "anchor_class": "fixed-position"
+    },
+    "with_normal_grading": {
+     "states": 9,
+     "right_edge_px": [
+      378.0,
+      378.0
+     ],
+     "bottom_edge_px": [
+      763.8,
+      771.8
+     ],
+     "centre_x_px": [
+      302.7,
+      302.7
+     ],
+     "centre_y_px": [
+      741.8,
+      749.8
+     ],
+     "width_px": [
+      150.6,
+      150.6
+     ],
+     "height_px": [
+      44.0,
+      44.0
+     ],
+     "distance_to_right_edge_px": 12.0,
+     "distance_to_bottom_edge_px": 72.2,
+     "edge_move_px": 8.0,
+     "centre_move_px": 8.0,
+     "anchor_class": "none"
+    }
+   },
+   "Next pair": {
+    "pass": {
+     "states": 2,
+     "right_edge_px": [
+      378.0,
+      378.0
+     ],
+     "bottom_edge_px": [
+      771.8,
+      771.8
+     ],
+     "centre_x_px": [
+      323.9,
+      323.9
+     ],
+     "centre_y_px": [
+      749.8,
+      749.8
+     ],
+     "width_px": [
+      108.2,
+      108.2
+     ],
+     "height_px": [
+      44.0,
+      44.0
+     ],
+     "distance_to_right_edge_px": 12.0,
+     "distance_to_bottom_edge_px": 72.2,
+     "edge_move_px": 0.0,
+     "centre_move_px": 0.0,
+     "anchor_class": "fixed-position"
+    },
+    "with_normal_grading": {
+     "states": 2,
+     "right_edge_px": [
+      378.0,
+      378.0
+     ],
+     "bottom_edge_px": [
+      771.8,
+      771.8
+     ],
+     "centre_x_px": [
+      323.9,
+      323.9
+     ],
+     "centre_y_px": [
+      749.8,
+      749.8
+     ],
+     "width_px": [
+      108.2,
+      108.2
+     ],
+     "height_px": [
+      44.0,
+      44.0
+     ],
+     "distance_to_right_edge_px": 12.0,
+     "distance_to_bottom_edge_px": 72.2,
+     "edge_move_px": 0.0,
+     "centre_move_px": 0.0,
+     "anchor_class": "fixed-position"
+    }
+   },
+   "queue_next_pair_vs_pair_save_and_next": {
+    "right_edge_delta_px": 0.0,
+    "bottom_edge_delta_px": 0.0,
+    "width_delta_px": 42.4,
+    "overlap_fraction_of_smaller": 1.0
+   },
+   "states": [
+    {
+     "state": "pair, toast shown",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, no verdict",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, one chip ticked",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, many chips ticked (tallies and warnings)",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, body scrolled to the end",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, half point added (reason field shown)",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, saved",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "pair, changed after saving",
+     "mode": "pass",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      727.8,
+      150.6,
+      44.0
+     ]
+    },
+    {
+     "state": "queue, pairs left",
+     "mode": "pass",
+     "control": "Next pair",
+     "rect": [
+      269.8,
+      727.8,
+      108.2,
+      44.0
+     ]
+    },
+    {
+     "state": "a row outside the sample (the foot offers Next pair)",
+     "mode": "pass",
+     "control": "Next pair",
+     "rect": [
+      269.8,
+      727.8,
+      108.2,
+      44.0
+     ]
+    },
+    {
+     "state": "normal grading, student outside the sample",
+     "mode": "normal",
+     "control": "Save and next",
+     "rect": [
+      227.4,
+      719.8,
+      150.6,
+      44.0
+     ]
+    }
+   ]
+  },
+  "chips": {
+   "at_the_default_sheet": {
+    "chips_total": 137,
+    "chips_per_part": {
+     "parts": 40,
+     "mean": 3.4,
+     "min": 2,
+     "max": 6
+    },
+    "within_part_similarity": {
+     "mean_of_largest_pair": 0.28,
+     "largest_pair": 0.51,
+     "mean_of_all_pairs": 0.22,
+     "parts_with_a_pair_at_or_above_0.5": 1,
+     "parts_compared": 40
+    },
+    "in_view": {
+     "max_fully_visible_together": 3,
+     "mean_fully_visible": 1.2,
+     "mean_fully_visible_when_any": 1.51,
+     "share_of_windows_with_two_or_more": 0.4,
+     "windows": 2270,
+     "pairs_seen_together": 112,
+     "largest_similarity_seen_together": 0.51,
+     "mean_similarity_seen_together": 0.21,
+     "identical_label_pairs_seen_together": 0
+    },
+    "same_label_repeats_in_one_question": {
+     "max": 5,
+     "mean": 3.9
+    },
+    "stripe_colour": {
+     "reasons_seen": 10,
+     "distinct_colours": 9,
+     "reasons_sharing_a_colour": [
+      "NOWORK",
+      "OTHER"
+     ]
+    },
+    "key_clamped_to_two_lines": {
+     "keys": 40,
+     "clamped": 6
+    },
+    "key_in_view_with_a_chip": {
+     "chip_views": 2776,
+     "share": 0.29
+    },
+    "part_group_height_px": {
+     "parts": 40,
+     "mean": 272.9,
+     "max": 443.7,
+     "share_that_fit_in_the_open_body": 0.1
+    }
+   },
+   "reason_labels": {
+    "count": 12,
+    "pairs": 66,
+    "largest_pair_similarity": 0.6,
+    "pairs_at_or_above_0.5": [
+     "CONC~HYP",
+     "HYP~ASSUME",
+     "SETUP~CRIT"
+    ],
+    "share_of_parts_with_such_a_pair_simulated": 0.09,
+    "simulated_parts": 20000
+   },
+   "at_the_largest_sheet": {
+    "in_view": {
+     "max_fully_visible_together": 6,
+     "mean_fully_visible": 4.3,
+     "mean_fully_visible_when_any": 4.28,
+     "share_of_windows_with_two_or_more": 1.0,
+     "windows": 1852,
+     "pairs_seen_together": 456,
+     "largest_similarity_seen_together": 1.0,
+     "mean_similarity_seen_together": 0.28,
+     "identical_label_pairs_seen_together": 38
+    }
+   }
+  },
+  "feedback_ms": {
+   "chip": {
+    "ms": 11.1,
+    "kind": "immediate"
+   },
+   "half_point_plus": {
+    "ms": 5.4,
+    "kind": "immediate"
+   },
+   "no_deductions": {
+    "ms": 20.7,
+    "kind": "immediate"
+   },
+   "save_with_a_verdict": {
+    "ms": 10.7,
+    "kind": "immediate"
+   },
+   "check_on_the_bar": {
+    "ms": 6.0,
+    "kind": "immediate"
+   },
+   "sample_picks_tab": {
+    "ms": 4.6,
+    "kind": "immediate"
+   },
+   "copy_as_json": {
+    "ms": 18.8,
+    "kind": "immediate"
+   },
+   "save_with_nothing_picked": {
+    "ms": 6.2,
+    "kind": "immediate"
+   },
+   "save_and_next": {
+    "ms": 8.3,
+    "kind": "immediate"
+   }
+  },
+  "view_stability": {
+   "load_toast": {
+    "seconds_on_screen": 3.9,
+    "height_px": 55.8,
+    "content_moves_when_it_goes_px": 61.8,
+    "open_body_grows_px": 62.0,
+    "goes_by_itself": true
+   },
+   "refusal_toast": {
+    "height_px": 74.7,
+    "content_moves_when_it_comes_px": 80.7
+   },
+   "chip_tap": {
+    "max_chip_shift_px": 2.0,
+    "scroll_jump_px": 2.0,
+    "the_chip_is_ticked": true
+   },
+   "second_chip_in_a_part": {
+    "content_below_pushed_down_px": 41.1,
+    "warning_shown": true
+   },
+   "no_deductions_tap": {
+    "scroll_before_px": 65.0,
+    "scroll_after_px": 0.0
+   },
+   "none_tap": {
+    "scroll_before_px": 1603.0,
+    "scroll_after_px": 0.0,
+    "jumps_to_the_top": true
+   },
+   "grade_button_on_a_pair": {
+    "scroll_before_px": 500.0,
+    "scroll_after_px": 0.0
+   },
+   "hide_and_reopen_the_sheet": {
+    "scroll_before_px": 600.0,
+    "scroll_after_px": 0.0,
+    "ticked_before": 3,
+    "ticked_after": 3
+   },
+   "resize_the_sheet_by_dragging_its_head": {
+    "sheet_h_before_px": 438.9,
+    "sheet_h_after_px": 639.0,
+    "scroll_before_px": 600.0,
+    "scroll_after_px": 0.0,
+    "ticked_after": 3
+   },
+   "clamped_key_opened_by_a_tap": {
+    "content_below_pushed_down_px": 17.5
+   }
+  },
+  "loading": {
+   "mock_submission_read_delay_s": 1.2,
+   "states": [
+    {
+     "from_s": 0.19,
+     "for_s": 0.23,
+     "host": true,
+     "purpose_tag": "Recorded on this phone only",
+     "head_is_pair": true,
+     "head_is_student_id": false,
+     "has_foot": true,
+     "has_chips": true,
+     "says_pick_a_student": false,
+     "says_loading_rubric": false,
+     "says_loading_class": false,
+     "toast": true,
+     "sheet_top_px": 405
+    },
+    {
+     "from_s": 0.42,
+     "for_s": 0.11,
+     "host": true,
+     "purpose_tag": "Changes Canvas",
+     "head_is_pair": false,
+     "head_is_student_id": true,
+     "has_foot": false,
+     "has_chips": false,
+     "says_pick_a_student": false,
+     "says_loading_rubric": true,
+     "says_loading_class": true,
+     "toast": false,
+     "sheet_top_px": 628
+    },
+    {
+     "from_s": 0.53,
+     "for_s": 1.15,
+     "host": true,
+     "purpose_tag": "Recorded on this phone only",
+     "head_is_pair": false,
+     "head_is_student_id": true,
+     "has_foot": false,
+     "has_chips": false,
+     "says_pick_a_student": true,
+     "says_loading_rubric": false,
+     "says_loading_class": false,
+     "toast": false,
+     "sheet_top_px": 607
+    },
+    {
+     "from_s": 1.68,
+     "for_s": 0.0,
+     "host": true,
+     "purpose_tag": "Recorded on this phone only",
+     "head_is_pair": true,
+     "head_is_student_id": false,
+     "has_foot": true,
+     "has_chips": true,
+     "says_pick_a_student": false,
+     "says_loading_rubric": false,
+     "says_loading_class": false,
+     "toast": true,
+     "sheet_top_px": 405
+    }
+   ],
+   "first_new_state_says_changes_canvas": true,
+   "a_state_tells_the_owner_to_pick_a_student": true,
+   "seconds_in_the_pick_a_student_state": 1.15,
+   "head_shows_a_bare_student_id_while_loading": true,
+   "no_foot_while_loading": true,
+   "sheet_top_moves_px": 223,
+   "seconds_from_tap_to_pair_ready": 1.68,
+   "old_page_stays_seconds": 0.42,
+   "toast_of_the_save_shown_on_the_next_page": true,
+   "seconds_from_tap_to_pair_ready_on_the_mock_alone": 0.81
+  },
+  "first_contact": {
+   "students_in_sample": 35,
+   "pairs": 45,
+   "class_size": 60,
+   "outside_sample": {
+    "toast_present": true,
+    "purpose_tag": "Changes Canvas",
+    "hint_button_present": true,
+    "save_and_next_present": true,
+    "save_and_next_disabled": true,
+    "mark_rest_full_present": true,
+    "sub_tabs_present": false,
+    "head_shows_the_student_name": true,
+    "hint_button_visible_fraction_with_toast": 0.61,
+    "hint_button_visible_fraction_without_toast": 1
+   },
+   "load_toast_seconds_on_screen": 4.1,
+   "inside_sample": {
+    "head_is_a_pair": true,
+    "blind_tag_present": true,
+    "sub_tabs_present": false,
+    "tabs_marked_outside_sample": 8,
+    "tabs_open": 1
+   },
+   "pair_title_slack_px_one_pair_per_question": {
+    "min": -0.3,
+    "max": 29.7,
+    "borderline_under_2px": 7,
+    "clipped": 7
+   }
+  },
+  "interruption": {
+   "app_switch_without_reload": {
+    "ticked_before": 1,
+    "ticked_after": 1,
+    "draft_kept": true
+   },
+   "reload_with_a_half_picked_pair": {
+    "ticked_before": 1,
+    "ticked_after": 0,
+    "note_kept": false,
+    "draft_lost": true,
+    "foot_says_nothing_is_picked": true,
+    "same_pair_shown_again": true
+   },
+   "reload_after_a_save": {
+    "pair_comes_back_recorded": true,
+    "ticked": 1
+   },
+   "queue_after_reload_shows_the_recorded_pair": true,
+   "reload_with_the_queue_open": {
+    "head_is_a_pair": true,
+    "queue_open": false
+   },
+   "reload_with_the_export_open": {
+    "was_open": true,
+    "head_is_a_pair": true,
+    "export_open": false
+   }
+  },
+  "export": {
+   "check_opens_on_a_tab_other_than_sample_picks": true,
+   "check_sub_tabs": {
+    "count": 5,
+    "all_fit_without_scrolling": true,
+    "font_px": 11.5,
+    "min_height_px": 44,
+    "largest_label_x_shape_similarity": 0.31,
+    "largest_label_similarity_alone": 0.48
+   },
+   "sample_picks_view": {
+    "sheet_h": 438.9,
+    "body_h": 252,
+    "scroll_h": 455,
+    "has_a_foot": false,
+    "copy_as_json_below_the_open_body_px": 134.6,
+    "copy_as_json_in_the_open_body_without_scrolling": false
+   },
+   "buttons_with_the_same_fill_as_copy_as_json": [
+    "Update Canvas1"
+   ],
+   "copy_as_json_vs_download_similarity": 0.15,
+   "missing_pairs_warning_shown": true,
+   "copy_as_json": {
+    "toast_says_copied": true,
+    "toast_says_copy_blocked": false,
+    "toast_mentions_missing_pairs": true,
+    "chars": 647,
+    "lines": 46,
+    "picks": 3,
+    "schema_ok": true
+   },
+   "complete_export_estimate": {
+    "picks": 45,
+    "chars": 9705,
+    "lines": 690
+   }
+  }
+ },
+ "errors": [],
+ "page_errors": [],
+ "browser": {
+  "chromium": "141.0.7390.37"
+ }
+}

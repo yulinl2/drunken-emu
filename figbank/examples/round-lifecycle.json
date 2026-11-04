@@ -1,0 +1,33 @@
+{
+  "id": "round-lifecycle",
+  "message": "One real figure's own round history: pipeline-sequence.json went draft, FAIL round 1 (a coordinate bug: every participant box ignored its y-origin), FAIL round 2 (the same fault, since the fix tried was the wrong one), ACCEPT round 3 (the real bug found and fixed) — data pulled from this bank's own verdicts.jsonl, not invented for the example.",
+  "provenance": {"generated_by": "figbank/examples/round-lifecycle.json (hand-authored from figbank/examples/verdicts.jsonl's own pipeline-sequence rows, the lifecycle diagram kind's first instance, drunken-emu #15)", "source": "figbank/examples/verdicts.jsonl"},
+  "canvas": {"width": 1140, "height": 190},
+  "word_budget": 45,
+  "must_not_contain": ["…"],
+  "title": {"text": "One figure's own round history, read straight from verdicts.jsonl.", "x": 16, "y": 14, "w": 1000},
+  "lifecycle": {
+    "origin": {"x": 20, "y": 90},
+    "col_w": 155,
+    "col_gap": 130,
+    "row_h": 48,
+    "states": [
+      {"id": "draft", "label": "draft", "col": 0},
+      {"id": "r1", "label": "round 1", "col": 1},
+      {"id": "r2", "label": "round 2", "col": 2},
+      {"id": "r3", "label": "round 3 — accepted", "col": 3, "terminal": true, "status": "measured"}
+    ],
+    "transitions": [
+      {"from": "draft", "to": "r1", "label": "render, rasterize, read"},
+      {"from": "r1", "to": "r2", "guard": "FAIL", "label": "title covered by headers"},
+      {"from": "r2", "to": "r3", "guard": "FAIL again", "label": "same fault, wrong fix tried"}
+    ],
+    "edge_color": "obj"
+  },
+  "acceptance": {
+    "must_mention": [["draft"], ["round 1", "round 2", "round 3"], ["fail", "reject"], ["accept"]],
+    "unreadable_max": 0,
+    "legibility": {"width": 1040, "min_px": 10, "surface": "documentation width, not a paper column"},
+    "rounds_max": 3
+  }
+}

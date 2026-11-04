@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MetaProof Variable Model</title>
+    <meta name="description" content="Every variable of the agent–environment model on one page: environment, agent, interface, objective, dynamics, meta — with its RL name, definition and measurement status; the loss at four grains; one worked episode." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The data slot. MetaProof's bin/variables.py replaces the token below with model/variables.json (+ the
+         episode's per-variable rows and the figure specs) when it renders figures/agent-environment-demo.html;
+         the React app reads it at start-up. Nothing is fetched. -->
+    <script id="vars" type="application/json">__JSON__</script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

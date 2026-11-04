@@ -23,6 +23,29 @@ jobs:
       - run: pip install --quiet pytest
       - run: python3 -m pytest -q checks/test_explore_text.py
 
+  chains:
+    # The operation-chain layer (docs/OPERATION-CHAINS.md): format, load, the ten verifiers (must-fire and must-hold
+    # each), the HW1 fixtures and the CLI; the HW2 registration and the draft publisher's registration pinned to their fixtures, and the scorer; emu_loop's unit tests (P-dae1). No Chromium, no model.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install --quiet pytest
+      - run: python3 -m pytest -q checks/test_chain.py
+      - run: python3 -m pytest -q checks/test_prediction.py
+      - run: python3 -m pytest -q checks/test_draft_publish_prediction.py
+      - run: python3 -m pytest -q checks/test_emu_loop.py
+
+  figbank:
+    # the figure bank's own gates: renderer, budget/overflow/ellipsis, React host, text calibration. No browser.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: node --test figbank/tests/*.test.js
+
   claims:
     runs-on: ubuntu-latest
     steps:
@@ -35,3 +58,19 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Assert README still tells the truth
         run: python3 checks/ci_claims.py
+      - name: Fragment-links check must fire on the planted fixture
+        run: |
+          pip install --quiet pytest
+          python3 -m pytest -q checks/test_fragment_links.py
+      - name: sync_artifact import forms, and the limits it pins (no browser)
+        run: python3 -m pytest -q checks/test_sync_artifact.py
+      - name: blind_audit tap targets (button, summary and role=button enforced, links and fields reported; Chromium)
+        run: python3 -m pytest -q checks/test_blind_audit_targets.py
+      - name: explore_run impairment bites at p=1 and not at p=0 (Chromium)
+        run: python3 -m pytest -q checks/test_explore_run.py
+      - name: svg_text_gates and figpipe --svg, the gates the tests pin
+        run: python3 -m pytest -q checks/test_external_svg.py
+      - name: every Chromium launch goes through checks/browser.py (#72; reads the source, no browser)
+        run: python3 -m pytest -q checks/test_launch_sites.py
+      - name: Static HTML and URL targets through the CLI, with small-control and page-error controls
+        run: python3 -m pytest -q checks/test_static_targets.py

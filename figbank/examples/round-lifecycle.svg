@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 190" width="1140" height="190" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" data-figure="round-lifecycle" role="img" aria-label="One real figure's own round history: pipeline-sequence.json went draft, FAIL round 1 (a coordinate bug: every participant box ignored its y-origin), FAIL round 2 (the same fault, since the fix tried was the wrong one), ACCEPT round 3 (the real bug found and fixed) — data pulled from this bank's own verdicts.jsonl, not invented for the example.">
+ <defs>
+  <marker id="ah-6b3d7a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+   <path d="M0,0 L10,5 L0,10 z" fill="#6b3d7a"/>
+  </marker>
+ </defs>
+ <rect x="0" y="0" width="1140" height="190" fill="#ffffff"/>
+ <text x="16" y="29.3" font-size="17" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" font-weight="bold" data-id="title"><tspan x="16" dy="0">One figure's own round history, read straight from verdicts.jsonl.</tspan></text>
+ <g class="stateedge" data-id="draft-&gt;r1">
+  <path d="M175,114 C240,114 240,114 305,114" fill="none" stroke="#6b3d7a" stroke-width="1.4" marker-end="url(#ah-6b3d7a)"/>
+  <text x="240" y="67" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" text-anchor="middle"><tspan x="240" dy="0">render, rasterize,</tspan><tspan x="240" dy="15">read</tspan></text>
+ </g>
+ <g class="stateedge" data-id="r1-&gt;r2">
+  <path d="M460,114 C525,114 525,114 590,114" fill="none" stroke="#6b3d7a" stroke-width="1.4" marker-end="url(#ah-6b3d7a)"/>
+  <text x="525" y="67" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" text-anchor="middle"><tspan x="525" dy="0">title covered by</tspan><tspan x="525" dy="15">headers [FAIL]</tspan></text>
+ </g>
+ <g class="stateedge" data-id="r2-&gt;r3">
+  <path d="M745,114 C810,114 810,114 875,114" fill="none" stroke="#6b3d7a" stroke-width="1.4" marker-end="url(#ah-6b3d7a)"/>
+  <text x="810" y="67" font-size="12" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#6b3d7a" text-anchor="middle"><tspan x="810" dy="0">same fault, wrong</tspan><tspan x="810" dy="15">fix tried [FAIL again]</tspan></text>
+ </g>
+ <g class="lifecyclestate" data-id="draft">
+  <rect x="20" y="90" width="155" height="48" rx="5" fill="#fbfaf6" stroke="#1d2126" stroke-width="1.4"/>
+  <text x="28" y="118.5" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="start" data-id="draft"><tspan x="28" dy="0">draft</tspan></text>
+ </g>
+ <g class="lifecyclestate" data-id="r1">
+  <rect x="305" y="90" width="155" height="48" rx="5" fill="#fbfaf6" stroke="#1d2126" stroke-width="1.4"/>
+  <text x="313" y="118.5" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="start" data-id="r1"><tspan x="313" dy="0">round 1</tspan></text>
+ </g>
+ <g class="lifecyclestate" data-id="r2">
+  <rect x="590" y="90" width="155" height="48" rx="5" fill="#fbfaf6" stroke="#1d2126" stroke-width="1.4"/>
+  <text x="598" y="118.5" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="start" data-id="r2"><tspan x="598" dy="0">round 2</tspan></text>
+ </g>
+ <g class="lifecyclestate" data-id="r3" data-status="measured">
+  <rect x="875" y="90" width="155" height="48" rx="5" fill="#fbfaf6" stroke="#1d2126" stroke-width="1.4"/>
+  <rect x="879" y="94" width="147" height="40" rx="3" fill="none" stroke="#1d2126" stroke-width="1.1"/>
+  <circle cx="886" cy="114" r="3" fill="#2f7d4f" stroke="#2f7d4f" stroke-width="1.2" data-status="measured"/>
+  <text x="895" y="118.5" font-size="12.5" font-family="DejaVu Sans, Liberation Sans, Helvetica, Arial, sans-serif" fill="#1d2126" text-anchor="start" data-id="r3"><tspan x="895" dy="0">round 3 — accepted</tspan></text>
+ </g>
+</svg>

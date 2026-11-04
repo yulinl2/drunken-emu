@@ -1,0 +1,258 @@
+{
+ "schema": "speedkit-rehearsal/1",
+ "tool": "python3 -m speedkit.rehearse",
+ "viewport": "390x844 touch",
+ "mock": "tests/tapgrade/mock_canvas.py",
+ "real_canvas_tried": false,
+ "file": {
+  "path": "rutgers-fa26-463-regression/hw2/drafts/hw2-drafts.user.js (private: it holds student grades; this is the 0.3.1 file rebuilt from commit ab19308's template and the delivered data, sha256 equal to the delivered file's)",
+  "publisher": "0.3.1",
+  "sha256": "bcd2947ae99891fe21b2a7f508e24f30158692a14522297a9b1719711770b621",
+  "drafts": 59,
+  "held": 10,
+  "writable": 57,
+  "rubric_rows": 7
+ },
+ "seconds": 46.3,
+ "pass": false,
+ "lines": [
+  {
+   "pass": true,
+   "line": "M: the sheet counts 57 位可以写入, 10 位机器没把握，暂缓, 2 位的文件核对不过，暂缓",
+   "detail": "the sheet says {'位可以写入': 57, '位的文件核对不过，暂缓': 2, '位机器没把握，暂缓': 10}"
+  },
+  {
+   "pass": true,
+   "line": "G M ready: buttons and foot in view, 0 targets under 44 px, smallest text 13 px, the lists keep 55% of the sheet",
+   "detail": "sheet 692 px, scrolling part 383 px of 584, dock 309 px (foot 232)"
+  },
+  {
+   "pass": true,
+   "line": "G M every list open: buttons and foot in view, 0 targets under 44 px, smallest text 13 px, the lists keep 55% of the sheet",
+   "detail": "sheet 692 px, scrolling part 383 px of 130297, dock 309 px (foot 232)"
+  },
+  {
+   "pass": true,
+   "line": "M: the main button reads «发布»",
+   "detail": "发布 57 位初稿"
+  },
+  {
+   "pass": true,
+   "line": "M: the sheet says 57 written, 0 failed, 0 left",
+   "detail": "it says 57 written, 0 failed, 0 left, 12 s"
+  },
+  {
+   "pass": true,
+   "line": "M: the mock holds every row and total of the 57 students as the file has them; nobody else was touched",
+   "detail": "0 different, 0 others touched"
+  },
+  {
+   "pass": true,
+   "line": "M: exactly one confirmation",
+   "detail": "1"
+  },
+  {
+   "pass": true,
+   "line": "M: the run's record holds the 57 students, every row read back ok",
+   "detail": "{'written': 57, 'already': 0, 'failed': 0, 'skipped': 0, 'stopped': False, 'not_reached': 0}"
+  },
+  {
+   "pass": true,
+   "line": "M: the confirmation repeats the foot the record keeps",
+   "detail": ""
+  },
+  {
+   "pass": true,
+   "line": "G M written: buttons in view, 0 targets under 44 px, smallest text 13 px, the lists keep 76% of the sheet",
+   "detail": "sheet 692 px, scrolling part 529 px of 112650, dock 163 px"
+  },
+  {
+   "pass": true,
+   "line": "M: a second check finds 0 left to write",
+   "detail": ""
+  },
+  {
+   "pass": true,
+   "line": "G T ready (the first student is open in the list): buttons and foot in view, 0 targets under 44 px, smallest text 13 px, the lists keep 53% of the sheet",
+   "detail": "sheet 692 px, scrolling part 364 px of 5612, dock 329 px (foot 252)"
+  },
+  {
+   "pass": true,
+   "line": "T: the main button reads «先试写 1 位»",
+   "detail": "先试写 1 位"
+  },
+  {
+   "pass": true,
+   "line": "T: the first tap wrote one student",
+   "detail": "1 PUTs"
+  },
+  {
+   "pass": true,
+   "line": "T: the button now reads «初稿·已试写»",
+   "detail": "初稿·已试写"
+  },
+  {
+   "pass": false,
+   "line": "G T trial written: buttons and foot in view, 0 targets under 44 px, smallest text 13 px, the lists keep 39% of the sheet",
+   "detail": "sheet 692 px, scrolling part 270 px of 3241, dock 422 px (foot 232) — the lists keep under 40% of the sheet"
+  },
+  {
+   "pass": true,
+   "line": "T: after a reload the sheet names the student written and offers «写入剩下的 56 位»",
+   "detail": "写入剩下的 56 位"
+  },
+  {
+   "pass": true,
+   "line": "T: the rest is written: the mock holds all 57 students as the file has them, one PUT each",
+   "detail": "0 different, 0 others touched, 57 PUTs"
+  },
+  {
+   "pass": true,
+   "line": "T: the phone keeps two records, the trial of one student and the rest",
+   "detail": "[(True, 1), (False, 56)]"
+  },
+  {
+   "pass": true,
+   "line": "R: the main button is the rubric step, «创建评分标准（7 行）», not the students",
+   "detail": "创建评分标准（7 行）"
+  },
+  {
+   "pass": true,
+   "line": "G R rubric step: buttons in view, 0 targets under 44 px, smallest text 13 px, the lists keep 89% of the sheet",
+   "detail": "sheet 692 px, scrolling part 619 px of 1029, dock 73 px"
+  },
+  {
+   "pass": true,
+   "line": "R: the rubric was created and read back row by row (7 rows) and no student was written",
+   "detail": "0 student PUTs"
+  },
+  {
+   "pass": true,
+   "line": "R: the main button reads «发布»",
+   "detail": "发布 57 位初稿"
+  },
+  {
+   "pass": true,
+   "line": "R: the sheet says 57 written, 0 failed, 0 left",
+   "detail": "it says 57 written, 0 failed, 0 left, 14 s"
+  },
+  {
+   "pass": true,
+   "line": "R: the mock holds every row and total of the 57 students as the file has them; nobody else was touched",
+   "detail": "0 different, 0 others touched"
+  },
+  {
+   "pass": true,
+   "line": "R: exactly one confirmation",
+   "detail": "1"
+  },
+  {
+   "pass": true,
+   "line": "R: the run's record holds the 57 students, every row read back ok",
+   "detail": "{'written': 57, 'already': 0, 'failed': 0, 'skipped': 0, 'stopped': False, 'not_reached': 0}"
+  },
+  {
+   "pass": true,
+   "line": "R: the confirmation repeats the foot the record keeps",
+   "detail": ""
+  }
+ ],
+ "states": [
+  {
+   "state": "M ready",
+   "sheet_h": 692,
+   "scroll_visible_h": 383,
+   "scroll_content_h": 584,
+   "dock_h": 309,
+   "foot_h": 232,
+   "foot_in_view": true,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": null
+  },
+  {
+   "state": "M every list open",
+   "sheet_h": 692,
+   "scroll_visible_h": 383,
+   "scroll_content_h": 130297,
+   "dock_h": 309,
+   "foot_h": 232,
+   "foot_in_view": true,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": {
+    "top": 781,
+    "height": 2173
+   }
+  },
+  {
+   "state": "M written",
+   "sheet_h": 692,
+   "scroll_visible_h": 529,
+   "scroll_content_h": 112650,
+   "dock_h": 163,
+   "foot_h": null,
+   "foot_in_view": null,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": {
+    "top": 567,
+    "height": 111907
+   }
+  },
+  {
+   "state": "T ready (the first student is open in the list)",
+   "sheet_h": 692,
+   "scroll_visible_h": 364,
+   "scroll_content_h": 5612,
+   "dock_h": 329,
+   "foot_h": 252,
+   "foot_in_view": true,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": {
+    "top": 439,
+    "height": 2173
+   }
+  },
+  {
+   "state": "T trial written",
+   "sheet_h": 692,
+   "scroll_visible_h": 270,
+   "scroll_content_h": 3241,
+   "dock_h": 422,
+   "foot_h": 232,
+   "foot_in_view": true,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": {
+    "top": 688,
+    "height": 2377
+   }
+  },
+  {
+   "state": "R rubric step",
+   "sheet_h": 692,
+   "scroll_visible_h": 619,
+   "scroll_content_h": 1029,
+   "dock_h": 73,
+   "foot_h": null,
+   "foot_in_view": null,
+   "buttons_in_view": true,
+   "small_targets": 0,
+   "min_font": 13,
+   "first_open": null
+  }
+ ],
+ "run": {
+  "command": "python3 -m speedkit.rehearse rutgers-fa26-463-regression/hw2 --drafts <that file> --only MTR --json <this file>",
+  "speeds_kit_commit": "0a73c79 (the tool); the file rehearsed is the 0.3.1 one, built from ab19308",
+  "route_F_not_run": "F (the file is current) was not run: the tool's template is 0.3.2 and the file is 0.3.1, which is what the owner holds",
+  "the_one_line_that_fails": "G T trial written: the lists keep 39 % of the sheet right after the one-student trial, the tool's floor is 40 %; 0.3.2 fixes it and was not sent"
+ }
+}

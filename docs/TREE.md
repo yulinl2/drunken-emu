@@ -24,6 +24,8 @@ that is never executed is not a regeneration command.
 
 ```text
 .
+|-- .claude/
+|   `-- settings.json
 |-- .github/
 |   `-- workflows/
 |       `-- claims.yml
@@ -31,28 +33,210 @@ that is never executed is not a regeneration command.
 |   |-- apply_doi.sh
 |   |-- blocker_check.py
 |   |-- emu
+|   |-- figpipe
 |   |-- gen_tree.py
 |   `-- sync_artifact.py
 |-- checks/
+|   |-- fixtures/
+|   |   |-- chains/
+|   |   |   |-- draft_publish_hw2.json
+|   |   |   |-- hw1_correction_pass.json
+|   |   |   |-- hw1_correction_pass_fixed.json
+|   |   |   |-- hw1_correction_pass_transcribed.json
+|   |   |   |-- tapgrade_0_6_6.json
+|   |   |   |-- tapgrade_0_6_7_sample_pass.json
+|   |   |   `-- worked_example.json
+|   |   |-- fragment_links_clean.jsx
+|   |   |-- fragment_links_nolinks.jsx
+|   |   `-- fragment_links_planted.jsx
+|   |-- hw2_sample_prediction/
+|   |   |-- __init__.py
+|   |   |-- __main__.py
+|   |   |-- chains.py
+|   |   |-- changes.py
+|   |   |-- cites.py
+|   |   |-- events.py
+|   |   |-- inputs.py
+|   |   |-- markdown.py
+|   |   |-- rebuild.py
+|   |   `-- registration.py
+|   |-- __init__.py
+|   |-- affordances.py
 |   |-- blind_audit.py
+|   |-- browser.py
+|   |-- chain.py
+|   |-- chain_check.py
+|   |-- chain_load.py
+|   |-- chain_verifiers.py
 |   |-- ci_claims.py
+|   |-- draft_publish_prediction.py
+|   |-- emu_loop.py
+|   |-- explore_run.py
 |   |-- explore_step.py
 |   |-- explore_text.py
+|   |-- fragment_links.py
+|   |-- measure_sample_predictors.py
+|   |-- page_ready.py
+|   |-- prediction_score.py
 |   |-- region_shots.py
 |   |-- smoke.py
+|   |-- static_target.py
 |   |-- svg_legibility.py
-|   `-- test_explore_text.py
+|   |-- svg_text_gates.py
+|   |-- test_blind_audit_targets.py
+|   |-- test_chain.py
+|   |-- test_draft_publish_prediction.py
+|   |-- test_emu_loop.py
+|   |-- test_explore_run.py
+|   |-- test_explore_text.py
+|   |-- test_external_svg.py
+|   |-- test_fragment_links.py
+|   |-- test_launch_sites.py
+|   |-- test_prediction.py
+|   |-- test_static_targets.py
+|   `-- test_sync_artifact.py
 |-- docs/
+|   |-- evidence/
+|   |   `-- hw1-correction-2026-10-03/
+|   |       |-- README.md
+|   |       |-- narration.zh.txt
+|   |       |-- transcription.jsonl
+|   |       `-- validate.py
+|   |-- predictions/
+|   |   |-- first-draft-ca80695/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- replaced-be4e324/
+|   |   |   |-- declared.json
+|   |   |   |-- measured-example-bank.json
+|   |   |   |-- measured.json
+|   |   |   |-- new-keys.json
+|   |   |   `-- summary.json
+|   |   |-- draft-publish-first-run.md
+|   |   |-- draft-publish-first-run.measured.json
+|   |   |-- draft-publish-first-run.outcome.md
+|   |   |-- draft-publish-first-run.prediction.json
+|   |   |-- hw2-sample-pass.inputs.json
+|   |   |-- hw2-sample-pass.md
+|   |   |-- hw2-sample-pass.measured-example-bank.json
+|   |   |-- hw2-sample-pass.measured.json
+|   |   `-- hw2-sample-pass.prediction.json
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
+|   |-- OPERATION-CHAINS.md
+|   |-- OPERATION-MODEL.md
 |   |-- SANDBOX-FACTS.md
+|   |-- STATIC-PAGES.md
 |   |-- TREE.md
-|   `-- ZENODO-RUNBOOK.md
+|   |-- ZENODO-RUNBOOK.md
+|   `-- issue-sweep-2026-10-23.md
+|-- figbank/
+|   |-- app/
+|   |   |-- frontier-tree/
+|   |   |   |-- src/
+|   |   |   |   |-- App.tsx
+|   |   |   |   |-- Figure.tsx
+|   |   |   |   |-- data.ts
+|   |   |   |   |-- index.css
+|   |   |   |   `-- main.tsx
+|   |   |   |-- .gitignore
+|   |   |   |-- .parcelrc
+|   |   |   |-- .postcssrc
+|   |   |   |-- README.md
+|   |   |   |-- check_page.py
+|   |   |   |-- index.html
+|   |   |   |-- package.json
+|   |   |   |-- pnpm-lock.yaml
+|   |   |   |-- tailwind.config.js
+|   |   |   |-- tsconfig.app.json
+|   |   |   |-- tsconfig.json
+|   |   |   |-- tsconfig.node.json
+|   |   |   `-- vite.config.ts
+|   |   |-- variable-model/
+|   |   |   |-- src/
+|   |   |   |   |-- App.tsx
+|   |   |   |   |-- Figure.tsx
+|   |   |   |   |-- data.ts
+|   |   |   |   |-- index.css
+|   |   |   |   `-- main.tsx
+|   |   |   |-- .gitignore
+|   |   |   |-- .parcelrc
+|   |   |   |-- .postcssrc
+|   |   |   |-- README.md
+|   |   |   |-- check_page.py
+|   |   |   |-- index.html
+|   |   |   |-- package.json
+|   |   |   |-- pnpm-lock.yaml
+|   |   |   |-- tailwind.config.js
+|   |   |   |-- tsconfig.app.json
+|   |   |   |-- tsconfig.json
+|   |   |   |-- tsconfig.node.json
+|   |   |   `-- vite.config.ts
+|   |   `-- bundle.sh
+|   |-- examples/
+|   |   |-- figbank-file-tree.json
+|   |   |-- figbank-file-tree.pdf
+|   |   |-- figbank-file-tree.png
+|   |   |-- figbank-file-tree.svg
+|   |   |-- gen_file_tree.py
+|   |   |-- gen_majority_vote.py
+|   |   |-- majority-vote-curve.json
+|   |   |-- majority-vote-curve.pdf
+|   |   |-- majority-vote-curve.png
+|   |   |-- majority-vote-curve.svg
+|   |   |-- pipeline-sequence.json
+|   |   |-- pipeline-sequence.pdf
+|   |   |-- pipeline-sequence.png
+|   |   |-- pipeline-sequence.svg
+|   |   |-- pipeline-workflow.json
+|   |   |-- pipeline-workflow.png
+|   |   |-- pipeline-workflow.svg
+|   |   |-- round-lifecycle.json
+|   |   |-- round-lifecycle.pdf
+|   |   |-- round-lifecycle.png
+|   |   |-- round-lifecycle.svg
+|   |   `-- verdicts.jsonl
+|   |-- lib/
+|   |   |-- components.js
+|   |   |-- figure.d.ts
+|   |   |-- figure.js
+|   |   |-- lifecyclelayout.js
+|   |   |-- palette.d.ts
+|   |   |-- palette.js
+|   |   |-- plot.js
+|   |   |-- plotlayout.js
+|   |   |-- sequencelayout.js
+|   |   |-- text.js
+|   |   |-- treelayout.js
+|   |   |-- vnode.d.ts
+|   |   `-- vnode.js
+|   |-- reader/
+|   |   `-- cold-reader.md
+|   |-- schema/
+|   |   `-- figure.schema.json
+|   |-- tests/
+|   |   |-- calibration.json
+|   |   |-- figure.test.js
+|   |   |-- fixture-two-regions.json
+|   |   |-- plot.test.js
+|   |   `-- text.test.js
+|   |-- README.md
+|   |-- package.json
+|   `-- render_svg.js
 |-- harness/
 |   `-- harness.html
 |-- out/
 |   `-- .gitkeep
+|-- theory/
+|   |-- LIVENESS.md
+|   |-- RECORD-THEORY.md
+|   |-- RESULTS.md
+|   |-- liveness.py
+|   `-- proto.py
 |-- vendor/
 |   |-- babel.js
 |   |-- react.js
@@ -60,11 +244,13 @@ that is never executed is not a regeneration command.
 |   `-- tailwind.js
 |-- .gitignore
 |-- CITATION.cff
+|-- CLAUDE.md
 |-- CONTRIBUTING.md
 |-- LICENSE
+|-- Makefile
 |-- NOTICE
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-8 directories, 33 files tracked
+29 directories, 198 files tracked
 ```
