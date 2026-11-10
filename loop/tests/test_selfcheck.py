@@ -38,7 +38,9 @@ def test_nothing_of_one_project_is_in_the_package():
 
 
 def test_readme_and_cli_list_the_same_verbs():
-    rows = set(re.findall(r"^\| `(\w+)` \|", (LOOP / "README.md").read_text(encoding="utf-8"), re.M))
+    text = (LOOP / "README.md").read_text(encoding="utf-8")
+    verbs = text.split("\n## Verbs", 1)[1].split("\n## ", 1)[0]   # the verbs table only: the configuration table has backticked keys too
+    rows = set(re.findall(r"^\| `(\w+)` \|", verbs, re.M))
     assert rows == set(cli.VERBS) | {"doctor"}, (sorted(rows), sorted(cli.VERBS))
 
 
@@ -65,7 +67,7 @@ def test_config_finds_the_root_and_resolves_paths(tmp_path, monkeypatch):
     deep.mkdir(parents=True)
     cfg = config.load(deep)
     assert cfg.root == tmp_path.resolve() and cfg.path("bank") == tmp_path.resolve() / "evidence" / "bank.jsonl"
-    assert cfg["backup"] == {"remote": "origin", "prefix": "keep/", "extra_dirs": []}   # a nested key is merged, not replaced
+    assert cfg["backup"] == {"remote": "", "prefix": "keep/", "extra_dirs": []}   # a nested key is merged, not replaced
 
 
 def test_the_entry_runs_isolated_and_names_a_missing_verb(tmp_path):

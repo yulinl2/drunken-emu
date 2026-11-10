@@ -1,0 +1,118 @@
+"""The gate's checks: the selftest, an empty project, a wait with and without a chain, what check writes, and inputs that are missing or broken."""
+import datetime
+import json
+import os
+import pathlib
+import subprocess
+import sys
+
+sys.dont_write_bytecode = True
+KIT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(KIT))
+from loop import gate  # noqa: E402
+
+CLAUSE = "Ship the small version first and widen it once it works"
+PLAN_LINE = "The principal's plan line."
+
+
+def _isolate(tmp_path, monkeypatch):
+    """The project and the home directory are temporary: no test reads or writes the machine's own."""
+    monkeypatch.setenv("LOOP_PROJECT", str(tmp_path))
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+
+
+def _project(root, with_chain, drop=None):
+    """One root and one wait under it; with_chain gives the wait the chain the gate must pass; `drop` leaves one bank file out."""
+    (root / "doc.md").write_text(PLAN_LINE + "\n", encoding="utf-8")
+    (root / "art.txt").write_text("x", encoding="utf-8")
+    bank = root / "loop-state" / "bank"
+    bank.mkdir(parents=True, exist_ok=True)
+    for f in gate.BANK_FILES:
+        if f == drop:
+            continue
+        lines = [json.dumps({"id": "clause-1", "time": "2026-01-01T00:01:00Z", "text": CLAUSE})] if f == "principal-clauses" else []
+        (bank / (f + ".jsonl")).write_text("".join(line + "\n" for line in lines), encoding="utf-8")
+    wait = {"id": "W", "status": "wait on the principal", "title": "a wait", "children": []}
+    if with_chain:
+        wait.update({
+            "chain": [
+                {"node": "R", "quote": CLAUSE, "source": "clause-1", "fit": "states", "speech_act": "assert", "why": ""},
+                {"node": "W", "quote": PLAN_LINE, "source": "path:doc.md", "fit": "supports",
+                 "why": "the plan line is what this wait is about"},
+            ],
+            "evidence": [["REPRODUCED", "ran it", "here"]],
+            "artifacts": ["art.txt"],
+            "reproduced_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+        })
+    tree = {"roots": [{"id": "R", "status": "done", "title": "the root", "children": [wait]}]}
+    (root / "loop-state" / "tree.json").write_text(json.dumps(tree), encoding="utf-8")
+
+
+def _listing(root):
+    """Every path under root with its bytes (None for a directory), so a test can tell what a run wrote."""
+    return {str(p.relative_to(root)): (p.read_bytes() if p.is_file() else None) for p in root.rglob("*")}
+
+
+def test_the_selftest_passes_every_case(capsys):
+    assert gate.main(["selftest"]) == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert len(lines) == 20, lines
+    assert all(line.startswith("ok   ") for line in lines), lines
+
+
+def test_the_entry_runs_the_selftest_in_isolation(tmp_path):
+    env = {**os.environ, "LOOP_PROJECT": str(tmp_path), "HOME": str(tmp_path / "home"), "PYTHONDONTWRITEBYTECODE": "1"}
+    r = subprocess.run([sys.executable, "-I", str(KIT / "bin" / "loop"), "gate", "selftest"],
+                       capture_output=True, text=True, cwd=str(tmp_path), env=env)
+    assert r.returncode == 0 and "WRONG" not in r.stdout, r.stdout + r.stderr
+
+
+def test_an_empty_project_fails_closed_and_writes_nothing(tmp_path, monkeypatch, capsys):
+    _isolate(tmp_path, monkeypatch)
+    assert gate.main(["check"]) == 1
+    assert json.loads(capsys.readouterr().out) == {"ok": False, "detail": "no tree at loop-state/tree.json"}
+    assert gate.main(["render", "W"]) == 1
+    assert gate.main(["baseline"]) == 1
+    assert not (tmp_path / ".loop").exists() and not (tmp_path / "loop-state").exists()
+
+
+def test_a_wait_without_a_chain_fails_and_with_a_valid_chain_passes(tmp_path, monkeypatch, capsys):
+    _isolate(tmp_path, monkeypatch)
+    _project(tmp_path, with_chain=False)
+    assert gate.main(["check"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is False and out["new_fail"] == ["W"], out
+    _project(tmp_path, with_chain=True)
+    assert gate.main(["check"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is True and out["new_fail"] == [] and out["fail"] == 0, out
+    assert gate.main(["render", "W"]) == 0
+    assert "gate: PASS" in capsys.readouterr().out
+
+
+def test_check_writes_only_its_state_file(tmp_path, monkeypatch):
+    _isolate(tmp_path, monkeypatch)
+    _project(tmp_path, with_chain=True)
+    before = _listing(tmp_path)
+    assert gate.main(["check"]) == 0
+    after = _listing(tmp_path)
+    added = sorted(set(after) - set(before))
+    assert added == [".loop", os.path.join(".loop", "chain-gate.json")], added
+    assert all(after[k] == before[k] for k in before), "an existing file changed"
+
+
+def test_a_missing_bank_file_or_an_unreadable_tree_fails_without_a_traceback(tmp_path, monkeypatch, capsys):
+    _isolate(tmp_path, monkeypatch)
+    _project(tmp_path, with_chain=True, drop="principal-questions")
+    assert gate.main(["check"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is False and out["bank_missing"] == ["principal-questions.jsonl"], out
+    _project(tmp_path, with_chain=True)
+    (tmp_path / "loop-state" / "tree.json").write_text("{not json", encoding="utf-8")
+    assert gate.main(["check"]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["ok"] is False and "not readable" in out["detail"], out
+
+
+def test_an_unknown_verb_is_refused_with_a_code():
+    assert gate.main(["bogus"]) == 2

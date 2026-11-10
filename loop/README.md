@@ -5,7 +5,7 @@
 Extracted on 2026-11-10 from a private project in which each part had been running under tests. Here the parts are one package with one entry and one configuration; what belongs to that project stayed there (last section but one).
 
 ## Why a loop
-An assistant forgets, and the person it works for (the principal) cannot re-read everything. A rule that depends on being remembered is a wish: `docs/OPEN-PROBLEMS.md` records a requirement that lived in prose and stayed unbuilt across sessions (P-8c1e), and feedback that must be asked for and so never reaches a session that does not ask (P-dae1). So each step below is run by a hook or by the tick, never by memory, and each says what it did not check.
+An assistant forgets, and the person it works for (the principal) cannot re-read everything. A rule that depends on being remembered is a wish: `docs/OPEN-PROBLEMS.md` records a requirement that lived in prose and stayed unbuilt across sessions (P-8c1e), and feedback that must be asked for and so never reaches a session that does not ask (P-dae1). So each step below can be run by a hook or by the tick instead of by memory, and each says what it did not check. Out of the box the hooks run `record`, `keep`, the reprint and the guard; `gate` and `tick` run once the project's `loop.json` names them (see Start).
 
 ```
 the principal speaks
@@ -25,19 +25,27 @@ the principal speaks
 | `record` | `bank`, `raw`, `find` | every utterance of the principal is banked once, verbatim, with its time | a typed message is in the transcript and not in the bank |
 | `gate` | `check`, `render`, `baseline`, `selftest` | a wait carries a chain of verbatim quotes down to a root, or a closure in the principal's words | a status changes and the debt list does not; a question is cited as an assertion |
 | `tick` | `run`, `liveness` | the due check runs and nothing starves | a check has not run for three times its interval and no tick said so |
-| `hook` | `install`, `prompt`, `post`, `stop`, `compact` | the loop is closed by the session's own events, not by memory | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call |
-| `guard` | `pre`, `permissions` | no merge, no write to a protected branch and no rewritten history without a recorded verdict | such an act passes with no verdict that names it |
+| `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call |
+| `guard` | `pre`, `permissions` | a tripwire, not a barrier: a merge, a write to a protected branch or a forced push needs a verdict recorded before the act; the known gaps are listed in `loop/guard.py`; under `sessions: here` it reads sessions inside the project | such an act, in a form the guard reads, passes with no verdict that names it |
 | `keep` | `backup`, `restore`, `replay` | what a later session needs survives the machine | a file exists nowhere but in a machine that is gone |
 | `doctor` | prints what the loop can see from here | changes nothing | it writes anything |
 
-Every module's docstring carries two lines, `INVARIANT:` and `FAILS WHEN:`. `loop/tests/test_selfcheck.py` asserts that, and asserts this table against the code.
+Every module's docstring carries two lines, `INVARIANT:` and `FAILS WHEN:`. `loop/tests/test_selfcheck.py` asserts that, and asserts this table against the code. `loop/tests/test_closed_loop.py` runs one session through all six in a temporary project, with the output of each verb as the input of the next; on 2026-11-10 it found five defects that the verbs' own tests could not, and two reviews of the package found more that it now pins: a stop acts on the session that stopped, not on the newest transcript of the machine; each session has its own backup; a trial takes nothing.
 
 ## Start
 ```
 python3 -I bin/loop doctor                  # what is found from this directory
 python3 -I bin/loop hook install --user     # the user-level settings: the channel seen to fire in cloud sessions
 ```
-The installed commands carry the project's root, so they work from any working directory.
+The installed commands carry the project's root, so they work from any working directory. `install` first tries each command once on an empty payload: the command must start and read its configuration. A trial banks nothing and backs nothing up. `install` refuses where there is no `loop.json`: a project names itself.
+
+That installs `record`, `keep`, the reprint and the guard. To close the rest of the loop, the project's `loop.json` names where a stop is refused and what the tick runs; the tree the gate reads is a source, written by hand:
+```
+{"backup": {"remote": "<a private remote>"},
+ "stop_blocks_on": [["gate", "check"]],
+ "stop_runs": [["keep", "backup"], ["record", "bank"], ["tick", "run"]],
+ "checks": [{"name": "gate", "run": ["gate", "check"], "every_s": 3600}]}
+```
 
 ## Configuration (`loop.json` at the project root; every key optional; an unknown key is refused)
 | Key | Default | What it is |
@@ -47,22 +55,26 @@ The installed commands carry the project's root, so they work from any working d
 | `bank` | `loop-state/bank.jsonl` | append-only, in git: one record per utterance |
 | `words` | none | globs of more files that hold the principal's words, for `record find` |
 | `not_principal_prefixes` | none | a text that starts with one of these is not the principal's |
-| `tree`, `chain_debt`, `clause_bank_dir` | under `loop-state/` | the goals and questions, the waits that had no chain at the first run, the bank cut into clauses |
+| `tree`, `chain_debt`, `clause_bank_dir` | under `loop-state/` | the goals and questions, the waits that had no chain at the first run, the bank cut into clauses (optional: without that folder the gate reads `bank`) |
 | `verdicts` | `loop-state/verdicts.jsonl` | an advisor's verdicts, recorded before a guarded act |
-| `protected_branches` | `main` | where a write needs a verdict |
-| `backup` | remote `origin`, prefix `backup/` | where a stop keeps the transcript, the scratch files and what is untracked |
+| `protected_branches` | `main`, `master` | where a write needs a verdict |
+| `backup` | no remote, prefix `backup/` | where a stop keeps the stopping session's transcript (with those of the agents it started), the extra folders and what is untracked. Name a **private** remote: a transcript holds everything the session saw |
 | `transcripts_dir` | `~/.claude/projects` | where the session transcripts are |
+| `sessions` | `here` | which sessions the hooks act for. `here`: a session whose working directory at the event is the root or under it. Its whole transcript is then taken, with what it typed elsewhere; a session that starts above the root (a cloud session with several repositories) is not served until it enters, and nothing says so. `all`: at every stop of any session on this machine, that session's words go into this project's bank and every transcript under `transcripts_dir` to this project's remote, and a verb run by hand takes the newest transcript; for a machine whose every session is this project's |
 | `state_dir` | `.loop` | counters and logs; never committed |
 | `checks` | none | what `tick` runs: a name, a verb with its arguments, an interval |
 | `stop_runs` | keep, then record | what every stop runs; a failure is reported and never blocks |
 | `stop_blocks_on` | none | commands whose failure refuses the stop |
 | `stop_cap` | 3 | how many refusals in a row before the stop is let through |
 
+**`loop.json` is code.** Its commands (`stop_runs`, `stop_blocks_on`, `checks`) run with your rights at every stop; the file it names is printed into every prompt; its backup remote receives the transcripts; the bank is committed. A `loop.json` that arrives by clone, pull, checkout or merge takes effect at the next hook, so review it as code. With `--user` the hooks sit in the settings of every session on this machine; they act only for sessions inside the project unless `sessions` is `all`. Install the loop for a private project.
+
 ## Rules the package keeps for itself
 - **Fail closed.** A missing tree, bank or transcript is a finding, not a pass.
 - **Say what was not checked.** A result names what ran and what did not, so silence is not read as closure.
 - **A refusal is capped.** A stop that can be refused without limit is a trap; the count is kept and the cap is a setting.
-- **Append, never rewrite.** The stores are append-only; an overwrite leaves a dated copy.
+- **Three kinds of file.** A log is only appended (the bank, the verdicts, the tick log). A source holds judgement kept by hand and is replaced only with a dated copy (the tree, the debt list). A view is recomputed and never edited (the gate's report, liveness). Regenerating a source loses what no script can make again.
+- **A failure reaches the session unasked.** A backup that did not succeed is said at the next prompt and shown by `doctor`.
 - **The builder is not the verifier.** A module is ported by one worker and accepted by another reader who runs its tests again.
 - **A budget.** This file has at most 120 lines, and a test holds it to that.
 
@@ -72,4 +84,12 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 ## What it does not do
 - It does not judge meaning. A gate checks that a source exists and resolves, not that the reading of it is right.
 - It does not evaluate pages. That is the engine; name its command in `stop_blocks_on`.
+- It does not let due checks take turns yet: a check that keeps failing is picked first at every tick, the others wait until they are more than three intervals late, and `tick liveness` then names them.
+- `record find` reads the words files only inside quotation marks; the principal's words outside quotes are not found there.
+- No verb writes a verdict: the line is written by hand, and the guard refuses a malformed one.
+- The reprint also reaches the workers a session starts. Four of the six that ported this package took it for foreign text and ignored it; whether a worker should be bound by it is open.
+- It cannot tell a public remote from a private one, which is why `backup.remote` has no default: until a project names one, `keep backup` refuses and every prompt says that nothing is kept.
+- `keep backup` needs bash 4, GNU coreutils and findutils, and `flock`; it has not run on macOS. Each session keeps its own backup worktree under the state folder, and old ones are not removed yet.
+- A user-level install replaces a symlinked settings file with a regular one. `guard permissions apply` removes a rules file's retired asks even where no guard is registered.
+- The hooks name the kit's clone by its path. If that clone is moved or deleted, each hook exits 2, which blocks tool calls and stops: run `hook install` again from the new place, or take the entries out of the settings, before removing the clone.
 - It has run in one kind of container. Whether a hook registered in the middle of a session fires is not established here.

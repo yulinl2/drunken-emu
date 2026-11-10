@@ -20,9 +20,10 @@ DEFAULTS = {
     "chain_debt": "loop-state/chain-debt.json",   # the waits that had no chain when the gate was first run
     "clause_bank_dir": "loop-state/bank",         # the bank cut into clauses, which chain links cite
     "verdicts": "loop-state/verdicts.jsonl",      # an advisor's verdicts, recorded before a guarded act
-    "protected_branches": ["main"],
-    "backup": {"remote": "origin", "prefix": "backup/", "extra_dirs": []},
+    "protected_branches": ["main", "master"],
+    "backup": {"remote": "", "prefix": "backup/", "extra_dirs": []},   # no default remote: a backup holds the transcripts, and the kit cannot tell a public remote from a private one
     "transcripts_dir": "~/.claude/projects",      # where the session transcripts are; LOOP_PROJECTS_DIR overrides it
+    "sessions": "here",   # which sessions the hooks act for: Config.serves, Config.transcript
     "state_dir": ".loop",                         # runtime state (counters, logs): never committed
     "checks": [],                                 # what `tick` runs: [{"name": ..., "run": [VERB, ...], "every_s": ...}]
     "stop_runs": [["keep", "backup"], ["record", "bank"]],   # what the stop hook runs every time; a failure is reported, never blocks
@@ -52,12 +53,32 @@ class Config(dict):
         return pathlib.Path(os.path.expanduser(os.environ.get("LOOP_PROJECTS_DIR") or str(self["transcripts_dir"])))
 
     def transcript(self):
-        """The live session's transcript: LOOP_TRANSCRIPT, else the newest */*.jsonl under transcripts_dir(), else None."""
+        """The transcript to act on: LOOP_TRANSCRIPT (a hook passes the one its event names). Without it, only a project that
+        says every session on this machine is its own ("sessions": "all") takes the newest */*.jsonl under transcripts_dir();
+        any other project gets None, never the newest transcript of a machine that several projects share."""
         given = os.environ.get("LOOP_TRANSCRIPT")
         if given:
-            return pathlib.Path(given)
+            return pathlib.Path(os.path.expanduser(given))
+        if self["sessions"] != "all":
+            return None
         found = [p for p in self.transcripts_dir().glob("*/*.jsonl") if p.is_file()]
         return max(found, key=lambda p: p.stat().st_mtime) if found else None
+
+    def serves(self, payload, unnamed=True):
+        """Whether a hook's event is this project's to act on. With "sessions": "all" every session on the machine is.
+        Otherwise only a session that works inside the project: the payload's cwd, at this event, is the root or under it.
+        A payload that names no cwd gets `unnamed`: yes for the guard (to guard is the safe direction) and for the prompt
+        (which takes nothing), no for the hooks that take or send data."""
+        if self["sessions"] == "all":
+            return True
+        cwd = payload.get("cwd") if isinstance(payload, dict) else None
+        if not isinstance(cwd, str) or not cwd:
+            return unnamed
+        try:
+            pathlib.Path(cwd).resolve().relative_to(self.root.resolve())
+        except ValueError:
+            return False
+        return True
 
 
 def _exclude(root, d):
@@ -77,6 +98,15 @@ def _exclude(root, d):
                 f.write(("\n" if text and not text.endswith("\n") else "") + line + "\n")
     except (ValueError, OSError):
         return
+
+
+def no_project(cfg, what):
+    """Empty when the project names itself (a loop.json at its root); else the sentence a verb says before it refuses.
+    A verb that takes or sends data runs only in a project that names itself: without a loop.json the root is a guess (the
+    git top level, or the working directory), and the kit's own clone would count as a project."""
+    if cfg.file is not None:
+        return ""
+    return f"{what}: no project at {cfg.root} (no loop.json there). A project names itself with a loop.json at its root; nothing was done."
 
 
 def project_root(start=None):
@@ -103,4 +133,6 @@ def load(start=None):
             raise SystemExit(f"loop.json: unknown key(s) {unknown}; the known keys are {sorted(DEFAULTS)}")
         for k, v in given.items():
             values[k] = {**values[k], **v} if isinstance(values[k], dict) and isinstance(v, dict) else v
+    if values["sessions"] not in ("here", "all"):
+        raise SystemExit(f'loop.json: "sessions" is "here" or "all", not {values["sessions"]!r}')
     return Config(root, values, f if f.is_file() else None)

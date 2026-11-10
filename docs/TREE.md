@@ -35,6 +35,7 @@ that is never executed is not a regeneration command.
 |   |-- emu
 |   |-- figpipe
 |   |-- gen_tree.py
+|   |-- loop
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- fixtures/
@@ -234,6 +235,27 @@ that is never executed is not a regeneration command.
 |   `-- render_svg.js
 |-- harness/
 |   `-- harness.html
+|-- loop/
+|   |-- tests/
+|   |   |-- test_closed_loop.py
+|   |   |-- test_gate.py
+|   |   |-- test_guard.py
+|   |   |-- test_hook.py
+|   |   |-- test_keep.py
+|   |   |-- test_record.py
+|   |   |-- test_selfcheck.py
+|   |   `-- test_tick.py
+|   |-- README.md
+|   |-- __init__.py
+|   |-- cli.py
+|   |-- config.py
+|   |-- gate.py
+|   |-- guard.py
+|   |-- hook.py
+|   |-- keep.py
+|   |-- keep_backup.sh
+|   |-- record.py
+|   `-- tick.py
 |-- out/
 |   `-- .gitkeep
 |-- theory/
@@ -257,5 +279,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 203 files tracked
+31 directories, 223 files tracked
 ```

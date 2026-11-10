@@ -16,7 +16,7 @@ VERBS = {
 
 def doctor():
     """What the loop can see from here, as JSON: nothing is changed."""
-    from loop import config
+    from loop import config, keep
     cfg = config.load()
     paths = {k: cfg.path(k).exists() for k in ("principal_method", "bank", "tree", "verdicts")}
     mods = {v: (pathlib.Path(__file__).parent / (v + ".py")).is_file() for v in VERBS}
@@ -28,7 +28,7 @@ def doctor():
         hooked = []
     t = cfg.transcript()
     print(json.dumps({"project": str(cfg.root), "loop_json": bool(cfg.file), "exists": paths, "verbs_present": mods,
-                      "hooks_in_user_settings": hooked, "transcript_found": bool(t)}, indent=1))
+                      "hooks_in_user_settings": hooked, "transcript_found": bool(t), "last_backup": keep.last_run(cfg) or None}, indent=1))
     return 0
 
 
