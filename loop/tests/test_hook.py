@@ -244,3 +244,19 @@ def test_a_second_projects_install_leaves_the_first_projects_hooks_in_place(proj
     assert first and all(c in after for c in first) and len(after) == 2 * len(first)
     assert sum(str(other) in c for c in after) == len(first)
     assert hook.main(["install"]) == 0 and sorted(_commands(_settings(home))) == sorted(after)
+
+
+def test_a_hook_whose_kit_is_gone_does_nothing_and_the_prompt_says_so(project):
+    """A missing script would exit 2, which blocks a tool call or a stop. The installed command tests for the kit first: with
+    the kit gone it exits 0 with nothing said, except at the prompt, where the session is told that the loop is off."""
+    root, home = project
+    gone = root.parent / "kit-that-was-moved" / "bin" / "loop"
+    for argv in (["hook", "stop"], ["hook", "post"], ["hook", "compact"], ["guard", "pre"]):
+        r = subprocess.run(hook.command_for(root, gone, argv), shell=True, input="{}", capture_output=True, text=True)
+        assert (r.returncode, r.stdout, r.stderr) == (0, "", ""), argv
+    r = subprocess.run(hook.command_for(root, gone, ["hook", "prompt"]), shell=True, input="{}", capture_output=True, text=True)
+    assert r.returncode == 0 and "the kit at" in r.stdout and "is gone" in r.stdout
+    (root / "PRINCIPAL-METHOD.md").write_text("METHOD TEXT\n", encoding="utf-8")   # and with the kit in place the same command runs it
+    r = subprocess.run(hook.command_for(root, BIN_LOOP, ["hook", "prompt"]), shell=True, input=json.dumps({"cwd": str(root)}),
+                       capture_output=True, text=True, env={**os.environ, "HOME": str(home)})
+    assert r.returncode == 0 and r.stdout.startswith("METHOD TEXT\n") and "is gone" not in r.stdout

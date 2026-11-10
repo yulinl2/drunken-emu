@@ -227,8 +227,16 @@ def cmd_compact(args):
 
 
 def command_for(root, loop_bin, argv):
-    """The command one hook runs: the project root in LOOP_PROJECT, then this kit's bin/loop with the verb and its subcommand."""
-    return f"LOOP_PROJECT={shlex.quote(str(root))} python3 -I {shlex.quote(str(loop_bin))} " + " ".join(shlex.quote(a) for a in argv)
+    """The command one hook runs: the project root in LOOP_PROJECT, then this kit's bin/loop with the verb and its subcommand.
+    In front of it, a test that the kit is still there. A hook whose script is gone exits 2, and for a PreToolUse or a Stop
+    hook that means "block": a moved or deleted clone would stop every tool call and every stop of every session on the
+    machine. With the kit gone the command does nothing and exits 0, and the prompt hook says so at every prompt: a loop that
+    is switched off must not look as if it were on."""
+    kit, gone = shlex.quote(str(loop_bin)), "exit 0"
+    if list(argv) == ["hook", "prompt"]:
+        gone = "{ echo " + shlex.quote(f"[loop] the kit at {loop_bin} is gone: the loop's hooks do nothing, the guard included. Run hook install "
+                                       "again from where the kit is now, or take its entries out of the settings.") + "; exit 0; }"
+    return f"[ -f {kit} ] || {gone}; LOOP_PROJECT={shlex.quote(str(root))} python3 -I {kit} " + " ".join(shlex.quote(a) for a in argv)
 
 
 def _trial(cmd):
@@ -250,9 +258,9 @@ def _ours(hook, loop_bin, root=None):
     cmd = str(hook.get("command", ""))
     if not (str(loop_bin) in cmd or OWN_COMMAND.search(cmd)):
         return False
-    if root is None or not cmd.startswith("LOOP_PROJECT="):
+    if root is None or "LOOP_PROJECT=" not in cmd:
         return True
-    return cmd.startswith(f"LOOP_PROJECT={shlex.quote(str(root))} ")
+    return f"LOOP_PROJECT={shlex.quote(str(root))} " in cmd
 
 
 def _read_settings(path):
