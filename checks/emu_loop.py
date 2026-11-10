@@ -38,7 +38,7 @@ out/loop/ (gitignored). ledger.jsonl is append-only and cand/ keeps every evalua
 hash; nothing is overwritten or deleted, a newer record supersedes an older one by pointing at it.
 
     python3 checks/emu_loop.py arm --watch 'path/*.jsx' [--chain 'dir/{stem}.chain.json'] [--max-rounds 3] [--no-smoke]
-    python3 checks/emu_loop.py install [--shared]   # register the hooks (default: .claude/settings.local.json)
+    python3 checks/emu_loop.py install [--shared | --user]   # register the hooks (default: .claude/settings.local.json; --user: ~/.claude/settings.json, every session)
     python3 checks/emu_loop.py status | eval ARTIFACT | disarm
 
 Stdlib only.
@@ -51,6 +51,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -464,7 +465,7 @@ def hook_stop(payload):
 
 # ---- commands -----------------------------------------------------------------------------
 
-def install(path):
+def install(path, prefix=HOOK):
     cfg = {}
     if os.path.exists(path):
         with open(path, encoding="utf-8") as f:
@@ -479,7 +480,7 @@ def install(path):
                 keep.append(g)
             elif rest:   # another command shares the group: keep it, without this module's old hook
                 keep.append({**g, "hooks": rest})
-        entry = {"hooks": [{"type": "command", "command": HOOK + which, "timeout": timeout}]}
+        entry = {"hooks": [{"type": "command", "command": prefix + which, "timeout": timeout}]}
         if matcher:
             entry["matcher"] = matcher
         hooks[event] = keep + [entry]
@@ -570,7 +571,9 @@ def main(argv=None):
     e.add_argument("--chain")
     e.add_argument("--no-smoke", action="store_true")
     i = sub.add_parser("install")
-    i.add_argument("--shared", action="store_true", help="write the checked-in .claude/settings.json, not settings.local.json")
+    ig = i.add_mutually_exclusive_group()
+    ig.add_argument("--shared", action="store_true", help="write the checked-in .claude/settings.json, not settings.local.json")
+    ig.add_argument("--user", action="store_true", help="write ~/.claude/settings.json: the hooks run in every session on this machine, from any directory")
     h = sub.add_parser("hook")
     h.add_argument("which", choices=["post-edit", "stop"])
     args = ap.parse_args(argv)
@@ -583,10 +586,14 @@ def main(argv=None):
     elif args.cmd == "eval":
         cmd_eval(args)
     elif args.cmd == "install":
-        target = os.path.join(ROOT, ".claude", "settings.json" if args.shared else "settings.local.json")
-        install(target)
-        if not args.shared:
-            keep_local(target)
+        if args.user:   # no working directory and no CLAUDE_PROJECT_DIR: the absolute path of this file, so any session finds it
+            target = os.path.join(os.path.expanduser("~"), ".claude", "settings.json")
+            install(target, prefix=f"python3 {shlex.quote(os.path.abspath(__file__))} hook ")
+        else:
+            target = os.path.join(ROOT, ".claude", "settings.json" if args.shared else "settings.local.json")
+            install(target)
+            if not args.shared:
+                keep_local(target)
         print(f"hooks registered in {rel(target)}; they stay inert until `arm`")
     else:
         try:

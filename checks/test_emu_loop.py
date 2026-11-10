@@ -237,6 +237,68 @@ def test_install_keeps_a_command_that_shares_a_group_with_the_hook(tmp_path):
     assert "echo mine" in cmds and sum("emu_loop.py" in c for c in cmds) == 1
 
 
+def test_install_user_writes_absolute_commands_into_the_user_settings(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))                   # expanduser("~") now points into tmp_path
+    L.main(["install", "--user"])
+    cfg = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    script = os.path.join(ROOT, "checks", "emu_loop.py")
+    assert os.path.isfile(script)
+    for event, which in (("PostToolUse", "post-edit"), ("Stop", "stop")):
+        assert len(cfg["hooks"][event]) == 1
+        cmd = cfg["hooks"][event][0]["hooks"][0]["command"]
+        assert cmd.startswith("python3 ") and script in cmd and cmd.endswith("hook " + which)
+        assert "CLAUDE_PROJECT_DIR" not in cmd                  # a session elsewhere has no project directory to expand
+
+
+def test_install_user_keeps_other_hooks_and_every_other_key(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    (tmp_path / ".claude").mkdir()
+    before = {"permissions": {"allow": ["Bash(git status:*)"]}, "theme": "dark",
+              "hooks": {"PostToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "echo post"}]}],
+                        "Stop": [{"hooks": [{"type": "command", "command": "echo stop"}]}]}}
+    (tmp_path / ".claude" / "settings.json").write_text(json.dumps(before))
+    L.main(["install", "--user"])
+    cfg = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    assert cfg["permissions"] == before["permissions"] and cfg["theme"] == "dark"
+    for event in ("PostToolUse", "Stop"):
+        others = [g for g in cfg["hooks"][event] if not any("emu_loop.py" in h["command"] for h in g["hooks"])]
+        assert others == before["hooks"][event]
+
+
+def test_install_user_run_twice_leaves_one_entry_per_event(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    L.main(["install", "--user"])
+    L.main(["install", "--user"])
+    cfg = json.loads((tmp_path / ".claude" / "settings.json").read_text())
+    for event in ("PostToolUse", "Stop"):
+        cmds = [h["command"] for g in cfg["hooks"][event] for h in g["hooks"]]
+        assert len(cfg["hooks"][event]) == 1 and sum("emu_loop.py" in c for c in cmds) == 1
+
+
+def test_install_user_and_shared_together_are_refused(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    with pytest.raises(SystemExit) as e:
+        L.main(["install", "--user", "--shared"])
+    assert e.value.code == 2                                    # argparse's usage error
+    assert not (tmp_path / ".claude" / "settings.json").exists()
+
+
+def test_install_user_leaves_the_repository_and_its_exclude_file_alone(tmp_path, monkeypatch):
+    import subprocess
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    monkeypatch.setattr(L, "ROOT", str(repo))
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    exclude = repo / ".git" / "info" / "exclude"
+    before = exclude.read_bytes() if exclude.exists() else None
+    L.main(["install", "--user"])
+    assert (tmp_path / "home" / ".claude" / "settings.json").is_file()
+    assert not (repo / ".claude" / "settings.local.json").exists()
+    assert (exclude.read_bytes() if exclude.exists() else None) == before
+
+
 def test_a_new_arming_gets_its_own_rounds_even_within_the_same_second(loop, tmp_path, monkeypatch):
     art, chain = loop                                           # the fixture's chain fails: every stop is refused
     monkeypatch.setattr(L, "now", lambda: "2026-10-18T19:00:00+00:00")   # every record in one second
