@@ -148,6 +148,36 @@ def test_install_refuses_a_command_that_fails_on_a_sample_payload(project, capsy
     assert not (home / ".claude" / "settings.json").exists()
 
 
+def test_install_refuses_user_and_project_together(project, trials, capsys):
+    root, home = project
+    assert hook.main(["install", "--user", "--project"]) == 2        # argparse's usage error: nothing is written anywhere
+    assert not (home / ".claude").exists() and not (root / ".claude").exists()
+
+
+def test_a_user_install_writes_nothing_under_the_project_root(project, trials):
+    root, home = project
+    (root / ".git" / "info").mkdir(parents=True)
+    (root / ".git" / "info" / "exclude").write_text("# exclude\n", encoding="utf-8")   # a clone's exclude file: left as it was
+    before = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    assert hook.main(["install"]) == 0                              # the default: the user settings
+    after = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    assert after == before and (home / ".claude" / "settings.json").is_file()
+
+
+def test_install_keeps_a_command_that_shares_a_group_with_ours_and_the_group_matcher(project, trials):
+    root, home = project
+    shared = {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo mine"},
+                                           {"type": "command", "command": f"LOOP_PROJECT={root} python3 -I {BIN_LOOP} hook stop", "timeout": 30}]}
+    f = home / ".claude" / "settings.json"
+    f.parent.mkdir()
+    f.write_text(json.dumps({"hooks": {"Stop": [shared]}}), encoding="utf-8")
+    assert hook.main(["install"]) == 0
+    groups = _settings(home)["hooks"]["Stop"]
+    kept = [g for g in groups if any(h["command"] == "echo mine" for h in g["hooks"])]
+    assert len(kept) == 1 and kept[0]["matcher"] == "Bash" and [h["command"] for h in kept[0]["hooks"]] == ["echo mine"]
+    assert sum(str(BIN_LOOP) in h["command"] for g in groups for h in g["hooks"]) == 1
+
+
 # the hooks themselves, run as a session runs them: one process per event
 
 def test_prompt_prints_the_principal_method_and_says_so_when_it_is_missing(project):

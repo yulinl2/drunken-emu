@@ -3,7 +3,7 @@
 
     python3 checks/verdict.py ARTIFACT [--chain CHAIN.json] [--no-smoke]     (also: bin/emu verdict ...)
 
-Layers, as in checks/emu_loop.py: smoke (`bin/emu smoke`, unless --no-smoke) and chain (`bin/emu chain check`,
+Layers: smoke (`bin/emu smoke`, unless --no-smoke) and chain (`bin/emu chain check`,
 when --chain is given). Gate: fail if any layer failed; not evaluated if no layer ran, a layer could not run, or
 the artifact is not a file; otherwise pass. Vector, every axis lower-is-better: smoke_fail (0 or 1),
 chain_findings, chain_load.
@@ -66,7 +66,7 @@ def last_json(text):
 @contextlib.contextmanager
 def one_at_a_time():
     """`bin/emu smoke` shares harness/app.jsx, out/srv.pid and one port with every other run of it, in any project on this
-    machine (emu_loop.py's Lock did this for its own runs). Two at once gave each other's pages: a page with a ReferenceError
+    machine (the lock that the retired checks/emu_loop.py took for its own runs did this, until 2026-11-10). Two at once gave each other's pages: a page with a ReferenceError
     read `smoke: go`. So one smoke run at a time, by a file lock in the kit; the kernel drops it when the process dies."""
     os.makedirs(os.path.dirname(LOCK), exist_ok=True)
     with open(LOCK, "w") as held:
@@ -115,7 +115,7 @@ def plug_chain(path, timeout=20):
 
 
 def gate_of(layers):
-    """The gate of checks/emu_loop.py: fail if any layer failed; not evaluated if no layer ran or one could not."""
+    """The gate: fail if any layer failed; not evaluated if no layer ran or one could not."""
     st = [r["status"] for r in layers.values()]
     return "fail" if "fail" in st else "not_evaluated" if (not st or "not_evaluated" in st) else "pass"
 

@@ -25,7 +25,7 @@ jobs:
 
   chains:
     # The operation-chain layer (docs/OPERATION-CHAINS.md): format, load, the ten verifiers (must-fire and must-hold
-    # each), the HW1 fixtures and the CLI; the HW2 registration and the draft publisher's registration pinned to their fixtures, and the scorer; emu_loop's unit tests (P-dae1). No Chromium, no model.
+    # each), the HW1 fixtures and the CLI; the HW2 registration and the draft publisher's registration pinned to their fixtures, and the scorer; the stub that replaced emu_loop (checks/test_emu_loop.py; P-dae1). No Chromium, no model.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

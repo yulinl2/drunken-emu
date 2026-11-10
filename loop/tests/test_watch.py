@@ -556,3 +556,75 @@ def test_status_names_what_a_pass_did_not_run(proj, capsys):
     capsys.readouterr()
     assert watch.main(["status"]) == 0
     assert "PASS (the check reports no layers)" in capsys.readouterr().out
+
+
+# retired checks/emu_loop.py (docs/EMU-LOOP-RETIRED.md): the engine's verdict judged through watch, a missing trial chain, a restore
+# hint that names a copy with its inputs, the event a post answers, and the error line of a check that did not run under a banner.
+
+CHAIN_BAD = KIT / "checks" / "fixtures" / "chains" / "hw1_correction_pass.json"         # recorded: 'expensive' trips the verifiers
+CHAIN_GOOD = KIT / "checks" / "fixtures" / "chains" / "hw1_correction_pass_fixed.json"   # designed: no findings
+VERDICT = str(KIT / "checks" / "verdict.py")
+
+
+def verdict_entry(name, chain):
+    return {"name": name, "files": ["app.txt"], "run": ["python3", "-I", VERDICT, "{path}", "--no-smoke", "--chain", str(chain)]}
+
+
+def test_the_engine_verdict_fails_the_known_bad_chain_and_passes_the_known_good_one_through_watch(proj):
+    setcfg(proj, watch=[verdict_entry("bad", CHAIN_BAD), verdict_entry("good", CHAIN_GOOD)])
+    put(proj, "an artifact the verdict reads\n")
+    cfg = config.load()
+    bad = watch.evaluate(cfg, cfg["watch"][0], "app.txt", "manual", force=True)
+    good = watch.evaluate(cfg, cfg["watch"][1], "app.txt", "manual", force=True)
+    assert bad["gate"] == "fail" and good["gate"] == "pass", (bad["tail"], good["tail"])
+    assert bad["vector"]["chain_findings"] > good["vector"]["chain_findings"], (bad["vector"], good["vector"])
+    assert bad["vector"]["chain_load"] > good["vector"]["chain_load"], (bad["vector"], good["vector"])
+
+
+def test_a_missing_trial_chain_holds_the_stop_through_watch(proj, monkeypatch, capsys, tmp_path):
+    trial = tmp_path / "trial.chain.json"
+    setcfg(proj, watch=[verdict_entry("verdict", trial)])
+    put(proj, "an artifact the verdict reads\n")
+    rc, _, err = hook_run(monkeypatch, capsys, proj, "stop")          # no trial chain: the chain layer did not run
+    assert rc == 2 and "did not run" in err, err
+    trial.write_bytes(CHAIN_GOOD.read_bytes())                        # the trial appears
+    rc, _, err = hook_run(monkeypatch, capsys, proj, "stop")
+    assert rc == 0, err
+
+
+def test_a_regression_offers_no_one_line_restore_when_its_inputs_differ(proj, monkeypatch, capsys):
+    setcfg(proj, watch=INPUT_WATCH)
+    (proj / "policy").mkdir()
+    (proj / "policy" / "rules.txt").write_text("v1\n", encoding="utf-8")
+    put(proj, "LOAD=1\n")
+    hook_run(monkeypatch, capsys, proj, "post")                       # candidate A: passes at load 1, with inputs v1
+    put(proj, "LOAD=2\n")                                             # B: dominated by A, judged with the same inputs
+    ctx = context(hook_run(monkeypatch, capsys, proj, "post")[1])
+    assert "REGRESSION" in ctx and "cp " in ctx, ctx                  # control: same inputs, so the copy restores the candidate
+    (proj / "policy" / "rules.txt").write_text("v2\n", encoding="utf-8")   # the inputs change
+    put(proj, "LOAD=2 \n")                                            # C: dominated by A, judged with inputs v2
+    ctx = context(hook_run(monkeypatch, capsys, proj, "post")[1])
+    assert "REGRESSION" in ctx and "cp " not in ctx and "inputs differ" in ctx, ctx
+
+
+def test_the_post_output_names_the_event_it_answers_and_exits_0(proj, monkeypatch, capsys):
+    put(proj, "BROKEN\n")
+    rc, out, _ = hook_run(monkeypatch, capsys, proj, "post", tool_name="Edit")
+    assert rc == 0 and json.loads(out)["hookSpecificOutput"]["hookEventName"] == "PostToolUse", out
+
+
+BANNER_CHECK = '''import sys
+print("Traceback (most recent call last):", file=sys.stderr)
+print("RuntimeError: the page did not mount", file=sys.stderr)
+for line in ("+----------------------------+", "| Playwright was just updated |", "| <3 the Playwright team     |", "+----------------------------+"):
+    print(line, file=sys.stderr)
+sys.exit(3)
+'''
+
+
+def test_a_check_error_under_a_banner_still_reaches_the_session(proj, monkeypatch, capsys):
+    (proj / "banner_check.py").write_text(BANNER_CHECK, encoding="utf-8")
+    setcfg(proj, watch=[{"name": "banner", "files": ["app.txt"], "run": ["python3", "-I", "banner_check.py", "{path}"]}])
+    put(proj, "an artifact\n")
+    ctx = context(hook_run(monkeypatch, capsys, proj, "post")[1])
+    assert "NOT EVALUATED" in ctx and "RuntimeError: the page did not mount" in ctx, ctx

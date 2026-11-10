@@ -442,7 +442,7 @@ identical block is intended; sharing can come back later by choice.
 
 **The idea, mapped.**
 
-| The figure | The kit today | `checks/emu_loop.py` v0 |
+| The figure | The kit today | `checks/emu_loop.py` v0 (retired 2026-11-10: a stub, see the update at the end of this entry) |
 |---|---|---|
 | Claude edits `solver.py` | a session edits the artifact | the same; `--watch` globs |
 | Circuit | the rendered page, or a recorded chain | a `bin/emu smoke` run; a chain file |
@@ -464,14 +464,14 @@ identical block is intended; sharing can come back later by choice.
 - D2. A scripted decider "knows too much" (P-b279); a model decider is paid and not reproducible (EXPLORE-SPEC, "Cost and placement"), the opposite of what a hook-driven gate wants.
 - D3. The two chain fixtures are one recorded chain (`hw1_correction_pass.json`, narrated 2026-10-03) and one *designed* chain (`hw1_correction_pass_fixed.json`, 2026-10-04). Telling them apart shows the plumbing ranks a known-bad above a known-good, not that the loop improves any page.
 
-**Concerns.**
+**Concerns.** (About `checks/emu_loop.py` as v0 was; retired 2026-11-10, see the update at the end of this entry.)
 - C1. Goodhart: an agent that can read the checker can tune to it. The ledger keeps every candidate, so a regression is visible afterwards; nothing prevents it.
 - C2. A Stop gate can trap a session. v0 caps refusals per arming (`--max-rounds`, default 3; 0 observes and never blocks), counts them in the ledger, and fails open on any hook error.
 - C3. Cost on every tool call: a disarmed hook measured 55.2 ms per call (mean of 20 runs, this container) for any session that installs the hooks; none for one that does not (`install` defaults to the uncommitted `.claude/settings.local.json`).
 - C4. `checks/smoke.py:23` calls `p.chromium.launch` itself instead of `checks.browser.alaunch`, so it fails whenever pip's Playwright is newer than the container's Chromium (SANDBOX-FACTS, 2026-10-17). Not fixed here.
 - C5. `install` left an untracked `.claude/settings.local.json`, and the harness's own Stop hook flags every untracked file and tells the session to commit it (`~/.claude/stop-hook-git-check.sh:32-37`): the first version of the loop generated work for a gate it did not know existed. `install` now adds the local file to `.git/info/exclude` (this clone only), and a test uses that hook's own predicate. `--shared` writes the tracked `.claude/settings.json` and needs no such step.
 
-**What exists (prototype v0, branch `claude/emu-loop-prototype`).** `checks/emu_loop.py` (stdlib only): `arm`, `disarm`, `status`, `eval`, `install`, and the two hook handlers. Layers: `smoke` (`bin/emu smoke`; an infrastructure failure is NOT EVALUATED, not FAIL) and `chain` (`bin/emu chain check`, parsed into findings and load). A candidate is the artifact bytes plus the chain bytes; a layer that did not run makes the verdict NOT EVALUATED, which the Stop gate treats as not passing. Every feedback block lists the layers that ran, the ones that did not, and says the verdict is a proxy. `checks/test_emu_loop.py`: 16 tests, 0.73 s, no browser, **not wired into CI** (open: whether it should be). Measured here: `bin/emu chain check` on `hw1_correction_pass.json` exits 1 (26 findings, load 160.40 for its "expensive" chain plus 2.50 for "cheap"); on `..._fixed.json` exits 0 (0 findings, load 15.00). **Unit-tested, not observed end to end**: the hook did not run in the session that built it (question 3).
+**What existed (prototype v0, branch `claude/emu-loop-prototype`; retired 2026-11-10, see the update at the end of this entry).** `checks/emu_loop.py` (stdlib only): `arm`, `disarm`, `status`, `eval`, `install`, and the two hook handlers. Layers: `smoke` (`bin/emu smoke`; an infrastructure failure is NOT EVALUATED, not FAIL) and `chain` (`bin/emu chain check`, parsed into findings and load). A candidate is the artifact bytes plus the chain bytes; a layer that did not run makes the verdict NOT EVALUATED, which the Stop gate treats as not passing. Every feedback block lists the layers that ran, the ones that did not, and says the verdict is a proxy. `checks/test_emu_loop.py`: 16 tests, 0.73 s, no browser, **not wired into CI** (open: whether it should be). Measured here: `bin/emu chain check` on `hw1_correction_pass.json` exits 1 (26 findings, load 160.40 for its "expensive" chain plus 2.50 for "cheap"); on `..._fixed.json` exits 0 (0 findings, load 15.00). **Unit-tested, not observed end to end**: the hook did not run in the session that built it (question 3).
 
 **Not done, and why.** The loop is not closed: the evaluator reads a chain somebody recorded, and capturing one from a driven run is P-9d8b; the goal-directed explore layer (P1) is not in the loop; no model decider. Nothing here claims the loop improves an artifact. This entry must not be read as licence for a fixed tap sequence to stand in for the user trial (EXPLORE-SPEC, "What must not happen to this spec"); the layer labels in every feedback block exist to stop that.
 
@@ -489,6 +489,8 @@ identical block is intended; sharing can come back later by choice.
 - `test_emu_loop.py` now has 24 tests.
 
 **2026-11-10: a harness that calls the kit without being asked (P-dae1).** `loop/` (pull request 85) runs its steps from the session's own events: at the prompt, at every Nth tool call, before a guarded tool call and at every stop. A project that names the engine's command in `stop_blocks_on` is told its verdict at every stop without calling it, and a backup that failed is said at the next prompt. Seen working in tests that send the events themselves (`loop/tests/test_closed_loop.py`), and, for another project's user-level hooks, in one live session (`docs/SANDBOX-FACTS.md`, 2026-11-10). Not yet seen: the loop's own hooks installed in a live session with the engine named as a blocker. That observation closes P-dae1 or says why not; until then it stays `OPEN`.
+
+**2026-11-10: `checks/emu_loop.py` is retired, and `loop watch` supersedes it (`loop/watch.py`; `loop/README.md`, the `watch` row).** `loop watch` judges a changed watched file through its check, puts the verdict into the session's context after the edit, and holds a stop while the newest verdict fails, is not evaluated or is dominated. `checks/emu_loop.py` is now a stub that exits 0 and says so (`checks/test_emu_loop.py`); each of its 29 tests is mapped in `docs/EMU-LOOP-RETIRED.md`. P-dae1 stays `OPEN`: the observation above is still not made, and question 3 now concerns the loop's own hooks (`loop/hook.py`), not the retired module.
 
 ## P-4009 — a test fixture made by editing a real record carries the record `OPEN`
 

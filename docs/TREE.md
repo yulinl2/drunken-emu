@@ -134,6 +134,7 @@ that is never executed is not a regeneration command.
 |   |   |-- hw2-sample-pass.measured-example-bank.json
 |   |   |-- hw2-sample-pass.measured.json
 |   |   `-- hw2-sample-pass.prediction.json
+|   |-- EMU-LOOP-RETIRED.md
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -295,5 +296,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 235 files tracked
+35 directories, 236 files tracked
 ```

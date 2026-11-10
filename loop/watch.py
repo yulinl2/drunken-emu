@@ -26,7 +26,7 @@ the newest verdict of a watched file fails, could not be made (out of time, lock
 a PASS says what its check did not run.
 FAILS WHEN: a watched file's bytes or an input's changed and the next stop passes with no record for those bytes; a verdict is
 reused for other bytes, inputs or another command; a ledger line that is not a record is read as one; a check that could not run
-reads as a pass; a PASS does not say what did not run (loop/tests/test_watch.py).
+reads as a pass; a PASS does not say what did not run; a restore hint names a copy that is not the whole candidate (loop/tests/test_watch.py).
 
 usage: python3 -I bin/loop watch eval [PATH ...]   judge now, every watched file or the PATHs (relative to the project
                                                    root): exit 0 pass, 1 fail or dominated, 3 not evaluated, 2 a PATH
@@ -398,6 +398,12 @@ def _compare(prev, rec):
     return line
 
 
+def _inputs_now(cfg, check):
+    """The inputs of the named check's entry as they are on disk now, in the form a record keeps them ([] for an entry without inputs)."""
+    entry = next((e for e in cfg["watch"] if e["name"] == check), None)
+    return inputs_of(cfg, entry) if entry else []
+
+
 def block(cfg, rec, refusals=True):
     """What the session is told about one record, as plain lines: the check and the file, the gate in capitals (a PASS with what it did
     not run), the layers that ran and those that did not, the inputs judged with it, the vector, the output of a fail or a not
@@ -432,7 +438,10 @@ def block(cfg, rec, refusals=True):
     if rec["gate"] == "pass" and rec["dominated_by"]:
         dom = next(r for r in ledger if r["id"] == rec["dominated_by"])
         out.append(f"  REGRESSION: record {dom['id']} ({fmtvec(dom['vector'])}) is no worse on every axis and better on one.")
-        if held(cfg, dom):
+        if dom.get("inputs", []) != _inputs_now(cfg, rec["check"]):   # a copy of the file restores the candidate only with its inputs
+            out.append("  Its inputs differ from the ones on disk now, so copying its file back would not restore that candidate; "
+                       "no one-line restore is offered.")
+        elif held(cfg, dom):
             out.append(f"  Its copy: {dom['snapshot']}. Restore it: cp {dom['snapshot']} {rec['path']}")
     return "\n".join(out)
 

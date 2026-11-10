@@ -190,9 +190,9 @@ A prediction registered before a real pass, and scored after it: `docs/predictio
 
 ## The loop (`loop/`, `bin/loop`): since 2026-11-10
 
-`bin/emu` is the engine; `bin/loop` is a harness around a session that calls it without being asked (P-dae1). Six verbs
-(`record`, `gate`, `tick`, `hook`, `guard`, `keep`), one configuration file per project (`loop.json`), standard library,
-git and bash. The manual, what each verb guarantees, and the known limits are in `loop/README.md`.
+`bin/emu` is the engine; `bin/loop` is a harness around a session that calls it without being asked (P-dae1). Seven verbs
+(`record`, `gate`, `tick`, `hook`, `guard`, `keep`, `watch`), one configuration file per project (`loop.json`), standard library,
+git and bash. `watch` judges a changed file through its check and holds a stop while the verdict fails; it replaces the retired `checks/emu_loop.py` (`docs/EMU-LOOP-RETIRED.md`). The manual, what each verb guarantees, and the known limits are in `loop/README.md`.
 
 ```
 python3 -m pytest -q loop/tests        # no Chromium, no model
