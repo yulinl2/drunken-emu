@@ -9,8 +9,8 @@ between two tool calls (a queued_command attachment). Four subcommands:
   find     searches the bank and the words files (the "words" globs) for the given words, case-insensitively
   pending  lists the queued messages still waiting in a transcript: typed while a turn runs, not yet delivered to the model
 
-INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; pending lists each queued message that no later row delivers, once, in file order, and no other message.
-FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed (loop/tests/test_record.py, loop/tests/test_record_ways.py)
+INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; one rule, delivers(), decides what a row delivers, for the bank and for pending alike (its text is one waiting message, or its text blocks are, or its text is cut exactly into waiting messages joined by one newline each); pending lists each queued message that no later row delivers, once, in file order, and no other message.
+FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed; a row that only contains a waiting message among other text delivers it, a cut that uses one message twice delivers, and a queued slash command is counted as not delivered yet (loop/tests/test_record.py, loop/tests/test_record_ways.py, loop/tests/test_rec_delivery.py)
 
 usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
@@ -41,7 +41,8 @@ LONG_REPEAT = 200        # a scheduled delivery repeating a banked text this lon
 QUOTED = re.compile(r'["\u201c\u300c](.+?)["\u201d\u300d]')   # in a words file, the principal's words are the quoted parts
 
 # Text that starts with one of these is not the principal's: notices of the tool itself, hook output, compaction summaries,
-# interrupt markers. A prefix that names one project's own jobs is not here: it goes in loop.json as "not_principal_prefixes".
+# interrupt markers, the harness's goal check-ins. A prefix that names one project's own jobs is not here: it goes in loop.json
+# as "not_principal_prefixes". This is the one list: bank, pending and raw read it.
 NOT_PRINCIPAL = (
     "<task-notification>", "Stop hook feedback", "[SYSTEM NOTIFICATION", "UserPromptSubmit hook", "PostToolUse", "PreToolUse",
     "<system-reminder>", "This session is being continued", "Called the Read tool", "Result of calling",
@@ -49,9 +50,10 @@ NOT_PRINCIPAL = (
     "# /loop", "The following skills were", "Base directory for this skill", "(Re-invocation of",
     "This session's worker process was restarted", "Your response above was stopped by a safety classi",
     "A session-scoped Stop hook is now active", "Another Claude session sent a message", "[Request interrupted by user",
+    "Goal check-in",
 )
-# The raw listing drops these as well (its own list, kept as it was).
-RAW_SKIP = ("This session is being continued", "Caveat:", "Goal check-in", "[Request interrupted", "[SYSTEM", "UserPromptSubmit hook")
+# What the raw listing skips beyond the one list: a second named tuple, added to it (never a copy of it).
+RAW_EXTRA = ("Caveat:", "[Request interrupted", "[SYSTEM")
 HANDOFF = (" [inside a /compact command: may be the assistant's own handoff line; "
            "find the words elsewhere before calling it the principal's rule]")
 
@@ -170,37 +172,90 @@ def _row(raw):
     return obj if isinstance(obj, dict) else None
 
 
-def _strings(x):
-    """Every string value inside x, at any depth."""
-    if isinstance(x, str):
-        yield x
-    elif isinstance(x, dict):
-        for v in x.values():
-            yield from _strings(v)
-    elif isinstance(x, list):
-        for v in x:
-            yield from _strings(v)
-
-
-def _delivery_strings(obj):
-    """The strings of a row in which a queued message reaches the model: the string content and the text blocks of a user row
-    that is neither a sidechain row nor a compaction summary (a match inside a tool_result block does not count), and, of an
-    attachment row of type queued_command, the joined text of its prompt (a list of items is one text) and every string value."""
+def delivery_of(obj):
+    """(text, blocks) of a row that can deliver a queued message, or None: the one reading of a row that pending and the bank share.
+    A user row that is neither a sidechain row nor a compaction summary: its text is its text blocks joined by one newline, stripped,
+    and its blocks are its non-empty text blocks, stripped (a match inside a tool_result block does not count). A queued_command
+    attachment: its prompt text, with no blocks. Any other row delivers nothing."""
     if obj.get("type") == "user":
         if obj.get("isSidechain") or obj.get("isCompactSummary"):
-            return []
+            return None
         msg = obj.get("message")
         content = msg.get("content") if isinstance(msg, dict) else None
         if isinstance(content, str):
-            return [content]
+            return content.strip(), _blocks(obj)
         if isinstance(content, list):
-            return [b["text"] for b in content if isinstance(b, dict) and b.get("type") == "text" and isinstance(b.get("text"), str)]
-        return []
+            items = [b.get("text") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+            return "\n".join(t for t in items if isinstance(t, str)).strip(), _blocks(obj)
+        return None
     att = obj.get("attachment")
     if obj.get("type") == "attachment" and isinstance(att, dict) and att.get("type") == "queued_command":
         text = _prompt_text(att)
-        return ([text] if text else []) + list(_strings(att))
-    return []
+        return (text, None) if text else None
+    return None
+
+
+def delivers(texts, text, blocks=None):
+    """The indices, into texts (the waiting messages, oldest first), of the messages that one row delivers: the one rule that pending
+    and the bank both apply. text is the row's text, stripped; blocks are its text blocks when it has several, None for an attachment.
+    In this order: (a) the text is exactly one waiting message: that one, the oldest of equal texts; (b) the row has two or more blocks
+    and each block is a waiting message, equal texts counted as often as they wait: each of them; (c) the text is cut exactly into two
+    or more waiting messages joined by one newline each, every message used once: the first cut found when the messages are tried
+    oldest first, each of them; (d) anything else delivers nothing, so a waiting message that is only part of other text stays
+    waiting."""
+    if not text or not texts:
+        return []
+    for i, w in enumerate(texts):
+        if w == text:
+            return [i]
+    if blocks is not None and len(blocks) >= 2:
+        picked = _each_block(texts, blocks)
+        if picked is not None:
+            return picked
+    return _cut(texts, text) or []
+
+
+def _each_block(texts, blocks):
+    """The index of the oldest waiting message equal to each block, the indices distinct; None when a block is no waiting message."""
+    used, picked = set(), []
+    for b in blocks:
+        i = next((j for j, w in enumerate(texts) if w == b and j not in used), None)
+        if i is None:
+            return None
+        used.add(i)
+        picked.append(i)
+    return picked
+
+
+def _cut(texts, text):
+    """The first cut of text into two or more waiting messages joined by one newline each, every message used once, the messages tried
+    oldest first: a depth-first search that remembers each dead end (the state is the place in the text and the texts still unused, so
+    a dead end is not searched again). The indices of the messages in the order of the text; None when there is no cut."""
+    dead = set()
+
+    def go(pos, unused, chosen):
+        for k, i in enumerate(unused):
+            w = texts[i]
+            if not text.startswith(w, pos):
+                continue
+            end = pos + len(w)
+            if end == len(text):
+                if chosen:                      # the one before it makes two or more
+                    return chosen + [i]
+                continue
+            if text[end] != "\n":
+                continue
+            rest = unused[:k] + unused[k + 1:]
+            key = (end + 1, tuple(sorted(texts[j] for j in rest)))
+            if key in dead:
+                continue
+            found = go(end + 1, rest, chosen + [i])
+            if found is not None:
+                return found
+            dead.add(key)
+        return None
+
+    return go(0, tuple(range(len(texts))), [])
 
 
 def _is_command(text):
@@ -209,12 +264,13 @@ def _is_command(text):
 
 
 def _step(waiting, obj, n, prefixes):
-    """Applies the row obj, the n-th line of its transcript, to the list of waiting messages. A row that delivers a waiting message
-    takes it out; a queue row that is the principal's and not a command joins the list. Rows come in file order, so a delivery
-    takes out only the messages queued before it."""
-    strings = _delivery_strings(obj) if waiting else []
-    if strings:
-        waiting[:] = [w for w in waiting if not any(w["text"] in s for s in strings)]
+    """Applies the row obj, the n-th line of its transcript, to the list of waiting messages: a row that delivers some of them (see
+    delivers) takes those out; a queue row that is the principal's and not a command joins the list. Rows come in file order, so a
+    delivery takes out only the messages queued before it."""
+    d = delivery_of(obj)
+    if d is not None and waiting:
+        gone = set(delivers([w["text"] for w in waiting], *d))
+        waiting[:] = [w for i, w in enumerate(waiting) if i not in gone]
     text = queued_text(obj, prefixes)
     if text is not None and not _is_command(text):
         at = obj.get("timestamp")
@@ -328,9 +384,11 @@ def pending_since(state, src, prefixes=NOT_PRINCIPAL):
 
 
 def scan(path, prefixes):
-    """The principal's messages of a transcript, in file order, as events of a kind: typed (a user row), dialog (an answer to a
+    """The events of a transcript, in file order: the principal's messages, of a kind: typed (a user row), dialog (an answer to a
     question dialog), queued (an enqueue row: typed while a turn was running), midturn (a queued_command attachment: a queued
-    message delivered between two tool calls) or host (a queued_command attachment that is the host speaking; see delivered_text)."""
+    message delivered between two tool calls) or host (a queued_command attachment that is the host speaking; see delivered_text).
+    A row that delivers queued messages and is none of these is a row event: it is not banked. Each event that can deliver carries
+    its delivery (delivery_of) under "deliver"."""
     ask_ids, events = set(), []
     with open(path, "rb") as fh:   # bytes, a line at a time; a partial last line is skipped and a later run picks it up
         for n, line in enumerate(fh, 1):
@@ -354,13 +412,14 @@ def scan(path, prefixes):
                 kind, text = "queued", queued_text(obj, prefixes)
             if text is None:
                 kind, text = delivered_text(obj, prefixes)
+            d = delivery_of(obj)
             if text is None:
-                continue
+                if not d or not d[0]:
+                    continue
+                kind, text = "row", d[0]          # a row that delivers and says nothing of the principal's: never banked
             ev = {"kind": kind, "key": obj.get("uuid") or f"{pathlib.Path(path).stem}:line:{n}", "line": n, "timestamp": obj.get("timestamp"),
                   "text": text, "meta": bool(obj.get("isMeta")),
-                  "scheduled": obj.get("turnOrigin") == "scheduled" or bool(obj.get("wakeupSource"))}
-            if kind == "typed":
-                ev["blocks"] = _blocks(obj)
+                  "scheduled": obj.get("turnOrigin") == "scheduled" or bool(obj.get("wakeupSource")), "deliver": d}
             events.append(ev)
     return events
 
@@ -390,37 +449,39 @@ def load_bank(path):
 
 def plan(events, seen, stamps, long_texts):
     """The records to bank, in file order. A queued message is one utterance: banked once, under the key of its enqueue row, with
-    the time it was typed; when a row delivers it, also the time of the delivery and the way: at the end of a turn (a user row
-    that carries it; a user row whose text blocks are several queued messages delivers each one) or between two tool calls (a
-    queued_command attachment). Queued messages of one text are delivered oldest first. The row that delivers a message is not
-    banked itself. A notice of the host delivers too, and what it delivers is not banked. A delivery that no enqueue row
-    precedes is banked under its own key and time. A repeat within the same second, or a scheduled repeat, is skipped. A key
-    that the bank holds stands, and so does the key of the row that delivered the message: nothing is banked twice."""
-    waiting = collections.defaultdict(collections.deque)   # text -> the queued events not delivered yet, oldest first
-    took = {}          # line of a queued event -> (the row that delivered it, its way)
-    host, carrier, mid = set(), set(), set()   # lines: queued events a notice delivered; user rows and attachments that delivered
+    the time it was typed; when a row delivers it (delivers: the same rule that pending applies), also the time of the delivery and
+    the way: at the end of a turn (a user row, banked or not, whose text, blocks or cut delivers it) or between two tool calls (a
+    queued_command attachment). The row that delivers a message is not banked itself. A notice of the host delivers too, and what
+    it delivers is not banked. A delivery that no enqueue row precedes is banked under its own key and time. A repeat within the
+    same second, or a scheduled repeat, is skipped. A key that the bank holds stands, and so does the key of the row that delivered
+    the message: nothing is banked twice."""
+    waiting = []      # the queued events not delivered yet, oldest first
+    took = {}         # line of a queued event -> (the row that delivered it, its way)
+    host, carrier, mid = set(), set(), set()   # lines: queued events a notice delivered; rows that delivered; attachments that delivered
     for ev in events:
-        k, text = ev["kind"], ev["text"]
-        if k == "queued":
-            waiting[text].append(ev)
-        elif k == "typed":
-            blocks = ev["blocks"] if len(ev["blocks"]) > 1 else []
-            if waiting.get(text):
-                took[waiting[text].popleft()["line"]] = (ev, "end-of-turn")
-                carrier.add(ev["line"])
-            elif blocks and all(len(waiting.get(b, ())) >= c for b, c in collections.Counter(blocks).items()):
-                for b in blocks:
-                    took[waiting[b].popleft()["line"]] = (ev, "end-of-turn")
-                carrier.add(ev["line"])
-        elif k == "midturn" and waiting.get(text):
-            took[waiting[text].popleft()["line"]] = (ev, "mid-turn")
+        if ev["kind"] == "queued":
+            waiting.append(ev)
+            continue
+        if ev["deliver"] is None or not waiting:
+            continue
+        hit = delivers([w["text"] for w in waiting], *ev["deliver"])
+        if not hit:
+            continue
+        k, gone = ev["kind"], set(hit)
+        for i in hit:
+            if k == "host":
+                host.add(waiting[i]["line"])
+            else:
+                took[waiting[i]["line"]] = (ev, "mid-turn" if k == "midturn" else "end-of-turn")
+        if k == "midturn":
             mid.add(ev["line"])
-        elif k == "host" and waiting.get(text):
-            host.add(waiting[text].popleft()["line"])
+        elif k != "host":
+            carrier.add(ev["line"])
+        waiting = [w for i, w in enumerate(waiting) if i not in gone]
     new = []
     for ev in events:
         k, line = ev["kind"], ev["line"]
-        if k == "host" or line in host or line in carrier or line in mid:
+        if k in ("host", "row") or line in host or line in carrier or line in mid:
             continue
         if k == "queued":                                  # its row is the delivering one, when one delivered it
             row, way = took.get(line, (None, None))
@@ -473,13 +534,21 @@ def _one_writer(cfg):
 
 WAYS = (("typed", "typed at a prompt"), ("dialog", "answers to a question"),
         ("end-of-turn", "queued and delivered at the end of a turn"), ("mid-turn", "queued and delivered in the middle of a turn"),
-        ("waiting", "queued and not delivered yet"))
+        ("waiting", "queued and not delivered yet"), ("command", "queued commands (the engine runs them)"))
+
+
+def _way(r):
+    """The way a banked row counts under: its kind; for a queued row, the way it was delivered, else a slash command (the engine runs
+    it, and no row delivers it) or a message still waiting."""
+    if r["kind"] != "queued":
+        return r["kind"]
+    return r.get("delivered_via") or ("command" if _is_command(r["text"]) else "waiting")
 
 
 def ways(rows):
     """How many of the rows each way took, every way named, so that a zero is seen: typed at a prompt, an answer to a question, a
-    queued message delivered at the end of a turn or between two tool calls, and one not delivered yet."""
-    c = collections.Counter(r["kind"] if r["kind"] != "queued" else (r.get("delivered_via") or "waiting") for r in rows)
+    queued message delivered at the end of a turn or between two tool calls, one not delivered yet, and a queued command."""
+    c = collections.Counter(_way(r) for r in rows)
     return ", ".join(f"{label} {c[key]}" for key, label in WAYS)
 
 
@@ -500,7 +569,7 @@ def cmd_bank(args, cfg):
     try:
         with _one_writer(cfg):
             seen, stamps, long_texts = load_bank(bank)
-            new = plan(scan(src, NOT_PRINCIPAL + _extra_prefixes(cfg)), seen, stamps, long_texts)
+            new = plan(scan(src, principal_prefixes(cfg)), seen, stamps, long_texts)
             if new:
                 append(bank, new)
     except (RecordError, OSError, ValueError) as e:
@@ -595,7 +664,7 @@ def typed_messages(lines, skip):
 
 
 def cmd_raw(args, cfg):
-    skip = RAW_SKIP + _extra_prefixes(cfg)
+    skip = principal_prefixes(cfg) + RAW_EXTRA
     try:
         pat = re.compile(args.grep, re.I) if args.grep else None
     except re.error as e:
@@ -669,7 +738,7 @@ def search(cfg, words, every=False, limit=60):
     """(hits, total, notes). A hit is (source, when, where, snippet): a line of the bank, or the quoted words of a words file.
     The notes name what could not be read, so that a search which found nothing is not taken as a pass over what it did not read."""
     pats = [re.compile(re.escape(w), re.I) for w in words]
-    prefixes = NOT_PRINCIPAL + _extra_prefixes(cfg)
+    prefixes = principal_prefixes(cfg)
     out, seen, notes = [], set(), []
 
     def add(src, when, where, snip):

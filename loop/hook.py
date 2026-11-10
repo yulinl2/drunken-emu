@@ -1,11 +1,11 @@
-"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, every tool call shows the principal's queued messages that are still waiting, and a stop runs its checks and is refused a capped number of times in a row. Each event has one time budget (HOOK_TIME) that ends before the timeout install writes for its command: the steps and checks it runs share that budget, and what would run past it is cut and reported.
+"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, every tool call of the session shows the principal's queued messages that are still waiting (a worker's call shows none), and a stop runs its checks and is refused a capped number of times in a row. Each event has one time budget (HOOK_TIME) that ends before the timeout install writes for its command: the steps and checks it runs share that budget, and what would run past it is cut and reported.
 
-INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3), and every command it registers carries its event's timeout; a hook waits at most 5 s for a lock (2 s for the post counter and the queued words), then goes on without it, except watch.lock: a post that finds it held judges nothing and says so, and a stop waits for it inside its budget and refuses what it could not judge; a step or a watched check runs no longer than what is left of its event's budget; every tool call shows each queued message once per session, and a queue that cannot be read is said in one line.
-FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock, except watch.lock at a stop, which it waits for inside its budget; a step or a watched check runs past its event's budget without being reported as out of time, or a hook runs past the timeout its install wrote; a queued message still waiting is shown twice in one session or at no tool call; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had, or with a registered command that has no timeout (loop/tests/test_hook.py).
+INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3), and every command it registers carries its event's timeout; a hook waits at most 5 s for a lock (2 s for the post counter and the queued words), then goes on without it, except watch.lock: a post that finds it held judges nothing and says so, and a stop waits for it inside its budget and refuses what it could not judge; a step or a watched check runs no longer than what is left of its event's budget; every tool call of the root shows each queued message once per session, and a worker's call (a payload with a non-empty agent_id) shows none and counts only its own calls; a queue that cannot be read is said in one line.
+FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock, except watch.lock at a stop, which it waits for inside its budget; a step or a watched check runs past its event's budget without being reported as out of time, or a hook runs past the timeout its install wrote; a queued message still waiting is shown twice in one session or at no tool call of the root; a worker's call shows or marks one, or moves the root's count; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had, or with a registered command that has no timeout (loop/tests/test_hook.py, loop/tests/test_rec_delivery.py).
 usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
        python3 -I bin/loop hook prompt | post | stop | compact
 """
-import argparse, contextlib, hashlib, json, os, pathlib, shlex, subprocess, sys, tempfile, time
+import argparse, contextlib, hashlib, json, os, pathlib, re, shlex, subprocess, sys, tempfile, time
 from loop import config, record, watch
 
 try:
@@ -209,10 +209,25 @@ def _count(path):
         return 0
 
 
-def _bump(cfg):
-    """The post counter: one read, one more, one write, under post-count.lock, so that two tool calls at the same moment cannot
-    both count n+1. Returns the new count."""
-    counter = cfg.state("post-count.json")
+def _tame(agent):
+    """A worker's agent_id as a part of a file name: its characters outside letters, digits, "_" and "-" become "_", and a short hash
+    of the whole id keeps two ids that read alike apart."""
+    digest = hashlib.sha256(agent.encode("utf-8", "surrogatepass")).hexdigest()[:12]
+    return re.sub(r"[^A-Za-z0-9_-]", "_", agent)[:40] + "-" + digest
+
+
+def _agent(payload):
+    """The agent_id of the worker that fired this call: a subagent the session started, whose payload carries a non-empty string
+    agent_id. None for the root's call."""
+    agent = payload.get("agent_id")
+    return agent if isinstance(agent, str) and agent else None
+
+
+def _bump(cfg, agent=None):
+    """The post counter of the root (post-count.json) or, for a worker's call, of that worker (post-count-<its agent_id>.json): one
+    read, one more, one write, under post-count.lock, so that two tool calls at the same moment cannot both count n+1. Returns the
+    new count."""
+    counter = cfg.state("post-count.json" if agent is None else f"post-count-{_tame(agent)}.json")
     with _locked(cfg, "post-count.lock", POST_LOCK_WAIT_S):
         count = _count(counter) + 1
         _write_json(counter, {"count": count})
@@ -274,16 +289,18 @@ def _queued(cfg, payload):
 
 
 def cmd_post(args):
-    """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse).
-    Then every watched file is judged (loop/watch.py); the verdicts go into the same context, so one output may carry both. Last,
-    the principal's queued messages still waiting in the transcript are added (_queued), each once per session."""
+    """Counts the tool call (the root's count, or the count of the worker whose call it is); on every reread_every-th one prints the
+    principal's method as additional context (PostToolUse). Then every watched file is judged (loop/watch.py); the verdicts go into
+    the same context, so one output may carry both. Last, the root's call adds the principal's queued messages still waiting in the
+    transcript (_queued), each once per session; a worker's call reads no queue and marks nothing."""
     deadline = deadline_of("PostToolUse")
     try:
         payload = _payload()
         cfg = config.load()
         if not _mine(cfg, payload, "post"):
             return 0
-        count = _bump(cfg)
+        agent = _agent(payload)
+        count = _bump(cfg, agent)
         ctx = []
         every = cfg["reread_every"]
         if not isinstance(every, int) or isinstance(every, bool) or every < 1:
@@ -300,7 +317,8 @@ def cmd_post(args):
                 ctx += watch.post(cfg, deadline)
             except Exception as e:   # a judge that broke says so and is passed over: the tool call goes on
                 _say(f"loop hook post: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
-        ctx += _queued(cfg, payload)                 # the queued words come last: after the reprint and the verdicts
+        if agent is None:                            # the queued words come last: after the reprint and the verdicts; a worker's call reads none
+            ctx += _queued(cfg, payload)
         if ctx:
             sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "\n\n".join(ctx)}}) + "\n")
     except (Exception, SystemExit) as e:

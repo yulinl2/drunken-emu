@@ -81,11 +81,12 @@ def test_skill_bodies_and_harness_notices_are_not_banked_and_wrapped_principal_w
             meta("v4", "t4", "This session's worker process was restarted. If your previous turn was already complete, take no action."),
             meta("v5", "t5", "Stop hook feedback:\n[a hook script]: There are uncommitted changes"),
             meta("v7", "t7", "Your response above was stopped by a safety classifier."),
-            user("v6", "t6", "# A long heading the principal typed\n" + "word " * 700)]
+            user("v6", "t6", "# A long heading the principal typed\n" + "word " * 700),
+            meta("v8", "t8", "a line the principal typed, that a harness row carries")]
     src = project / "t.jsonl"
     write_jsonl(src, rows)
     assert record.main(["bank", "--src", str(src)]) == 0
-    assert [(b["key"], b["meta"]) for b in bank_rows()] == [("v1", False), ("v3", True), ("v6", False)]
+    assert [(b["key"], b["meta"]) for b in bank_rows()] == [("v1", False), ("v6", False), ("v8", True)]
 
 
 def test_scheduled_repeats_replays_and_line_separators(project):
@@ -97,14 +98,14 @@ def test_scheduled_repeats_replays_and_line_separators(project):
             user("o2", "2026-01-01T00:12:00Z", cmd, clientPlatform="ios"),
             user("h1", "2026-01-01T00:13:00.100Z", "same second", origin={"kind": "human"}),
             user("h2", "2026-01-01T00:13:00.900Z", "same second", origin={"kind": "human"}),
-            user("s1", "2026-01-01T00:14:00Z", "a b c\x85d", origin={"kind": "human"})]
+            user("s1", "2026-01-01T00:14:00Z", "a" + chr(0x2028) + "b" + chr(0x2029) + "c\x85d", origin={"kind": "human"})]
     src = project / "t.jsonl"
     write_jsonl(src, rows)
     assert record.main(["bank", "--src", str(src)]) == 0
     bank = bank_rows()
     assert [b["key"] for b in bank] == ["w1", "o1", "o2", "h1", "s1"]
     assert [b["line"] for b in bank] == [1, 3, 4, 5, 7]
-    assert bank[-1]["text"] == "a b c\x85d"
+    assert bank[-1]["text"] == "a" + chr(0x2028) + "b" + chr(0x2029) + "c\x85d"
 
 
 # The raw listing: one line of the transcript per entry, as the file holds it.
@@ -114,7 +115,7 @@ def raw_rec(content, ts="2026-01-01T00:08:00.000Z", **kw):
 
 RAW_LINES = [
     raw_rec("Tidy the fixtures."), raw_rec("Tidy the fixtures."),
-    raw_rec([{"type": "text", "text": "<system-reminder>x</system-reminder>"}, {"type": "text", "text": "naïve?"}]),
+    raw_rec([{"type": "text", "text": "<system-reminder>x</system-reminder>"}, {"type": "text", "text": "na\xefve?"}]),
     raw_rec([{"type": "tool_result", "tool_use_id": "t", "content": "NOT the principal"}]),
     raw_rec("<command-name>/goal</command-name><command-args>\n\n> a quoted line\n\nDoes the gate hold?</command-args>"),
     raw_rec("/goal\n\n> a quoted line\n\nDoes the gate hold?"),
@@ -129,8 +130,8 @@ RAW_LINES = [
 
 
 def test_only_typed_text_survives_and_once():
-    got = [t for _, t in record.typed_messages(RAW_LINES, record.RAW_SKIP)]
-    assert got == ["Tidy the fixtures.", "naïve?", "> a quoted line\n\nDoes the gate hold?", "queued words"]
+    got = [t for _, t in record.typed_messages(RAW_LINES, record.NOT_PRINCIPAL + record.RAW_EXTRA)]
+    assert got == ["Tidy the fixtures.", "na\xefve?", "> a quoted line\n\nDoes the gate hold?", "queued words"]
 
 
 def test_grep_filters_and_the_header_counts_both(project, capsys):
@@ -326,9 +327,9 @@ def test_a_record_that_a_part_boundary_cuts_is_read_whole_from_a_backup(tmp_path
     parts.mkdir(parents=True)
     whole = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in (
         {"type": "user", "uuid": "a", "timestamp": "2026-01-01T00:00:01.000Z", "message": {"role": "user", "content": "before the cut"}},
-        {"type": "user", "uuid": "b", "timestamp": "2026-01-01T00:00:02.000Z", "message": {"role": "user", "content": "caf\u00e9 across the cut"}},
+        {"type": "user", "uuid": "b", "timestamp": "2026-01-01T00:00:02.000Z", "message": {"role": "user", "content": "caf\xe9 across the cut"}},
         {"type": "user", "uuid": "c", "timestamp": "2026-01-01T00:00:03.000Z", "message": {"role": "user", "content": "after the cut"}})).encode("utf-8")
-    cut = whole.index("\u00e9".encode("utf-8")) + 1            # between the two bytes of the accented letter
+    cut = whole.index("\xe9".encode("utf-8")) + 1            # between the two bytes of the accented letter
     (parts / "part-000").write_bytes(whole[:cut])
     (parts / "part-001").write_bytes(whole[cut:])
     subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
@@ -336,7 +337,7 @@ def test_a_record_that_a_part_boundary_cuts_is_read_whole_from_a_backup(tmp_path
         subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", *args],
                        check=True, capture_output=True)
     texts = [t for _, t in record.typed_messages(record.ref_lines(repo, "HEAD"), ())]
-    assert texts == ["before the cut", "caf\u00e9 across the cut", "after the cut"]
+    assert texts == ["before the cut", "caf\xe9 across the cut", "after the cut"]
 
 
 # the queue: what the principal typed while a turn ran and no later row has delivered yet (pending, pending_since)
@@ -380,12 +381,14 @@ def test_a_match_only_inside_a_tool_result_does_not_deliver(tmp_path):
     assert waiting_texts(record.pending(src)) == ["check the logs"]
 
 
-def test_an_attachment_of_type_queued_command_delivers_at_any_depth_and_no_other_attachment_does(tmp_path):
+def test_an_attachment_of_type_queued_command_delivers_through_its_prompt_text_and_no_other_attachment_does(tmp_path):
+    """A queued_command attachment delivers through its prompt text (a string, or a list of items with text); a prompt of any other
+    shape has no text to deliver, and no other attachment type delivers."""
     src = tmp_path / "t.jsonl"
-    delivered = rec("attachment", timestamp=T2, attachment={"type": "queued_command", "prompt": {"items": [{"text": "run the tests"}]}})
+    shaped = rec("attachment", timestamp=T2, attachment={"type": "queued_command", "prompt": {"items": [{"text": "run the tests"}]}})
     other = rec("attachment", timestamp=T3, attachment={"type": "file", "content": "keep the hedges"})
-    write_jsonl(src, [queued(T1, "run the tests"), queued(T1, "keep the hedges"), delivered, other])
-    assert waiting_texts(record.pending(src)) == ["keep the hedges"]
+    write_jsonl(src, [queued(T1, "run the tests"), queued(T1, "keep the hedges"), shaped, other])
+    assert waiting_texts(record.pending(src)) == ["run the tests", "keep the hedges"]
 
 
 def test_a_queued_notification_is_never_pending(tmp_path):
@@ -457,12 +460,12 @@ def test_a_state_file_that_holds_no_read_position_raises_and_names_the_file(tmp_
 
 def test_the_pending_verb_prints_one_json_line_per_waiting_message_and_nothing_else(project, capsys):
     src = project / "t.jsonl"
-    write_jsonl(src, [queued(T1, "a waiting message with   a separator"), user("u2", T2, "a typed message"), queued(T3, "a second one")])
+    write_jsonl(src, [queued(T1, "a waiting message with " + chr(0x2028) + " a separator"), user("u2", T2, "a typed message"), queued(T3, "a second one")])
     assert record.main(["pending", "--src", str(src)]) == 0
     out = capsys.readouterr().out
-    assert out.count("\n") == 2 and " " not in out
+    assert out.count("\n") == 2 and chr(0x2028) not in out
     assert [json.loads(line) for line in out.split("\n")[:2]] == [
-        {"line": 1, "at": T1, "text": "a waiting message with   a separator"}, {"line": 3, "at": T3, "text": "a second one"}]
+        {"line": 1, "at": T1, "text": "a waiting message with " + chr(0x2028) + " a separator"}, {"line": 3, "at": T3, "text": "a second one"}]
 
 
 def test_the_pending_verb_names_nothing_when_nothing_waits_and_reads_the_live_transcript(project, capsys, monkeypatch):
