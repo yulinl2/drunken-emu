@@ -3,6 +3,7 @@
 Time comes from LOOP_NOW and nothing sleeps. Each project is a temporary directory named in LOOP_PROJECT; HOME is temporary too.
 """
 import json
+import os
 import pathlib
 import random
 import sys
@@ -94,7 +95,7 @@ def test_a_failing_check_runs_again_at_the_next_tick(tmp_path, monkeypatch, caps
     _project(tmp_path, monkeypatch, [{"name": "bad", "run": ["false"], "every_s": 60}])
     rc1, first = _call(monkeypatch, capsys, 1000)
     rc2, second = _call(monkeypatch, capsys, 1001)
-    assert rc1 == rc2 == 0
+    assert rc1 == rc2 == 1      # the exit code of a tick is the result of the check it ran
     assert (first["ran"], first["ok"]) == ("bad", False) and first["detail"].startswith("exit 1")
     assert (second["ran"], second["ok"]) == ("bad", False)
 
@@ -144,3 +145,38 @@ def test_no_checks_configured_fails_closed(tmp_path, monkeypatch, capsys):
     assert (rc, out) == (1, {"ran": None, "ok": False, "detail": "no checks in loop.json"})
     rc, out = _call(monkeypatch, capsys, 1000, "liveness")
     assert rc == 1 and out["ok"] is False and out["starved"] == []
+
+
+# two findings of the review of the first published head
+
+def _tick_project(tmp_path, run):
+    import json as _json
+    (tmp_path / "loop.json").write_text(_json.dumps({"checks": [{"name": "only", "run": run, "every_s": 60}]}), encoding="utf-8")
+    return {**{k: v for k, v in os.environ.items() if not k.startswith("LOOP_")}, "LOOP_PROJECT": str(tmp_path), "LOOP_NOW": "1000"}
+
+
+def _tick_run(env):
+    import pathlib as _pathlib, subprocess as _subprocess
+    entry = _pathlib.Path(__file__).resolve().parents[2] / "bin" / "loop"
+    return _subprocess.run([sys.executable, "-I", str(entry), "tick", "run"], capture_output=True, text=True, env=env, timeout=120)
+
+
+def test_a_tick_exits_with_the_result_of_the_check_it_ran(tmp_path):
+    """A tick used as a step or a blocker of a stop is read by its exit code: a check that failed is exit 1."""
+    r = _tick_run(_tick_project(tmp_path, ["false"]))
+    assert r.returncode == 1 and json.loads(r.stdout.strip().splitlines()[-1])["ok"] is False, (r.stdout, r.stderr)
+    (tmp_path / ".loop" / "tick-state.json").unlink()
+    r = _tick_run(_tick_project(tmp_path, ["true"]))
+    assert r.returncode == 0 and json.loads(r.stdout.strip().splitlines()[-1])["ok"] is True, (r.stdout, r.stderr)
+
+
+def test_a_tick_that_finds_another_one_running_does_nothing_and_says_so(tmp_path):
+    import fcntl
+    env = _tick_project(tmp_path, ["true"])
+    (tmp_path / ".loop").mkdir()
+    with open(tmp_path / ".loop" / "tick.lock", "w") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        r = _tick_run(env)
+    last = json.loads(r.stdout.strip().splitlines()[-1])
+    assert r.returncode == 0 and last["ran"] is None and "another tick is running" in last["detail"], (r.stdout, r.stderr)
+    assert not (tmp_path / ".loop" / "tick-log.jsonl").exists()

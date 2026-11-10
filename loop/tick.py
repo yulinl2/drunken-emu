@@ -22,6 +22,10 @@ import os
 import subprocess
 import sys
 import time
+try:
+    import fcntl
+except ImportError:   # no file locks on this platform: ticks are then not kept apart
+    fcntl = None
 
 from loop import cli, config
 
@@ -194,6 +198,20 @@ def _earliest(m):
 
 
 def _run(cfg, checks, now):
+    """One tick, under a lock from the read of the state to its write: two ticks at once would both pick the same check and
+    one would lose the other's state. A tick that finds another one running does nothing and says so. The exit code is the
+    result of the check that ran: 1 when it failed, so that a tick used as a step or a blocker of a stop is read as its check."""
+    with open(cfg.state("tick.lock"), "w") as held:
+        if fcntl is not None:
+            try:
+                fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                print(json.dumps({"ran": None, "ok": True, "detail": "another tick is running; nothing was run", "at": _at(now)}))
+                return 0
+        return _tick(cfg, checks, now)
+
+
+def _tick(cfg, checks, now):
     by_name = {c["name"]: c for c in checks}
     try:
         state, log = cfg.state(STATE_FILE), cfg.state(LOG_FILE)
@@ -217,7 +235,7 @@ def _run(cfg, checks, now):
     except OSError as e:
         return _fail("run", f"tick state or log not written: {e}")
     print(json.dumps(out))
-    return 0
+    return 0 if ok else 1
 
 
 def _liveness(cfg, checks, now):

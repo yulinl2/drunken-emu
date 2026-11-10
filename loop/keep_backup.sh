@@ -30,7 +30,9 @@ EXTRA=(); while IFS= read -r x; do [ -n "$x" ] && EXTRA+=("$x"); done <<< "${LOO
       git -C "$W" sparse-checkout disable 2>/dev/null; find "$W" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
     fi
   fi
-  [ -e "$W/.git" ] || { echo "FAILED: no worktree for $BR"; exit 0; }
+  # LAST-RUN lives in the worktree, so a run that cannot make one reports through a status file beside it; keep.last_run reads both
+  [ -e "$W/.git" ] || { echo "FAILED $(date -u +%FT%TZ): no worktree for $BR, see $LOG" | tee "$STATE/backup-$SID.status"; exit 0; }
+  rm -f -- "$STATE/backup-$SID.status"
   gd=$(git -C "$W" rev-parse --absolute-git-dir 2>/dev/null) && [ -e "$gd/index.lock" ] && { rm -f -- "$gd/index.lock"; echo "removed a stale $gd/index.lock (this run holds $LOCK; a run killed inside git leaves one)"; }
   prev=$(head -n 1 "$W/LAST-RUN" 2>/dev/null); printf 'running since %s\nprevious run: %s\n' "$(date -u +%FT%TZ)" "${prev:-none}" > "$W/LAST-RUN"; ok=1
   put() { local src="$1" dst="$2" n; case "$dst/" in */.git/*) return 0;; esac; n=$(stat -c %s -- "$src" 2>/dev/null) || { [ -e "$src" ] && ok=0; return 0; }; mkdir -p "$(dirname "$dst")"   # never a file named .git, nor one inside a .git

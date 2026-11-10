@@ -148,7 +148,9 @@ def verify(src, quote, ctx):
     if base in ctx["bank"]:
         f, tm, text = ctx["bank"][base]
         if f == "principal-dialog-answers":
-            if ('="' + q) not in text:
+            # a dialog is banked as question="answer" pairs, and a quote must start an answer, not sit in the assistant's
+            # question; an answer banked as plain text (no pair in it) is the principal's whole answer, and a quote must be in it
+            if (('="' + q) not in text) if '="' in text else (q not in text):
                 return bad(f"quote does not start an answer segment of dialog {base}", "principal-answer", tm)
             return {"ok": True, "reason": "", "kind": "principal-answer", "when": tm, "near": None}
         if q not in text:
@@ -195,10 +197,19 @@ def speech_problem(quote, act, followed):
     return ""
 
 
+class DuplicateIds(Exception):
+    """The tree names a node id more than once."""
+
+
 def tree_paths(tree):
-    nodes, path = {}, {}
+    """-> ({id: node}, {id: path of ids from the root}). An id is one node: a second node of the same id would replace the
+    first in both maps, and a wait under that id would leave the check with nothing said. The tree is kept by hand, so a
+    repeated id is refused, not resolved."""
+    nodes, path, twice = {}, {}, []
 
     def walk(n, p):
+        if n["id"] in nodes:
+            twice.append(str(n["id"]))
         nodes[n["id"]] = n
         path[n["id"]] = p + [n["id"]]
         for c in n.get("children") or []:
@@ -206,6 +217,8 @@ def tree_paths(tree):
 
     for r in tree["roots"]:
         walk(r, [])
+    if twice:
+        raise DuplicateIds(sorted(set(twice)))
     return nodes, path
 
 
@@ -308,6 +321,8 @@ def load_tree(cfg):
         return None, None, f"no tree at {_rel(t, cfg.root)}"
     try:
         nodes, paths = tree_paths(json.loads(t.read_text(encoding="utf-8")))
+    except DuplicateIds as e:
+        return None, None, f"tree at {_rel(t, cfg.root)} names a node id more than once ({', '.join(e.args[0])}): an id is one node"
     except MALFORMED:
         return None, None, f"tree at {_rel(t, cfg.root)} is not readable"
     return nodes, paths, None
@@ -415,7 +430,13 @@ def baseline(cfg):
         print(json.dumps({"ok": False, "detail": "baseline refused: a bank input is missing or malformed, so its failures would be recorded as debt",
                           "bank_missing": out["bank_missing"], "bank_bad_lines": out["bank_bad_lines"]}, ensure_ascii=False))
         return 1
-    failing = sorted((i for i, r in res.items() if r["fails"]), key=str)
+    if out["debt_unreadable"]:
+        print(json.dumps({"ok": False, "detail": "baseline refused: " + out["debt_unreadable"] + ", so what it owes would be lost"}, ensure_ascii=False))
+        return 1
+    # a debt leaves the list only when it is paid: by a chain that passes, or by the principal's own words (closed_by). A node
+    # that left the wait state without them, or left the tree, stays owed: a second baseline must not erase it.
+    unpaid = sorted(out["closure_fail"], key=str)
+    failing = sorted({i for i, r in res.items() if r["fails"]} | set(unpaid), key=str)
     debt = cfg.path("chain_debt")
     debt.parent.mkdir(parents=True, exist_ok=True)
     if debt.is_file():
@@ -431,7 +452,7 @@ def baseline(cfg):
         "note": "Waits that had no verified root chain when the gate was introduced. Each is owed a chain; the list only "
                 "shrinks. A wait that is not on this list and fails the gate fails the loop's chain check.",
         "waits": failing}, indent=1), encoding="utf-8")
-    print(json.dumps({"debt_recorded": failing}, ensure_ascii=False))
+    print(json.dumps({"debt_recorded": failing, "kept_because_not_paid": unpaid}, ensure_ascii=False))
     return 0
 
 

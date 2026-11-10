@@ -267,7 +267,11 @@ def last_run(cfg, sid=None):
     creating the state directory, so that doctor and the prompt hook can call it."""
     try:
         d = cfg.path("state_dir")
-        runs = [d / f"backup-wt-{sid}" / "LAST-RUN"] if sid else sorted(d.glob("backup-wt-*/LAST-RUN"), key=lambda p: p.stat().st_mtime)
+        # a run that could not make its worktree leaves backup-<sid>.status; the next run that has one removes it
+        if sid:
+            runs = [p for p in (d / f"backup-wt-{sid}" / "LAST-RUN", d / f"backup-{sid}.status") if p.is_file()]
+        else:
+            runs = sorted(list(d.glob("backup-wt-*/LAST-RUN")) + list(d.glob("backup-*.status")), key=lambda p: p.stat().st_mtime)
         return runs[-1].read_text(encoding="utf-8").split("\n")[0] if runs else ""
     except OSError:
         return ""

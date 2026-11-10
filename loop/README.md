@@ -24,7 +24,7 @@ the principal speaks
 |---|---|---|---|
 | `record` | `bank`, `raw`, `find` | every utterance of the principal is banked once, verbatim, with its time | a typed message is in the transcript and not in the bank |
 | `gate` | `check`, `render`, `baseline`, `selftest` | a wait carries a chain of verbatim quotes down to a root, or a closure in the principal's words | a status changes and the debt list does not; a question is cited as an assertion |
-| `tick` | `run`, `liveness` | the due check runs and nothing starves | a check has not run for three times its interval and no tick said so |
+| `tick` | `run`, `liveness` | the due check runs, one tick at a time, and `run` exits 1 when its check failed; nothing starves | a check has not run for three times its interval and no tick said so |
 | `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call |
 | `guard` | `pre`, `permissions` | a tripwire, not a barrier: a merge, a write to a protected branch or a forced push needs a verdict recorded before the act; the known gaps are listed in `loop/guard.py`; under `sessions: here` it reads sessions inside the project | such an act, in a form the guard reads, passes with no verdict that names it |
 | `keep` | `backup`, `restore`, `replay` | what a later session needs survives the machine | a file exists nowhere but in a machine that is gone |

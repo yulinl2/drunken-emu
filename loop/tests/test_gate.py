@@ -116,3 +116,50 @@ def test_a_missing_bank_file_or_an_unreadable_tree_fails_without_a_traceback(tmp
 
 def test_an_unknown_verb_is_refused_with_a_code():
     assert gate.main(["bogus"]) == 2
+
+
+# three findings of the review of the first published head
+
+def _review_project(tmp_path, monkeypatch, tree):
+    """A project with one banked message and the given tree; returns the root."""
+    monkeypatch.setenv("LOOP_PROJECT", str(tmp_path))
+    (tmp_path / "loop.json").write_text("{}", encoding="utf-8")
+    state = tmp_path / "loop-state"
+    state.mkdir()
+    (state / "bank.jsonl").write_text(json.dumps({"key": "m1", "kind": "typed", "timestamp": "2026-01-01T00:00:01Z", "text": "Ship it when it is tested."}) + "\n", encoding="utf-8")
+    (state / "tree.json").write_text(json.dumps(tree), encoding="utf-8")
+    return tmp_path
+
+
+def test_a_tree_that_names_an_id_twice_is_refused(tmp_path, monkeypatch, capsys):
+    """A second node of the same id would replace the first, and a wait under that id would leave the check unseen."""
+    tree = {"roots": [{"id": "R", "status": "goal", "children": [{"id": "W", "status": "wait: the principal", "title": "a wait with no chain"},
+                                                                 {"id": "W", "status": "done", "title": "the same id again"}]}]}
+    _review_project(tmp_path, monkeypatch, tree)
+    assert gate.main(["check"]) == 1
+    out = capsys.readouterr().out
+    assert "more than once" in out and "W" in out
+
+
+def test_a_second_baseline_does_not_erase_a_debt_that_was_not_paid(tmp_path, monkeypatch, capsys):
+    """A wait on the debt list that is switched to done without the principal's words stays owed: the check fails, and a
+    baseline run again keeps it on the list."""
+    wait = {"id": "W", "status": "wait: the principal", "title": "a wait with no chain"}
+    root = _review_project(tmp_path, monkeypatch, {"roots": [{"id": "R", "status": "goal", "children": [wait]}]})
+    assert gate.main(["baseline"]) == 0 and gate.main(["check"]) == 0
+    (root / "loop-state" / "tree.json").write_text(json.dumps({"roots": [{"id": "R", "status": "goal", "children": [dict(wait, status="done")]}]}), encoding="utf-8")
+    assert gate.main(["check"]) == 1
+    assert gate.main(["baseline"]) == 0
+    assert json.loads((root / "loop-state" / "chain-debt.json").read_text(encoding="utf-8"))["waits"] == ["W"]
+    assert gate.main(["check"]) == 1
+    capsys.readouterr()
+
+
+def test_an_answer_banked_as_plain_text_can_be_quoted_and_a_pair_keeps_its_rule(tmp_path):
+    ctx = {"bank": {"plain": ("principal-dialog-answers", "t", gate.N("the small version, please")),
+                    "pair": ("principal-dialog-answers", "t", gate.N('Which version? ="the small version, please"'))},
+           "ow": [], "bad": 0, "missing": [], "root": tmp_path}
+    assert gate.verify("plain", "the small version", ctx)["ok"]
+    assert gate.verify("pair", "the small version", ctx)["ok"]
+    assert not gate.verify("pair", "Which version", ctx)["ok"]          # the assistant's question is not the principal's answer
+    assert not gate.verify("plain", "the large version", ctx)["ok"]

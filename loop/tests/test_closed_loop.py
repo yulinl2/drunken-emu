@@ -349,3 +349,16 @@ def test_two_sessions_of_one_project_each_keep_their_own_backup(tmp_path):
     assert "session-1" in on("backup/session-") and "second-2" not in on("backup/session-")
     assert "second-2" in on("backup/second-2") and "session-1" not in on("backup/second-2")
     assert again in s.bank_texts()
+
+
+def test_a_backup_that_cannot_make_its_worktree_still_reaches_the_prompt(tmp_path):
+    """LAST-RUN lives in the backup's worktree. In a repository with no commit yet the worktree cannot be made: the failure
+    is kept beside it, a waited run returns 1, and the next prompt says so."""
+    import shutil
+    s = Session(tmp_path)
+    shutil.rmtree(s.proj / ".git")
+    subprocess.run(["git", "init", "-q", "-b", "main", str(s.proj)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(s.proj), "remote", "add", "origin", str(s.origin)], check=True, capture_output=True)
+    rc, out, err = s.loop("keep", "backup", "--wait")
+    assert rc == 1 and "FAILED" in err and "no worktree" in err, (out, err)
+    assert "the last backup did not succeed" in s.loop("hook", "prompt")[1]

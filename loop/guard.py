@@ -160,9 +160,11 @@ def refspec_reasons(r):
 
 def push_reasons(args, wd):
     """[(class, why)] for a `git push` with these arguments (the words after push); [] when it can go on."""
-    why, pos, i = [], [], 0
+    why, pos, i, repo = [], [], 0, None
     while i < len(args):
         a = args[i]
+        if a == "--repo" and i + 1 < len(args): repo = args[i + 1]      # the remote, when no positional argument names one
+        if a.startswith("--repo="): repo = a.split("=", 1)[1]
         if a in TAKES_ARG: i += 2; continue
         if a.startswith("--"):
             c = risky_flag(a.split("=", 1)[0])
@@ -173,7 +175,7 @@ def push_reasons(args, wd):
         i += 1
     refspecs, br_up = pos[1:], None
     if not refspecs:                  # git decides the destination from the repository's configuration
-        br, up = br_up = branch_and_upstream(wd); remote = pos[0] if pos else default_remote(wd, br)
+        br, up = br_up = branch_and_upstream(wd); remote = pos[0] if pos else (repo or default_remote(wd, br))
         refspecs = [l for l in git_out(wd, "config", "--get-all", f"remote.{remote}.push").split("\n") if l]
         if git_out(wd, "config", "--bool", "--get", f"remote.{remote}.mirror") == "true": why.append((DENY, f"remote {remote} is configured as a mirror"))
         if not refspecs and git_out(wd, "config", "--get", "push.default") == "matching": why.append((DENY, "push.default is matching: every branch of the same name is sent"))
@@ -185,6 +187,9 @@ def push_reasons(args, wd):
         br, up = br_up or branch_and_upstream(wd)
         if br in PROTECTED: why.append((DENY, f"implied destination: the current branch is {br}: {VIA_PR}"))
         elif up in PROTECTED: why.append((DENY, f"implied destination: the current branch {br} tracks {up}: {VIA_PR}"))
+    if any(c == FORCE for c, _ in why) and not any(LEASE.fullmatch(a) for a in args):
+        # the lease is a word of this command: one written in a comment, in a quoted text or in another command never reaches the remote
+        why.append((DENY, "a force or delete push must carry --force-with-lease=<ref>:<40 hex sha> among its own arguments"))
     return why
 
 def api_write(args):

@@ -252,7 +252,7 @@ class Verdicts(Base):
         with project(cmd_row(LEASE_CMD)):
             self.assertIsNone(hook("Bash", {"command": LEASE_CMD}, f)); self.assertIsNone(hook("Bash", {"command": LEASE_CMD + "  "}, f))
             other = LEASE_CMD.replace(H1, H2); self.assertIn("no command verdict", hook("Bash", {"command": other}, f))
-            self.assertIn("no command verdict", hook("Bash", {"command": LEASE_CMD + " && git push origin :topic-other"}, f))
+            self.assertIn("among its own arguments", hook("Bash", {"command": LEASE_CMD + " && git push origin :topic-other"}, f)); self.assertIn("no command verdict", hook("Bash", {"command": LEASE_CMD + " && git push --force-with-lease=topic-other:" + "b" * 40 + " origin :topic-other"}, f))
             self.assertIn("no command verdict", hook("Bash", {"command": "echo x; " + LEASE_CMD}, f))
         plain = "git push origin --delete topic-old"
         with project(cmd_row(plain)): self.assertIn("--force-with-lease=<ref>:<40 hex sha>", hook("Bash", {"command": plain}, f))
@@ -445,3 +445,22 @@ class TheOnePathRule(Base):
         self.assertEqual((r.returncode, r.stdout), (0, ""))
 
 if __name__ == "__main__": unittest.main()
+
+
+class FindingsOfTheFirstPublishedReview(Base):
+    """Two holes in the reading of a push."""
+    @classmethod
+    def setUpClass(cls): cls.feature = repo("topic-r")
+    def test_the_remote_chosen_with_repo_is_the_one_whose_configuration_is_read(self):
+        for k, v in (("remote.upstream.url", "x"), ("remote.upstream.push", "HEAD:main")):
+            subprocess.run(["git", "config", k, v], cwd=self.feature, check=True)
+        self.assertEqual(guard.decide("git push", self.feature), [])
+        for c in ("git push --repo upstream", "git push --repo=upstream"): self.assertTrue(guard.decide(c, self.feature), c)
+    def test_a_lease_must_be_an_argument_of_the_push_that_forces_or_deletes(self):
+        lease = "--force-with-lease=topic:" + "a" * 40
+        no_lease = guard.push_reasons(["--delete", "origin", "topic"], self.feature)
+        self.assertTrue(any(c == guard.DENY and "among its own arguments" in t for c, t in no_lease), no_lease)
+        with_lease = guard.push_reasons([lease, "--delete", "origin", "topic"], self.feature)
+        self.assertTrue(with_lease and all(c != guard.DENY for c, _ in with_lease), with_lease)
+        # a lease written only in a comment is not given to git: the push is held whatever verdict is on file
+        self.assertTrue(guard.decide("git push --delete origin topic # " + lease, self.feature))
