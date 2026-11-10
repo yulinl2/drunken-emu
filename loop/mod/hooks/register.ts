@@ -17,7 +17,9 @@ const VERSION = '0.2.0'
 const said = (err: unknown): string => String((err as any)?.message ?? err).slice(0, 400)
 
 async function dir($: any): Promise<string> {
-  return ((await $.env.get('HOME')) || '/root') + '/.claude/loop'
+  const home = await $.env.get('HOME')
+  if (!home) throw new Error('HOME is not set: no state folder')   // every caller catches: no line, no log, the tools still answer
+  return home + '/.claude/loop'
 }
 
 async function text($: any, name: string): Promise<string> {

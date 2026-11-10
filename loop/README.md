@@ -32,6 +32,16 @@ the principal speaks
 
 Every module's docstring carries two lines, `INVARIANT:` and `FAILS WHEN:`. `loop/tests/test_selfcheck.py` asserts that, and asserts this table against the code. `loop/tests/test_closed_loop.py` runs one session through all six in a temporary project, with the output of each verb as the input of the next; on 2026-11-10 it found five defects that the verbs' own tests could not, and two reviews of the package found more that it now pins: a stop acts on the session that stopped, not on the newest transcript of the machine; each session has its own backup; a trial takes nothing.
 
+## The mod (`loop/mod/`): what a hook cannot do
+A hook is a command: it cannot read the session's usage or start a compaction. A mod (a plugin with a hooks module, which the engine loads) can. This one registers two tools the model calls and one hook, and decides nothing itself.
+| Part | Does | Seen (`docs/SANDBOX-FACTS.md`, 2026-11-10) |
+|---|---|---|
+| `usage` | the context's fill, each rate-limit window's percent used and reset time, the session's cost | live figures inside a turn, where the host's own record of the session lagged a whole turn |
+| `compact` | starts a compaction once the turn has ended, with the principal's line and the session's also-keep text | started by a session itself, in two sessions; each summary carried the text |
+| every compaction | adds the same two texts, also to a typed or an automatic one; logs tokens and cost before and after | in both sessions |
+
+It loads at a session's start from a skills folder: `.claude/skills/loop` here is a link to it, and a fresh session had both tools with no person involved. A copy placed in `~/.claude/skills/` in the middle of a session was not loaded. Its state is in `~/.claude/loop/`: `line.txt` (the principal's line: the project's own words, none here), `also-keep.txt` (what the session must carry over) and `log.jsonl`.
+
 ## Start
 ```
 python3 -I bin/loop doctor                  # what is found from this directory
