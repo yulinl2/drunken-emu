@@ -13,6 +13,7 @@ usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
        python3 -I bin/loop record find [--all] [--max N] WORD [WORD ...]
 """
+import contextlib
 import argparse
 import collections
 import glob
@@ -24,6 +25,10 @@ import subprocess
 import sys
 
 from loop import config
+try:
+    import fcntl
+except ImportError:   # no file locks on this platform: the bank is then written without one
+    fcntl = None
 
 MAX_CHARS = 20000        # a longer message is banked cut to this many characters, with "truncated": true
 SKILL_BODY_CHARS = 3000  # a skill body the harness injected, longer than this, is not the principal's words
@@ -128,7 +133,7 @@ def scan(path, prefixes):
                 kind, text = "queued", queued_text(obj, prefixes)
             if text is None:
                 continue
-            events.append({"kind": kind, "key": obj.get("uuid") or f"line:{n}", "line": n, "timestamp": obj.get("timestamp"),
+            events.append({"kind": kind, "key": obj.get("uuid") or f"{pathlib.Path(path).stem}:line:{n}", "line": n, "timestamp": obj.get("timestamp"),
                            "text": text, "meta": bool(obj.get("isMeta")),
                            "scheduled": obj.get("turnOrigin") == "scheduled" or bool(obj.get("wakeupSource"))})
     return events
@@ -199,6 +204,17 @@ def append(path, items):
                     .replace("\x85", "\\u0085") + "\n")
 
 
+@contextlib.contextmanager
+def _one_writer(cfg):
+    """The bank is read, planned against and appended to under one lock, so that two runs that overlap (a stop hook and a
+    run by hand, two sessions of a project that stop together) cannot both append the same message. The lock file is in the
+    state directory, which is never committed."""
+    with open(cfg.state("bank.lock"), "w") as fh:
+        if fcntl is not None:
+            fcntl.flock(fh, fcntl.LOCK_EX)
+        yield
+
+
 def cmd_bank(args, cfg):
     why = config.no_project(cfg, "record bank")
     if why:
@@ -214,10 +230,11 @@ def cmd_bank(args, cfg):
         return 1
     bank = cfg.path("bank")
     try:
-        seen, stamps, long_texts = load_bank(bank)
-        new = plan(scan(src, NOT_PRINCIPAL + _extra_prefixes(cfg)), seen, stamps, long_texts)
-        if new:
-            append(bank, new)
+        with _one_writer(cfg):
+            seen, stamps, long_texts = load_bank(bank)
+            new = plan(scan(src, NOT_PRINCIPAL + _extra_prefixes(cfg)), seen, stamps, long_texts)
+            if new:
+                append(bank, new)
     except (RecordError, OSError, ValueError) as e:
         print(f"record bank: {e}", file=sys.stderr)
         return 1
@@ -229,6 +246,11 @@ def cmd_bank(args, cfg):
 
 
 def _git(root, *args):
+    """The stdout of a git command in the project, as text; RecordError as in _git_bytes."""
+    return _git_bytes(root, *args).decode("utf-8", "replace")
+
+
+def _git_bytes(root, *args):
     """The stdout of a git command in the project; RecordError when git is missing or the command fails (no such ref, no repository)."""
     try:
         r = subprocess.run(["git", "-C", str(root), *args], capture_output=True)
@@ -236,7 +258,7 @@ def _git(root, *args):
         raise RecordError(f"git is not available ({e})") from None
     if r.returncode != 0:
         raise RecordError(f"git {args[0]} failed (no such ref, or not a repository): {r.stderr.decode('utf-8', 'replace').strip()[:200]}")
-    return r.stdout.decode("utf-8", "replace")
+    return r.stdout
 
 
 def backup_refs(cfg):
@@ -247,11 +269,23 @@ def backup_refs(cfg):
 
 
 def ref_lines(root, ref):
-    """The lines of the transcripts a git ref holds (its transcripts/ files, not the sub-agents'); RecordError when the ref is not there."""
+    """The lines of the transcripts a git ref holds (its transcripts/ files, not the sub-agents'); RecordError when the ref is
+    not there. A backup cuts a transcript into parts at arbitrary bytes (NAME.parts/part-NNN), so the parts of one transcript
+    are read as one stream: a record, or a character, that a part boundary cuts is whole again. One part is held at a time."""
     names = _git(root, "ls-tree", "-r", "--name-only", ref).split("\n")
-    for n in sorted(x for x in names if x.startswith("transcripts/") and "agent-" not in x and "subagent" not in x
-                    and (x.endswith(".jsonl") or "/part-" in x)):
-        yield from _git(root, "show", f"{ref}:{n}").split("\n")
+    groups = collections.defaultdict(list)
+    for n in names:
+        if n.startswith("transcripts/") and "agent-" not in n and "subagent" not in n and (n.endswith(".jsonl") or "/part-" in n):
+            head, sep, _ = n.partition(".parts/")
+            groups[head + sep if sep else n].append(n)
+    for g in sorted(groups):
+        rest = b""
+        for n in sorted(groups[g]):
+            *whole, rest = (rest + _git_bytes(root, "show", f"{ref}:{n}")).split(b"\n")
+            for line in whole:
+                yield line.decode("utf-8", "replace")
+        if rest:
+            yield rest.decode("utf-8", "replace")
 
 
 def typed_messages(lines, skip):

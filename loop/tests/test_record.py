@@ -212,7 +212,7 @@ def test_a_queued_message_with_no_delivery_is_banked_once_as_queued(project):
     assert record.main(["bank", "--src", str(src)]) == 0
     assert record.main(["bank", "--src", str(src)]) == 0
     assert [(b["key"], b["kind"], b["text"]) for b in bank_rows()] == [
-        ("u1", "typed", "a typed message"), ("line:2", "queued", "sent while a turn was running")]
+        ("u1", "typed", "a typed message"), ("t:line:2", "queued", "sent while a turn was running")]
 
 
 def test_a_queued_message_that_also_arrives_as_a_user_message_is_banked_once(project):
@@ -230,7 +230,7 @@ def test_a_queued_record_banked_before_its_delivery_stands_and_the_delivery_is_n
     assert record.main(["bank", "--src", str(src)]) == 0
     write_jsonl(src, [queued, user("u2", "2026-01-01T00:02:00Z", "ship the fix")])
     assert record.main(["bank", "--src", str(src)]) == 0
-    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("line:1", "queued")]
+    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("t:line:1", "queued")]
     assert "nothing new" in capsys.readouterr().out
 
 
@@ -267,3 +267,60 @@ def test_no_transcript_is_a_failure_with_a_reason(project, capsys):
     assert record.main(["bank"]) == 1
     assert "no transcript is named" in capsys.readouterr().err
     assert bank_rows() == []
+
+
+# the four findings of the review of the first published head, each pinned
+
+def test_a_record_without_a_uuid_is_keyed_by_its_transcript_so_two_sessions_do_not_collide(project):
+    """One bank holds every session of a project. A queued message has no uuid: keyed by its line alone, the message at
+    line 1 of a second session would be taken for the one at line 1 of the first and dropped."""
+    for name, words in (("first-session", "queued in the first session"), ("second-session", "queued in the second session")):
+        src = project / (name + ".jsonl")
+        src.write_text(json.dumps({"type": "queue-operation", "operation": "enqueue", "timestamp": "2026-01-01T00:20:00.000Z",
+                                   "content": words}) + "\n", encoding="utf-8")
+        assert record.main(["bank", "--src", str(src)]) == 0
+    rows = bank_rows()
+    assert sorted(r["text"] for r in rows) == ["queued in the first session", "queued in the second session"]
+    assert sorted(r["key"] for r in rows) == ["first-session:line:1", "second-session:line:1"]
+
+
+def test_two_runs_that_overlap_take_turns_on_the_bank(project):
+    """The bank is read, planned against and appended to under one lock: while another writer holds it, a run waits, and
+    then banks each message once."""
+    import fcntl, subprocess, sys, time
+    src = project / "t.jsonl"
+    write_jsonl(src, [user("u1", "2026-01-01T00:00:01Z", "a typed message")])
+    lock = project / ".loop" / "bank.lock"
+    lock.parent.mkdir(exist_ok=True)
+    entry = pathlib.Path(record.__file__).resolve().parents[1] / "bin" / "loop"
+    with open(lock, "w") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        run = subprocess.Popen([sys.executable, "-I", str(entry), "record", "bank", "--src", str(src)],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        time.sleep(1.5)
+        assert run.poll() is None and bank_rows() == []        # it waits for the lock, and has written nothing
+        fcntl.flock(held, fcntl.LOCK_UN)
+        assert run.wait(60) == 0
+    assert [r["text"] for r in bank_rows()] == ["a typed message"]
+
+
+def test_a_record_that_a_part_boundary_cuts_is_read_whole_from_a_backup(tmp_path):
+    """A backup cuts a transcript into parts at arbitrary bytes. Read as one stream, the message that the cut falls in, and
+    the two-byte character the cut falls in, come back whole; read part by part, both halves would be thrown away."""
+    import subprocess
+    repo = tmp_path / "repo"
+    parts = repo / "transcripts" / "-p__s.jsonl.parts"
+    parts.mkdir(parents=True)
+    whole = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in (
+        {"type": "user", "uuid": "a", "timestamp": "2026-01-01T00:00:01.000Z", "message": {"role": "user", "content": "before the cut"}},
+        {"type": "user", "uuid": "b", "timestamp": "2026-01-01T00:00:02.000Z", "message": {"role": "user", "content": "caf\u00e9 across the cut"}},
+        {"type": "user", "uuid": "c", "timestamp": "2026-01-01T00:00:03.000Z", "message": {"role": "user", "content": "after the cut"}})).encode("utf-8")
+    cut = whole.index("\u00e9".encode("utf-8")) + 1            # between the two bytes of the accented letter
+    (parts / "part-000").write_bytes(whole[:cut])
+    (parts / "part-001").write_bytes(whole[cut:])
+    subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
+    for args in (["add", "-A"], ["commit", "-q", "-m", "x"]):
+        subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", *args],
+                       check=True, capture_output=True)
+    texts = [t for _, t in record.typed_messages(record.ref_lines(repo, "HEAD"), ())]
+    assert texts == ["before the cut", "caf\u00e9 across the cut", "after the cut"]

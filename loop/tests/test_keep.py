@@ -723,3 +723,19 @@ def test_restore_a_missing_source_is_a_failure_and_copies_nothing(tmp_path):
     dest = tmp_path / "dest"
     assert keep.main(["restore", str(tmp_path / "nope"), str(dest)]) == 1
     assert not dest.exists()
+
+
+def test_the_manifest_does_not_follow_a_link_out_of_the_output_folder(tmp_path, monkeypatch):
+    """The manifest is written inside --out like every rebuilt file: a MANIFEST.tsv that is already there as a link to a file
+    elsewhere is replaced by a regular file, and the file it pointed at is left as it was."""
+    monkeypatch.setenv("LOOP_PROJECT", str(tmp_path))
+    out, victim = tmp_path / "out", tmp_path / "victim.tsv"
+    out.mkdir()
+    victim.write_text("keep\n", encoding="utf-8")
+    os.symlink(victim, out / "MANIFEST.tsv")
+    path = jsonl_file(str(tmp_path), "t.jsonl", write_call(1, "w1", "/fake-root/ok.md", "ok\n"))
+    assert keep.main(["replay", "rebuild", "--transcript", str(path), "--out", str(out), "--root", ROOT]) == 0
+    assert victim.read_text(encoding="utf-8") == "keep\n"
+    assert not (out / "MANIFEST.tsv").is_symlink() and (out / "MANIFEST.tsv").read_text(encoding="utf-8").startswith("path\t")
+    assert (out / "ok.md").read_text(encoding="utf-8") == "ok\n"
+    assert sorted(p.name for p in out.iterdir()) == ["MANIFEST.tsv", "ok.md"]

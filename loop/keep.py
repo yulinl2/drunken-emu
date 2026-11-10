@@ -31,6 +31,7 @@ Each file is only as fresh as its last Write, fitting Edit or full Read. Nothing
 would land outside it (through "..", or through a symlink already in DIR) is left out and listed in refused_outside_out.
 A rebuilt file named MANIFEST.tsv at the top of the root is written as MANIFEST.tsv.rebuilt.
 The rebuilt files can hold the principal's data: keep DIR private."""
+import tempfile
 import argparse, collections, json, os, pathlib, re, shutil, subprocess, sys
 from loop import config
 
@@ -198,10 +199,15 @@ def write_out(state, meta, out, root, refused=None):
         m = meta[p]
         rows.append((rel, len(text.encode("utf-8")), m["src"], m["w"], m["r"], m["e"], m["fail"], m["long"], m["last"][:16]))
     rows.sort()
-    with open(os.path.join(base, "MANIFEST.tsv"), "w", encoding="utf-8") as f:
+    # the manifest goes through a new file of its own and a rename: a MANIFEST.tsv that is already there as a link to a file
+    # elsewhere is replaced, and the file it pointed at is not opened
+    fd, tmp = tempfile.mkstemp(dir=base, prefix=".manifest-")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write("\t".join(MANIFEST_HEADER) + "\n")
         for r in rows:
             f.write("\t".join(map(str, r)) + "\n")
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, os.path.join(base, "MANIFEST.tsv"))
     return rows
 
 
