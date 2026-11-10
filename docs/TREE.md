@@ -263,6 +263,7 @@ that is never executed is not a regeneration command.
 |   |   |-- test_revisit.py
 |   |   |-- test_selfcheck.py
 |   |   |-- test_tick.py
+|   |   |-- test_verdict.py
 |   |   `-- test_watch.py
 |   |-- README.md
 |   |-- __init__.py
@@ -277,6 +278,7 @@ that is never executed is not a regeneration command.
 |   |-- record.py
 |   |-- revisit.py
 |   |-- tick.py
+|   |-- verdict.py
 |   `-- watch.py
 |-- out/
 |   `-- .gitkeep
@@ -301,5 +303,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 241 files tracked
+35 directories, 243 files tracked
 ```

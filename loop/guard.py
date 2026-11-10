@@ -1,11 +1,12 @@
 """The guard verb: refuse a merge, a write to a protected branch and a rewritten history unless a verdict recorded before the act covers that exact call.
-Two subcommands. `pre` is a PreToolUse hook: it reads the hook's payload (JSON) on standard input and prints a deny or an ask, or nothing; it never allows. `permissions apply` merges a rules file into a user settings file. It is a tripwire against accidents, not a barrier: a verdict is self-attested, and the principal decides what a verdict says.
+Three subcommands. `pre` is a PreToolUse hook: it reads the hook's payload (JSON) on standard input and prints a deny or an ask, or nothing; it never allows. `permissions apply` merges a rules file into a user settings file, and `verdict` records a verdict (loop/verdict.py). It is a tripwire against accidents, not a barrier: a verdict is self-attested, and the principal decides what a verdict says.
 
 INVARIANT: a guarded act (a merge through a pull request, a write to a protected branch, a push that forces, deletes or mirrors, a gh write) is denied unless a go verdict in the configured verdict file (loop.json key "verdicts") was recorded before it and names that exact head or command; a permission file is written only when its rules check, and no rule in it allows what the guard decides.
 FAILS WHEN: such an act passes with no verdict that names it, or a call that mentions push, merge or api passes after an internal failure; the forms listed under "Known gaps" pass as well. The tests are loop/tests/test_guard.py; loop/tests/oracle_push.py runs git itself against the guard's reading of a push (the tests run a slice of it).
 
 usage: python3 -I bin/loop guard pre                  (the hook payload on standard input)
        python3 -I bin/loop guard permissions apply --rules FILE [--settings FILE] [--check]
+       python3 -I bin/loop guard verdict hold|go|command|withdraw ...   (records a verdict: loop/verdict.py; -h says the options)
   --settings defaults to ~/.claude/settings.json; --check says what would change and writes nothing.
 
 Matcher: Bash, and mcp__github__ merge_pull_request, push_files, create_or_update_file, delete_file. The Artifact tool asks for a delete or a force publish.
@@ -25,6 +26,7 @@ Verdicts: the file at loop.json key "verdicts" (default loop-state/verdicts.json
   {"id":"v-0001","at":"...","by":"advisor example","answer":"advisor-answers/example.md","repo":"alice/project-x","kind":"merge","pr":7,"head":"<40 hex>","base":"<40 hex>","tree":"<40 hex>","tests":"12 OK","verdict":"go","undo":"git revert -m 1 <merge sha>"}
   {"id":"v-0002","at":"...","by":"reviewer <review url>","answer":"advisor-answers/example-2.md","repo":"alice/project-x","kind":"command","command":"git push --force-with-lease=topic-old:<40 hex> origin :topic-old","verdict":"go","undo":"git push origin <40 hex>:refs/heads/topic-old"}
 A verdict is self-attested: this is a tripwire against accidents, not a barrier.
+A verdict is written by `python3 -I bin/loop guard verdict` (loop/verdict.py); a deny that asks for one ends with the command that writes it.
 Why a parser: the glob rules in a permission file cannot read clustered flags (-vf, -qd), an abbreviated option (--dele), a wildcard refspec, a wrapper such as `bash -lc`, or a destination that is only implied (git push, git push origin HEAD, a branch that tracks a protected branch, a remote whose push refspec is configured). This reads the command and the repository's push configuration.
 Every simple command is looked at (split at ; && || | and newlines; a # comment is dropped the way bash drops it, before a backslash-newline joins two lines: a # that begins a word outside quotes and backticks runs to the end of its line, a backslash at that end included, and a # inside a word (foo#bar, ${#v}, $#) is text; heredoc bodies and quoted text are not commands, except as the heredoc and python -c rule above says; `bash -c '...'`, `sh -ec '...'` and `bash -lc '...'` are looked into, and so are the other forms listed under Followed too; `cd DIR` and `git -C DIR` set the folder). It acts on
   - a flag that forces, deletes, mirrors, prunes or sends everything: --force*, --delete, --mirror, --prune, --all, --branches (or any abbreviation git would accept, such as --dele), or a short cluster holding f or d;
@@ -35,7 +37,7 @@ Every simple command is looked at (split at ; && || | and newlines; a # comment 
 Write the branch name out in a push command: a variable cannot be read.
 Followed too: eval, backticks, xargs (its arguments come from stdin), a wrapper and its own arguments (env -i, sudo -u x, nice -n 5, timeout -k 5 60, stdbuf -oL, setsid, ionice -c3, flock FILE), shell keywords (if/then/do/{ ... }), git aliases (-c alias.x=push, alias.x in the configuration), and a program given by path (tools/git).
 Scope: under loop.json "sessions": "here" the guard reads a session inside the project (its working directory at the call is the root or under it), a payload that names no working directory, and any command that names the root as an absolute path. Known gap of that scope: from a session outside the project, a push that reaches the project by a relative path (cd ../proj && git push ..., git -C ../proj push ...) and every MCP merge or file write pass with nothing said. Under "sessions": "all" every session is read.
-Known gaps (not covered). The gaps the reviews found are kept with the project that uses this package; the list here is the part found so far and may be shorter: a script or make target that pushes on the caller's behalf, a gh alias, git configuration supplied by the environment (GIT_CONFIG_*) or by -c remote.<name>.push=..., a command built from variables or with its name split by quotes or a backslash (it acts only when the push itself is visible), a command line handed to a shell as data (echo '...' | bash, bash <<< '...'), a wrapper that is not in WRAPPERS or that runs a command string (su -c, script -c, flock -c, strace), a destination spelled heads/main; after a wrapper's own argument, only a shell, git or gh given by path is followed (not python, xargs or git-core/git-push by path), and git-push given by path is not read without a wrapper either; a command built with $'...', env -S, or nested past two levels (a bash -c or an eval inside two others); a $(...) or backtick after a cd in the same command line, which is read in the folder the line starts in; a push in quotes after an unquoted $(...) or backtick in the words of an eval or a bash -c (eval $(true) 'git push ...', eval `true`'git push ...'); what follows, in the body of a $(...), an unbalanced parenthesis outside quotes (a case pattern: case y in y) ...) or a double-quoted ) inside a $(...) that is itself in double quotes in that body (echo "$(echo "$(echo ")")"; ...).
+Known gaps (not covered). The gaps the reviews found are kept with the project that uses this package; the list here is the part found so far and may be shorter: a verdict file that cannot be read while the act is reached through an alias of git (the call then names none of the words the failure rule looks for, so the failure is not turned into a deny and the call goes on), a script or make target that pushes on the caller's behalf, a gh alias, git configuration supplied by the environment (GIT_CONFIG_*) or by -c remote.<name>.push=..., a command built from variables or with its name split by quotes or a backslash (it acts only when the push itself is visible), a command line handed to a shell as data (echo '...' | bash, bash <<< '...'), a wrapper that is not in WRAPPERS or that runs a command string (su -c, script -c, flock -c, strace), a destination spelled heads/main; after a wrapper's own argument, only a shell, git or gh given by path is followed (not python, xargs or git-core/git-push by path), and git-push given by path is not read without a wrapper either; a command built with $'...', env -S, or nested past two levels (a bash -c or an eval inside two others); a $(...) or backtick after a cd in the same command line, which is read in the folder the line starts in; a push in quotes after an unquoted $(...) or backtick in the words of an eval or a bash -c (eval $(true) 'git push ...', eval `true`'git push ...'); what follows, in the body of a $(...), an unbalanced parenthesis outside quotes (a case pattern: case y in y) ...) or a double-quoted ) inside a $(...) that is itself in double quotes in that body (echo "$(echo "$(echo ")")"; ...).
 A command substitution $(...) (nested ones too) and a backtick substitution are read, and a ) in quotes or after a backslash inside a body does not end it (except the double-quoted ) of the Known gaps); a $(...) or backtick inside single quotes or in a comment is read anyway (echo '$(git push -f origin x)'), and so is an escaped \\$(...) or \\`...\\` in double quotes, where bash leaves it as text, and a $( that is never closed is read to the end of the line: a false deny, in the safe direction."""
 import argparse, json, os, pathlib, re, shlex, subprocess, sys, tempfile
 from loop import config
@@ -61,17 +63,19 @@ API_VALUE_LONG = {"--header", "--jq", "--template", "--preview", "--hostname", "
 DENY, FORCE, CMD, FF = "deny", "force", "cmd", "ff"
 MCP_TOOLS = {"merge_pull_request", "push_files", "create_or_update_file", "delete_file"}
 VIA_PR = "merge through a PR"
+WRITE = "python3 -I bin/loop guard verdict"      # the command that records a verdict (loop/verdict.py); a deny that asks for one ends with it
 PROTECTED = frozenset()     # set from the configuration by _configure()
 VERDICTS = None             # the verdict file, set by _configure()
 
 
 def _configure(cfg=None):
     """Takes the protected branches and the verdict file from the project's configuration (loop.json over the defaults)."""
-    global PROTECTED, VERDICTS
+    global PROTECTED, VERDICTS, WRITE
     cfg = config.load() if cfg is None else cfg
     protected = cfg["protected_branches"]
     PROTECTED = frozenset([protected] if isinstance(protected, str) else protected)
     VERDICTS = cfg.path("verdicts")
+    WRITE = f"LOOP_PROJECT={shlex.quote(str(cfg.root))} python3 -I {shlex.quote(str(config.KIT / 'bin' / 'loop'))} guard verdict"
 
 
 def git_out(wd, *a):
@@ -316,8 +320,12 @@ def decide(cmd, wd, depth=0):
     try: return analyse(cmd, wd, depth)
     except ValueError: return [(DENY, "the command cannot be read")] if UNREADABLE.search(cmd) else []
 
+def counts(row):
+    """True for a row that is a go verdict with a non-empty id, by, answer and undo. A withdrawal is read by read_verdicts, not here."""
+    return row.get("verdict") == "go" and all(isinstance(row.get(k), str) and row[k].strip() for k in ("id", "by", "answer", "undo"))
+
 def read_verdicts():
-    """The verdicts that count: verdict "go", id, by, answer and undo present, not withdrawn. A missing file is no verdicts; a file that cannot be read raises."""
+    """The verdicts that count: counts(row), not withdrawn. A missing file is no verdicts; a file that cannot be read raises."""
     try:
         with open(VERDICTS, encoding="utf-8") as f: lines = f.read().splitlines()
     except FileNotFoundError: return []
@@ -327,8 +335,7 @@ def read_verdicts():
         except ValueError: continue
         if isinstance(r, dict): rows.append(r)
     withdrawn = {r.get("of") for r in rows if r.get("verdict") == "withdrawn"}
-    full = lambda r: all(isinstance(r.get(k), str) and r[k].strip() for k in ("id", "by", "answer", "undo"))
-    return [r for r in rows if r.get("verdict") == "go" and full(r) and r["id"] not in withdrawn]
+    return [r for r in rows if counts(r) and r["id"] not in withdrawn]
 
 def judge_bash(cmd, wd):
     """The reason to deny a Bash command line; "" when it may go on."""
@@ -340,10 +347,10 @@ def judge_bash(cmd, wd):
         if any(c != FF for c, _ in why): return said((FORCE, CMD)) + f": a push to a protected branch goes alone, with no force, delete or gh write in the same command ({said((FF,))})"
         heads = {str(v.get("head", "")).lower() for v in read_verdicts() if v.get("kind") == "merge"}
         miss = [t for c, t in why if c == FF and SHA.search(t).group() not in heads]
-        return f"{miss[0]}: no go verdict of kind merge has this head (record the advisor's verdict before the push)" if miss else ""
+        return f"{miss[0]}: no go verdict of kind merge has this head; record the advisor's verdict first, with: {WRITE} go --head {SHA.search(miss[0]).group()} --base <40 hex> --branch <branch> --by <who> --answer <file> --note <text>" if miss else ""
     if any(c == FORCE for c, _ in why) and not LEASE.search(cmd): return said((FORCE, CMD)) + ": a force or delete push must carry --force-with-lease=<ref>:<40 hex sha>"
     if any(v.get("kind") == "command" and isinstance(v.get("command"), str) and v["command"].strip() == cmd.strip() for v in read_verdicts()): return ""
-    return said((FORCE, CMD)) + ": no command verdict equals this whole command (record the advisor's verdict first, with the command exactly as run)"
+    return said((FORCE, CMD)) + ": no command verdict equals this whole command; record the advisor's verdict first, with the command exactly as run: " + WRITE + " command --command <the whole command, as run> --by <who> --answer <file> --note <text>"
 
 def judge_merge(ti):
     repo, pr = f"{ti.get('owner')}/{ti.get('repo')}".lower(), ti.get("pullNumber"); pr = str(int(pr)) if isinstance(pr, (int, float)) and pr == int(pr) else str(pr)
@@ -351,9 +358,9 @@ def judge_merge(ti):
     if ti.get("merge_method") != "merge": return 'merge_pull_request needs merge_method "merge" (a squash or rebase would not match the verdict\'s undo)'
     if not SHA.fullmatch(head): return "merge_pull_request needs expectedHeadSha, the 40-hex head the verdict covers"
     mine = [v for v in read_verdicts() if v.get("kind") == "merge" and str(v.get("repo", "")).lower() == repo and str(v.get("pr")) == pr]
-    if not mine: return f"no go verdict of kind merge for {repo}#{pr}: record the advisor's verdict before the merge"
+    if not mine: return f"no go verdict of kind merge for {repo}#{pr}: record the advisor's verdict first, with: {WRITE} go --head {head} --base <40 hex> --branch <branch> --by <who> --answer <file> --note <text> --pr {pr} --repo {repo}"
     same = [v for v in mine if str(v.get("head", "")).lower() == head]
-    if not same: return f"the verdict for {repo}#{pr} covers head {', '.join(str(v.get('head'))[:7] for v in mine)}, the call says {head[:7]}: the head moved, or the wrong sha was passed"
+    if not same: return f"the verdict for {repo}#{pr} covers head {', '.join(str(v.get('head'))[:7] for v in mine)}, the call says {head[:7]}: the head moved, or the wrong sha was passed; record the verdict for this head first, with: {WRITE} go --head {head} --base <40 hex> --branch <branch> --by <who> --answer <file> --note <text> --pr {pr} --repo {repo}"
     if not any(v["id"] in str(ti.get("commit_message") or "") for v in same): return f"commit_message must contain the verdict id ({same[-1]['id']})"
     return ""
 
@@ -480,11 +487,15 @@ class _Text:
 
 
 def main(argv=None):
-    """The guard verb: `pre` (the hook) or `permissions apply`. Returns the exit code."""
+    """The guard verb: `pre` (the hook), `permissions apply`, or `verdict` (records a verdict: loop/verdict.py). Returns the exit code."""
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["verdict"]:      # the verdict verb has options of its own, parsed there; loop/verdict.py needs fcntl, so it is imported in this branch only
+        from loop import verdict
+        return verdict.main(argv[1:])
     ap = argparse.ArgumentParser(prog="loop guard", description="refuse a guarded act without a recorded verdict; merge a permission rules file")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("pre", help="the PreToolUse hook: reads the payload on standard input")
+    sub.add_parser("verdict", help="record a verdict (hold, go, command or withdraw); `guard verdict -h` says the options")
     perm = sub.add_parser("permissions", help="permission rules")
     psub = perm.add_subparsers(dest="action", required=True)
     pa = psub.add_parser("apply", help="merge a rules file into a user settings file")
