@@ -256,6 +256,7 @@ that is never executed is not a regeneration command.
 |   |   |-- test_hook.py
 |   |   |-- test_keep.py
 |   |   |-- test_record.py
+|   |   |-- test_record_ways.py
 |   |   |-- test_selfcheck.py
 |   |   |-- test_tick.py
 |   |   `-- test_watch.py
@@ -294,5 +295,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 234 files tracked
+35 directories, 235 files tracked
 ```

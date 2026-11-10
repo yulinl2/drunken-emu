@@ -1,15 +1,16 @@
 """Bank what the principal says, once, verbatim, with its time; search the bank and the words files for what was said; list
 what the principal typed that is still waiting in a transcript's queue.
 
-The principal's messages come from the session transcript: what was typed, the answers to a question dialog, and what was
-typed while a turn was running (a queued message). Four subcommands:
+The principal's messages come from the session transcript: what was typed at a prompt, the answers to a question dialog, and
+what was typed while a turn was running (a queued message), which the host delivers at the end of the turn (a user row) or
+between two tool calls (a queued_command attachment). Four subcommands:
   bank     appends each new message of the principal to the bank, an append-only file of JSON lines (the "bank" key)
   raw      lists what the principal typed, once, from a transcript file or from the git refs of the backup branches
   find     searches the bank and the words files (the "words" globs) for the given words, case-insensitively
   pending  lists the queued messages still waiting in a transcript: typed while a turn runs, not yet delivered to the model
 
-INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with its time, and no other text is; pending lists each queued message that no later row delivers, once, in file order, and no other message.
-FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a tool result or a notice of the harness is banked; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed (loop/tests/test_record.py)
+INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; pending lists each queued message that no later row delivers, once, in file order, and no other message.
+FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed (loop/tests/test_record.py, loop/tests/test_record_ways.py)
 
 usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
@@ -114,6 +115,47 @@ def queued_text(obj, prefixes):
     return text
 
 
+def _prompt_text(att):
+    """The text of a queued_command attachment: its prompt when that is a string; else the "text" of each item of its prompt,
+    a list, joined by a newline (typed_text joins the text blocks of a message the same way); None when there is none."""
+    prompt = att.get("prompt")
+    if isinstance(prompt, str):
+        text = prompt
+    elif isinstance(prompt, list):
+        text = "\n".join(x["text"] for x in prompt if isinstance(x, dict) and isinstance(x.get("text"), str))
+    else:
+        return None
+    return text.strip() or None
+
+
+def _blocks(obj):
+    """The text blocks of a user row, stripped, in order (a string content is one block); an empty block is not one."""
+    msg = obj.get("message")
+    content = msg.get("content") if isinstance(msg, dict) else None
+    if isinstance(content, str):
+        items = [content]
+    elif isinstance(content, list):
+        items = [b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+    else:
+        items = []
+    return [t.strip() for t in items if isinstance(t, str) and t.strip()]
+
+
+def delivered_text(obj, prefixes):
+    """(kind, text) of a queued_command attachment. "midturn": a message the principal queued, delivered between two tool calls.
+    "host": the host speaking, which is not banked, and neither is the queued text it delivers: a commandMode other than a
+    prompt, or a text that starts with one of the prefixes. (None, None): any other row, or an attachment with no text."""
+    att = obj.get("attachment")
+    if obj.get("type") != "attachment" or not isinstance(att, dict) or att.get("type") != "queued_command":
+        return None, None
+    text = _prompt_text(att)
+    if text is None:
+        return None, None
+    if att.get("commandMode") not in (None, "prompt") or text.startswith(prefixes):
+        return "host", text
+    return "midturn", text
+
+
 def principal_prefixes(cfg):
     """The prefixes that mark a text as not the principal's: the built-in notices, and the ones loop.json adds."""
     return NOT_PRINCIPAL + _extra_prefixes(cfg)
@@ -142,8 +184,8 @@ def _strings(x):
 
 def _delivery_strings(obj):
     """The strings of a row in which a queued message reaches the model: the string content and the text blocks of a user row
-    that is neither a sidechain row nor a compaction summary (a match inside a tool_result block does not count), and every
-    string value of an attachment row of type queued_command."""
+    that is neither a sidechain row nor a compaction summary (a match inside a tool_result block does not count), and, of an
+    attachment row of type queued_command, the joined text of its prompt (a list of items is one text) and every string value."""
     if obj.get("type") == "user":
         if obj.get("isSidechain") or obj.get("isCompactSummary"):
             return []
@@ -156,7 +198,8 @@ def _delivery_strings(obj):
         return []
     att = obj.get("attachment")
     if obj.get("type") == "attachment" and isinstance(att, dict) and att.get("type") == "queued_command":
-        return list(_strings(att))
+        text = _prompt_text(att)
+        return ([text] if text else []) + list(_strings(att))
     return []
 
 
@@ -285,7 +328,9 @@ def pending_since(state, src, prefixes=NOT_PRINCIPAL):
 
 
 def scan(path, prefixes):
-    """The principal's messages of a transcript, in file order: kind typed, dialog or queued (typed while a turn was running)."""
+    """The principal's messages of a transcript, in file order, as events of a kind: typed (a user row), dialog (an answer to a
+    question dialog), queued (an enqueue row: typed while a turn was running), midturn (a queued_command attachment: a queued
+    message delivered between two tool calls) or host (a queued_command attachment that is the host speaking; see delivered_text)."""
     ask_ids, events = set(), []
     with open(path, "rb") as fh:   # bytes, a line at a time; a partial last line is skipped and a later run picks it up
         for n, line in enumerate(fh, 1):
@@ -308,10 +353,15 @@ def scan(path, prefixes):
             if text is None:
                 kind, text = "queued", queued_text(obj, prefixes)
             if text is None:
+                kind, text = delivered_text(obj, prefixes)
+            if text is None:
                 continue
-            events.append({"kind": kind, "key": obj.get("uuid") or f"{pathlib.Path(path).stem}:line:{n}", "line": n, "timestamp": obj.get("timestamp"),
-                           "text": text, "meta": bool(obj.get("isMeta")),
-                           "scheduled": obj.get("turnOrigin") == "scheduled" or bool(obj.get("wakeupSource"))})
+            ev = {"kind": kind, "key": obj.get("uuid") or f"{pathlib.Path(path).stem}:line:{n}", "line": n, "timestamp": obj.get("timestamp"),
+                  "text": text, "meta": bool(obj.get("isMeta")),
+                  "scheduled": obj.get("turnOrigin") == "scheduled" or bool(obj.get("wakeupSource"))}
+            if kind == "typed":
+                ev["blocks"] = _blocks(obj)
+            events.append(ev)
     return events
 
 
@@ -339,34 +389,60 @@ def load_bank(path):
 
 
 def plan(events, seen, stamps, long_texts):
-    """The events to bank, in file order. A queued message that the transcript later delivers as a message is one message:
-    the delivered record is banked and the queued one is not. A queued record that an earlier run banked stands, and its
-    delivery is not banked again (the bank is append-only). A repeat within the same second, or a scheduled repeat, is skipped."""
-    pending = collections.defaultdict(collections.deque)   # text -> keys of queued records still waiting, oldest first
-    consumed, delivered_by = set(), {}
+    """The records to bank, in file order. A queued message is one utterance: banked once, under the key of its enqueue row, with
+    the time it was typed; when a row delivers it, also the time of the delivery and the way: at the end of a turn (a user row
+    that carries it; a user row whose text blocks are several queued messages delivers each one) or between two tool calls (a
+    queued_command attachment). Queued messages of one text are delivered oldest first. The row that delivers a message is not
+    banked itself. A notice of the host delivers too, and what it delivers is not banked. A delivery that no enqueue row
+    precedes is banked under its own key and time. A repeat within the same second, or a scheduled repeat, is skipped. A key
+    that the bank holds stands, and so does the key of the row that delivered the message: nothing is banked twice."""
+    waiting = collections.defaultdict(collections.deque)   # text -> the queued events not delivered yet, oldest first
+    took = {}          # line of a queued event -> (the row that delivered it, its way)
+    host, carrier, mid = set(), set(), set()   # lines: queued events a notice delivered; user rows and attachments that delivered
     for ev in events:
-        if ev["kind"] == "queued":
-            pending[ev["text"]].append(ev["key"])
-        elif ev["kind"] == "typed" and pending[ev["text"]]:
-            q = pending[ev["text"]].popleft()
-            consumed.add(q)
-            delivered_by[ev["key"]] = q
+        k, text = ev["kind"], ev["text"]
+        if k == "queued":
+            waiting[text].append(ev)
+        elif k == "typed":
+            blocks = ev["blocks"] if len(ev["blocks"]) > 1 else []
+            if waiting.get(text):
+                took[waiting[text].popleft()["line"]] = (ev, "end-of-turn")
+                carrier.add(ev["line"])
+            elif blocks and all(len(waiting.get(b, ())) >= c for b, c in collections.Counter(blocks).items()):
+                for b in blocks:
+                    took[waiting[b].popleft()["line"]] = (ev, "end-of-turn")
+                carrier.add(ev["line"])
+        elif k == "midturn" and waiting.get(text):
+            took[waiting[text].popleft()["line"]] = (ev, "mid-turn")
+            mid.add(ev["line"])
+        elif k == "host" and waiting.get(text):
+            host.add(waiting[text].popleft()["line"])
     new = []
     for ev in events:
-        key, text = ev["key"], ev["text"]
-        if key in seen or key in consumed:
+        k, line = ev["kind"], ev["line"]
+        if k == "host" or line in host or line in carrier or line in mid:
             continue
-        q = delivered_by.get(key)
-        if q is not None and q in seen:
+        if k == "queued":                                  # its row is the delivering one, when one delivered it
+            row, way = took.get(line, (None, None))
+            kind, when, delivered_at = "queued", ev["timestamp"], (row["timestamp"] if row else None)
+        elif k == "midturn":                               # a delivery with no enqueue row before it: its own row and time
+            row, way = None, "mid-turn"
+            kind, when, delivered_at = "queued", ev["timestamp"], ev["timestamp"]
+        else:                                              # typed at a prompt, or an answer to a question dialog
+            row, way = None, None
+            kind, when, delivered_at = k, ev["timestamp"], None
+        if ev["key"] in seen or (row is not None and row["key"] in seen):
             continue
-        stamp = ((ev["timestamp"] or "")[:19], text[:MAX_CHARS])
-        if stamp in stamps or (ev["scheduled"] and len(text) >= LONG_REPEAT and text[:MAX_CHARS] in long_texts):
+        src, text = (row if row is not None else ev), ev["text"]
+        stamp = ((when or "")[:19], text[:MAX_CHARS])
+        if stamp in stamps or (src["scheduled"] and len(text) >= LONG_REPEAT and text[:MAX_CHARS] in long_texts):
             continue
         stamps.add(stamp)
         if len(text) >= LONG_REPEAT:
             long_texts.add(text[:MAX_CHARS])
-        new.append({"key": key, "line": ev["line"], "kind": ev["kind"], "timestamp": ev["timestamp"], "chars": len(text),
-                    "truncated": len(text) > MAX_CHARS, "meta": ev["meta"], "text": text[:MAX_CHARS]})
+        new.append({"key": ev["key"], "line": line, "kind": kind, "timestamp": when, "chars": len(text),
+                    "truncated": len(text) > MAX_CHARS, "meta": src["meta"], "delivered_at": delivered_at,
+                    "delivered_via": way, "text": text[:MAX_CHARS]})
     return new
 
 
@@ -395,6 +471,18 @@ def _one_writer(cfg):
         yield
 
 
+WAYS = (("typed", "typed at a prompt"), ("dialog", "answers to a question"),
+        ("end-of-turn", "queued and delivered at the end of a turn"), ("mid-turn", "queued and delivered in the middle of a turn"),
+        ("waiting", "queued and not delivered yet"))
+
+
+def ways(rows):
+    """How many of the rows each way took, every way named, so that a zero is seen: typed at a prompt, an answer to a question, a
+    queued message delivered at the end of a turn or between two tool calls, and one not delivered yet."""
+    c = collections.Counter(r["kind"] if r["kind"] != "queued" else (r.get("delivered_via") or "waiting") for r in rows)
+    return ", ".join(f"{label} {c[key]}" for key, label in WAYS)
+
+
 def cmd_bank(args, cfg):
     why = config.no_project(cfg, "record bank")
     if why:
@@ -419,9 +507,10 @@ def cmd_bank(args, cfg):
         print(f"record bank: {e}", file=sys.stderr)
         return 1
     if not new:
-        print(f"nothing new; bank holds {len(seen)} messages")
+        print(f"nothing new ({ways([])}); bank holds {len(seen)} messages")
         return 0
-    print(f"banked {len(new)} new messages of the principal (lines {new[0]['line']} to {new[-1]['line']}); bank holds {len(seen) + len(new)}")
+    print(f"banked {len(new)} new messages of the principal (lines {new[0]['line']} to {new[-1]['line']}): {ways(new)}; "
+          f"bank holds {len(seen) + len(new)}")
     return 0
 
 

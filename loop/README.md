@@ -9,7 +9,7 @@ An assistant forgets, and the person it works for (the principal) cannot re-read
 
 ```
 the principal speaks
-  -> record   bank it: once, verbatim, with its time (also what was typed while a turn was running: shown at the next tool call)
+  -> record   bank it: once, verbatim, with the time it was typed; a message typed while a turn ran also with its delivery time (the turn's end, or between two tool calls); shown at the next tool call until delivered
   -> gate     nothing unsourced: a wait must cite a record; a missing input reads as changed
   -> tick     one due check per tick; a missed check moves to the front; a starved check is raised
   -> hook     every prompt: the principal's method again; every Nth tool call: again;
@@ -22,7 +22,7 @@ the principal speaks
 ## Verbs (`python3 -I bin/loop VERB ...`)
 | Verb | Does | Guarantees | Shows it failed when |
 |---|---|---|---|
-| `record` | `bank`, `raw`, `find`, `pending` | every utterance of the principal is banked once, verbatim, with its time | a typed message is in the transcript and not in the bank |
+| `record` | `bank`, `raw`, `find`, `pending` | every utterance of the principal is banked once, verbatim, with the time it was typed (a queued one also with the time and way of its delivery) | a typed message, or a queued one that a row delivered, is in the transcript and not in the bank, or in it twice |
 | `gate` | `check`, `render`, `baseline`, `selftest` | a wait carries a chain of verbatim quotes down to a root, or a closure in the principal's words | a status changes and the debt list does not; a question is cited as an assertion |
 | `tick` | `run`, `liveness` | the due check runs, one tick at a time, and `run` exits 1 when its check failed; nothing starves | a check has not run for three times its interval and no tick said so |
 | `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory; every tool call shows the principal's queued words, each once; the steps and checks of an event share one time budget (`HOOK_TIME` in `loop/hook.py`), which ends before the timeout install writes | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call; a queued message still waiting is shown at no tool call; a hook runs past the timeout install wrote |
@@ -106,4 +106,5 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - The hooks name the kit's clone by its path. If that clone is moved or deleted, the hooks do nothing, the guard included, and every prompt says that the kit is gone: run `hook install` again from where the kit is now.
 - `watch` judges only what `loop.json` names, when a hook or `watch eval` runs. A watched file deleted on purpose is judged gone at every stop: the stop is refused up to `stop_cap` times, then let through, and no verb clears that record (the ledger is only appended to). A tool call does not wait for `watch.lock`: when another run holds it, the call says so and judges nothing; a stop waits for it inside its budget and refuses what it could not judge. A ledger line that is not a record is skipped and said once per run, and its bytes are judged again.
 - It has run in one kind of container. Its hooks ran live in one session on 2026-11-10: a stop was refused three times and let through at the cap, the guard refused a forced push, each stop made a backup, the bank and `tick liveness` answered. Not seen there: any text from the PostToolUse hook in 34 tool calls, and a reprint at a prompt that was a notification; why is not established. User-level hooks written by a session's own first command were seen to fire for the rest of that session (`docs/SANDBOX-FACTS.md`, 2026-11-10); a project-level `settings.local.json` written mid-session left no trace (same file, 2026-10-17).
-- `record pending` counts a queued message as delivered when a later row contains its text, so a short queued word that a later message contains (`y` in `yes`) is not listed.
+- `record pending` counts a queued message as delivered when a later row contains its text (a user row, or a `queued_command` attachment, a notice of the host included), so a short queued word that a later message contains (`y` in `yes`) is not listed.
+- A queued message banked while it still waits has no delivery time: the bank is append-only, so that time is not added later. Rows banked before the `delivered_at` and `delivered_via` fields existed keep their form; a message delivered at the end of a turn is then a `typed` row with the time of its delivery.

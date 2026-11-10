@@ -220,7 +220,8 @@ def test_a_queued_message_that_also_arrives_as_a_user_message_is_banked_once(pro
     write_jsonl(src, [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z", content="ship the fix"),
                       user("u2", "2026-01-01T00:02:00Z", "ship the fix")])
     assert record.main(["bank", "--src", str(src)]) == 0
-    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("u2", "typed")]
+    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("t:line:1", "queued")]     # keyed by the enqueue row, one row
+    assert (bank_rows()[0]["timestamp"], bank_rows()[0]["delivered_at"]) == ("2026-01-01T00:01:00Z", "2026-01-01T00:02:00Z")
 
 
 def test_a_queued_record_banked_before_its_delivery_stands_and_the_delivery_is_not_banked_again(project, capsys):
