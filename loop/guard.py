@@ -13,7 +13,7 @@ Rules (what stops without a verdict, what passes with one):
   merge_pull_request          passes only with merge_method "merge", expectedHeadSha equal to the `head` of a `merge` verdict for the same repo and PR, and a commit_message that contains the verdict's id
   push_files, create_or_update_file, delete_file     denied when the branch is a protected one (or is not named: GitHub then uses the default branch)
   git push to a protected branch    denied, explicit or implied (merge through a PR), except a push of a literal 40-hex sha (git push origin <sha>:refs/heads/main; no +, no force flag, nothing but plain pushes in the same command) whose sha is the head of a go verdict of kind merge; git itself refuses a push that is not a fast-forward
-  git push that forces or deletes (--force*, --delete, -f, -d, a refspec with + or an empty source)    passes only when a `command` verdict equals the whole Bash string and the string carries --force-with-lease=<ref>:<40 hex>
+  git push that forces or deletes (--force*, --delete, -f, -d, a refspec with + or an empty source)    passes only when a `command` verdict equals the whole Bash string and that push carries, among its own arguments, --force-with-lease=<ref>:<40 hex>
   git push --mirror, --all, --branches, --prune, a wildcard or unreadable refspec, a configured mirror or push.default=matching     denied
   gh pr merge                 denied: merge through a PR
   gh api writes (-X or --method other than GET, -f, -F, --field, --raw-field, --input), gh repo edit     pass only when a `command` verdict equals the whole Bash string

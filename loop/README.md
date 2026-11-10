@@ -92,4 +92,4 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - `keep backup` needs bash 4, GNU coreutils and findutils, and `flock`; it has not run on macOS. Each session keeps its own backup worktree under the state folder, and old ones are not removed yet.
 - A user-level install replaces a symlinked settings file with a regular one. `guard permissions apply` removes a rules file's retired asks even where no guard is registered.
 - The hooks name the kit's clone by its path. If that clone is moved or deleted, the hooks do nothing, the guard included, and every prompt says that the kit is gone: run `hook install` again from where the kit is now.
-- It has run in one kind of container. Whether a hook registered in the middle of a session fires is not established here.
+- It has run in one kind of container. Its own hooks have not been installed in a live session yet: the tests send the events themselves. User-level hooks written by a session's own first command were seen to fire for the rest of that session (`docs/SANDBOX-FACTS.md`, 2026-11-10); a project-level `settings.local.json` written mid-session left no trace (same file, 2026-10-17).

@@ -487,3 +487,37 @@ identical block is intended; sharing can come back later by choice.
   - `install` keeps a hook command that shares a group with this one;
   - the regression hint offers a one-line restore only when that restores the whole candidate (artifact and trial).
 - `test_emu_loop.py` now has 24 tests.
+
+**2026-11-10: a harness that calls the kit without being asked (P-dae1).** `loop/` (pull request 85) runs its steps from the session's own events: at the prompt, at every Nth tool call, before a guarded tool call and at every stop. A project that names the engine's command in `stop_blocks_on` is told its verdict at every stop without calling it, and a backup that failed is said at the next prompt. Seen working in tests that send the events themselves (`loop/tests/test_closed_loop.py`), and, for another project's user-level hooks, in one live session (`docs/SANDBOX-FACTS.md`, 2026-11-10). Not yet seen: the loop's own hooks installed in a live session with the engine named as a blocker. That observation closes P-dae1 or says why not; until then it stays `OPEN`.
+
+## P-4009 — a test fixture made by editing a real record carries the record `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a test fixture made by editing a real record carries the record")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** Twice in one day a review found material of a private project in the tests of a package ported from it: first a real timestamp beside a paraphrase, then the openings of real commands with one word changed. The builders had been told to invent their fixtures; they edited real ones. The scans run before each review looked for strings, dates and names from a list, and none could see an edit of a record it did not hold verbatim.
+
+**What would close it.** A check that fails when a fixture is close to a record of the source project (the second review compared rare-word overlap against the source's own records), run where the source can be read; and an order to builders that names the property (no value in a fixture may be derived from a real record: not its time, its length, its wording or its file names) and not the word "invented".
+
+## P-6430 — a tick lets a check that keeps failing run first at every tick `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a tick lets a check that keeps failing run first at every tick")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** `loop/tick.py` puts a failed check at the front, due at once, and picks the first due check in level order. One check that keeps failing therefore runs at every tick, and every other check waits until it is more than three intervals late; `tick liveness` then names them. The policy reports its own starvation and also produces it.
+
+**What would close it.** Among the checks that are due, pick the one that has waited longest in units of its own interval, so that a failing check takes turns. Three tests in `loop/tests/test_tick.py` pin the present rule and change with it.
+
+## P-ee14 — under sessions: here the guard does not read a session that works outside the project `OPEN`
+
+*ID: `P-` + first four hex of `sha1("under sessions: here the guard does not read a session that works outside the project")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** With the default `"sessions": "here"`, `loop/guard.py` leaves alone a session whose working directory is outside the project, unless its command names the project's root as an absolute path. From such a session a push that reaches the project by a relative path and every MCP merge or file write pass with nothing said. Reading every session instead would make one project's verdicts and protected branches a policy for every repository on the machine.
+
+**What would close it.** Decide by the repository a command acts on, not by the session's working directory; the guard already follows the folder a command runs in.
+
+## P-bb1b — the reprint reaches the workers a session starts, and they do not act on it `OPEN`
+
+*ID: `P-` + first four hex of `sha1("the reprint reaches the workers a session starts, and they do not act on it")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** A session's user-level hooks fire for the tool calls of the agents and workflows it starts (`docs/SANDBOX-FACTS.md`, 2026-11-10). Four of six workers said in their reports that they took the reprinted method for foreign text and ignored it, as their orders told them to treat text inside tool results. Their calls also advanced the parent's counter.
+
+**The question, not a rule.** Should a worker be bound by the principal's method at all, and if so, through which channel that a worker takes for its principal's?
