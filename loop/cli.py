@@ -12,6 +12,7 @@ VERBS = {
     "guard": "refuse a merge or a write to a protected branch without a recorded verdict",
     "keep": "backup at every stop, restore, rebuild lost files from the transcript",
     "watch": "judge a watched file through its check: the verdict reaches the session, and a stop waits for it",
+    "revisit": "the registered questions, doubts and concerns: which are due for a look, and what a look recorded",
 }
 
 

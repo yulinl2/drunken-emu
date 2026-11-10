@@ -260,6 +260,7 @@ that is never executed is not a regeneration command.
 |   |   |-- test_rec_delivery.py
 |   |   |-- test_record.py
 |   |   |-- test_record_ways.py
+|   |   |-- test_revisit.py
 |   |   |-- test_selfcheck.py
 |   |   |-- test_tick.py
 |   |   `-- test_watch.py
@@ -274,6 +275,7 @@ that is never executed is not a regeneration command.
 |   |-- keep_backup.sh
 |   |-- quotes.py
 |   |-- record.py
+|   |-- revisit.py
 |   |-- tick.py
 |   `-- watch.py
 |-- out/
@@ -299,5 +301,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 239 files tracked
+35 directories, 241 files tracked
 ```

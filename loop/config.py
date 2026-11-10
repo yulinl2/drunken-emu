@@ -11,6 +11,7 @@ import json, os, pathlib, subprocess
 
 KIT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULTS = {
+    "revisit": "loop-state/revisit",              # the registry's folder: registry.json (rewritten whole, its .bak kept) and events.jsonl (appended); loop/revisit.py
     "principal_method": "PRINCIPAL-METHOD.md",    # the principal's own text: printed at every prompt and every reread_every tool calls
     "reread_every": 5,
     "bank": "loop-state/bank.jsonl",              # append-only, in git: one record per utterance of the principal

@@ -23,3 +23,13 @@ def test_an_unknown_key_inside_backup_is_refused_and_the_message_names_it_and_th
 def test_the_known_key_extra_dirs_inside_backup_is_accepted(tmp_path, monkeypatch):
     write_project(tmp_path, monkeypatch, {"backup": {"remote": "origin", "extra_dirs": ["scratch"]}})
     assert config.load()["backup"] == {"remote": "origin", "prefix": "backup/", "extra_dirs": ["scratch"]}
+
+
+def test_the_revisit_key_defaults_to_a_folder_under_loop_state(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOOP_PROJECT", str(tmp_path))   # no loop.json here: every key is its default
+    assert config.load().path("revisit") == tmp_path.resolve() / "loop-state" / "revisit"
+
+
+def test_the_revisit_key_names_the_registry_folder_under_the_root(tmp_path, monkeypatch):
+    write_project(tmp_path, monkeypatch, {"revisit": "ledger/questions"})
+    assert config.load().path("revisit") == tmp_path.resolve() / "ledger" / "questions"
