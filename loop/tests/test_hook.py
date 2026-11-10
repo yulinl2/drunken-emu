@@ -1,7 +1,7 @@
 """loop/hook.py: the hooks a session fires, the install that registers them, and the stop that is refused a capped number of times.
 
 Every test runs in temporary folders with a temporary HOME; none reads or writes the settings of the machine it runs on."""
-import json, os, pathlib, subprocess, sys
+import json, os, pathlib, subprocess, sys, threading, time
 
 import pytest
 
@@ -260,3 +260,117 @@ def test_a_hook_whose_kit_is_gone_does_nothing_and_the_prompt_says_so(project):
     r = subprocess.run(hook.command_for(root, BIN_LOOP, ["hook", "prompt"]), shell=True, input=json.dumps({"cwd": str(root)}),
                        capture_output=True, text=True, env={**os.environ, "HOME": str(home)})
     assert r.returncode == 0 and r.stdout.startswith("METHOD TEXT\n") and "is gone" not in r.stdout
+
+
+# the stop's count under stop.lock, the post counter, what a failed blocker says, and the entries an install recognises
+
+def test_two_stops_at_once_both_count_their_refusal(project, monkeypatch):
+    """The read, the verdict and the write of a stop are one step under stop.lock: two stops that overlap count two refusals."""
+    root, _home = project
+    cfg = config.load()
+    res = {"failed": ["false"], "did_not_run": [], "passed": [], "said": [("false", "exit 1: ")]}
+    read = hook._stop_state
+
+    def slow(path):
+        st = read(path)
+        time.sleep(0.2)
+        return st
+
+    monkeypatch.setattr(hook, "_stop_state", slow)
+    stops = [threading.Thread(target=hook._decide, args=(cfg, res)) for _ in range(2)]
+    for t in stops:
+        t.start()
+    for t in stops:
+        t.join()
+    assert json.loads((root / ".loop" / "stop-refusals.json").read_text(encoding="utf-8")) == {"refused": 2, "open": False}
+
+
+def test_a_stop_that_finds_stop_lock_held_says_so_and_does_not_hang(project, monkeypatch, capsys):
+    import fcntl
+    root, _home = project
+    cfg = config.load()
+    monkeypatch.setattr(hook, "STOP_LOCK_WAIT_S", 0.3, raising=False)
+    res = {"failed": ["false"], "did_not_run": [], "passed": [], "said": [("false", "exit 1: ")]}
+    with open(cfg.state("stop.lock"), "w") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        t0 = time.monotonic()
+        assert hook._decide(cfg, res) == 2
+        assert time.monotonic() - t0 < 2
+    assert "stop.lock is still held after 0.3 s" in capsys.readouterr().err
+
+
+def test_the_post_counter_counts_eight_calls_that_arrive_at_once(project, monkeypatch):
+    root, _home = project
+    _cfg(root, reread_every=1000)
+    monkeypatch.setattr(hook, "_payload", lambda: {"cwd": str(root)})
+    read = hook._count
+
+    def slow(path):
+        n = read(path)
+        time.sleep(0.05)
+        return n
+
+    monkeypatch.setattr(hook, "_count", slow)
+    together = threading.Barrier(8)
+
+    def call():
+        together.wait()
+        hook.cmd_post(None)
+
+    calls = [threading.Thread(target=call) for _ in range(8)]
+    for t in calls:
+        t.start()
+    for t in calls:
+        t.join()
+    assert json.loads((root / ".loop" / "post-count.json").read_text(encoding="utf-8")) == {"count": 8}
+
+
+def test_a_state_file_is_replaced_in_one_step_not_written_in_place(tmp_path):
+    f = tmp_path / "state.json"
+    hook._write_json(f, {"count": 1})
+    before = f.stat().st_ino
+    hook._write_json(f, {"count": 2})
+    assert json.loads(f.read_text(encoding="utf-8")) == {"count": 2} and f.stat().st_ino != before
+
+
+def test_a_failed_blocker_says_the_marker_it_printed(project):
+    root, home = project
+    _cfg(root, stop_runs=[], stop_blocks_on=[["sh", "-c", "echo KETTLE-$((4000 + 1583)); exit 1"]])   # the marker is made by the shell
+    r = _run(["hook", "stop"], root, home, stdin="{}")
+    assert r.returncode == 2 and "KETTLE-5583" in r.stderr
+
+
+def test_a_failed_blocker_says_the_last_20_lines_it_printed(project):
+    root, home = project
+    script = "i=1; while [ $i -le 30 ]; do echo row-$i; i=$((i+1)); done; exit 1"
+    _cfg(root, stop_runs=[], stop_blocks_on=[["sh", "-c", script]])
+    r = _run(["hook", "stop"], root, home, stdin="{}")
+    assert r.returncode == 2 and "    row-30\n" in r.stderr and "    row-11\n" in r.stderr and "    row-10\n" not in r.stderr
+
+
+def test_a_failed_blocker_says_at_most_2000_characters_of_its_output(project):
+    root, home = project
+    _cfg(root, stop_runs=[], stop_blocks_on=[["sh", "-c", "printf '%5000s' '' | tr ' ' A; exit 1"]])
+    r = _run(["hook", "stop"], root, home, stdin="{}")
+    assert r.returncode == 2 and "A" * 2000 in r.stderr and "A" * 2001 not in r.stderr
+
+
+def test_a_blocker_that_cannot_run_says_why(project):
+    root, home = project
+    _cfg(root, stop_runs=[], stop_blocks_on=[["no-such-program-for-this-test"]])
+    r = _run(["hook", "stop"], root, home, stdin="{}")
+    assert r.returncode == 2 and "did not run" in r.stderr and "could not start" in r.stderr
+
+
+def test_a_second_clone_replaces_the_entries_of_a_first_whose_path_has_a_space(project, trials, monkeypatch, tmp_path):
+    root, home = project
+    first, second = tmp_path / "first clone", tmp_path / "second-clone"
+    monkeypatch.setattr(config, "KIT", first)
+    assert hook.main(["install", "--user"]) == 0
+    monkeypatch.setattr(config, "KIT", second)
+    assert hook.main(["install", "--user"]) == 0
+    got = _settings(home)
+    assert str(first) not in json.dumps(got)
+    for event, groups in got["hooks"].items():
+        cmds = [h["command"] for g in groups for h in g["hooks"]]
+        assert len(cmds) == 1 and str(second / "bin" / "loop") in cmds[0], (event, cmds)

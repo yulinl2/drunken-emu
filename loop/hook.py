@@ -1,15 +1,22 @@
 """The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, and a stop runs its checks and is refused a capped number of times in a row.
 
-INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3).
-FAILS WHEN: a stop is refused more than stop_cap times in a row; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had (loop/tests/test_hook.py).
+INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3); a hook waits at most 5 s for a lock (2 s for the post counter), then goes on without it.
+FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had (loop/tests/test_hook.py).
 usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
        python3 -I bin/loop hook prompt | post | stop | compact
 """
-import argparse, json, os, pathlib, re, shlex, subprocess, sys, tempfile
+import argparse, contextlib, json, os, pathlib, shlex, subprocess, sys, tempfile, time
 from loop import config
+
+try:
+    import fcntl
+except ImportError:   # no file locks on this platform: the stop and the post counter then run without one
+    fcntl = None
 
 STEP_TIMEOUT_S = 120                  # one step of stop, stop_blocks_on or compact (no DEFAULTS key: a constant of the kit)
 TRIAL_TIMEOUT_S = 900                 # one registered command, run once by install on a sample payload (no DEFAULTS key)
+STOP_LOCK_WAIT_S = 5                  # the longest a stop waits for stop.lock, then decides without it (no DEFAULTS key: a constant of the kit)
+POST_LOCK_WAIT_S = 2                  # the longest a tool call waits for post-count.lock, then counts without it (no DEFAULTS key: a constant of the kit)
 COMPACT_RUNS = [["keep", "backup"]]   # what compact runs (no DEFAULTS key: fixed here)
 REGISTERED = [                        # (event, verb and subcommand, matcher or None), in the order install writes them
     ("UserPromptSubmit", ["hook", "prompt"], None),
@@ -18,7 +25,6 @@ REGISTERED = [                        # (event, verb and subcommand, matcher or 
     ("Stop", ["hook", "stop"], None),
     ("PreCompact", ["hook", "compact"], None),
 ]
-OWN_COMMAND = re.compile(r"python3 -I \S*bin/loop(\s|$)")   # an entry of this package, whichever clone it names
 
 
 def _say(msg):
@@ -61,17 +67,39 @@ def _mine(cfg, payload, name):
 
 
 def _write_json(path, obj):
-    path.write_text(json.dumps(obj), encoding="utf-8")
+    """Replaces the file in one step (see _write): a reader sees the old file or the new one, never half of one."""
+    _write(path, json.dumps(obj))
+
+
+@contextlib.contextmanager
+def _locked(cfg, name, longest_wait_s):
+    """Holds the lock file `name` of the state directory while the block runs. It tries without blocking, every 50 ms, for at
+    most longest_wait_s seconds; when the lock is still held then, it says so on standard error and runs the block without it,
+    so that a hook never hangs on another one. Without fcntl (no file locks on this platform) the block runs without a lock."""
+    with open(cfg.state(name), "w") as held:
+        if fcntl is not None:
+            deadline = time.monotonic() + longest_wait_s
+            while True:
+                try:
+                    fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except OSError:
+                    if time.monotonic() >= deadline:
+                        _say(f"loop hook: {name} is still held after {longest_wait_s:g} s; going on without it")
+                        break
+                    time.sleep(0.05)
+        yield
 
 
 def _run_step(argv, cfg):
     """One step of stop or compact, run in the project root: a kit verb through bin/loop, anything else as an external command.
-    Returns (status, detail): "ok" for exit 0; "did_not_run" for exit 3, a missing program, a timeout, or an entry that is not a
-    list of strings; "failed" for any other exit."""
+    Returns (status, detail, tail): "ok" for exit 0; "did_not_run" for exit 3, a missing program, a timeout, or an entry that is
+    not a list of strings; "failed" for any other exit. detail is the one-line reason (the reports of stop_runs and compact print
+    it); tail is the last 20 lines of a failed step's output, at most 2000 characters, which a blocker's refusal says ("" otherwise)."""
     if not isinstance(argv, list) or not argv or not all(isinstance(a, str) for a in argv):
-        return "did_not_run", "not a command list in loop.json"
+        return "did_not_run", "not a command list in loop.json", ""
     if argv[0] == "hook":
-        return "did_not_run", "a hook is not a step of stop: it would run itself again"
+        return "did_not_run", "a hook is not a step of stop: it would run itself again", ""
     from loop import cli
     kit = set(cli.VERBS) | {"doctor"}
     cmd = [sys.executable, "-I", str(config.KIT / "bin" / "loop"), *argv] if argv[0] in kit else argv
@@ -80,14 +108,16 @@ def _run_step(argv, cfg):
                            stdin=subprocess.DEVNULL, capture_output=True, encoding="utf-8", errors="replace",
                            timeout=STEP_TIMEOUT_S)
     except subprocess.TimeoutExpired:
-        return "did_not_run", f"no result within {STEP_TIMEOUT_S} s"
+        return "did_not_run", f"no result within {STEP_TIMEOUT_S} s", ""
     except OSError as e:
-        return "did_not_run", f"could not start: {e}"
+        return "did_not_run", f"could not start: {e}", ""
     if r.returncode == 0:
-        return "ok", ""
+        return "ok", "", ""
     if r.returncode == 3:
-        return "did_not_run", "exit 3"
-    return "failed", f"exit {r.returncode}: {(r.stderr or r.stdout).strip()[-200:]}"
+        return "did_not_run", "exit 3", ""
+    text = "\n".join(s.rstrip() for s in (r.stdout, r.stderr) if s and s.strip())
+    tail = "\n".join(text.splitlines()[-20:])[-2000:]
+    return "failed", f"exit {r.returncode}: {(r.stderr or r.stdout).strip()[-200:]}", tail
 
 
 def cmd_prompt(args):
@@ -123,6 +153,16 @@ def _count(path):
         return 0
 
 
+def _bump(cfg):
+    """The post counter: one read, one more, one write, under post-count.lock, so that two tool calls at the same moment cannot
+    both count n+1. Returns the new count."""
+    counter = cfg.state("post-count.json")
+    with _locked(cfg, "post-count.lock", POST_LOCK_WAIT_S):
+        count = _count(counter) + 1
+        _write_json(counter, {"count": count})
+    return count
+
+
 def cmd_post(args):
     """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse)."""
     try:
@@ -130,9 +170,7 @@ def cmd_post(args):
         cfg = config.load()
         if not _mine(cfg, payload, "post"):
             return 0
-        counter = cfg.state("post-count.json")
-        count = _count(counter) + 1
-        _write_json(counter, {"count": count})
+        count = _bump(cfg)
         every = cfg["reread_every"]
         if not isinstance(every, int) or isinstance(every, bool) or every < 1:
             _say(f"loop hook post: reread_every must be a whole number of at least 1, not {every!r}; no reprint")
@@ -163,47 +201,56 @@ def _stop_state(path):
 
 def _decide(cfg, res):
     """The stop's verdict from the blockers' results: 0 lets the stop through, 2 refuses it. A refusal is counted; after stop_cap
-    refusals in a row the stop is let through and stays open until one pass in which nothing fails."""
-    state_file = cfg.state("stop-refusals.json")
-    st = _stop_state(state_file)
-    cap = cfg["stop_cap"]
-    gone = res["failed"] + res["did_not_run"]
-    if not gone:
-        _write_json(state_file, {"refused": 0, "open": False})
+    refusals in a row the stop is let through and stays open until one pass in which nothing fails. The count is read, judged
+    and written under stop.lock, so two stops that overlap count two refusals."""
+    with _locked(cfg, "stop.lock", STOP_LOCK_WAIT_S):
+        state_file = cfg.state("stop-refusals.json")
+        st = _stop_state(state_file)
+        cap = cfg["stop_cap"]
+        gone = res["failed"] + res["did_not_run"]
+        if not gone:
+            _write_json(state_file, {"refused": 0, "open": False})
+            return 0
+        if st["open"]:
+            _say(f"loop hook stop: still failing; the stop is let through (open since {cap} refusals): {', '.join(gone)}")
+            return 0
+        if st["refused"] < cap:
+            n = st["refused"] + 1
+            _write_json(state_file, {"refused": n, "open": False})
+            _say(f"loop hook stop: refusal {n} of {cap}; the stop is refused.")
+            _say(f"  failed:      {_names(res['failed'])}")
+            _say(f"  did not run: {_names(res['did_not_run'])}")
+            _say(f"  passed:      {_names(res['passed'])}")
+            for name, text in res["said"]:
+                _say(f"  {name}:")
+                for line in text.splitlines():
+                    _say(f"    {line}")
+            _say("  Fix what failed, or say in your reply why a check is wrong.")
+            return 2
+        _write_json(state_file, {"refused": st["refused"], "open": True})
+        _say(f"loop hook stop: the cap of {cap} refusals is reached; the stop is let through with still failing: "
+             f"{', '.join(gone)}; it stays open until one pass")
         return 0
-    if st["open"]:
-        _say(f"loop hook stop: still failing; the stop is let through (open since {cap} refusals): {', '.join(gone)}")
-        return 0
-    if st["refused"] < cap:
-        n = st["refused"] + 1
-        _write_json(state_file, {"refused": n, "open": False})
-        _say(f"loop hook stop: refusal {n} of {cap}; the stop is refused.")
-        _say(f"  failed:      {_names(res['failed'])}")
-        _say(f"  did not run: {_names(res['did_not_run'])}")
-        _say(f"  passed:      {_names(res['passed'])}")
-        _say("  Fix what failed, or say in your reply why a check is wrong.")
-        return 2
-    _write_json(state_file, {"refused": st["refused"], "open": True})
-    _say(f"loop hook stop: the cap of {cap} refusals is reached; the stop is let through with still failing: "
-         f"{', '.join(gone)}; it stays open until one pass")
-    return 0
 
 
 def cmd_stop(args):
-    """Runs stop_runs (a failure is reported, never blocks), then stop_blocks_on; a failing or unrunnable blocker refuses the stop, capped."""
+    """Runs stop_runs (a failure is reported, never blocks), then stop_blocks_on; a failing or unrunnable blocker refuses the stop,
+    capped, and the refusal says what that blocker printed (its last lines) or why it did not run."""
     try:
         payload = _payload()
         cfg = config.load()
         if not _mine(cfg, payload, "stop"):
             return 0
         for argv in cfg["stop_runs"]:
-            status, detail = _run_step(argv, cfg)
+            status, detail, _tail = _run_step(argv, cfg)
             if status != "ok":
                 _say(f"loop hook stop: {_label(argv)} {status} ({detail}); reported, not blocking")
-        res = {"failed": [], "did_not_run": [], "passed": []}
+        res = {"failed": [], "did_not_run": [], "passed": [], "said": []}
         for argv in cfg["stop_blocks_on"]:
-            status, _detail = _run_step(argv, cfg)
+            status, detail, tail = _run_step(argv, cfg)
             res["passed" if status == "ok" else status].append(_label(argv))
+            if status != "ok":
+                res["said"].append((_label(argv), tail or detail))
         return _decide(cfg, res)
     except (Exception, SystemExit) as e:
         _say(f"loop hook stop: {type(e).__name__}: {e}; the stop is let through (fail open)")
@@ -218,7 +265,7 @@ def cmd_compact(args):
         if not _mine(cfg, payload, "compact"):
             return 0
         for argv in COMPACT_RUNS:
-            status, detail = _run_step(argv, cfg)
+            status, detail, _tail = _run_step(argv, cfg)
             if status != "ok":
                 _say(f"loop hook compact: {_label(argv)} {status} ({detail}); reported, not blocking")
     except (Exception, SystemExit) as e:
@@ -248,19 +295,33 @@ def _trial(cmd):
                           timeout=TRIAL_TIMEOUT_S)
 
 
-def _ours(hook, loop_bin, root=None):
-    """True for an entry of this package that an install for `root` replaces: a command that names this kit's bin/loop or the
-    bin/loop of any clone, and that names this project (LOOP_PROJECT=<root>) or no project at all (an entry of an older
-    form). Another project's entries are not ours: each project's hooks serve its own sessions, and installing the loop
-    for a second project must not unbind the first."""
+def _read_entry(cmd):
+    """(the kit's bin/loop, the project the command names or None) for a command this package registers, else None. The command
+    is read with shlex, so a path with white space is one word: the word after `python3 -I` is the kit's entry point (any clone's
+    bin/loop), and a word LOOP_PROJECT=<root> names the project."""
+    try:
+        words = shlex.split(cmd)
+    except ValueError:
+        return None
+    for i in range(len(words) - 2):
+        if words[i] == "python3" and words[i + 1] == "-I" and words[i + 2].endswith("bin/loop"):
+            named = [w[len("LOOP_PROJECT="):] for w in words if w.startswith("LOOP_PROJECT=")]
+            return words[i + 2], (named[0] if named else None)
+    return None
+
+
+def _ours(hook, root=None):
+    """True for an entry of this package that an install for `root` replaces: a command whose entry point is a bin/loop (this
+    clone's or another's, see _read_entry), and that names this project (LOOP_PROJECT=<root>) or no project at all (an entry of
+    an older form). Another project's entries are not ours: each project's hooks serve its own sessions, and installing the
+    loop for a second project must not unbind the first."""
     if not isinstance(hook, dict) or hook.get("type") != "command":
         return False
-    cmd = str(hook.get("command", ""))
-    if not (str(loop_bin) in cmd or OWN_COMMAND.search(cmd)):
+    entry = _read_entry(str(hook.get("command", "")))
+    if entry is None:
         return False
-    if root is None or "LOOP_PROJECT=" not in cmd:
-        return True
-    return f"LOOP_PROJECT={shlex.quote(str(root))} " in cmd
+    named = entry[1]
+    return root is None or named is None or named == str(root)
 
 
 def _read_settings(path):
@@ -280,14 +341,14 @@ def _read_settings(path):
     return data
 
 
-def _merged(old, registrations, loop_bin, root=None):
+def _merged(old, registrations, root=None):
     """The settings with this package's earlier entries taken out and its registrations appended to their events; every other hook
     and every other top-level key stays. Returns (settings, the number of other hooks kept)."""
     hooks, kept = {}, 0
     for event, groups in old.get("hooks", {}).items():
         out = []
         for g in groups:
-            hs = [h for h in g.get("hooks", []) if not _ours(h, loop_bin, root)]
+            hs = [h for h in g.get("hooks", []) if not _ours(h, root)]
             kept += len(hs)
             if hs or not g.get("hooks"):
                 out.append({**g, "hooks": hs})
@@ -340,7 +401,7 @@ def cmd_install(args):
                 return 1
             else:
                 registrations.append((event, matcher, cmd))
-        new, kept = _merged(old, registrations, loop_bin, cfg.root)
+        new, kept = _merged(old, registrations, cfg.root)
         for note in notes:
             _say(note)
         text = json.dumps(new, indent=2, ensure_ascii=False) + "\n"
