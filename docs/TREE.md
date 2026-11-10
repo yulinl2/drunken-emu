@@ -237,6 +237,7 @@ that is never executed is not a regeneration command.
 |   `-- harness.html
 |-- loop/
 |   |-- tests/
+|   |   |-- oracle_push.py
 |   |   |-- test_closed_loop.py
 |   |   |-- test_gate.py
 |   |   |-- test_guard.py
@@ -279,5 +280,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-31 directories, 223 files tracked
+31 directories, 224 files tracked
 ```

@@ -2,7 +2,7 @@
 Two subcommands. `pre` is a PreToolUse hook: it reads the hook's payload (JSON) on standard input and prints a deny or an ask, or nothing; it never allows. `permissions apply` merges a rules file into a user settings file. It is a tripwire against accidents, not a barrier: a verdict is self-attested, and the principal decides what a verdict says.
 
 INVARIANT: a guarded act (a merge through a pull request, a write to a protected branch, a push that forces, deletes or mirrors, a gh write) is denied unless a go verdict in the configured verdict file (loop.json key "verdicts") was recorded before it and names that exact head or command; a permission file is written only when its rules check, and no rule in it allows what the guard decides.
-FAILS WHEN: such an act passes with no verdict that names it, or a call that mentions push, merge or api passes after an internal failure; the forms listed under "Known gaps" pass as well. The tests are loop/tests/test_guard.py.
+FAILS WHEN: such an act passes with no verdict that names it, or a call that mentions push, merge or api passes after an internal failure; the forms listed under "Known gaps" pass as well. The tests are loop/tests/test_guard.py; loop/tests/oracle_push.py runs git itself against the guard's reading of a push (the tests run a slice of it).
 
 usage: python3 -I bin/loop guard pre                  (the hook payload on standard input)
        python3 -I bin/loop guard permissions apply --rules FILE [--settings FILE] [--check]

@@ -579,6 +579,19 @@ class TheGitFactsTheLeaseRuleRestsOn(Base):
         self.assertEqual(self.git("remote.git", "rev-parse", "refs/heads/new1"), self.C)
 
 
+class TheGuardAgreesWithGit(Base):
+    """An oracle, not a model: a slice of loop/tests/oracle_push.py. Every shape of `git push` that the guard does not refuse outright is run by git against a temporary
+    bare repository. None may destroy or delete a branch there (every lease in a shape is stale or weak), and one that the guard lets go on with nothing said may
+    not write main. The whole sweep (about 29,000 shapes): python3 -I loop/tests/oracle_push.py --depth 2 --jobs 4."""
+    def test_no_push_the_guard_lets_through_destroys_a_branch_or_writes_main_unseen(self):
+        import importlib.util, pathlib
+        spec = importlib.util.spec_from_file_location("oracle_push", pathlib.Path(__file__).with_name("oracle_push.py"))
+        oracle = importlib.util.module_from_spec(spec); spec.loader.exec_module(oracle)
+        got = oracle.sweep(guard, oracle.grammar(depth=1, small=True))
+        self.assertGreater(got["run"], 50, got)          # git did run: a guard that refuses every shape would hold both properties and be of no use
+        self.assertEqual(got["broken"], [], got["broken"][:5])
+
+
 if __name__ == "__main__": unittest.main()
 
 
