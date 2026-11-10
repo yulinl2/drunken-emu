@@ -25,6 +25,8 @@ that is never executed is not a regeneration command.
 ```text
 .
 |-- .claude/
+|   |-- skills/
+|   |   `-- loop
 |   `-- settings.json
 |-- .github/
 |   `-- workflows/
@@ -236,6 +238,12 @@ that is never executed is not a regeneration command.
 |-- harness/
 |   `-- harness.html
 |-- loop/
+|   |-- mod/
+|   |   |-- .claude-plugin/
+|   |   |   `-- plugin.json
+|   |   `-- hooks/
+|   |       |-- hooks.json
+|   |       `-- register.ts
 |   |-- tests/
 |   |   |-- oracle_push.py
 |   |   |-- test_closed_loop.py
@@ -280,5 +288,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-31 directories, 224 files tracked
+35 directories, 228 files tracked
 ```
