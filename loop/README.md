@@ -37,10 +37,10 @@ A hook is a command: it cannot read the session's usage or start a compaction. A
 | Part | Does | Seen (`docs/SANDBOX-FACTS.md`, 2026-11-10) |
 |---|---|---|
 | `usage` | the context's fill, each rate-limit window's percent used and reset time, the session's cost | live figures inside a turn, where the host's own record of the session lagged a whole turn |
-| `compact` | starts a compaction once the turn has ended, with the principal's line and the session's also-keep text | started by a session itself, in two sessions; each summary carried the text |
+| `compact` | starts a compaction once the turn has ended, with the principal's line and one pointer to the session's state file | started by a session itself, in two sessions; each summary carried the text |
 | every compaction | adds the same two texts, also to a typed or an automatic one; logs tokens and cost before and after | in both sessions |
 
-It loads at a session's start from a skills folder: `.claude/skills/loop` here is a link to it, and a fresh session had both tools with no person involved. A copy placed in `~/.claude/skills/` in the middle of a session was not loaded. Its state is in `~/.claude/loop/`: `line.txt` (the principal's line: the project's own words, none here), `also-keep.txt` (what the session must carry over) and `log.jsonl`.
+It loads at a session's start from a skills folder: `.claude/skills/loop` here is a link to it, and a fresh session had both tools with no person involved. A copy placed in `~/.claude/skills/` in the middle of a session was not loaded. Its state is in `~/.claude/loop/`: `line.txt` (the principal's line: the project's own words, none here), `also-keep.txt` (one line: where the session's state file is; the line selects, the file carries the state) and `log.jsonl`.
 
 ## Start
 ```

@@ -10,7 +10,7 @@ import type { Register } from 'claude-code'
 // a terminal session, where the second way below is the documented one.
 // The mod decides nothing: the model calls the tools. State is three files in ~/.claude/loop/, which the project's install writes:
 //   line.txt        the principal's standing line for every compaction (the project's own words; none here)
-//   also-keep.txt   what else this session must carry over; the session keeps it current
+//   also-keep.txt   one line: where this session's state file is (only its first line is read, cut at 200 characters)
 //   log.jsonl       one row per turn, per compaction and per answer of the engine
 
 const VERSION = '0.2.0'
@@ -49,10 +49,15 @@ function note($: any, row: Record<string, unknown>): Promise<void> {
   return chain
 }
 
-// What a compaction is told to keep, each part once: what was typed, the principal's line, the also-keep text, what the call adds.
+// What a compaction is told to keep, each part once: what was typed, the principal's line, one pointer, what the call adds.
+// The line selects; it carries no state. Whoever writes the summary has the whole conversation in view, so a list of facts in the
+// line only repeats what a state file holds, drifts from it (seen: a stale commit id in such a list) and fills the person's screen.
+// So the session writes its state into a file and names that file in one line; one line, cut at POINTER_MAX, is all that is read.
+const POINTER_MAX = 200
+const first = (t: string): string => (t.split('\n').find(s => s.trim()) ?? '').trim().slice(0, POINTER_MAX)
 async function keep($: any, typed: string, extra: string): Promise<string> {
   const parts = [typed.trim()]
-  const more: Array<[string, string]> = [['', await text($, 'line.txt')], ['also keep: ', await text($, 'also-keep.txt')], ['also keep: ', extra.trim()]]
+  const more: Array<[string, string]> = [['', await text($, 'line.txt')], ['also keep: ', first(await text($, 'also-keep.txt'))], ['also keep: ', first(extra)]]
   for (const [label, t] of more) if (t && !parts.join('\n').toLowerCase().includes(t.toLowerCase())) parts.push(label + t)
   return parts.filter(Boolean).join('; ')
 }
@@ -87,7 +92,7 @@ export const register: Register = on => {
     await $.tool.register({
       name: 'compact',
       description:
-        "Compacts this conversation once this turn has ended, as if the person typed /compact with the principal's standing line. First write what else must survive (the state file's path, open work) into ~/.claude/loop/also-keep.txt, or pass it as also_keep. Call it at a boundary of the work, not in the middle of a step; ~/.claude/loop/log.jsonl then holds what the engine answered.",
+        "Compacts this conversation once this turn has ended, as if the person typed /compact with the principal's standing line. First write the session's state into a file, and put that file's path into the first line of ~/.claude/loop/also-keep.txt (or pass it as also_keep): only one line of at most 200 characters is read, because the line selects what the summary keeps and the file carries the state. Call it at a boundary of the work, not in the middle of a step; ~/.claude/loop/log.jsonl then holds what the engine answered.",
       inputSchema: { type: 'object', properties: { also_keep: { type: 'string' } } },
       isDeferred: false,
     })
