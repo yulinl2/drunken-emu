@@ -39,7 +39,7 @@ Each row names the test that pins the same behaviour for `loop watch` (`loop/tes
 ## Notes
 
 - **A change in behaviour, on purpose (row 29).** `loop/watch.py` `block()` now withholds the one-line restore of a regression when the dominated record's inputs differ from the inputs on disk now. Before, it offered the copy regardless, which restores the file but not the candidate.
-- **Rows the engine keeps (`checks/test_verdict.py`).** Rows 2, 3, 9 and 15 are pinned there under the same names, for the verdict that watch runs.
+- **Rows the engine keeps (`checks/test_verdict.py`).** Rows 2, 3 and 15 are pinned there under the same names, for the verdict that watch runs. Row 9 is pinned by the test its own row names, in `loop/tests/test_watch.py`.
 - **Not carried over.** The arm and disarm trail (13), the local settings file and its exclude entry (16), and the listing of one frontier per config in `status` (26, 28). `status` now shows each file's newest record and whether another record dominates it.
 - **Known difference.** The old "why" line chose the error line over a banner. `loop watch` shows the last 20 lines (2000 characters) of a check's output, so an error more than 20 lines above the end of the output is not named.
 - **Old registrations stay.** `hook install` replaces only commands that name `bin/loop`. An entry of the old module (in the project's `.claude/settings.local.json` by default) keeps calling the stub until it is removed by hand.
