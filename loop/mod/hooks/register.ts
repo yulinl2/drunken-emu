@@ -11,7 +11,8 @@ import type { Register } from 'claude-code'
 // The mod decides nothing: the model calls the tools. State is three files in ~/.claude/loop/, which the project's install writes:
 //   line.txt        the principal's standing line for every compaction (the project's own words; none here)
 //   also-keep.txt   one line: where this session's state file is (only its first line is read, cut at 200 characters)
-//   log.jsonl       one row per turn, per compaction and per answer of the engine
+//   resume.txt      the prompt a clear is followed by; emptied when it has been submitted
+//   log.jsonl       one row per turn, per compaction, per clear and per answer of the engine
 
 const VERSION = '0.2.0'
 const said = (err: unknown): string => String((err as any)?.message ?? err).slice(0, 400)
@@ -62,6 +63,20 @@ async function keep($: any, typed: string, extra: string): Promise<string> {
   return parts.filter(Boolean).join('; ')
 }
 
+// After a clear nothing is left to say what to do, so the prompt that names the state file is kept in resume.txt and submitted
+// once: by the call that ran the clear, or by the next session.start if the clear tore this module down first.
+const RESUME_MAX = 400
+async function resume($: any, by: string): Promise<void> {
+  try {
+    const path = (await dir($)) + '/resume.txt'
+    const prompt = (await $.fs.exists(path)) ? String(await $.fs.read(path)).trim() : ''
+    if (!prompt) return
+    await $.fs.write(path, '')
+    await $.prompt.submit({ text: prompt })
+    await note($, { ev: 'resumed', by })
+  } catch (err) { await note($, { ev: 'refused', way: 'prompt.submit', by, error: said(err) }) }
+}
+
 let pending = false
 function start($: any, args: string): void {
   if (pending) return
@@ -82,6 +97,7 @@ function start($: any, args: string): void {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    $.clock.after(500, () => resume($, 'session.start ' + String((e as any).source ?? '')))   // after a clear: the prompt that names the state file
     await $.tool.register({
       name: 'usage',
       description:
@@ -94,6 +110,13 @@ export const register: Register = on => {
       description:
         "Compacts this conversation once this turn has ended, as if the person typed /compact with the principal's standing line. First write the session's state into a file, and put that file's path into the first line of ~/.claude/loop/also-keep.txt (or pass it as also_keep): only one line of at most 200 characters is read, because the line selects what the summary keeps and the file carries the state. Call it at a boundary of the work, not in the middle of a step; ~/.claude/loop/log.jsonl then holds what the engine answered.",
       inputSchema: { type: 'object', properties: { also_keep: { type: 'string' } } },
+      isDeferred: false,
+    })
+    await $.tool.register({
+      name: 'clear',
+      description:
+        "Clears this conversation once this turn has ended, then submits one prompt, as if the person typed /clear and then that prompt. Nothing of the conversation is carried over, and no summary is written or read again, so it is cheaper than a compaction. Use it only when a state file holds everything the next turn needs (a reader who knows nothing must be able to go on from it) and the next work does not need what is in the context now. Pass the prompt as resume: one or two lines that name the state file and say to read it first.",
+      inputSchema: { type: 'object', properties: { resume: { type: 'string' } }, required: ['resume'] },
       isDeferred: false,
     })
     return next(e)
@@ -112,6 +135,24 @@ export const register: Register = on => {
     await note($, { ev: 'queued', args_len: args.length, ...(await reading($)) })
     start($, args)
     return { result: 'queued: /compact runs once this turn has ended, with: ' + args.slice(0, 400) }
+  })
+
+  on('tool.call', { tool: /^mcp__loop__clear$/ }, async ($, e) => {
+    if (pending) return { result: 'already queued: it runs when the session is idle' }
+    const prompt = String(((e as any).input ?? {}).resume ?? '').trim().slice(0, RESUME_MAX)
+    if (!prompt) return { result: 'not queued: a clear with no resume prompt leaves the next turn with nothing; name the state file' }
+    try { await $.fs.write((await dir($)) + '/resume.txt', prompt) } catch (err) { return { result: 'not queued: the resume prompt could not be kept (' + said(err) + ')' } }
+    await note($, { ev: 'clear_queued', ...(await reading($)) })
+    pending = true
+    $.clock.after(1500, async () => {
+      try {
+        await $.command.run({ command: 'clear', args: '' })
+        await note($, { ev: 'cleared', ...(await reading($)) })
+        await resume($, 'after command.run')
+      } catch (err) { await note($, { ev: 'refused', way: 'command.run clear', error: said(err) }) }
+      finally { pending = false }
+    })
+    return { result: 'queued: /clear runs once this turn has ended, then this prompt is submitted: ' + prompt }
   })
 
   on('turn.complete', async ($, e, next) => {
