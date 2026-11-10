@@ -464,6 +464,121 @@ class ALeaseIsAnOptionOfThePushAndNotAWordInIt(Base):
         for c in ("git push --rep upstream", "git push --rep=upstream"): self.assertTrue(guard.decide(c, self.feature), c)
 
 
+
+class ALeaseProtectsOnlyWhenItIsTheOnlyForce(Base):
+    """Seen with git 2.43.0 on 2026-11-10: beside -f, --force or a + refspec, a stale lease does not stop a push. And two findings of a review:
+    a short cluster with an attached value hid its f, and a later --no-force-with-lease did not clear the lease."""
+    @classmethod
+    def setUpClass(cls): cls.feature = repo("topic-p")
+    def said(self, args, text): return any(c == guard.DENY and text in x for c, x in guard.push_reasons(args, self.feature))
+    def test_a_plain_force_is_refused_whatever_lease_it_carries(self):
+        lease = "--force-with-lease=topic:" + "a" * 40
+        for args in (["-f", lease, "origin", "topic"], ["--force", lease, "origin", "topic"], ["--forc", lease, "origin", "topic"], [lease, "origin", "+topic"],
+                     ["-uf", lease, "origin", "topic"], ["-f", "origin", "topic"], ["origin", "+topic"]):
+            self.assertTrue(self.said(args, "the lease must be the only force"), args)
+        for args in ([lease, "origin", "topic"], [lease, "origin", ":topic"], [lease, "--delete", "origin", "topic"], [lease, "-d", "origin", "topic"]):
+            reasons = guard.push_reasons(args, self.feature)
+            self.assertTrue(reasons and all(c != guard.DENY for c, _ in reasons), (args, reasons))      # held for a verdict, not refused outright
+    def test_the_f_of_a_cluster_is_read_whatever_value_is_attached_to_its_o(self):
+        for args in (["-fo=ci.skip", "origin", "topic"], ["-fo", "ci.skip", "origin", "topic"], ["-qfo=x.y", "origin", "topic"]):
+            self.assertTrue(self.said(args, "the lease must be the only force"), args)
+        for c in ("git push -o=ci.skip origin topic", "git push -uo ci.skip origin topic", "git push -qo=f.d origin topic"): self.assertEqual(guard.decide(c, self.feature), [], c)
+    def test_a_later_no_force_with_lease_cancels_the_lease(self):
+        lease = "--force-with-lease=topic:" + "a" * 40
+        for args in ([lease, "--no-force-with-lease", "origin", ":topic"], [lease, "--no-force-with-l", "--delete", "origin", "topic"]):
+            self.assertTrue(self.said(args, "among its own arguments"), args)
+        self.assertFalse(self.said(["--no-force-with-lease", lease, "origin", ":topic"], "among its own arguments"))      # a lease after the cancel counts
+
+
+
+class ALeaseProtectsOnlyTheRefItNamesAtTheShaItNames(Base):
+    """The rule, read from what git does (the class below runs git itself): every lease of a push is written out in full, each ref the push deletes is named
+    by one of its leases, and the value of --recurse-submodules is not taken for the remote."""
+    @classmethod
+    def setUpClass(cls): cls.feature = repo("topic-n")
+    def said(self, args, text): return any(c == guard.DENY and text in x for c, x in guard.push_reasons(args, self.feature))
+    def test_every_lease_of_a_push_is_written_out_in_full(self):
+        lease, other = "--force-with-lease=topic:" + "a" * 40, "--force-with-lease=other:" + "b" * 40
+        for args in ([lease, "--force-with-lease", "origin", "topic", "other"], [lease, "--force-with-lease=other", "origin", "topic", "other"],
+                     [lease, "--force-with-lease=other:origin/other", "origin", "topic", "other"], [lease, "--force-with-l", "origin", "topic"], ["--force-with-lease", "origin", "topic"]):
+            self.assertTrue(self.said(args, "must be written out as"), args)
+        for args in ([lease, "origin", "topic"], [lease, other, "origin", "topic", "other"], ["--force-with-lease", "--no-force-with-lease", lease, "origin", "topic"]):
+            self.assertFalse(self.said(args, "must be written out as"), args)
+    def test_a_delete_is_named_by_a_lease_of_its_push(self):
+        lease, other = "--force-with-lease=topic:" + "a" * 40, "--force-with-lease=other:" + "b" * 40
+        for args in ([lease, "origin", ":other"], [lease, "--delete", "origin", "other"], [lease, "-d", "origin", "topic", "other"], [lease, "origin", "topic", ":other"],
+                     ["--force-with-lease=refs/heads/topic:" + "a" * 40, "origin", ":topic"]):
+            self.assertTrue(self.said(args, "names the ref it deletes"), args)
+        for args in ([lease, "origin", ":topic"], [lease, "--delete", "origin", "topic"], [lease, "-d", "origin", "topic"], [lease, "origin", ":refs/heads/topic"],
+                     [lease, other, "origin", ":topic", ":other"], [lease, "origin", "topic"]):
+            self.assertFalse(self.said(args, "names the ref it deletes"), args)
+    def test_the_value_of_recurse_submodules_is_not_the_remote(self):
+        for k, v in (("remote.upstream.url", "x"), ("remote.upstream.push", "HEAD:main")): subprocess.run(["git", "config", k, v], cwd=self.feature, check=True)
+        for c in ("git push --recurse-submodules no upstream", "git push --recurse-sub on-demand upstream"): self.assertTrue(guard.decide(c, self.feature), c)
+        self.assertEqual(guard.decide("git push --recurse-submodules check origin topic", self.feature), [])
+    def test_every_option_git_lists_with_a_separate_value_is_known(self):
+        import re
+        usage = subprocess.run(["git", "push", "-h"], cwd=self.feature, capture_output=True, text=True)
+        listed = {m.group(1).replace("[no-]", "") for m in re.finditer(r"^\s+(?:-\w, )?(--(?:\[no-\])?[\w-]+) [<(]", usage.stdout + usage.stderr, re.M)}
+        if not listed: self.skipTest("this git does not list an option of git push as `--name <value>`")
+        self.assertEqual(listed - guard.TAKES_ARG, set(), "the installed git takes a separate value for an option the guard does not know")
+
+
+class TheGitFactsTheLeaseRuleRestsOn(Base):
+    """What git does with a lease, seen on 2026-11-10 with git 2.43.0 and run again here against a temporary bare repository, so that a git which behaves
+    otherwise fails in this class and the rule in push_reasons is read again. Before each push the remote's main and side are at B; the clone's main is at C,
+    which is not a descendant of B; a lease on A is stale. after() gives (main, side) on the remote as letters, "-" for a ref that is gone."""
+    @classmethod
+    def setUpClass(cls):
+        import os, tempfile
+        cls.top = tempfile.mkdtemp(prefix="lease-facts-")
+        cls.env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid",
+                   "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull}
+        g = cls.git
+        g(".", "init", "-q", "--bare", "-b", "main", "remote.git"); g("remote.git", "config", "receive.advertisePushOptions", "true")
+        g(".", "clone", "-q", "remote.git", "w"); g("w", "symbolic-ref", "HEAD", "refs/heads/main")
+        g("w", "commit", "-q", "--allow-empty", "-m", "A"); g("w", "push", "-q", "origin", "main", "main:side"); cls.A = g("w", "rev-parse", "HEAD")
+        g(".", "clone", "-q", "remote.git", "w2"); g("w2", "commit", "-q", "--allow-empty", "-m", "B"); g("w2", "push", "-q", "origin", "main", "main:side"); cls.B = g("w2", "rev-parse", "HEAD")
+        g("w", "commit", "-q", "--allow-empty", "-m", "C"); cls.C = g("w", "rev-parse", "HEAD")
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+        shutil.rmtree(cls.top, ignore_errors=True)
+    @classmethod
+    def git(cls, where, *a, check=True):
+        import os
+        r = subprocess.run(["git", *a], cwd=os.path.join(cls.top, where), env=cls.env, capture_output=True, text=True)
+        if check and r.returncode: raise AssertionError(f"git {' '.join(a)}: {r.stderr}")
+        return r.stdout.strip()
+    def after(self, *args, fetch=False):
+        g = self.git
+        g("w2", "push", "-q", "-f", "origin", self.B + ":refs/heads/main", self.B + ":refs/heads/side")
+        if fetch: g("w", "fetch", "-q", "origin")
+        g("w", "push", *[a.replace("<A>", self.A).replace("<B>", self.B) for a in args], check=False)
+        letter = {self.A: "A", self.B: "B", self.C: "C", "": "-"}
+        return tuple(letter.get(g("remote.git", "rev-parse", "-q", "--verify", "refs/heads/" + n, check=False), "?") for n in ("main", "side"))
+    def test_a_stale_lease_stops_a_push_only_when_it_is_the_only_force(self):
+        stale = "--force-with-lease=main:<A>"
+        self.assertEqual(self.after(stale, "origin", "main"), ("B", "B"))
+        self.assertEqual(self.after("--force-with-lease=main:<B>", "origin", "main"), ("C", "B"))
+        for args in (("-f", stale, "origin", "main"), ("--force", stale, "origin", "main"), (stale, "origin", "+main"), ("-fo=ci.skip", "origin", "main")):
+            self.assertEqual(self.after(*args), ("C", "B"), args)
+        self.assertEqual(self.after("--force-with-lease=main:<B>", "--no-force-with-lease", "origin", "main"), ("B", "B"))
+    def test_a_lease_protects_only_the_ref_it_names(self):
+        self.assertEqual(self.after("--force-with-lease=main:<A>", "origin", ":side"), ("B", "-"))
+        for args in (("--force-with-lease=side:<A>", "origin", ":side"), ("--force-with-lease=side:<A>", "--delete", "origin", "side"), ("--force-with-lease=side:<A>", "origin", ":refs/heads/side")):
+            self.assertEqual(self.after(*args), ("B", "B"), args)
+        self.assertEqual(self.after("-f", "--force-with-lease=side:<A>", "--delete", "origin", "side"), ("B", "-"))
+    def test_a_lease_with_no_sha_expects_what_the_remote_tracking_ref_holds(self):
+        self.git("w", "update-ref", "refs/remotes/origin/main", self.A)          # the clone has not seen B
+        self.assertEqual(self.after("--force-with-lease", "origin", "main"), ("B", "B"))
+        for args in (("--force-with-lease", "origin", "main"), ("--force-with-lease=side:<B>", "--force-with-lease", "origin", "main"), ("--force-with-lease=main", "origin", "main")):
+            self.assertEqual(self.after(*args, fetch=True), ("C", "B"), args)
+    def test_the_value_of_recurse_submodules_may_be_the_next_word(self):
+        self.git("w", "push", "--recurse-submodules", "no", "origin", "HEAD:refs/heads/new1")
+        self.assertEqual(self.git("remote.git", "rev-parse", "refs/heads/new1"), self.C)
+
+
 if __name__ == "__main__": unittest.main()
 
 

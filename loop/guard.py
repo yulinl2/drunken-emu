@@ -13,7 +13,7 @@ Rules (what stops without a verdict, what passes with one):
   merge_pull_request          passes only with merge_method "merge", expectedHeadSha equal to the `head` of a `merge` verdict for the same repo and PR, and a commit_message that contains the verdict's id
   push_files, create_or_update_file, delete_file     denied when the branch is a protected one (or is not named: GitHub then uses the default branch)
   git push to a protected branch    denied, explicit or implied (merge through a PR), except a push of a literal 40-hex sha (git push origin <sha>:refs/heads/main; no +, no force flag, nothing but plain pushes in the same command) whose sha is the head of a go verdict of kind merge; git itself refuses a push that is not a fast-forward
-  git push that forces or deletes (--force*, --delete, -f, -d, a refspec with + or an empty source)    passes only when a `command` verdict equals the whole Bash string and that push carries, among its own arguments, --force-with-lease=<ref>:<40 hex>
+  git push that forces or deletes (--force*, --delete, -f, -d, a refspec with + or an empty source)    passes only when all of these hold: a `command` verdict equals the whole Bash string; the lease is the only force, so no -f, no --force and no refspec with + (written or configured) is in the push, and every lease in it is written out as --force-with-lease=<ref>:<40 hex>; each ref the push deletes is named by one of its leases. Why (seen with git 2.43.0 on 2026-11-10, and run again by the tests): beside a plain force a stale lease does not stop the push; a lease with no sha expects what the remote-tracking ref holds, which a fetch moves; a lease on one ref lets a delete of another through
   git push --mirror, --all, --branches, --prune, a wildcard or unreadable refspec, a configured mirror or push.default=matching     denied
   gh pr merge                 denied: merge through a PR
   gh api writes (-X or --method other than GET, -f, -F, --field, --raw-field, --input), gh repo edit     pass only when a `command` verdict equals the whole Bash string
@@ -42,7 +42,7 @@ from loop import config
 
 LONG = ("--force", "--force-with-lease", "--force-if-includes", "--delete", "--mirror", "--prune", "--all", "--branches")
 DENY_LONG = {"--mirror", "--prune", "--all", "--branches"}       # the rest of LONG forces or deletes
-TAKES_ARG = {"-o", "--push-option", "--receive-pack", "--exec", "--repo"}
+TAKES_ARG = {"-o", "--push-option", "--receive-pack", "--exec", "--repo", "--recurse-submodules"}
 WRAPPERS = {"env", "sudo", "time", "timeout", "stdbuf", "setsid", "ionice", "flock", "nohup", "command", "builtin", "exec", "nice"}
 SHELLS = {"bash", "sh", "zsh", "dash"}
 KEYWORDS = {"{", "}", "!", "if", "then", "else", "elif", "do", "while", "until", "fi", "done"}
@@ -159,14 +159,20 @@ def refspec_reasons(r):
     return out
 
 def takes_value(a):
-    """True for an option of git push whose value is the next word: -o, and --push-option, --receive-pack, --exec and --repo in any
-    prefix (git accepts an unambiguous prefix of a long option). With "=" in the word the value is in the word itself."""
+    """True for an option of git push whose value is the next word: -o, and --push-option, --receive-pack, --exec, --repo and
+    --recurse-submodules in any prefix (git accepts an unambiguous prefix of a long option). The list is what `git push -h` writes as `--name <value>`
+    (git 2.43.0); a test compares it with the installed git. With "=" in the word the value is in the word itself."""
     if a == "-o": return True
     return a.startswith("--") and len(a) > 2 and "=" not in a and any(t.startswith(a) for t in TAKES_ARG if t.startswith("--"))
 
+def lease_names(lease, dst):
+    """True when a lease on `lease` covers the remote ref a push writes as `dst`: the same spelling, or `dst` is refs/heads/<lease> (both seen with git 2.43.0).
+    The other direction is refused: a short destination can resolve to a tag where the lease names a branch."""
+    return dst == lease or dst == "refs/heads/" + lease
+
 def push_reasons(args, wd):
     """[(class, why)] for a `git push` with these arguments (the words after push); [] when it can go on."""
-    why, pos, i, repo, leased = [], [], 0, None, False
+    why, pos, i, repo, leases, plain, weak, delete = [], [], 0, None, [], False, False, False
     while i < len(args):
         a = args[i]
         name, eq, val = a.partition("=")
@@ -175,10 +181,16 @@ def push_reasons(args, wd):
         if a.startswith("--"):
             c = risky_flag(a.split("=", 1)[0])
             if c: why.append((c, f"flag {a}"))
-            if LEASE.fullmatch(a): leased = True      # a lease is an option of this push, read here and nowhere else
+            if LEASE.fullmatch(a): leases.append(val[:-41])      # a lease is an option of this push, read here and nowhere else; kept by the ref it names
+            elif len(name) >= 9 and "--force-with-lease".startswith(name): weak = True      # no ref, no sha, a name in place of the sha, or an abbreviated spelling
+            if len(name) >= 12 and "--no-force-with-lease".startswith(name): leases, weak = [], False     # it cancels every lease before it
+            if len(name) > 2 and "--force".startswith(name): plain = True
+            if len(name) > 2 and "--delete".startswith(name): delete = True
         elif a.startswith("-") and len(a) > 1:
-            flags, o, rest = a[1:].partition("o")     # -o takes a value: the rest of its word, or the next word when it ends the cluster (-fo VALUE)
-            if re.fullmatch(r"-[A-Za-z0-9]+", a) and set(flags) & set("fd"): why.append((FORCE, f"flag {a}"))
+            flags, o, rest = a[1:].partition("o")     # -o takes a value: the rest of its word, whatever it holds (-fo=x), or the next word when it ends the cluster (-fo VALUE)
+            if set(flags) & set("fd"): why.append((FORCE, f"flag {a}"))
+            if "f" in flags: plain = True
+            if "d" in flags: delete = True
             if o and not rest: i += 1
         else: pos.append(a)
         i += 1
@@ -188,17 +200,31 @@ def push_reasons(args, wd):
         refspecs = [l for l in git_out(wd, "config", "--get-all", f"remote.{remote}.push").split("\n") if l]
         if git_out(wd, "config", "--bool", "--get", f"remote.{remote}.mirror") == "true": why.append((DENY, f"remote {remote} is configured as a mirror"))
         if not refspecs and git_out(wd, "config", "--get", "push.default") == "matching": why.append((DENY, "push.default is matching: every branch of the same name is sent"))
-    implied = not refspecs
+    implied, deleted = not refspecs, []
     for r in refspecs:
         if r in ("HEAD", "@"): implied = True; continue
+        if r.startswith("+"): plain = True
+        src, colon, dst = r.lstrip("+").partition(":")
+        if delete or (colon and not src): deleted.append(dst if colon else src)      # the ref a --delete names, or the destination of a refspec with an empty source
         why += refspec_reasons(r)
     if implied:
         br, up = br_up or branch_and_upstream(wd)
         if br in PROTECTED: why.append((DENY, f"implied destination: the current branch is {br}: {VIA_PR}"))
         elif up in PROTECTED: why.append((DENY, f"implied destination: the current branch {br} tracks {up}: {VIA_PR}"))
-    if any(c == FORCE for c, _ in why) and not leased:
+    if any(c == FORCE for c, _ in why) and not leases:
         # the lease is an option this push itself is given: one in a comment, in another command, or taken as the value of another option never reaches the remote
         why.append((DENY, "a force or delete push must carry --force-with-lease=<ref>:<40 hex sha> among its own arguments"))
+    if weak:
+        # seen with git 2.43.0 on 2026-11-10: a lease with no sha expects what the remote-tracking ref holds; right after a fetch that is the remote's own value, and the push overwrites
+        why.append((DENY, "every lease of a push must be written out as --force-with-lease=<ref>:<40 hex sha>: one with no ref, no sha or a name in place of the sha expects what the remote-tracking ref holds, which a fetch moves"))
+    unnamed = [d for d in deleted if leases and not any(lease_names(l, d) for l in leases)]
+    if unnamed:
+        # seen with git 2.43.0 on 2026-11-10: beside a lease on another ref a delete goes through
+        why.append((DENY, f"no lease of this push names the ref it deletes ({', '.join(unnamed)}): a lease protects only the ref it names, so the delete needs --force-with-lease={unnamed[0]}:<40 hex sha>"))
+    if plain:
+        # seen with git 2.43.0 on 2026-11-10: beside -f, --force or a + refspec a stale lease does not stop the push, the plain force wins.
+        # So a lease is a protection only when it is the only force, and a plain force is refused whatever lease and verdict it carries.
+        why.append((DENY, "a plain force (-f, --force or a + refspec) defeats a lease, so the lease must be the only force: git push --force-with-lease=<ref>:<40 hex sha> <remote> <ref>"))
     return why
 
 def api_write(args):
