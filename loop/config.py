@@ -29,9 +29,9 @@ DEFAULTS = {
     "stop_runs": [["keep", "backup"], ["record", "bank"]],   # what the stop hook runs every time; a failure is reported, never blocks
     "stop_blocks_on": [],                         # commands whose failure refuses the stop, at most stop_cap times in a row
     "stop_cap": 3,
-    "watch": [],                                  # the files judged by their checks: [{"name": ..., "files": [glob, ...], "run": [word, ...]}] (loop/watch.py)
+    "watch": [],                                  # the files judged by their checks: [{"name": ..., "files": [glob, ...], "run": [word, ...], "inputs": [glob, ...] (optional)}] (loop/watch.py)
 }
-WATCH_KEYS = ("name", "files", "run")             # the keys of one watch entry; watch.py reads each of them
+WATCH_KEYS = ("name", "files", "run", "inputs")   # the keys of one watch entry; watch.py reads each of them
 
 
 class Config(dict):
@@ -125,7 +125,7 @@ def project_root(start=None):
 
 def _watch_shape(entries):
     """Each watch entry is an object with a name (a string, used by one entry only) and files and run (non-empty lists of
-    strings), and no other key: a key nobody reads is refused, as at every level of loop.json."""
+    strings), an optional inputs of the same kind, and no other key: a key nobody reads is refused, as at every level of loop.json."""
     if not isinstance(entries, list):
         raise SystemExit(f"loop.json: watch is a list of entries, not {type(entries).__name__}")
     names = []
@@ -138,6 +138,8 @@ def _watch_shape(entries):
         if not (isinstance(e.get("name"), str) and e["name"]
                 and all(isinstance(e.get(k), list) and e[k] and all(isinstance(w, str) for w in e[k]) for k in ("files", "run"))):
             raise SystemExit(f"loop.json: watch[{i}] needs a name (a string) and files and run (non-empty lists of strings)")
+        if "inputs" in e and not (isinstance(e["inputs"], list) and e["inputs"] and all(isinstance(w, str) for w in e["inputs"])):
+            raise SystemExit(f"loop.json: watch[{i}]: inputs is a non-empty list of glob strings when it is given")
         if e["name"] in names:
             raise SystemExit(f"loop.json: watch[{i}]: the name {e['name']!r} is already used by another entry")
         names.append(e["name"])

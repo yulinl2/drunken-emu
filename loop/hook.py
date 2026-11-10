@@ -1,7 +1,7 @@
-"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, every tool call shows the principal's queued messages that are still waiting, and a stop runs its checks and is refused a capped number of times in a row.
+"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, every tool call shows the principal's queued messages that are still waiting, and a stop runs its checks and is refused a capped number of times in a row. Each event has one time budget (HOOK_TIME) that ends before the timeout install writes for its command: the steps and checks it runs share that budget, and what would run past it is cut and reported.
 
-INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3); a hook waits at most 5 s for a lock (2 s for the post counter and the queued words), then goes on without it; every tool call shows each queued message once per session, and a queue that cannot be read is said in one line.
-FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock; a queued message still waiting is shown twice in one session or at no tool call; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had (loop/tests/test_hook.py).
+INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3), and every command it registers carries its event's timeout; a hook waits at most 5 s for a lock (2 s for the post counter and the queued words), then goes on without it, except watch.lock: a post that finds it held judges nothing and says so, and a stop waits for it inside its budget and refuses what it could not judge; a step or a watched check runs no longer than what is left of its event's budget; every tool call shows each queued message once per session, and a queue that cannot be read is said in one line.
+FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock, except watch.lock at a stop, which it waits for inside its budget; a step or a watched check runs past its event's budget without being reported as out of time, or a hook runs past the timeout its install wrote; a queued message still waiting is shown twice in one session or at no tool call; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had, or with a registered command that has no timeout (loop/tests/test_hook.py).
 usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
        python3 -I bin/loop hook prompt | post | stop | compact
 """
@@ -13,11 +13,16 @@ try:
 except ImportError:   # no file locks on this platform: the stop and the post counter then run without one
     fcntl = None
 
-STEP_TIMEOUT_S = 120                  # one step of stop, stop_blocks_on or compact (no DEFAULTS key: a constant of the kit)
+STEP_TIMEOUT_S = 120                  # one step of stop, stop_blocks_on or compact, or one watched check: the longest it runs (no DEFAULTS key)
 TRIAL_TIMEOUT_S = 900                 # one registered command, run once by install on a sample payload (no DEFAULTS key)
 STOP_LOCK_WAIT_S = 5                  # the longest a stop waits for stop.lock, then decides without it (no DEFAULTS key: a constant of the kit)
 POST_LOCK_WAIT_S = 2                  # the longest a tool call waits for post-count.lock, then counts without it (no DEFAULTS key: a constant of the kit)
 COMPACT_RUNS = [["keep", "backup"]]   # what compact runs (no DEFAULTS key: fixed here)
+# One time budget per hook event, in seconds, and the timeout install writes for its command: (budget, timeout). The budget ends
+# before the timeout, so the hook returns on its own: its steps and checks share the budget, and one that would run past it is cut
+# and reported. The prompt and the guard run no step and no check, so their budgets are declared, not spent. BUDGET_ENV overrides them.
+HOOK_TIME = {"UserPromptSubmit": (10, 60), "PostToolUse": (45, 60), "PreToolUse": (50, 60), "Stop": (200, 240), "PreCompact": (200, 240)}
+BUDGET_ENV = "LOOP_HOOK_BUDGET_S"     # a test sets it: the budget of every event, in seconds (not a configuration key)
 REGISTERED = [                        # (event, verb and subcommand, matcher or None), in the order install writes them
     ("UserPromptSubmit", ["hook", "prompt"], None),
     ("PostToolUse", ["hook", "post"], "*"),
@@ -91,9 +96,52 @@ def _locked(cfg, name, longest_wait_s):
         yield
 
 
-def _run_step(argv, cfg):
+def budget(event):
+    """The seconds one event of this kind may use: its HOOK_TIME budget, or BUDGET_ENV's value when that is a positive number. Never
+    the installed timeout or more: the override is for tests, and a budget longer than the timeout would let the hook be killed."""
+    try:
+        s = float(os.environ.get(BUDGET_ENV, ""))
+        if s > 0:
+            return min(s, HOOK_TIME[event][1] - 1.0)
+    except ValueError:
+        pass
+    return float(HOOK_TIME[event][0])
+
+
+def deadline_of(event):
+    """The time.monotonic() value at which a hook of this event runs out of budget; taken when the hook starts."""
+    return time.monotonic() + budget(event)
+
+
+def _within(deadline, cap):
+    """The longest a wait may last: `cap`, or what is left of the budget when that is less; `cap` when there is no deadline."""
+    return cap if deadline is None else max(0.0, min(cap, deadline - time.monotonic()))
+
+
+@contextlib.contextmanager
+def _lock_within(cfg, name, wait_s):
+    """Holds the lock file `name` of the state directory while the block runs, if it comes free within wait_s seconds (0: one try).
+    The block gets True when it holds the lock, and False when another run does: then it must not do what the lock guards.
+    Without fcntl (no file locks on this platform) the block gets True and runs without a lock."""
+    with open(cfg.state(name), "w") as held:
+        got = True
+        if fcntl is not None:
+            got, deadline = False, time.monotonic() + max(0.0, wait_s)
+            while True:
+                try:
+                    fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    got = True
+                    break
+                except OSError:
+                    if time.monotonic() >= deadline:
+                        break
+                    time.sleep(0.05)
+        yield got
+
+
+def _run_step(argv, cfg, deadline=None):
     """One step of stop or compact, run in the project root: a kit verb through bin/loop, anything else as an external command.
-    Returns (status, detail, tail): "ok" for exit 0; "did_not_run" for exit 3, a missing program, a timeout, or an entry that is
+    Returns (status, detail, tail): "ok" for exit 0; "did_not_run" for exit 3, a missing program, a timeout or a spent budget, or an entry that is
     not a list of strings; "failed" for any other exit. detail is the one-line reason (the reports of stop_runs and compact print
     it); tail is the last 20 lines of a failed step's output, at most 2000 characters, which a blocker's refusal says ("" otherwise)."""
     if not isinstance(argv, list) or not argv or not all(isinstance(a, str) for a in argv):
@@ -103,11 +151,19 @@ def _run_step(argv, cfg):
     from loop import cli
     kit = set(cli.VERBS) | {"doctor"}
     cmd = [sys.executable, "-I", str(config.KIT / "bin" / "loop"), *argv] if argv[0] in kit else argv
+    limit = STEP_TIMEOUT_S
+    if deadline is not None:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            return "did_not_run", "out of time: the hook's budget is spent", ""
+        limit = min(STEP_TIMEOUT_S, left)
     try:
         r = subprocess.run(cmd, cwd=str(cfg.root), env={**os.environ, "LOOP_PROJECT": str(cfg.root)},
                            stdin=subprocess.DEVNULL, capture_output=True, encoding="utf-8", errors="replace",
-                           timeout=STEP_TIMEOUT_S)
+                           timeout=limit)
     except subprocess.TimeoutExpired:
+        if limit < STEP_TIMEOUT_S:
+            return "did_not_run", "out of time: the hook's budget ran out while it ran", ""
         return "did_not_run", f"no result within {STEP_TIMEOUT_S} s", ""
     except OSError as e:
         return "did_not_run", f"could not start: {e}", ""
@@ -221,6 +277,7 @@ def cmd_post(args):
     """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse).
     Then every watched file is judged (loop/watch.py); the verdicts go into the same context, so one output may carry both. Last,
     the principal's queued messages still waiting in the transcript are added (_queued), each once per session."""
+    deadline = deadline_of("PostToolUse")
     try:
         payload = _payload()
         cfg = config.load()
@@ -240,7 +297,7 @@ def cmd_post(args):
                 _say(f"loop hook post: no principal method at {method}; no reprint")
         if cfg["watch"]:
             try:
-                ctx += watch.post(cfg)
+                ctx += watch.post(cfg, deadline)
             except Exception as e:   # a judge that broke says so and is passed over: the tool call goes on
                 _say(f"loop hook post: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
         ctx += _queued(cfg, payload)                 # the queued words come last: after the reprint and the verdicts
@@ -263,17 +320,19 @@ def _stop_state(path):
         return {"refused": 0, "open": False}
 
 
-def _decide(cfg, res):
+def _decide(cfg, res, deadline=None):
     """The stop's verdict from the blockers' results: 0 lets the stop through, 2 refuses it. A refusal is counted; after stop_cap
     refusals in a row the stop is let through and stays open until one pass in which nothing fails. The count is read, judged
     and written under stop.lock, so two stops that overlap count two refusals."""
-    with _locked(cfg, "stop.lock", STOP_LOCK_WAIT_S):
+    with _locked(cfg, "stop.lock", _within(deadline, STOP_LOCK_WAIT_S)):
         state_file = cfg.state("stop-refusals.json")
         st = _stop_state(state_file)
         cap = cfg["stop_cap"]
         gone = res["failed"] + res["did_not_run"]
         if not gone:
             _write_json(state_file, {"refused": 0, "open": False})
+            for name in res["passed"]:   # a pass is said with what it did not run (loop/watch.py): a stop that lets through is not silent
+                _say(f"loop hook stop: passed: {name}")
             return 0
         if st["open"]:
             _say(f"loop hook stop: still failing; the stop is let through (open since {cap} refusals): {', '.join(gone)}")
@@ -297,11 +356,11 @@ def _decide(cfg, res):
         return 0
 
 
-def _judged(cfg, res):
+def _judged(cfg, res, deadline=None):
     """The watched files' verdicts join the stop's blockers before _decide: a failing, dominated or not evaluated file refuses
     the stop (loop/watch.py). A judge that breaks is said and passed over, so the stop is decided without it."""
     try:
-        seen = watch.stop(cfg)
+        seen = watch.stop(cfg, deadline)
     except Exception as e:
         _say(f"loop hook stop: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
         return res
@@ -311,24 +370,25 @@ def _judged(cfg, res):
 def cmd_stop(args):
     """Runs stop_runs (a failure is reported, never blocks), then stop_blocks_on, then the watched files (loop/watch.py); a failing
     or unrunnable blocker refuses the stop, capped, and the refusal says what that blocker printed (its last lines) or why it did not run."""
+    deadline = deadline_of("Stop")
     try:
         payload = _payload()
         cfg = config.load()
         if not _mine(cfg, payload, "stop"):
             return 0
         for argv in cfg["stop_runs"]:
-            status, detail, _tail = _run_step(argv, cfg)
+            status, detail, _tail = _run_step(argv, cfg, deadline)
             if status != "ok":
                 _say(f"loop hook stop: {_label(argv)} {status} ({detail}); reported, not blocking")
         res = {"failed": [], "did_not_run": [], "passed": [], "said": []}
         for argv in cfg["stop_blocks_on"]:
-            status, detail, tail = _run_step(argv, cfg)
+            status, detail, tail = _run_step(argv, cfg, deadline)
             res["passed" if status == "ok" else status].append(_label(argv))
             if status != "ok":
                 res["said"].append((_label(argv), tail or detail))
         if cfg["watch"]:
-            res = _judged(cfg, res)
-        return _decide(cfg, res)
+            res = _judged(cfg, res, deadline)
+        return _decide(cfg, res, deadline)
     except (Exception, SystemExit) as e:
         _say(f"loop hook stop: {type(e).__name__}: {e}; the stop is let through (fail open)")
         return 0
@@ -336,13 +396,14 @@ def cmd_stop(args):
 
 def cmd_compact(args):
     """Runs COMPACT_RUNS before a compaction; exits 0 always, a failure is reported."""
+    deadline = deadline_of("PreCompact")
     try:
         payload = _payload()
         cfg = config.load()
         if not _mine(cfg, payload, "compact"):
             return 0
         for argv in COMPACT_RUNS:
-            status, detail, _tail = _run_step(argv, cfg)
+            status, detail, _tail = _run_step(argv, cfg, deadline)
             if status != "ok":
                 _say(f"loop hook compact: {_label(argv)} {status} ({detail}); reported, not blocking")
     except (Exception, SystemExit) as e:
@@ -431,8 +492,8 @@ def _merged(old, registrations, root=None):
                 out.append({**g, "hooks": hs})
         if out or not groups:
             hooks[event] = out
-    for event, matcher, cmd in registrations:
-        group = {"hooks": [{"type": "command", "command": cmd}]}
+    for event, matcher, cmd, timeout in registrations:
+        group = {"hooks": [{"type": "command", "command": cmd, "timeout": timeout}]}
         hooks.setdefault(event, []).append({"matcher": matcher, **group} if matcher else group)
     return {**old, "hooks": hooks}, kept
 
@@ -477,7 +538,7 @@ def cmd_install(args):
                 _say(f"- hooks: refused, `{label}` exited {r.returncode} on a sample payload ({detail}); {target} left as it is")
                 return 1
             else:
-                registrations.append((event, matcher, cmd))
+                registrations.append((event, matcher, cmd, HOOK_TIME[event][1]))
         new, kept = _merged(old, registrations, cfg.root)
         for note in notes:
             _say(note)
@@ -491,7 +552,7 @@ def cmd_install(args):
             return 0
         _write(target, text)
         _read_settings(target)
-        events = ", ".join(event for event, _matcher, _cmd in registrations)
+        events = ", ".join(event for event, _matcher, _cmd, _timeout in registrations)
         _say(f"- hooks: installed into {target} ({events})" + (f"; {kept} other hook(s) kept" if kept else ""))
         return 0
     except (Exception, SystemExit) as e:

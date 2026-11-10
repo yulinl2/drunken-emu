@@ -34,9 +34,11 @@ def trials(monkeypatch):
     monkeypatch.setattr(hook, "_trial", fake)
 
 
-def _run(args, root, home, stdin=""):
+def _run(args, root, home, stdin="", budget=None):
     env = {k: v for k, v in os.environ.items() if not k.startswith("LOOP_")}
     env.update({"LOOP_PROJECT": str(root), "HOME": str(home)})
+    if budget is not None:   # every event's time budget, in seconds (loop/hook.py): a test makes a check outlast it
+        env["LOOP_HOOK_BUDGET_S"] = str(budget)
     try:   # a payload names the session's working directory, as the harness's does: the data hooks do not act without one
         d = json.loads(stdin or "{}")
         if isinstance(d, dict) and "cwd" not in d:
@@ -360,6 +362,76 @@ def test_a_blocker_that_cannot_run_says_why(project):
     _cfg(root, stop_runs=[], stop_blocks_on=[["no-such-program-for-this-test"]])
     r = _run(["hook", "stop"], root, home, stdin="{}")
     assert r.returncode == 2 and "did not run" in r.stderr and "could not start" in r.stderr
+
+
+# item 3: one time budget per hook event, ending before the timeout install writes; what runs past it is reported as out of time
+
+SLEEPER = 'import json, time\ntime.sleep(5)\nprint(json.dumps({"vector": {"errors": 0}, "layers": {"stub": "go"}}))\n'
+
+
+def _watched_sleeper(root):
+    """A project whose one check sleeps five seconds on every file, and then passes."""
+    (root / "sleeper.py").write_text(SLEEPER, encoding="utf-8")
+    _cfg(root, reread_every=1000, stop_runs=[], stop_cap=2,
+         watch=[{"name": "slow", "files": ["*.txt"], "run": ["python3", "-I", "sleeper.py", "{path}"]}])
+
+
+def test_every_hook_event_has_a_budget_that_ends_before_its_installed_timeout():
+    registered = {event for event, _argv, _matcher in hook.REGISTERED}
+    assert registered <= set(hook.HOOK_TIME), registered - set(hook.HOOK_TIME)
+    for event, (budget_s, timeout_s) in hook.HOOK_TIME.items():
+        assert 0 < budget_s < timeout_s, (event, budget_s, timeout_s)
+
+
+def test_install_writes_each_registered_command_the_timeout_of_its_event(project, trials):
+    _root, home = project
+    assert hook.main(["install", "--user"]) == 0
+    got = _settings(home)
+    assert set(got["hooks"]) == {"UserPromptSubmit", "PostToolUse", "Stop", "PreCompact"}
+    for event, groups in got["hooks"].items():
+        timeouts = [h.get("timeout") for g in groups for h in g["hooks"]]
+        assert timeouts == [hook.HOOK_TIME[event][1]] * len(timeouts), (event, timeouts)
+
+
+def test_a_check_that_outlasts_the_budget_is_out_of_time_for_each_file_and_the_post_returns_inside_it(project):
+    root, home = project
+    _watched_sleeper(root)
+    (root / "app.txt").write_text("x\n", encoding="utf-8")
+    (root / "other.txt").write_text("y\n", encoding="utf-8")
+    t0 = time.monotonic()
+    r = _run(["hook", "post"], root, home, stdin='{"tool_name": "Edit"}', budget=1)
+    elapsed = time.monotonic() - t0
+    assert r.returncode == 0 and elapsed < 4, (elapsed, r.stderr)
+    ctx = json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert ctx.count("not evaluated (out of time)") == 2, ctx        # the file whose check was running, and the one not yet judged
+    assert "refusal" not in r.stderr                                  # at a post it is a plain report, not a refusal
+
+
+def test_a_stop_whose_check_outlasts_the_budget_is_refused_as_out_of_time(project):
+    root, home = project
+    _watched_sleeper(root)
+    (root / "app.txt").write_text("x\n", encoding="utf-8")
+    t0 = time.monotonic()
+    r = _run(["hook", "stop"], root, home, stdin="{}", budget=1)
+    elapsed = time.monotonic() - t0
+    assert r.returncode == 2 and elapsed < 4, (elapsed, r.stderr)
+    assert "refusal 1 of 2" in r.stderr and "did not run: watch slow app.txt" in r.stderr and "out of time" in r.stderr, r.stderr
+
+
+def test_a_stop_step_that_outlasts_the_budget_is_refused_as_out_of_time(project):
+    root, home = project
+    _cfg(root, stop_runs=[], stop_blocks_on=[["sh", "-c", "sleep 8"]], stop_cap=2)
+    t0 = time.monotonic()
+    r = _run(["hook", "stop"], root, home, stdin="{}", budget=1)
+    elapsed = time.monotonic() - t0
+    assert r.returncode == 2 and elapsed < 6, (elapsed, r.stderr)
+    assert "refusal 1 of 2" in r.stderr and "out of time" in r.stderr, r.stderr
+
+
+def test_the_budget_override_can_not_outlast_the_timeout_it_is_under(monkeypatch):
+    monkeypatch.setenv("LOOP_HOOK_BUDGET_S", "100000")
+    for event, (_budget_s, timeout_s) in hook.HOOK_TIME.items():
+        assert hook.budget(event) < timeout_s, event
 
 
 def test_a_second_clone_replaces_the_entries_of_a_first_whose_path_has_a_space(project, trials, monkeypatch, tmp_path):
