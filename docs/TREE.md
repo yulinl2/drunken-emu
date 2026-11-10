@@ -245,6 +245,7 @@ that is never executed is not a regeneration command.
 |   |   |   `-- plugin.json
 |   |   `-- hooks/
 |   |       |-- hooks.json
+|   |       |-- register.test.ts
 |   |       `-- register.ts
 |   |-- tests/
 |   |   |-- oracle_push.py
@@ -293,5 +294,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 233 files tracked
+35 directories, 234 files tracked
 ```

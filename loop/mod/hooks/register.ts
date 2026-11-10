@@ -14,7 +14,7 @@ import type { Register } from 'claude-code'
 //   resume.txt      the prompt a clear is followed by; emptied when it has been submitted
 //   log.jsonl       one row per turn, per compaction, per clear and per answer of the engine
 
-const VERSION = '0.2.0'
+const VERSION = '0.2.1'
 const said = (err: unknown): string => String((err as any)?.message ?? err).slice(0, 400)
 
 async function dir($: any): Promise<string> {
@@ -131,7 +131,7 @@ export const register: Register = on => {
 
   on('tool.call', { tool: /^mcp__loop__compact$/ }, async ($, e) => {
     if (pending) return { result: 'already queued: it runs when the session is idle' }
-    const args = await keep($, '', String(((e as any).input ?? {}).also_keep ?? ''))
+    const args = await keep($, '', String((e as any).also_keep ?? ''))   // a tool's arguments sit on the event, beside tool and tool_use_id: there is no e.input
     await note($, { ev: 'queued', args_len: args.length, ...(await reading($)) })
     start($, args)
     return { result: 'queued: /compact runs once this turn has ended, with: ' + args.slice(0, 400) }
@@ -139,7 +139,7 @@ export const register: Register = on => {
 
   on('tool.call', { tool: /^mcp__loop__clear$/ }, async ($, e) => {
     if (pending) return { result: 'already queued: it runs when the session is idle' }
-    const prompt = String(((e as any).input ?? {}).resume ?? '').trim().slice(0, RESUME_MAX)
+    const prompt = String((e as any).resume ?? '').trim().slice(0, RESUME_MAX)
     if (!prompt) return { result: 'not queued: a clear with no resume prompt leaves the next turn with nothing; name the state file' }
     try { await $.fs.write((await dir($)) + '/resume.txt', prompt) } catch (err) { return { result: 'not queued: the resume prompt could not be kept (' + said(err) + ')' } }
     await note($, { ev: 'clear_queued', ...(await reading($)) })
