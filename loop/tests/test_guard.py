@@ -444,6 +444,26 @@ class TheOnePathRule(Base):
         r = subprocess.run([sys.executable, "-I", str(LOOP), "guard", "pre"], input="", capture_output=True, text=True, env=os.environ)
         self.assertEqual((r.returncode, r.stdout), (0, ""))
 
+
+class ALeaseIsAnOptionOfThePushAndNotAWordInIt(Base):
+    """Found on 2026-11-10 by a review of the ported guard: a lease-shaped word that git takes as the value of another option was counted as a lease."""
+    @classmethod
+    def setUpClass(cls): cls.feature = repo("topic-l")
+    def held(self, args): return any(c == guard.DENY and "among its own arguments" in x for c, x in guard.push_reasons(args, self.feature))
+    def test_a_lease_shaped_value_of_another_option_is_not_a_lease(self):
+        lease = "--force-with-lease=topic:" + "a" * 40
+        for args in (["-f", "-o", lease, "origin", "topic"], ["-f", "--push-option", lease, "origin", "topic"], ["-fo", lease, "origin", "topic"],
+                     ["-f", "--push-opt", lease, "origin", "topic"], ["-f", "--exec", lease, "origin", "topic"], ["-f", "--receive-p", lease, "origin", "topic"]):
+            self.assertTrue(self.held(args), args)
+        for args in (["-f", lease, "origin", "topic"], [lease, "-f", "-o", "ci.skip", "origin", "topic"], ["-fo", "ci.skip", lease, "origin", "topic"], ["-f", "--push-option=x", lease, "origin", "topic"]):
+            self.assertFalse(self.held(args), args)
+    def test_an_ordinary_push_with_a_push_option_still_goes_on(self):
+        for c in ("git push -o ci.skip origin topic", "git push --push-option ci.skip origin topic", "git push -uo ci.skip origin topic"): self.assertEqual(guard.decide(c, self.feature), [], c)
+    def test_an_abbreviated_repo_selects_the_remote_too(self):
+        for k, v in (("remote.upstream.url", "x"), ("remote.upstream.push", "HEAD:main")): subprocess.run(["git", "config", k, v], cwd=self.feature, check=True)
+        for c in ("git push --rep upstream", "git push --rep=upstream"): self.assertTrue(guard.decide(c, self.feature), c)
+
+
 if __name__ == "__main__": unittest.main()
 
 

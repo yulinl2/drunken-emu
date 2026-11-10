@@ -158,19 +158,28 @@ def refspec_reasons(r):
     if d in PROTECTED: out.append((FF, f"push of {src} to {d}") if SHA.fullmatch(src) and not out else (DENY, f"destination {d}: {VIA_PR}, or push the 40-hex head that a merge verdict names"))
     return out
 
+def takes_value(a):
+    """True for an option of git push whose value is the next word: -o, and --push-option, --receive-pack, --exec and --repo in any
+    prefix (git accepts an unambiguous prefix of a long option). With "=" in the word the value is in the word itself."""
+    if a == "-o": return True
+    return a.startswith("--") and len(a) > 2 and "=" not in a and any(t.startswith(a) for t in TAKES_ARG if t.startswith("--"))
+
 def push_reasons(args, wd):
     """[(class, why)] for a `git push` with these arguments (the words after push); [] when it can go on."""
-    why, pos, i, repo = [], [], 0, None
+    why, pos, i, repo, leased = [], [], 0, None, False
     while i < len(args):
         a = args[i]
-        if a == "--repo" and i + 1 < len(args): repo = args[i + 1]      # the remote, when no positional argument names one
-        if a.startswith("--repo="): repo = a.split("=", 1)[1]
-        if a in TAKES_ARG: i += 2; continue
+        name, eq, val = a.partition("=")
+        if name.startswith("--rep") and "--repo".startswith(name): repo = val if eq else (args[i + 1] if i + 1 < len(args) else None)   # the remote, when no positional argument names one
+        if takes_value(a): i += 2; continue          # the next word is this option's value, whatever it looks like
         if a.startswith("--"):
             c = risky_flag(a.split("=", 1)[0])
             if c: why.append((c, f"flag {a}"))
+            if LEASE.fullmatch(a): leased = True      # a lease is an option of this push, read here and nowhere else
         elif a.startswith("-") and len(a) > 1:
-            if re.fullmatch(r"-[A-Za-z0-9]+", a) and set(a[1:]) & set("fd"): why.append((FORCE, f"flag {a}"))
+            flags, o, rest = a[1:].partition("o")     # -o takes a value: the rest of its word, or the next word when it ends the cluster (-fo VALUE)
+            if re.fullmatch(r"-[A-Za-z0-9]+", a) and set(flags) & set("fd"): why.append((FORCE, f"flag {a}"))
+            if o and not rest: i += 1
         else: pos.append(a)
         i += 1
     refspecs, br_up = pos[1:], None
@@ -187,8 +196,8 @@ def push_reasons(args, wd):
         br, up = br_up or branch_and_upstream(wd)
         if br in PROTECTED: why.append((DENY, f"implied destination: the current branch is {br}: {VIA_PR}"))
         elif up in PROTECTED: why.append((DENY, f"implied destination: the current branch {br} tracks {up}: {VIA_PR}"))
-    if any(c == FORCE for c, _ in why) and not any(LEASE.fullmatch(a) for a in args):
-        # the lease is a word of this command: one written in a comment, in a quoted text or in another command never reaches the remote
+    if any(c == FORCE for c, _ in why) and not leased:
+        # the lease is an option this push itself is given: one in a comment, in another command, or taken as the value of another option never reaches the remote
         why.append((DENY, "a force or delete push must carry --force-with-lease=<ref>:<40 hex sha> among its own arguments"))
     return why
 
