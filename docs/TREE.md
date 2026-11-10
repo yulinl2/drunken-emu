@@ -102,7 +102,9 @@ that is never executed is not a regeneration command.
 |   |-- test_prose_readers.py
 |   |-- test_static_targets.py
 |   |-- test_sync_artifact.py
-|   `-- tree_relations.py
+|   |-- test_verdict.py
+|   |-- tree_relations.py
+|   `-- verdict.py
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -289,5 +291,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 229 files tracked
+35 directories, 231 files tracked
 ```

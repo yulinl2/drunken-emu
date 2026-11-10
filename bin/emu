@@ -14,13 +14,15 @@
 #   bin/emu audit  <artifact.jsx|page.html|URL> [read_stops] [min_px]
 #   bin/emu shots  <artifact.jsx|page.html|URL> "anchor 1" "anchor 2" ...
 #   bin/emu chain check <chain.json> [--budget B] [--json]    (no artifact, no server, no browser)
+#   bin/emu verdict <artifact.jsx|page.html> [--chain CHAIN.json] [--no-smoke]   (the gate and the vector; exit 0, 1 or 3)
 set -u
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${EMU_PORT:-8123}"
 URL="http://127.0.0.1:${PORT}/harness/harness.html"
-MODE="${1:?mode: smoke|audit|shots|step|chain}"; shift
+MODE="${1:?mode: smoke|audit|shots|step|chain|verdict}"; shift
 # chain: the operation-chain layer reads recorded chains; it needs none of the steps below (docs/OPERATION-CHAINS.md)
 if [ "$MODE" = chain ]; then exec python3 "$KIT/checks/chain_check.py" "$@"; fi
+if [ "$MODE" = verdict ]; then exec python3 "$KIT/checks/verdict.py" "$@"; fi
 ART="${1:?path to artifact .jsx, page .html, or URL}"; shift || true
 
 run_check() {
