@@ -3,11 +3,12 @@ what the principal typed that is still waiting in a transcript's queue.
 
 The principal's messages come from the session transcript: what was typed at a prompt, the answers to a question dialog, and
 what was typed while a turn was running (a queued message), which the host delivers at the end of the turn (a user row) or
-between two tool calls (a queued_command attachment). Four subcommands:
+between two tool calls (a queued_command attachment). Five subcommands:
   bank     appends each new message of the principal to the bank, an append-only file of JSON lines (the "bank" key)
   raw      lists what the principal typed, once, from a transcript file or from the git refs of the backup branches
   find     searches the bank and the words files (the "words" globs) for the given words, case-insensitively
   pending  lists the queued messages still waiting in a transcript: typed while a turn runs, not yet delivered to the model
+  quotes   checks each quoted text of a report against the bank and the words files: FOUND, LOOSE, ELSEWHERE or MISSING (loop/quotes.py)
 
 INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; one rule, delivers(), decides what a row delivers, for the bank and for pending alike (its text is one waiting message, or its text blocks are, or its text is cut exactly into waiting messages joined by one newline each); pending lists each queued message that no later row delivers, once, in file order, and no other message.
 FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed; a row that only contains a waiting message among other text delivers it, a cut that uses one message twice delivers, and a queued slash command is counted as not delivered yet (loop/tests/test_record.py, loop/tests/test_record_ways.py, loop/tests/test_rec_delivery.py)
@@ -16,6 +17,7 @@ usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
        python3 -I bin/loop record find [--all] [--max N] WORD [WORD ...]
        python3 -I bin/loop record pending [--src FILE]
+       python3 -I bin/loop record quotes FILE [--also FILE ...] [--min 12] [--out F]
 """
 import contextlib
 import argparse
@@ -812,9 +814,14 @@ def cmd_pending(args, cfg):
     return 0
 
 
+def cmd_quotes(args, cfg):
+    from loop import quotes   # quotes.py reads gate.py, which reads this module: it is imported when the verb runs
+    return quotes.run(cfg, args.file, args.also, args.min, args.out)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="loop record", description="Bank what the principal says, once, verbatim, with its time; search it.")
-    sub = p.add_subparsers(dest="cmd", required=True, metavar="{bank,raw,find,pending}")
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="{bank,raw,find,pending,quotes}")
     b = sub.add_parser("bank", help="append the new messages of the principal to the bank")
     b.add_argument("--src", metavar="FILE", help="the transcript (default: the live one)")
     r = sub.add_parser("raw", help="list what the principal typed, once, from a transcript or the backup refs")
@@ -829,6 +836,11 @@ def main(argv=None):
     f.add_argument("words", nargs="+", metavar="WORD")
     d = sub.add_parser("pending", help="list the principal's messages still waiting in a transcript's queue, one JSON line each")
     d.add_argument("--src", metavar="FILE", help="the transcript (default: the live one)")
+    q = sub.add_parser("quotes", help="check each quoted text of a report against the bank and the words files: FOUND, LOOSE, ELSEWHERE or MISSING")
+    q.add_argument("file", metavar="FILE", help="the report whose quoted texts are checked")
+    q.add_argument("--also", action="append", default=[], metavar="FILE", help="another file a quote may be found in (ELSEWHERE, never FOUND); repeat for more")
+    q.add_argument("--min", type=int, default=12, metavar="N", help="skip the quotes shorter than N characters (default 12)")
+    q.add_argument("--out", metavar="F", help="also write the table to F")
     args = p.parse_args(argv)
     cfg = config.load()
-    return {"bank": cmd_bank, "raw": cmd_raw, "find": cmd_find, "pending": cmd_pending}[args.cmd](args, cfg)
+    return {"bank": cmd_bank, "raw": cmd_raw, "find": cmd_find, "pending": cmd_pending, "quotes": cmd_quotes}[args.cmd](args, cfg)
