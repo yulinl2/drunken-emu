@@ -163,3 +163,26 @@ def test_an_answer_banked_as_plain_text_can_be_quoted_and_a_pair_keeps_its_rule(
     assert gate.verify("pair", "the small version", ctx)["ok"]
     assert not gate.verify("pair", "Which version", ctx)["ok"]          # the assistant's question is not the principal's answer
     assert not gate.verify("plain", "the large version", ctx)["ok"]
+
+
+# the principal's words in a words line are its quoted parts: the notes around them on the same line are not
+
+def _words_ctx(tmp_path, *lines):
+    """The gate's view of a words file with these lines, read the way `ctx_load` reads the words globs."""
+    (tmp_path / "words.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return gate.ctx_load(tmp_path / "bank", ["words.md"], tmp_path)
+
+
+def test_a_quote_verifies_only_inside_the_quoted_words_of_a_words_line(tmp_path):
+    ctx = _words_ctx(tmp_path,
+                     '- 08:15: "Ship the small version first" - the assistant notes that the plan is for the autumn',
+                     "- the assistant notes that the plan is for the autumn")
+    assert gate.verify("OW:1", "Ship the small version first", ctx)["ok"]
+    assert not gate.verify("OW:1", "the plan is for the autumn", ctx)["ok"]   # a note on the same line
+    assert not gate.verify("OW:2", "the plan is for the autumn", ctx)["ok"]   # a line with no quoted words at all
+
+
+def test_a_question_quoted_from_a_words_line_is_judged_by_the_quote_not_by_a_note_that_repeats_it(tmp_path):
+    ctx = _words_ctx(tmp_path, '- the assistant notes: Ship it later. The principal asked: "Ship it"?')
+    cb = {"source": "OW:1", "quote": "Ship it", "speech_act": "assert", "reading": "The principal asks whether to ship it now."}
+    assert "question" in gate.check_closure(cb, ctx)   # the quote is a question, so it is not an assertion

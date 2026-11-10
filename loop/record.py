@@ -99,11 +99,13 @@ def dialog_text(obj, ask_ids):
 
 
 def queued_text(obj, prefixes):
-    """The text of a message typed while a turn was running (a queue record, read as the raw listing reads it), or None."""
+    """The text of a message typed while a turn was running (a queue record), or None. The prefixes are the harness notices
+    (NOT_PRINCIPAL) and the project's own: a message that begins with one is not the principal's. Other text is kept, HTML
+    included, as typed_text keeps it."""
     if obj.get("type") != "queue-operation" or obj.get("operation") != "enqueue" or not isinstance(obj.get("content"), str):
         return None
     text = obj["content"].strip()
-    if not text or text.startswith("<") or text.startswith(prefixes):
+    if not text or text.startswith(prefixes):
         return None
     return text
 
@@ -389,6 +391,13 @@ def words_files(root, pattern):
     return [pathlib.Path(x) for x in sorted(names) if os.path.isfile(x)]
 
 
+def quoted_parts(line):
+    """The quoted parts of a line of a words file, as (start, end, text) with their offsets into the line. The principal's words
+    are the quoted parts; the rest of the line (notes of the assistant, in the words files) is not read. `search` and gate's
+    `verify` both read a words file through this function."""
+    return [(m.start(1), m.end(1), m.group(1)) for m in QUOTED.finditer(line)]
+
+
 def search(cfg, words, every=False, limit=60):
     """(hits, total, notes). A hit is (source, when, where, snippet): a line of the bank, or the quoted words of a words file.
     The notes name what could not be read, so that a search which found nothing is not taken as a pass over what it did not read."""
@@ -433,7 +442,7 @@ def search(cfg, words, every=False, limit=60):
                 notes.append(f"{rel} cannot be read ({e})")
                 continue
             for ln, line in enumerate(lines, 1):
-                quoted = " ".join(QUOTED.findall(line))   # the quoted parts only: the other lines of a words file may be notes
+                quoted = " ".join(t for _, _, t in quoted_parts(line))   # the quoted parts only: the rest of a words line may be notes
                 if quoted:
                     hits = [p.search(quoted) for p in pats]
                     if (all(hits) if every else any(hits)):

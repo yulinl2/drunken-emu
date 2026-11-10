@@ -243,6 +243,18 @@ def test_a_queued_notification_is_not_banked(project, capsys):
     assert "nothing new" in capsys.readouterr().out
 
 
+def test_queued_html_is_banked_and_a_queued_harness_wrapper_is_not(project):
+    src = project / "t.jsonl"
+    write_jsonl(src, [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z",
+                          content="<div>keep this</div> and some more words"),
+                      rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:02:00Z",
+                          content="<system-reminder>a harness notice</system-reminder>"),
+                      rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:03:00Z",
+                          content="<task-notification>a background job ended</task-notification>")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["kind"], b["text"]) for b in bank_rows()] == [("queued", "<div>keep this</div> and some more words")]
+
+
 def test_running_bank_twice_adds_nothing_the_second_time(project, capsys):
     src = project / "t.jsonl"
     write_jsonl(src, TRANSCRIPT + [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:05:00Z", content="a queued message")])

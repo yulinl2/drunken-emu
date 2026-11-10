@@ -9,7 +9,8 @@ last (no skipped links, no cherry-picking). Each link is
 source forms: a bank id: the key of a record in the bank that `record bank` writes, or, where a project also cuts its bank
               into clauses, the id of a record of principal-clauses, principal-dialog-answers, principal-questions or
               principal-comments in the clause bank directory (a "#aN" suffix is allowed),
-              "OW:<line>" (line N of the files that the config key `words` matches, read in sorted order),
+              "OW:<line>" (line N of the files that the config key `words` matches, read in sorted order; the quote must lie
+              in one quoted part of that line: the notes around the quoted parts are not the principal's),
               or "path:<file under the project root>".
 
 What the gate checks (it checks that the work is done, recorded and verifiable; whether a quote FITS its claim stays the
@@ -38,7 +39,7 @@ import re
 import sys
 import tempfile
 
-from loop import config
+from loop import config, record
 
 BANK_FILES = ("principal-clauses", "principal-dialog-answers", "principal-questions", "principal-comments")
 KIND_OF_FILE = {"principal-clauses": "principal-clause", "principal-comments": "principal-comment", "bank": "principal-words"}
@@ -141,7 +142,7 @@ def verify(src, quote, ctx):
         n, line = _ow_index(src), _ow_line(src, ctx)
         if line is None:
             return bad(f"bad words id {src}")
-        if q not in line:
+        if not any(q in part for _, _, part in record.quoted_parts(line)):   # the quoted parts only, as record find reads them
             return bad(f"quote not in words line {n}", "principal-words", f"line {n}")
         return {"ok": True, "reason": "", "kind": "principal-words", "when": f"words line {n}", "near": None}
     base = src.split("#")[0]
@@ -179,10 +180,12 @@ def followed_text(src, quote, ctx):
     q = N(quote)
     if src.startswith("OW:"):
         text = _ow_line(src, ctx) or ""
+        # as verify does, look the quote up in its quoted parts only: a note that repeats the words is not the principal's
+        i = next((s + part.find(q) for s, _, part in record.quoted_parts(text) if q in part), -1)
     else:
         base = src.split("#")[0]
         text = ctx["bank"][base][2] if base in ctx["bank"] else ""
-    i = text.find(q)
+        i = text.find(q)
     return text[i + len(q): i + len(q) + 3] if i >= 0 else ""
 
 
