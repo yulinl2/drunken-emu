@@ -29,7 +29,9 @@ DEFAULTS = {
     "stop_runs": [["keep", "backup"], ["record", "bank"]],   # what the stop hook runs every time; a failure is reported, never blocks
     "stop_blocks_on": [],                         # commands whose failure refuses the stop, at most stop_cap times in a row
     "stop_cap": 3,
+    "watch": [],                                  # the files judged by their checks: [{"name": ..., "files": [glob, ...], "run": [word, ...]}] (loop/watch.py)
 }
+WATCH_KEYS = ("name", "files", "run")             # the keys of one watch entry; watch.py reads each of them
 
 
 class Config(dict):
@@ -121,6 +123,26 @@ def project_root(start=None):
     return pathlib.Path(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else here
 
 
+def _watch_shape(entries):
+    """Each watch entry is an object with a name (a string, used by one entry only) and files and run (non-empty lists of
+    strings), and no other key: a key nobody reads is refused, as at every level of loop.json."""
+    if not isinstance(entries, list):
+        raise SystemExit(f"loop.json: watch is a list of entries, not {type(entries).__name__}")
+    names = []
+    for i, e in enumerate(entries):
+        if not isinstance(e, dict):
+            raise SystemExit(f"loop.json: watch[{i}] is not an object")
+        inner = sorted(set(e) - set(WATCH_KEYS))
+        if inner:
+            raise SystemExit(f"loop.json: watch[{i}]: unknown key(s) {inner}; the known keys are {list(WATCH_KEYS)}")
+        if not (isinstance(e.get("name"), str) and e["name"]
+                and all(isinstance(e.get(k), list) and e[k] and all(isinstance(w, str) for w in e[k]) for k in ("files", "run"))):
+            raise SystemExit(f"loop.json: watch[{i}] needs a name (a string) and files and run (non-empty lists of strings)")
+        if e["name"] in names:
+            raise SystemExit(f"loop.json: watch[{i}]: the name {e['name']!r} is already used by another entry")
+        names.append(e["name"])
+
+
 def load(start=None):
     """The project's configuration over the defaults. A key that is not in DEFAULTS is refused, at the top level and inside a
     dict-valued key such as backup: a typo must not pass in silence."""
@@ -139,4 +161,5 @@ def load(start=None):
             values[k] = {**values[k], **v} if isinstance(values[k], dict) and isinstance(v, dict) else v
     if values["sessions"] not in ("here", "all"):
         raise SystemExit(f'loop.json: "sessions" is "here" or "all", not {values["sessions"]!r}')
+    _watch_shape(values["watch"])
     return Config(root, values, f if f.is_file() else None)

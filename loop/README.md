@@ -28,6 +28,7 @@ the principal speaks
 | `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call |
 | `guard` | `pre`, `permissions` | a tripwire, not a barrier: a merge, a write to a protected branch or a forced push needs a verdict recorded before the act; the known gaps are listed in `loop/guard.py`; under `sessions: here` it reads sessions inside the project | such an act, in a form the guard reads, passes with no verdict that names it |
 | `keep` | `backup`, `restore`, `replay` | what a later session needs survives the machine | a file exists nowhere but in a machine that is gone |
+| `watch` | `eval`, `status` | a changed watched file gets a verdict from its check; the verdict reaches the session after the edit, and a stop waits while the newest verdict fails, could not be made or is dominated | a watched file's bytes changed and the next stop passes with no record for those bytes |
 | `doctor` | prints what the loop can see from here | changes nothing | it writes anything |
 
 Every module's docstring carries two lines, `INVARIANT:` and `FAILS WHEN:`. `loop/tests/test_selfcheck.py` asserts that, and asserts this table against the code. `loop/tests/test_closed_loop.py` runs one session through all six in a temporary project, with the output of each verb as the input of the next; on 2026-11-10 it found five defects that the verbs' own tests could not, and two reviews of the package found more that it now pins: a stop acts on the session that stopped, not on the newest transcript of the machine; each session has its own backup; a trial takes nothing.
@@ -76,6 +77,7 @@ That installs `record`, `keep`, the reprint and the guard. To close the rest of 
 | `stop_runs` | keep, then record | what every stop runs; a failure is reported and never blocks |
 | `stop_blocks_on` | none | commands whose failure refuses the stop |
 | `stop_cap` | 3 | how many refusals in a row before the stop is let through |
+| `watch` | none | entries `{"name", "files": [glob, ...], "run": [word, ...]}`: `{path}` in `run` is the judged file; records in `.loop/watch.jsonl`; an unknown key is refused |
 
 **`loop.json` is code.** Its commands (`stop_runs`, `stop_blocks_on`, `checks`) run with your rights at every stop; the file it names is printed into every prompt; its backup remote receives the transcripts; the bank is committed. A `loop.json` that arrives by clone, pull, checkout or merge takes effect at the next hook, so review it as code. With `--user` the hooks sit in the settings of every session on this machine; they act only for sessions inside the project unless `sessions` is `all`. Install the loop for a private project.
 
@@ -102,4 +104,5 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - `keep backup` needs bash 4, GNU coreutils and findutils, and `flock`; it has not run on macOS. Each session keeps its own backup worktree under the state folder, and old ones are not removed yet.
 - A user-level install replaces a symlinked settings file with a regular one. `guard permissions apply` removes a rules file's retired asks even where no guard is registered.
 - The hooks name the kit's clone by its path. If that clone is moved or deleted, the hooks do nothing, the guard included, and every prompt says that the kit is gone: run `hook install` again from where the kit is now.
+- `watch` judges only what `loop.json` names, when a hook or `watch eval` runs. A watched file deleted on purpose is judged gone at every stop: the stop is refused up to `stop_cap` times, then let through, and no verb clears that record (the ledger is only appended to).
 - It has run in one kind of container. Its own hooks have not been installed in a live session yet: the tests send the events themselves. User-level hooks written by a session's own first command were seen to fire for the rest of that session (`docs/SANDBOX-FACTS.md`, 2026-11-10); a project-level `settings.local.json` written mid-session left no trace (same file, 2026-10-17).

@@ -6,7 +6,7 @@ usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
        python3 -I bin/loop hook prompt | post | stop | compact
 """
 import argparse, contextlib, json, os, pathlib, shlex, subprocess, sys, tempfile, time
-from loop import config
+from loop import config, watch
 
 try:
     import fcntl
@@ -164,13 +164,15 @@ def _bump(cfg):
 
 
 def cmd_post(args):
-    """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse)."""
+    """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse).
+    Then every watched file is judged (loop/watch.py); the verdicts go into the same context, so one output may carry both."""
     try:
         payload = _payload()
         cfg = config.load()
         if not _mine(cfg, payload, "post"):
             return 0
         count = _bump(cfg)
+        ctx = []
         every = cfg["reread_every"]
         if not isinstance(every, int) or isinstance(every, bool) or every < 1:
             _say(f"loop hook post: reread_every must be a whole number of at least 1, not {every!r}; no reprint")
@@ -178,10 +180,16 @@ def cmd_post(args):
             method = cfg.path("principal_method")
             if method.is_file():
                 text = method.read_text(encoding="utf-8")
-                ctx = f"(tool call {count}; every {every}) Check yourself against the principal's method once more:\n\n{text}"
-                sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": ctx}}) + "\n")
+                ctx.append(f"(tool call {count}; every {every}) Check yourself against the principal's method once more:\n\n{text}")
             else:
                 _say(f"loop hook post: no principal method at {method}; no reprint")
+        if cfg["watch"]:
+            try:
+                ctx += watch.post(cfg)
+            except Exception as e:   # a judge that broke says so and is passed over: the tool call goes on
+                _say(f"loop hook post: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
+        if ctx:
+            sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "\n\n".join(ctx)}}) + "\n")
     except (Exception, SystemExit) as e:
         _say(f"loop hook post: {type(e).__name__}: {e}; no reprint")
     return 0
@@ -233,9 +241,20 @@ def _decide(cfg, res):
         return 0
 
 
+def _judged(cfg, res):
+    """The watched files' verdicts join the stop's blockers before _decide: a failing, dominated or not evaluated file refuses
+    the stop (loop/watch.py). A judge that breaks is said and passed over, so the stop is decided without it."""
+    try:
+        seen = watch.stop(cfg)
+    except Exception as e:
+        _say(f"loop hook stop: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
+        return res
+    return {k: res[k] + seen[k] for k in res}
+
+
 def cmd_stop(args):
-    """Runs stop_runs (a failure is reported, never blocks), then stop_blocks_on; a failing or unrunnable blocker refuses the stop,
-    capped, and the refusal says what that blocker printed (its last lines) or why it did not run."""
+    """Runs stop_runs (a failure is reported, never blocks), then stop_blocks_on, then the watched files (loop/watch.py); a failing
+    or unrunnable blocker refuses the stop, capped, and the refusal says what that blocker printed (its last lines) or why it did not run."""
     try:
         payload = _payload()
         cfg = config.load()
@@ -251,6 +270,8 @@ def cmd_stop(args):
             res["passed" if status == "ok" else status].append(_label(argv))
             if status != "ok":
                 res["said"].append((_label(argv), tail or detail))
+        if cfg["watch"]:
+            res = _judged(cfg, res)
         return _decide(cfg, res)
     except (Exception, SystemExit) as e:
         _say(f"loop hook stop: {type(e).__name__}: {e}; the stop is let through (fail open)")

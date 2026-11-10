@@ -5,7 +5,7 @@ what `record` banks is what `gate` resolves a quote against; what `gate` decides
 `tick` runs; what `keep backup` pushes is what `keep replay` rebuilds from. It is also where a machine is shared: another
 project's session, newer than ours, sits in the same transcripts folder and fires the same user-level hooks.
 
-INVARIANT: a message of the principal is banked once and a wait passes the gate only with a chain that resolves in that bank; a stop runs keep and record on the transcript its own event names, is refused while the gate fails and is let through at the cap; a write to a protected branch is denied; the tick runs the due check; a file written outside git comes back from the backup branch alone; nothing of another project's session is banked, backed up, reprinted to or guarded; where no loop.json names a project, nothing is taken or sent.
+INVARIANT: a message of the principal is banked once and a wait passes the gate only with a chain that resolves in that bank; a stop runs keep and record on the transcript its own event names, is refused while the gate fails and is let through at the cap; a write to a protected branch is denied; the tick runs the due check; a changed watched file's verdict reaches the session after the edit and refuses the stop until it passes; a file written outside git comes back from the backup branch alone; nothing of another project's session is banked, backed up, reprinted to or guarded; where no loop.json names a project, nothing is taken or sent.
 FAILS WHEN: a step needs a file that no verb of the kit writes; a hook command works only from the project's own directory; a hook acts on the newest transcript of the machine and not on its event's; an install, dry or not, banks or backs up; a process of this test reads or writes the real user settings (every process gets a temporary HOME).
 """
 import json, os, pathlib, subprocess, sys, time
@@ -362,3 +362,31 @@ def test_a_backup_that_cannot_make_its_worktree_still_reaches_the_prompt(tmp_pat
     rc, out, err = s.loop("keep", "backup", "--wait")
     assert rc == 1 and "FAILED" in err and "no worktree" in err, (out, err)
     assert "the last backup did not succeed" in s.loop("hook", "prompt")[1]
+
+
+def test_a_watched_file_is_judged_after_the_edit_and_holds_the_stop_until_it_is_fixed(tmp_path):
+    """The watch through the real entry: an edit makes the watched file fail, the post hook's output holds the verdict,
+    the stop is refused, a fix passes, and the stop is let through."""
+    s = Session(tmp_path)
+    check = ("import json, sys\nfrom pathlib import Path\n"
+             "bad = 'BROKEN' in Path(sys.argv[1]).read_text(encoding='utf-8')\n"
+             "print(json.dumps({'vector': {'errors': int(bad)}, 'layers': {'stub': 'fail' if bad else 'go'}}))\n"
+             "sys.exit(1 if bad else 0)\n")
+    (s.proj / "check.py").write_text(check, encoding="utf-8")
+    s.config(reread_every=1000, stop_runs=[], stop_cap=2,
+             watch=[{"name": "stub", "files": ["app.txt"], "run": ["python3", "-I", "check.py", "{path}"]}])
+    (s.proj / "app.txt").write_text("fine\n", encoding="utf-8")
+    assert s.loop("hook", "install", "--user")[0] == 0
+
+    (s.proj / "app.txt").write_text("BROKEN\n", encoding="utf-8")                # the edit
+    rc, out, err = s.event("PostToolUse", tool_name="Edit")
+    ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+    assert rc == 0 and "FAIL" in ctx and "app.txt" in ctx, (out, err)
+
+    rc, out, err = s.event("Stop")
+    assert rc == 2 and "failed:" in err and "watch stub app.txt" in err, (out, err)
+
+    (s.proj / "app.txt").write_text("fine\n", encoding="utf-8")                 # the fix
+    rc, out, err = s.event("PostToolUse", tool_name="Edit")
+    assert rc == 0 and "PASS" in json.loads(out)["hookSpecificOutput"]["additionalContext"], (out, err)
+    assert s.event("Stop")[0] == 0
