@@ -374,3 +374,123 @@ def test_a_second_clone_replaces_the_entries_of_a_first_whose_path_has_a_space(p
     for event, groups in got["hooks"].items():
         cmds = [h["command"] for g in groups for h in g["hooks"]]
         assert len(cmds) == 1 and str(second / "bin" / "loop") in cmds[0], (event, cmds)
+
+
+# the queued words: every tool call shows the principal's messages still waiting in its transcript, once per session
+
+T = "2026-01-01T00:01:00Z"
+
+
+def _transcript(root, name, rows):
+    """A transcript beside the project. Its first eight characters name the session, as the file names of transcripts do."""
+    path = root.parent / "transcripts" / name
+    path.parent.mkdir(exist_ok=True)
+    path.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    return path
+
+
+def _queue(content, ts=T):
+    return {"type": "queue-operation", "operation": "enqueue", "timestamp": ts, "content": content}
+
+
+def _post(root, home, transcript=None):
+    payload = {"tool_name": "Bash"}
+    if transcript is not None:
+        payload["transcript_path"] = str(transcript)
+    return _run(["hook", "post"], root, home, stdin=json.dumps(payload))
+
+
+def _block(text, line=1, at=T):
+    return (f"[loop] typed by the principal at {at}, not delivered yet (queue row {line}); the engine will deliver it again "
+            f"when the turn ends, and it is one message:\n{text}")
+
+
+def _context(r):
+    return json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"] if r.stdout.strip() else ""
+
+
+def test_a_waiting_queued_message_is_shown_once_over_two_tool_calls(project):
+    root, home = project
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue("please also check the margins")])
+    first, second = _post(root, home, t), _post(root, home, t)
+    assert (first.returncode, second.returncode) == (0, 0)
+    assert _context(first) == _block("please also check the margins")
+    assert second.stdout == ""
+
+
+def test_after_the_delivery_row_the_next_tool_call_shows_nothing(project):
+    root, home = project
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue("please also check the margins")])
+    assert _context(_post(root, home, t)) == _block("please also check the margins")
+    delivered = {"type": "user", "uuid": "u9", "timestamp": "2026-01-01T00:02:00Z",
+                 "message": {"role": "user", "content": "please also check the margins"}}
+    with t.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(delivered) + "\n")
+    r = _post(root, home, t)
+    assert r.returncode == 0 and r.stdout == ""
+
+
+def test_an_unparsable_line_is_skipped_and_the_hook_exits_as_on_success(project):
+    root, home = project
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [])
+    t.write_text('{"type": "queue-operation", "operation":\n' + json.dumps(_queue("still reached")) + "\n", encoding="utf-8")
+    r = _post(root, home, t)
+    assert r.returncode == 0 and _context(r) == _block("still reached", line=2) and "not read" not in r.stderr
+
+
+def test_a_payload_without_a_transcript_path_says_in_one_line_that_the_queue_was_not_read(project):
+    root, home = project
+    r = _post(root, home)
+    assert r.returncode == 0 and r.stdout == ""
+    assert r.stderr.count("\n") == 1 and "the queue was not read" in r.stderr and "transcript_path" in r.stderr
+
+
+def test_a_transcript_path_that_cannot_be_read_is_said_in_one_line(project):
+    root, home = project
+    unreadable = root.parent / "transcripts" / "aaaaaaaa-1.jsonl"
+    unreadable.mkdir(parents=True)                       # a directory where the transcript should be
+    r = _post(root, home, unreadable)
+    assert r.returncode == 0 and r.stdout == "" and r.stderr.count("\n") == 1 and "the queue was not read" in r.stderr
+
+
+def test_a_state_file_that_is_not_valid_is_said_in_one_line_shows_nothing_and_is_kept(project):
+    root, home = project
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue("a waiting message")])
+    (root / ".loop").mkdir(exist_ok=True)
+    bad = root / ".loop" / "queued-aaaaaaaa.json"
+    bad.write_text("{broken", encoding="utf-8")
+    r = _post(root, home, t)
+    assert r.returncode == 0 and r.stdout == "" and r.stderr.count("\n") == 1 and "the queue was not read" in r.stderr
+    assert bad.read_text(encoding="utf-8") == "{broken"
+
+
+def test_each_session_is_shown_its_own_waiting_message(project):
+    root, home = project
+    a = _transcript(root, "aaaaaaaa-1.jsonl", [_queue("the same words")])
+    b = _transcript(root, "bbbbbbbb-1.jsonl", [_queue("the same words")])
+    assert _context(_post(root, home, a)) == _block("the same words")
+    assert _context(_post(root, home, b)) == _block("the same words")
+    assert _post(root, home, a).stdout == "" and _post(root, home, b).stdout == ""
+
+
+def test_the_message_is_shown_whole_under_its_header(project):
+    root, home = project
+    text = 'Line one, with "quotes" and ünicøde.\n' + "a long clause, " * 250 + "\nEND"
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue(text)])
+    assert _context(_post(root, home, t)) == _block(text)
+
+
+def test_a_queued_row_without_a_timestamp_is_shown_as_at_an_unknown_time(project):
+    root, home = project
+    row = {"type": "queue-operation", "operation": "enqueue", "content": "no time on this one"}
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [row])
+    assert _context(_post(root, home, t)) == _block("no time on this one", at="an unknown time")
+
+
+def test_the_queued_words_join_the_reprint_in_the_same_context(project):
+    root, home = project
+    _cfg(root, reread_every=1)
+    (root / "PRINCIPAL-METHOD.md").write_text("METHOD TEXT", encoding="utf-8")
+    t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue("a queued message")])
+    reprint = "(tool call 1; every 1) Check yourself against the principal's method once more:\n\nMETHOD TEXT"
+    assert _context(_post(root, home, t)) == reprint + "\n\n" + _block("a queued message")

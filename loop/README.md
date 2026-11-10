@@ -9,7 +9,7 @@ An assistant forgets, and the person it works for (the principal) cannot re-read
 
 ```
 the principal speaks
-  -> record   bank it: once, verbatim, with its time (also what was typed while a turn was running)
+  -> record   bank it: once, verbatim, with its time (also what was typed while a turn was running: shown at the next tool call)
   -> gate     nothing unsourced: a wait must cite a record; a missing input reads as changed
   -> tick     one due check per tick; a missed check moves to the front; a starved check is raised
   -> hook     every prompt: the principal's method again; every Nth tool call: again;
@@ -22,10 +22,10 @@ the principal speaks
 ## Verbs (`python3 -I bin/loop VERB ...`)
 | Verb | Does | Guarantees | Shows it failed when |
 |---|---|---|---|
-| `record` | `bank`, `raw`, `find` | every utterance of the principal is banked once, verbatim, with its time | a typed message is in the transcript and not in the bank |
+| `record` | `bank`, `raw`, `find`, `pending` | every utterance of the principal is banked once, verbatim, with its time | a typed message is in the transcript and not in the bank |
 | `gate` | `check`, `render`, `baseline`, `selftest` | a wait carries a chain of verbatim quotes down to a root, or a closure in the principal's words | a status changes and the debt list does not; a question is cited as an assertion |
 | `tick` | `run`, `liveness` | the due check runs, one tick at a time, and `run` exits 1 when its check failed; nothing starves | a check has not run for three times its interval and no tick said so |
-| `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call |
+| `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory; every tool call shows the principal's queued words, each once | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call; a queued message still waiting is shown at no tool call |
 | `guard` | `pre`, `permissions` | a tripwire, not a barrier: a merge, a write to a protected branch or a forced push needs a verdict recorded before the act; the known gaps are listed in `loop/guard.py`; under `sessions: here` it reads sessions inside the project | such an act, in a form the guard reads, passes with no verdict that names it |
 | `keep` | `backup`, `restore`, `replay` | what a later session needs survives the machine | a file exists nowhere but in a machine that is gone |
 | `watch` | `eval`, `status` | a changed watched file gets a verdict from its check; the verdict reaches the session after the edit, and a stop waits while the newest verdict fails, could not be made or is dominated | a watched file's bytes changed and the next stop passes with no record for those bytes |
@@ -105,4 +105,5 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - A user-level install replaces a symlinked settings file with a regular one. `guard permissions apply` removes a rules file's retired asks even where no guard is registered.
 - The hooks name the kit's clone by its path. If that clone is moved or deleted, the hooks do nothing, the guard included, and every prompt says that the kit is gone: run `hook install` again from where the kit is now.
 - `watch` judges only what `loop.json` names, when a hook or `watch eval` runs. A watched file deleted on purpose is judged gone at every stop: the stop is refused up to `stop_cap` times, then let through, and no verb clears that record (the ledger is only appended to).
-- It has run in one kind of container. Its own hooks have not been installed in a live session yet: the tests send the events themselves. User-level hooks written by a session's own first command were seen to fire for the rest of that session (`docs/SANDBOX-FACTS.md`, 2026-11-10); a project-level `settings.local.json` written mid-session left no trace (same file, 2026-10-17).
+- It has run in one kind of container. Its hooks ran live in one session on 2026-11-10: a stop was refused three times and let through at the cap, the guard refused a forced push, each stop made a backup, the bank and `tick liveness` answered. Not seen there: any text from the PostToolUse hook in 34 tool calls, and a reprint at a prompt that was a notification; why is not established. User-level hooks written by a session's own first command were seen to fire for the rest of that session (`docs/SANDBOX-FACTS.md`, 2026-11-10); a project-level `settings.local.json` written mid-session left no trace (same file, 2026-10-17).
+- `record pending` counts a queued message as delivered when a later row contains its text, so a short queued word that a later message contains (`y` in `yes`) is not listed.

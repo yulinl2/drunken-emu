@@ -1,12 +1,12 @@
-"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, and a stop runs its checks and is refused a capped number of times in a row.
+"""The session's own events close the loop: a prompt gets the principal's method, every Nth tool call gets it again, every tool call shows the principal's queued messages that are still waiting, and a stop runs its checks and is refused a capped number of times in a row.
 
-INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3); a hook waits at most 5 s for a lock (2 s for the post counter), then goes on without it.
-FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had (loop/tests/test_hook.py).
+INVARIANT: a stop never traps a session: at most stop_cap refusals in a row, then it is let through and stays open until one pass; a handler that fails exits 0 with a note; an install writes nothing unless every command it registers exits 0 on a sample payload or is left out because its verb is not in the kit yet (exit 3); a hook waits at most 5 s for a lock (2 s for the post counter and the queued words), then goes on without it; every tool call shows each queued message once per session, and a queue that cannot be read is said in one line.
+FAILS WHEN: a stop is refused more than stop_cap times in a row; a hook waits more than 5 s for a lock; a queued message still waiting is shown twice in one session or at no tool call; a prompt, post or compact hook exits other than 0, or a stop exits other than 0 or 2; a settings file is written while a registered command fails on a sample payload, or without the other hooks and keys it had (loop/tests/test_hook.py).
 usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
        python3 -I bin/loop hook prompt | post | stop | compact
 """
-import argparse, contextlib, json, os, pathlib, shlex, subprocess, sys, tempfile, time
-from loop import config, watch
+import argparse, contextlib, hashlib, json, os, pathlib, shlex, subprocess, sys, tempfile, time
+from loop import config, record, watch
 
 try:
     import fcntl
@@ -163,9 +163,64 @@ def _bump(cfg):
     return count
 
 
+def _queue_key(w):
+    """What identifies a waiting message in the session's shown file: its queue row and a hash of its text."""
+    return f"{w['line']}:{hashlib.sha256(w['text'].encode('utf-8', 'surrogatepass')).hexdigest()[:20]}"
+
+
+def _queued_block(w):
+    """The text one waiting message adds to a tool call's context: a header that says what it is, then the message whole."""
+    at = w["at"] or "an unknown time"
+    return (f"[loop] typed by the principal at {at}, not delivered yet (queue row {w['line']}); the engine will deliver it again "
+            f"when the turn ends, and it is one message:\n{w['text']}")
+
+
+def _shown_keys(path):
+    """The keys of the queued messages this session was shown; none when it has no shown file. ValueError when the file cannot be
+    read or does not hold a list of keys."""
+    if not path.exists():
+        return set()
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        raise ValueError(f"{path.name} cannot be read ({e})") from None
+    keys = d.get("shown") if isinstance(d, dict) else None
+    if not isinstance(keys, list) or not all(isinstance(k, str) for k in keys):
+        raise ValueError(f"{path.name} does not hold a list of shown messages")
+    return set(keys)
+
+
+def _queued(cfg, payload):
+    """The principal's messages still waiting in this event's transcript that this session has not been shown yet, as text blocks for
+    the tool call's context. record.pending_since reads the transcript; the session's shown file keeps what was shown. A message is
+    recorded as shown under post-queue.lock before its block is returned, so tool calls at the same moment show it once. A queue that
+    cannot be read is said in one line, and nothing is shown for it."""
+    try:
+        path = payload.get("transcript_path")
+        if not isinstance(path, str) or not path:
+            raise ValueError("the payload names no transcript_path")
+        from loop import keep
+        sid = keep.session_id(path)
+        if not sid:
+            raise ValueError("the transcript_path names no session")
+        folder = cfg.state()
+        state, shown = folder / f"queued-{sid}.json", folder / f"queued-shown-{sid}.json"
+        with _locked(cfg, "post-queue.lock", POST_LOCK_WAIT_S):
+            waiting, _read = record.pending_since(state, os.path.expanduser(path), record.principal_prefixes(cfg))
+            keys = _shown_keys(shown)
+            new = [w for w in waiting if _queue_key(w) not in keys]
+            if new:
+                _write_json(shown, {"shown": sorted(keys | {_queue_key(w) for w in new})})
+    except (Exception, SystemExit) as e:
+        _say(f"loop hook post: the queue was not read ({type(e).__name__}: {e}); no queued words shown")
+        return []
+    return [_queued_block(w) for w in new]
+
+
 def cmd_post(args):
     """Counts the tool call; on every reread_every-th one prints the principal's method as additional context (PostToolUse).
-    Then every watched file is judged (loop/watch.py); the verdicts go into the same context, so one output may carry both."""
+    Then every watched file is judged (loop/watch.py); the verdicts go into the same context, so one output may carry both. Last,
+    the principal's queued messages still waiting in the transcript are added (_queued), each once per session."""
     try:
         payload = _payload()
         cfg = config.load()
@@ -188,6 +243,7 @@ def cmd_post(args):
                 ctx += watch.post(cfg)
             except Exception as e:   # a judge that broke says so and is passed over: the tool call goes on
                 _say(f"loop hook post: the watched files are not judged ({type(e).__name__}: {e}); the hook fails open")
+        ctx += _queued(cfg, payload)                 # the queued words come last: after the reprint and the verdicts
         if ctx:
             sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "\n\n".join(ctx)}}) + "\n")
     except (Exception, SystemExit) as e:

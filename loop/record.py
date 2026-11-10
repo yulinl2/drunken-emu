@@ -1,17 +1,20 @@
-"""Bank what the principal says, once, verbatim, with its time; search the bank and the words files for what was said.
+"""Bank what the principal says, once, verbatim, with its time; search the bank and the words files for what was said; list
+what the principal typed that is still waiting in a transcript's queue.
 
 The principal's messages come from the session transcript: what was typed, the answers to a question dialog, and what was
-typed while a turn was running (a queued message). Three subcommands:
-  bank  appends each new message of the principal to the bank, an append-only file of JSON lines (the "bank" key)
-  raw   lists what the principal typed, once, from a transcript file or from the git refs of the backup branches
-  find  searches the bank and the words files (the "words" globs) for the given words, case-insensitively
+typed while a turn was running (a queued message). Four subcommands:
+  bank     appends each new message of the principal to the bank, an append-only file of JSON lines (the "bank" key)
+  raw      lists what the principal typed, once, from a transcript file or from the git refs of the backup branches
+  find     searches the bank and the words files (the "words" globs) for the given words, case-insensitively
+  pending  lists the queued messages still waiting in a transcript: typed while a turn runs, not yet delivered to the model
 
-INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with its time, and no other text is.
-FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a tool result or a notice of the harness is banked; a missing transcript, bank or ref is reported as nothing new (loop/tests/test_record.py)
+INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with its time, and no other text is; pending lists each queued message that no later row delivers, once, in file order, and no other message.
+FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a tool result or a notice of the harness is banked; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed (loop/tests/test_record.py)
 
 usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
        python3 -I bin/loop record find [--all] [--max N] WORD [WORD ...]
+       python3 -I bin/loop record pending [--src FILE]
 """
 import contextlib
 import argparse
@@ -23,6 +26,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import tempfile
 
 from loop import config
 try:
@@ -108,6 +112,176 @@ def queued_text(obj, prefixes):
     if not text or text.startswith(prefixes):
         return None
     return text
+
+
+def principal_prefixes(cfg):
+    """The prefixes that mark a text as not the principal's: the built-in notices, and the ones loop.json adds."""
+    return NOT_PRINCIPAL + _extra_prefixes(cfg)
+
+
+def _row(raw):
+    """The JSON object of one line of a transcript (bytes or text); None for a line that is not one, an unparsable line included."""
+    try:
+        obj = json.loads(raw)
+    except ValueError:
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def _strings(x):
+    """Every string value inside x, at any depth."""
+    if isinstance(x, str):
+        yield x
+    elif isinstance(x, dict):
+        for v in x.values():
+            yield from _strings(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from _strings(v)
+
+
+def _delivery_strings(obj):
+    """The strings of a row in which a queued message reaches the model: the string content and the text blocks of a user row
+    that is neither a sidechain row nor a compaction summary (a match inside a tool_result block does not count), and every
+    string value of an attachment row of type queued_command."""
+    if obj.get("type") == "user":
+        if obj.get("isSidechain") or obj.get("isCompactSummary"):
+            return []
+        msg = obj.get("message")
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if isinstance(content, str):
+            return [content]
+        if isinstance(content, list):
+            return [b["text"] for b in content if isinstance(b, dict) and b.get("type") == "text" and isinstance(b.get("text"), str)]
+        return []
+    att = obj.get("attachment")
+    if obj.get("type") == "attachment" and isinstance(att, dict) and att.get("type") == "queued_command":
+        return list(_strings(att))
+    return []
+
+
+def _is_command(text):
+    """A slash command (a "/" then a letter) is run by the engine, not read by the model: it is never a waiting message."""
+    return len(text) > 1 and text[0] == "/" and text[1].isalpha()
+
+
+def _step(waiting, obj, n, prefixes):
+    """Applies the row obj, the n-th line of its transcript, to the list of waiting messages. A row that delivers a waiting message
+    takes it out; a queue row that is the principal's and not a command joins the list. Rows come in file order, so a delivery
+    takes out only the messages queued before it."""
+    strings = _delivery_strings(obj) if waiting else []
+    if strings:
+        waiting[:] = [w for w in waiting if not any(w["text"] in s for s in strings)]
+    text = queued_text(obj, prefixes)
+    if text is not None and not _is_command(text):
+        at = obj.get("timestamp")
+        waiting.append({"line": n, "at": at if isinstance(at, str) else None, "text": text})
+
+
+def pending(path, prefixes=NOT_PRINCIPAL):
+    """The principal's typed messages still waiting in the queue of a transcript, in file order, as [{"line", "at", "text"}]: line is
+    1-based, at the row's timestamp (None when it has none), text the stripped message. A queued message waits until a later row
+    delivers it. An unparsable line is skipped; a missing or unreadable file raises OSError."""
+    waiting = []
+    with open(path, "rb") as fh:
+        for n, raw in enumerate(fh, 1):
+            obj = _row(raw)
+            if obj is not None:
+                _step(waiting, obj, n, prefixes)
+    return waiting
+
+
+def _read_state(path):
+    """The state file as a dict: {} when there is none, or it is empty. RecordError when it cannot be read or is not a JSON object."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {}
+    except (OSError, UnicodeDecodeError) as e:
+        raise RecordError(f"the state file {path} cannot be read ({e})") from None
+    if not text.strip():
+        return {}
+    try:
+        d = json.loads(text)
+    except ValueError:
+        raise RecordError(f"the state file {path} is not JSON") from None
+    if not isinstance(d, dict):
+        raise RecordError(f"the state file {path} is not a JSON object")
+    return d
+
+
+def _valid_state(st):
+    """Whether the keys that pending_since keeps have the types it writes."""
+    def count(v):
+        return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+    waiting = st.get("waiting")
+    return (count(st.get("size")) and count(st.get("offset")) and count(st.get("lines")) and isinstance(st.get("open_tail"), bool)
+            and isinstance(waiting, list) and all(
+                isinstance(w, dict) and count(w.get("line")) and isinstance(w.get("text"), str)
+                and (w.get("at") is None or isinstance(w.get("at"), str)) for w in waiting))
+
+
+def _write_state(path, d):
+    """Replaces the state file in one step, through a file of the same folder: a reader sees the old file or the new one."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=path.name + ".")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps(d))
+    os.replace(tmp, str(path))
+
+
+def pending_since(state, src, prefixes=NOT_PRINCIPAL):
+    """(waiting, bytes read): what pending returns for the transcript src, read incrementally through the state file, which keeps
+    the byte offset read so far, the line count, the messages still waiting and the size seen at the last call. A call reads the
+    bytes appended since the offset, and none when the size is unchanged. A file that became shorter than the offset is read again
+    from its start, and so is a state that names another transcript. A last line that is not whole yet is not consumed: it is read
+    again, whole. RecordError when the state file cannot be read or holds no read position, or the transcript cannot be read."""
+    state, src = pathlib.Path(state), os.path.abspath(os.fspath(src))
+    try:
+        raw = _read_state(state)
+        mine = raw if raw.get("src") == src else {}
+        if mine and not _valid_state(mine):
+            raise RecordError(f"the state file {state} holds no valid read position")
+        size = os.path.getsize(src)
+    except OSError as e:
+        raise RecordError(f"{src} cannot be read ({e.strerror or e})") from None
+    offset = mine.get("offset", 0)
+    if offset > size:                                    # the file became shorter: it is read again from its start
+        mine, offset = {}, 0
+    if mine and mine["size"] == size:                    # unchanged since the last call: nothing is read
+        return list(mine["waiting"]), 0
+    waiting, lines, open_tail = list(mine.get("waiting", [])), mine.get("lines", 0), mine.get("open_tail", False)
+    nread = 0
+    try:
+        with open(src, "rb") as fh:
+            fh.seek(offset)
+            while True:
+                line = fh.readline()
+                if not line:
+                    break
+                whole = line.endswith(b"\n")
+                if open_tail and line == b"\n":          # the newline of a row that is already counted: it starts no line
+                    open_tail, offset, nread = False, offset + 1, nread + 1
+                    continue
+                open_tail = False
+                obj = _row(line)
+                nread += len(line)
+                if not whole and obj is None:            # a last line that is not whole yet: not consumed, read again next time
+                    break
+                lines += 1
+                if obj is not None:
+                    _step(waiting, obj, lines, prefixes)
+                offset += len(line)
+                if not whole:                            # a whole row whose newline is not written yet
+                    open_tail = True
+                    break
+    except OSError as e:
+        raise RecordError(f"{src} cannot be read ({e.strerror or e})") from None
+    try:
+        _write_state(state, {"src": src, "size": size, "offset": offset, "lines": lines, "open_tail": open_tail, "waiting": waiting})
+    except OSError as e:
+        raise RecordError(f"the state file {state} cannot be written ({e.strerror or e})") from None
+    return waiting, nread
 
 
 def scan(path, prefixes):
@@ -196,14 +370,18 @@ def plan(events, seen, stamps, long_texts):
     return new
 
 
+def _jsonl(obj):
+    """One JSON object as one line of text. A raw line or paragraph separator would split the row for splitlines() readers, so
+    it is written as an escape."""
+    return json.dumps(obj, ensure_ascii=False).replace("\u2028", "\\u2028").replace("\u2029", "\\u2029").replace("\x85", "\\u0085")
+
+
 def append(path, items):
     """Append the new records, one JSON object per line. The bank is never rewritten."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
         for item in items:
-            # a raw line or paragraph separator would split the row for splitlines() readers, so it is written as an escape
-            f.write(json.dumps(item, ensure_ascii=False).replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-                    .replace("\x85", "\\u0085") + "\n")
+            f.write(_jsonl(item) + "\n")
 
 
 @contextlib.contextmanager
@@ -460,9 +638,25 @@ def cmd_find(args, cfg):
     return 1 if notes else 0
 
 
+def cmd_pending(args, cfg):
+    src = pathlib.Path(args.src) if args.src else cfg.transcript()
+    if src is None:
+        print('record pending: no transcript is named (pass --src, or set LOOP_TRANSCRIPT: a hook passes the one its event names; '
+              'with "sessions": "all" in loop.json the newest on this machine is taken); nothing read', file=sys.stderr)
+        return 1
+    try:
+        waiting = pending(src, principal_prefixes(cfg))
+    except OSError as e:
+        print(f"record pending: {src} cannot be read ({e.strerror or e})", file=sys.stderr)
+        return 1
+    for w in waiting:
+        print(_jsonl(w))
+    return 0
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="loop record", description="Bank what the principal says, once, verbatim, with its time; search it.")
-    sub = p.add_subparsers(dest="cmd", required=True, metavar="{bank,raw,find}")
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="{bank,raw,find,pending}")
     b = sub.add_parser("bank", help="append the new messages of the principal to the bank")
     b.add_argument("--src", metavar="FILE", help="the transcript (default: the live one)")
     r = sub.add_parser("raw", help="list what the principal typed, once, from a transcript or the backup refs")
@@ -475,6 +669,8 @@ def main(argv=None):
     f.add_argument("--all", action="store_true", help="every word must occur in the same line")
     f.add_argument("--max", type=int, default=60, metavar="N", help="at most N hits are shown (default 60)")
     f.add_argument("words", nargs="+", metavar="WORD")
+    d = sub.add_parser("pending", help="list the principal's messages still waiting in a transcript's queue, one JSON line each")
+    d.add_argument("--src", metavar="FILE", help="the transcript (default: the live one)")
     args = p.parse_args(argv)
     cfg = config.load()
-    return {"bank": cmd_bank, "raw": cmd_raw, "find": cmd_find}[args.cmd](args, cfg)
+    return {"bank": cmd_bank, "raw": cmd_raw, "find": cmd_find, "pending": cmd_pending}[args.cmd](args, cfg)

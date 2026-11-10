@@ -336,3 +336,140 @@ def test_a_record_that_a_part_boundary_cuts_is_read_whole_from_a_backup(tmp_path
                        check=True, capture_output=True)
     texts = [t for _, t in record.typed_messages(record.ref_lines(repo, "HEAD"), ())]
     assert texts == ["before the cut", "caf\u00e9 across the cut", "after the cut"]
+
+
+# the queue: what the principal typed while a turn ran and no later row has delivered yet (pending, pending_since)
+
+T1, T2, T3 = "2026-01-01T00:01:00Z", "2026-01-01T00:02:00Z", "2026-01-01T00:03:00Z"
+
+
+def queued(ts, content, **kw):
+    return rec("queue-operation", operation="enqueue", timestamp=ts, content=content, **kw)
+
+
+def waiting_texts(waiting):
+    return [w["text"] for w in waiting]
+
+
+def test_a_queued_message_with_no_delivery_is_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [user("u1", "2026-01-01T00:00:01Z", "a typed message"), queued(T1, "sent while a turn was running")])
+    assert record.pending(src) == [{"line": 2, "at": T1, "text": "sent while a turn was running"}]
+
+
+def test_a_user_row_with_equal_text_delivers_the_queued_message(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "ship the fix"), user("u2", T2, "ship the fix")])
+    assert record.pending(src) == []
+
+
+def test_two_queued_messages_delivered_in_one_user_row_are_not_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    batch = rec("user", uuid="u3", timestamp=T2, message={"role": "user", "content": [
+        {"type": "text", "text": "first queued"}, {"type": "text", "text": "second queued"}]})
+    write_jsonl(src, [queued(T1, "first queued"), queued(T1, "second queued"), batch, queued(T3, "still waiting")])
+    assert waiting_texts(record.pending(src)) == ["still waiting"]
+
+
+def test_a_match_only_inside_a_tool_result_does_not_deliver(tmp_path):
+    src = tmp_path / "t.jsonl"
+    result = rec("user", uuid="u4", timestamp=T2, message={"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "b1", "content": "the output says: check the logs"}]})
+    write_jsonl(src, [queued(T1, "check the logs"), result])
+    assert waiting_texts(record.pending(src)) == ["check the logs"]
+
+
+def test_an_attachment_of_type_queued_command_delivers_at_any_depth_and_no_other_attachment_does(tmp_path):
+    src = tmp_path / "t.jsonl"
+    delivered = rec("attachment", timestamp=T2, attachment={"type": "queued_command", "prompt": {"items": [{"text": "run the tests"}]}})
+    other = rec("attachment", timestamp=T3, attachment={"type": "file", "content": "keep the hedges"})
+    write_jsonl(src, [queued(T1, "run the tests"), queued(T1, "keep the hedges"), delivered, other])
+    assert waiting_texts(record.pending(src)) == ["keep the hedges"]
+
+
+def test_a_queued_notification_is_never_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "<task-notification>a background job ended</task-notification>"),
+                      queued(T2, "[SYSTEM NOTIFICATION: a check ended]"),
+                      queued(T3, "<system-reminder>a harness notice</system-reminder>")])
+    assert record.pending(src) == []
+
+
+def test_a_slash_command_is_never_pending_and_a_slash_followed_by_a_space_is(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "/compact keep the hedges"), queued(T2, "  /loop 5m check the deploy  "), queued(T3, "/ 2 pages are left")])
+    assert waiting_texts(record.pending(src)) == ["/ 2 pages are left"]
+
+
+def test_the_incremental_form_reads_only_the_appended_bytes_and_a_delivery_takes_a_message_out(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state" / "queued.json"
+    write_jsonl(src, [queued(T1, "first waiting message")])
+    waiting, n = record.pending_since(state, src)
+    assert n == src.stat().st_size and waiting_texts(waiting) == ["first waiting message"]
+    waiting, n = record.pending_since(state, src)
+    assert n == 0 and waiting_texts(waiting) == ["first waiting message"]          # an unchanged file: nothing is read
+    appended = json.dumps(queued(T2, "second waiting message"), ensure_ascii=False) + "\n"
+    with src.open("a", encoding="utf-8") as f:
+        f.write(appended)
+    waiting, n = record.pending_since(state, src)
+    assert n == len(appended.encode("utf-8")) and [w["line"] for w in waiting] == [1, 2]
+    assert waiting == record.pending(src)                                             # the same list as reading the whole file
+    with src.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(user("u5", T3, "second waiting message")) + "\n")
+    assert waiting_texts(record.pending_since(state, src)[0]) == ["first waiting message"]
+
+
+def test_a_file_that_became_shorter_is_read_again_from_its_start(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    write_jsonl(src, [queued(T1, "an old message"), queued(T2, "a second old message")])
+    record.pending_since(state, src)
+    write_jsonl(src, [queued(T3, "new")])
+    waiting, n = record.pending_since(state, src)
+    assert [(w["line"], w["text"]) for w in waiting] == [(1, "new")] and n == src.stat().st_size
+
+
+def test_a_last_line_that_is_not_whole_yet_is_read_once_it_is_whole(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    whole = json.dumps(queued(T1, "written in two parts")) + "\n"
+    src.write_text(whole[:25], encoding="utf-8")
+    assert record.pending_since(state, src)[0] == []
+    src.write_text(whole, encoding="utf-8")
+    assert waiting_texts(record.pending_since(state, src)[0]) == ["written in two parts"]
+
+
+def test_a_whole_row_whose_newline_is_not_written_yet_is_counted_once(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    src.write_text(json.dumps(queued(T1, "no newline yet")), encoding="utf-8")
+    assert [(w["line"], w["text"]) for w in record.pending_since(state, src)[0]] == [(1, "no newline yet")]
+    with src.open("a", encoding="utf-8") as f:
+        f.write("\n" + json.dumps(queued(T2, "next")) + "\n")
+    assert [(w["line"], w["text"]) for w in record.pending_since(state, src)[0]] == [(1, "no newline yet"), (2, "next")]
+
+
+def test_a_state_file_that_holds_no_read_position_raises_and_names_the_file(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "queued.json"
+    write_jsonl(src, [queued(T1, "a message")])
+    state.write_text("{broken", encoding="utf-8")
+    with pytest.raises(record.RecordError, match="queued.json"):
+        record.pending_since(state, src)
+
+
+def test_the_pending_verb_prints_one_json_line_per_waiting_message_and_nothing_else(project, capsys):
+    src = project / "t.jsonl"
+    write_jsonl(src, [queued(T1, "a waiting message with   a separator"), user("u2", T2, "a typed message"), queued(T3, "a second one")])
+    assert record.main(["pending", "--src", str(src)]) == 0
+    out = capsys.readouterr().out
+    assert out.count("\n") == 2 and " " not in out
+    assert [json.loads(line) for line in out.split("\n")[:2]] == [
+        {"line": 1, "at": T1, "text": "a waiting message with   a separator"}, {"line": 3, "at": T3, "text": "a second one"}]
+
+
+def test_the_pending_verb_names_nothing_when_nothing_waits_and_reads_the_live_transcript(project, capsys, monkeypatch):
+    src = project / "t.jsonl"
+    write_jsonl(src, [queued(T1, "ship it"), user("u2", T2, "ship it")])
+    monkeypatch.setenv("LOOP_TRANSCRIPT", str(src))
+    assert record.main(["pending"]) == 0 and capsys.readouterr().out == ""
+
+
+def test_the_pending_verb_without_any_transcript_says_so(project, capsys):
+    assert record.main(["pending"]) == 1 and "no transcript is named" in capsys.readouterr().err
