@@ -9,7 +9,8 @@ standard output may be one JSON object: "vector" (numbers, every axis lower is b
 "gate" (where it disagrees with the exit code, the exit code counts). Everything else it prints is for a person.
 
 The bytes of the files that `inputs` globs match (sorted by path; each as its path and the hash of its bytes) are part of the
-candidate a verdict is for, so a changed input means no record for those bytes and the watched file is judged again. A glob that
+candidate a verdict is for, so a changed input means no record for those bytes and the watched file is judged again.
+A watched file or an input that changes while its check runs gets no verdict from that run. A glob that
 matches no file is said by `eval` and `status`. A PASS says what its check did not run: for the engine's verdict (bin/emu verdict),
 the layers it does not run (EMU_LAYERS, which a test ties to checks/verdict.py) and what its "not in the verdict yet" line names;
 for another command, that it reports no layers.
@@ -372,6 +373,9 @@ def evaluate(cfg, entry, path, trigger, force=False, deadline=None):
         gate, vector, layers, tail, note = _judge(cfg, entry, path, deadline)
         if (sha256_file(full) if full.is_file() else None) != sha:   # the bytes changed under the check: not this verdict
             gate, vector, layers, tail, note = "not_evaluated", {}, {}, "the file changed while its check ran; it is judged again", None
+        elif inputs_of(cfg, entry) != inputs:   # an input changed under the check: not this verdict
+            gate, vector, layers, tail, note = ("not_evaluated", {}, {},
+                                                "an input changed while its check ran; it is judged again", None)
     rec = {"at": now(), "id": None, "check": entry["name"], "path": path, "sha": sha, "config": chash, "gate": gate,
            "vector": vector, "layers": layers, "tail": tail, "trigger": trigger,
            "supersedes": prev["id"] if prev else None, "dominated_by": None,

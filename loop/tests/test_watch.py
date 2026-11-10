@@ -197,6 +197,37 @@ def test_a_file_that_changes_while_its_check_runs_gets_no_verdict_for_the_old_by
     assert rc == 0 and ledger(proj)[-1]["gate"] == "pass" and ledger(proj)[-1]["sha"] != rec["sha"], err
 
 
+INPUT_EDITING = '''import json
+from pathlib import Path
+rules = Path("policy") / "rules.txt"
+rules.write_text(rules.read_text(encoding="utf-8") + "x\\n", encoding="utf-8")   # the input changes under the check
+print(json.dumps({"vector": {"errors": 0}, "layers": {"stub": "go"}}))
+'''
+QUIET_CHECK = '''import json
+print(json.dumps({"vector": {"errors": 0}, "layers": {"stub": "go"}}))
+'''
+
+
+def test_an_input_that_changes_while_its_check_runs_gets_no_verdict_for_the_old_inputs(proj, monkeypatch, capsys):
+    setcfg(proj, watch=[{"name": "edit", "files": ["app.txt"], "inputs": ["policy/*.txt"],
+                         "run": ["python3", "-I", "edit_check.py", "{path}"]}])
+    (proj / "policy").mkdir()
+    (proj / "policy" / "rules.txt").write_text("v1\n", encoding="utf-8")
+    (proj / "edit_check.py").write_text(INPUT_EDITING, encoding="utf-8")   # the input changes under the check, on every run
+    put(proj, "LOAD=1\n")                                                  # the watched file's bytes do not change
+    ctx = context(hook_run(monkeypatch, capsys, proj, "post")[1])
+    assert "NOT EVALUATED" in ctx and "an input changed while its check ran" in ctx
+    rec = ledger(proj)[-1]
+    assert rec["gate"] == "not_evaluated" and rec["vector"] == {}          # the pass the check printed is for inputs that are gone
+    rc, _, err = hook_run(monkeypatch, capsys, proj, "stop")               # the check changes the input again: the stop is refused
+    assert rc == 2 and "refusal 1 of 2" in err and "did not run" in err, err
+    assert ledger(proj)[-1]["gate"] == "not_evaluated"
+    (proj / "edit_check.py").write_text(QUIET_CHECK, encoding="utf-8")     # a check that exits 0 and changes nothing
+    rc, _, err = hook_run(monkeypatch, capsys, proj, "stop")               # the file is judged again, on the inputs on disk now
+    on_disk = hashlib.sha256((proj / "policy" / "rules.txt").read_bytes()).hexdigest()
+    assert rc == 0 and ledger(proj)[-1]["gate"] == "pass" and ledger(proj)[-1]["inputs"] == [["policy/rules.txt", on_disk]], err
+
+
 def test_a_refused_stop_does_not_quote_a_refusal_count_that_is_one_behind(proj, monkeypatch, capsys):
     put(proj, "BROKEN\n")
     hook_run(monkeypatch, capsys, proj, "post")
