@@ -23,8 +23,11 @@ EXTRA=(); while IFS= read -r x; do [ -n "$x" ] && EXTRA+=("$x"); done <<< "${LOO
 (
   exec 9>"$LOCK"; if [ "${1:-}" = --wait ]; then flock -w 100 9; else flock -n 9; fi || { echo "skipped $(date -u +%FT%TZ): the previous run is still going"; exit 0; }
   if [ ! -e "$W/.git" ]; then
+    git -C "$R" worktree prune 2>/dev/null   # a worktree folder that was deleted stays registered, and git then refuses to make it again
     if git -C "$R" ls-remote --exit-code "$REMOTE" "refs/heads/$BR" >/dev/null 2>&1; then
       git -C "$R" fetch -q "$REMOTE" "$BR:$BR" && git -C "$R" worktree add -q "$W" "$BR"
+    elif git -C "$R" show-ref --verify -q "refs/heads/$BR"; then
+      git -C "$R" worktree add -q "$W" "$BR"   # the branch is here and not on the remote (a push that never succeeded, or a new remote): go on from it
     else
       git -C "$R" worktree add -q --detach "$W" && git -C "$W" checkout -q --orphan "$BR" && git -C "$W" read-tree --empty
       git -C "$W" sparse-checkout disable 2>/dev/null; find "$W" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
@@ -32,12 +35,15 @@ EXTRA=(); while IFS= read -r x; do [ -n "$x" ] && EXTRA+=("$x"); done <<< "${LOO
   fi
   # LAST-RUN lives in the worktree, so a run that cannot make one reports through a status file beside it; keep.last_run reads both
   [ -e "$W/.git" ] || { echo "FAILED $(date -u +%FT%TZ): no worktree for $BR, see $LOG" | tee "$STATE/backup-$SID.status"; exit 0; }
+  # a worktree that is not on the backup branch is no worktree for it: a snapshot committed there would be in no branch that is pushed
+  [ "$(git -C "$W" symbolic-ref -q HEAD 2>/dev/null)" = "refs/heads/$BR" ] || { echo "FAILED $(date -u +%FT%TZ): the backup worktree is not on $BR, see $LOG" | tee "$STATE/backup-$SID.status"; exit 0; }
   rm -f -- "$STATE/backup-$SID.status"
   gd=$(git -C "$W" rev-parse --absolute-git-dir 2>/dev/null) && [ -e "$gd/index.lock" ] && { rm -f -- "$gd/index.lock"; echo "removed a stale $gd/index.lock (this run holds $LOCK; a run killed inside git leaves one)"; }
   prev=$(head -n 1 "$W/LAST-RUN" 2>/dev/null); printf 'running since %s\nprevious run: %s\n' "$(date -u +%FT%TZ)" "${prev:-none}" > "$W/LAST-RUN"; ok=1
   put() { local src="$1" dst="$2" n; case "$dst/" in */.git/*) return 0;; esac; n=$(stat -c %s -- "$src" 2>/dev/null) || { [ -e "$src" ] && ok=0; return 0; }; mkdir -p "$(dirname "$dst")"   # never a file named .git, nor one inside a .git
           if [ "$n" -gt 20971520 ]; then printf '%s\t%s\t%s\n' "$n" "$(sha256sum "$src" | cut -c1-64)" "$src" >> "$W/LARGE.tsv"; else cp -a "$src" "$dst" || { [ -e "$src" ] && ok=0; }; fi; }   # a source gone since find listed it is no failure
   : > "$W/LARGE.tsv"; : > "$W/NESTED.tsv"; touch "$W/LEFT-OUT.txt"; declare -A SRC; tab=$'\t'
+  LST="$STATE/backup-$SID.list"   # a listing goes through this file and not through a process substitution, which loses the exit status: a listing that failed is a copy that failed
   # transcripts are stored whole, in 16 MB parts: as single files they would only be listed past 20 MB;
   # earlier parts stay byte-identical while a transcript grows, so git stores them once. A transcript that comes back shorter (a
   # compaction rewrote one shorter) does not overwrite the longer copy: that is renamed .until-<time> and kept.
@@ -56,20 +62,22 @@ EXTRA=(); while IFS= read -r x; do [ -n "$x" ] && EXTRA+=("$x"); done <<< "${LOO
     [ -d "$s" ] || continue; k="$(basename "$s")"
     if [ -z "$k" ] || [ "$k" = . ] || [ -n "${SRC[$k]:-}" ]; then echo "refused the extra folder $s: its name is empty or already taken" >> "$LOG"; ok=0; continue; fi
     SRC[$k]="$s"
-    mapfile -d '' nest < <(cd "$s" && find . -mindepth 1 -name .git -prune -printf '%h\0')   # every folder that holds .git (a directory or a pointer file)
+    (cd "$s" && find . -ignore_readdir_race -mindepth 1 -name .git -prune -printf '%h\0') > "$LST" || ok=0; mapfile -d '' nest < "$LST"   # every folder that holds .git (a directory or a pointer file)
     for r in "${nest[@]}"; do g="$s/${r#./}/.git"; if [ -d "$g" ]; then v="dir $(head -n 1 "$g/HEAD" 2>/dev/null)"; else v="file $(head -n 1 "$g" 2>/dev/null)"; fi
       printf '%s\t%s\t%s\n' "$k" "${r#./}" "$v" >> "$W/NESTED.tsv"; done
+    (cd "$s" && find . -ignore_readdir_race -name .git -prune -o -type f -print0) > "$LST" || ok=0
     while IFS= read -r -d '' f; do
       for r in "${nest[@]}"; do [ "$r" = . ] || case "$f" in "$r"/*) continue 2;; esac; done   # inside a nested repository: not copied
       put "$s/${f#./}" "$W/extra/$k/${f#./}"
-    done < <(cd "$s" && find . -name .git -prune -o -type f -print0)
+    done < "$LST"
   done
   mkdir -p "$W/git"; { date -u +%FT%TZ; git -C "$R" rev-parse --abbrev-ref HEAD; git -C "$R" log -1 --format='%h %s'; git -C "$R" status --porcelain; git -C "$R" stash list; } > "$W/git/state.txt"
-  git -C "$R" diff HEAD > "$W/git/working.patch" 2>/dev/null   # changes to tracked files not yet committed
-  i=0; while git -C "$R" rev-parse -q --verify "stash@{$i}" >/dev/null 2>&1; do git -C "$R" stash show -p --include-untracked "stash@{$i}" > "$W/git/stash-$i.patch" 2>/dev/null; i=$((i+1)); done
+  git -C "$R" diff --binary HEAD > "$W/git/working.patch" 2>/dev/null || ok=0   # changes to tracked files not yet committed, binary files included
+  i=0; while git -C "$R" rev-parse -q --verify "stash@{$i}" >/dev/null 2>&1; do git -C "$R" stash show -p --binary --include-untracked "stash@{$i}" > "$W/git/stash-$i.patch" 2>/dev/null || ok=0; i=$((i+1)); done
+  (cd "$R" && git ls-files --others --exclude-standard -z) > "$LST" || ok=0
   while IFS= read -r -d '' f; do   # git lists an untracked nested repository as one entry ending in /: listed, not copied
     case "$f" in */) printf '%s\t%s\t%s\n' git/untracked "$f" "nested repository in $R" >> "$W/NESTED.tsv"; continue;; esac; put "$R/$f" "$W/git/untracked/$f"
-  done < <(cd "$R" && git ls-files --others --exclude-standard -z)
+  done < "$LST"; rm -f -- "$LST"
   # the git steps. A nested repository still in the worktree is never added: its link leaves the index (update-index --force-remove)
   # and its folder is listed in LEFT-OUT.txt and left out of every later add
   step=""; [ "$ok" = 1 ] || step="copy"

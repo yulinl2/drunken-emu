@@ -1,4 +1,4 @@
-"""Tests of the keep verb: loop/keep_backup.sh (the 19 tests of the source backup), loop/keep.py replay (the 14 tests of the
+"""Tests of the keep verb: loop/keep_backup.sh (the 24 tests of the source backup), loop/keep.py replay (the 14 tests of the
 source replay tool) and restore. Every test points HOME, LOOP_PROJECT and LOOP_PROJECTS_DIR at folders under tmp_path."""
 import contextlib, fcntl, io, json, os, pathlib, re, shutil, subprocess, sys, time
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
@@ -381,6 +381,79 @@ def test_a_stale_index_lock_in_the_worktree_is_removed_under_the_lock_and_the_ru
     assert OK.match(f.last_run()[0]), f.logtext()
     assert f"extra/{K}/after.txt" in f.paths()
     assert "removed a stale" in f.logtext()
+
+
+def test_a_snapshot_made_after_its_worktree_was_removed_reaches_a_remote_that_came_back(tmp_path, monkeypatch, capfd):
+    f = Fixture(tmp_path, monkeypatch, capfd)
+    gone = f.tmp / "no-such-origin.git"
+    f.break_origin()
+    f.run_failing("--wait")   # the branch is made here and its push fails: the local branch exists, the remote has none
+    assert git("show-ref", "--verify", "-q", f"refs/heads/{BR}", cwd=f.r, check=False).returncode == 0
+    git("worktree", "remove", "--force", str(f.w), cwd=f.r)
+    git("init", "-q", "--bare", str(gone), cwd=f.tmp)   # the remote exists now, and still has no backup branch
+    f.bare = gone   # the remote the origin names, from here on
+    with (f.projects / "-p" / "abcd1234-x.jsonl").open("a", encoding="utf-8") as h:
+        h.write('{"turn": 2}\n')
+    f.run("--wait")
+    assert OK.match(f.last_run()[0]), f.logtext()
+    assert f.show("transcripts/-p__abcd1234-x.jsonl.parts/part-000") == '{"turn": 1}\n{"turn": 2}\n'
+    assert f.head("origin") == f.head("worktree")
+
+
+def test_a_worktree_folder_deleted_by_hand_is_made_again_from_the_unpushed_branch(tmp_path, monkeypatch, capfd):
+    f = Fixture(tmp_path, monkeypatch, capfd)
+    gone = f.tmp / "no-such-origin.git"
+    f.break_origin()
+    f.run_failing("--wait")
+    shutil.rmtree(f.w)   # the folder goes; the project's repository still registers the worktree
+    git("init", "-q", "--bare", str(gone), cwd=f.tmp)
+    f.bare = gone
+    f.run("--wait")
+    assert OK.match(f.last_run()[0]), f.logtext()
+    assert f.head("origin") == f.head("worktree")
+
+
+def test_a_listing_that_fails_makes_the_copy_step_fail_and_LAST_RUN_names_it(tmp_path, monkeypatch, capfd):
+    f = Fixture(tmp_path, monkeypatch, capfd)
+    fake = f.tmp / "fakebin"   # a find that does all its work and then exits 1, as one that met an unreadable folder does
+    fake.mkdir()
+    real_find = shutil.which("find")
+    assert real_find, "no find on PATH"
+    (fake / "find").write_text(f'#!/bin/sh\n"{real_find}" "$@"\nexit 1\n', encoding="utf-8")
+    (fake / "find").chmod(0o755)
+    monkeypatch.setenv("PATH", f"{fake}{os.pathsep}{os.environ['PATH']}")
+    f.run_failing("--wait")
+    assert re.match(r"^FAILED \d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ: step copy, see " + re.escape(str(f.log)) + "$", f.last_run()[0]), f.last_run()
+    assert "step copy" in f.logtext()
+
+
+def test_a_changed_binary_file_is_in_the_working_patch_as_content_and_git_apply_gives_back_its_bytes(tmp_path, monkeypatch, capfd):
+    f = Fixture(tmp_path, monkeypatch, capfd)
+    before, after = b"\x00\x01binary\x00one\n", b"\x00\x02binary\x00two\xff\n"   # bytes that include NUL
+    (f.r / "blob.bin").write_bytes(before)
+    git("add", "blob.bin", cwd=f.r)
+    git("commit", "-qm", "blob", cwd=f.r)
+    (f.r / "blob.bin").write_bytes(after)   # changed, not committed
+    f.run("--wait")
+    patch = f.show("git/working.patch")
+    assert "GIT binary patch" in patch and "Binary files" not in patch, patch
+    clean = f.tmp / "clean"   # the project's commit, checked out clean
+    git("clone", "-q", str(f.r), str(clean), cwd=f.tmp)
+    (f.tmp / "working.patch").write_text(patch, encoding="utf-8")
+    git("apply", str(f.tmp / "working.patch"), cwd=clean)
+    assert (clean / "blob.bin").read_bytes() == after
+
+
+def test_a_changed_binary_file_in_a_stash_is_in_its_stash_patch_as_content(tmp_path, monkeypatch, capfd):
+    f = Fixture(tmp_path, monkeypatch, capfd)
+    (f.r / "blob.bin").write_bytes(b"\x00\x01binary\x00one\n")
+    git("add", "blob.bin", cwd=f.r)
+    git("commit", "-qm", "blob", cwd=f.r)
+    (f.r / "blob.bin").write_bytes(b"\x00\x02binary\x00two\xff\n")
+    git("stash", "push", "-q", cwd=f.r)   # the change goes into a stash; the file is back at the commit
+    f.run("--wait")
+    patch = f.show("git/stash-0.patch")
+    assert "GIT binary patch" in patch and "Binary files" not in patch, patch
 
 
 KIT = pathlib.Path(__file__).resolve().parents[2]

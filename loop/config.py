@@ -1,8 +1,8 @@
 """Where one project keeps what the loop reads and writes: loop.json at the project's root, every key optional.
 
 INVARIANT: no module of this package holds a path, a name or a number that belongs to one project; each asks load().
-FAILS WHEN: a file under loop/ names a project or a machine's absolute path, or loop.json has a key nobody reads
-(loop/tests/test_selfcheck.py).
+FAILS WHEN: a file under loop/ names a project or a machine's absolute path, or loop.json has a key nobody reads, at the top
+level or inside backup (loop/tests/test_selfcheck.py, loop/tests/test_config.py).
 
 usage, from a module:  cfg = load(); cfg.path("bank"); cfg["reread_every"]; cfg.root; cfg.state("counter.json"); cfg.transcript()
 The project root is, in this order: the environment variable LOOP_PROJECT; the nearest directory at or above the working
@@ -122,7 +122,8 @@ def project_root(start=None):
 
 
 def load(start=None):
-    """The project's configuration over the defaults. A key that is not in DEFAULTS is refused: a typo must not pass in silence."""
+    """The project's configuration over the defaults. A key that is not in DEFAULTS is refused, at the top level and inside a
+    dict-valued key such as backup: a typo must not pass in silence."""
     root = project_root(start)
     f = root / "loop.json"
     values = json.loads(json.dumps(DEFAULTS))
@@ -132,6 +133,9 @@ def load(start=None):
         if unknown:
             raise SystemExit(f"loop.json: unknown key(s) {unknown}; the known keys are {sorted(DEFAULTS)}")
         for k, v in given.items():
+            inner = sorted(set(v) - set(DEFAULTS[k])) if isinstance(DEFAULTS[k], dict) and isinstance(v, dict) else []
+            if inner:
+                raise SystemExit(f"loop.json: {k}: unknown key(s) {inner}; the known keys are {sorted(DEFAULTS[k])}")
             values[k] = {**values[k], **v} if isinstance(values[k], dict) and isinstance(v, dict) else v
     if values["sessions"] not in ("here", "all"):
         raise SystemExit(f'loop.json: "sessions" is "here" or "all", not {values["sessions"]!r}')
