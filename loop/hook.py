@@ -7,6 +7,7 @@ usage: python3 -I bin/loop hook install [--user | --project] [--dry-run]
 """
 import argparse, contextlib, hashlib, json, os, pathlib, re, shlex, subprocess, sys, tempfile, time
 from loop import config, record, watch
+from loop.cli import EX_USAGE, GUARD_FAILURE_RULE
 
 try:
     import fcntl
@@ -429,21 +430,71 @@ def cmd_compact(args):
     return 0
 
 
+def _kit_call(root, loop_bin, argv):
+    """The kit's own call of one verb, with the project named: what the wrapper of command_for runs, and what install runs on its sample payload."""
+    return f"LOOP_PROJECT={shlex.quote(str(root))} python3 -I {shlex.quote(str(loop_bin))} " + " ".join(shlex.quote(a) for a in argv)
+
+
+GUARD_CHECK_DENIED = 10   # the exit of _guard_check when GUARD_FAILURE_RULE denies the payload; 0 is not denied, and any other exit means the check did not run
+
+
+def _guard_check():
+    """The check of a guard call whose kit call exits with a code other than 0, 2 and 64: a stdlib-only program that python3 -I -c runs with
+    the payload on standard input. It exits GUARD_CHECK_DENIED when GUARD_FAILURE_RULE denies the payload (the rule guard.pre applies after its
+    own failure, loop/guard.py), and 0 when it does not. It reads tool_name and tool_input.command only, and imports nothing of the kit: the rule
+    is written into its text from cli.GUARD_FAILURE_RULE each time a command is written."""
+    tools, command = GUARD_FAILURE_RULE["tools"], GUARD_FAILURE_RULE["command"]
+    return "\n".join([
+        "import json, re, sys",
+        't = sys.stdin.buffer.read().decode("utf-8", "replace")',
+        'try: d = json.loads(t or "null")',
+        "except ValueError: sys.exit(0)",
+        'd = d if isinstance(d, dict) else {}; ti = d.get("tool_input") if isinstance(d.get("tool_input"), dict) else {}; '
+        'n = d.get("tool_name") if isinstance(d.get("tool_name"), str) else ""',
+        f"hit = n.rsplit('__', 1)[-1] in {tuple(tools)!r} or re.search({command!r}, str(ti.get('command')))",
+        f"sys.exit({GUARD_CHECK_DENIED} if hit else 0)",
+    ])
+
+
 def command_for(root, loop_bin, argv):
     """The command one hook runs: the project root in LOOP_PROJECT, then this kit's bin/loop with the verb and its subcommand.
-    In front of it, a test that the kit is still there. A hook whose script is gone exits 2, and for a PreToolUse or a Stop
+    In front of it, a test that the kit is still there. Without that test a hook whose script is gone would exit 2, and for a PreToolUse or a Stop
     hook that means "block": a moved or deleted clone would stop every tool call and every stop of every session on the
     machine. With the kit gone the command does nothing and exits 0, and the prompt hook says so at every prompt: a loop that
-    is switched off must not look as if it were on."""
+    is switched off must not look as if it were on. Behind the call, the wrapper gives each event the exit code it needs, and writes one
+    line of its own on standard error (a line that starts with "[loop] ") whenever it changes an exit: a prompt, post or compact whose call
+    fails exits 0; a stop whose call exits 2 (its refusal) exits 2, and any other failure of its call exits 0. A guard whose call exits 64
+    (it did not run: its verb is unknown to the kit, or its arguments are refused) exits 2, so that a guarded act does not pass unchecked.
+    A guard whose call exits with another code, other than 0, 2 and 64, exits 2 when the check of the payload denies it (_guard_check, written from
+    GUARD_FAILURE_RULE: the rule guard.pre applies after its own failure), and with the kit's own exit otherwise; when the check cannot run,
+    one line says that the call was not checked. Every other exit of a guard call, and all its output, are the kit's own."""
     kit, gone = shlex.quote(str(loop_bin)), "exit 0"
     if list(argv) == ["hook", "prompt"]:
         gone = "{ echo " + shlex.quote(f"[loop] the kit at {loop_bin} is gone: the loop's hooks do nothing, the guard included. Run hook install "
                                        "again from where the kit is now, or take its entries out of the settings.") + "; exit 0; }"
-    return f"[ -f {kit} ] || {gone}; LOOP_PROJECT={shlex.quote(str(root))} python3 -I {kit} " + " ".join(shlex.quote(a) for a in argv)
+    call, label = _kit_call(root, loop_bin, argv), " ".join(argv)
+    if list(argv) == ["guard", "pre"]:
+        # exit 64 says the guard did not run (its verb is unknown to the kit, or its arguments are refused): the call is blocked with exit 2.
+        # Any other exit that is not 0 or 2 says the guard failed: the check of the payload then denies what the guard's failure rule names,
+        # and every other call keeps the kit's exit. The kit's output is not caught: it flows through as the kit wrote it
+        check = f"printf '%s' \"$p\" 2>/dev/null | python3 -I -c {shlex.quote(_guard_check())}; c=$?; "
+        body = (f"p=$(cat); printf '%s' \"$p\" 2>/dev/null | {call}; rc=$?; "
+                f"case \"$rc\" in 0|2) exit \"$rc\";; {EX_USAGE}) echo \"[loop] {label} exited {EX_USAGE}: the guard did not run, this call is blocked\" >&2; exit 2;; esac; "
+                + check
+                + f"[ \"$c\" -ne {GUARD_CHECK_DENIED} ] || {{ echo \"[loop] {label} exited $rc: the guard did not run, and its failure rule denies this call: blocked\" >&2; exit 2; }}; "
+                + f"[ \"$c\" -eq 0 ] || echo \"[loop] {label} exited $rc: its check did not run (exit $c), so this call is not checked\" >&2; "
+                + "exit \"$rc\"")
+    elif list(argv) == ["hook", "stop"]:
+        # exit 2 is the Stop's refusal and stays exit 2; any other failure of the call is said, and the stop goes on
+        body = call + ' || { rc=$?; [ "$rc" -eq 2 ] && exit 2; echo "[loop] ' + label + ' exited $rc: the stop is not blocked" >&2; exit 0; }'
+    else:
+        # a prompt, post or compact: a failure is said, and the event goes on
+        body = call + ' || { rc=$?; echo "[loop] ' + label + ' exited $rc: this event is not blocked" >&2; exit 0; }'
+    return f"[ -f {kit} ] || {gone}; " + body
 
 
 def _trial(cmd):
-    """One registered command run once on the payload {"loop_trial": true}: the command must start and read its
+    """One kit call (_kit_call) run once on the payload {"loop_trial": true}: the call must start and read its
     configuration. post, stop and compact do nothing else on that payload, so an install, dry or not, banks nothing, backs
     nothing up and counts nothing. The mark is in the payload and not in the environment: a variable could reach a real
     session and switch the loop off with nothing said."""
@@ -545,7 +596,7 @@ def cmd_install(args):
         for event, argv, matcher in REGISTERED:
             cmd, label = command_for(cfg.root, loop_bin, argv), " ".join(argv)
             try:
-                r = _trial(cmd)
+                r = _trial(_kit_call(cfg.root, loop_bin, argv))   # the kit's own exit: the wrapper of cmd would change the exit of a failure
             except subprocess.TimeoutExpired:
                 _say(f"- hooks: refused, `{label}` did not finish within {TRIAL_TIMEOUT_S} s on a sample payload; {target} left as it is")
                 return 1
@@ -579,7 +630,7 @@ def cmd_install(args):
 
 
 def main(argv=None):
-    """`bin/loop hook SUBCOMMAND`: returns the exit code (install 0 or 1; stop 0 or 2; the others 0; a bad argument 2)."""
+    """`bin/loop hook SUBCOMMAND`: returns the exit code (install 0 or 1; stop 0 or 2; the others 0; a bad argument 64)."""
     argv = list(sys.argv[1:] if argv is None else argv)
     p = argparse.ArgumentParser(prog="loop hook", description="the hooks that close the loop around a session")
     sub = p.add_subparsers(dest="cmd", required=True, metavar="SUBCOMMAND")
@@ -595,6 +646,6 @@ def main(argv=None):
     try:
         args = p.parse_args(argv)
     except SystemExit as e:
-        return int(e.code or 0)
+        return 0 if e.code in (None, 0) else EX_USAGE
     handlers = {"install": cmd_install, "prompt": cmd_prompt, "post": cmd_post, "stop": cmd_stop, "compact": cmd_compact}
     return handlers[args.cmd](args)

@@ -74,4 +74,4 @@ def test_the_entry_runs_isolated_and_names_a_missing_verb(tmp_path):
     r = subprocess.run([sys.executable, "-I", str(KIT / "bin" / "loop"), "help"], capture_output=True, text=True, cwd=tmp_path)
     assert r.returncode == 0 and all(v in r.stdout for v in cli.VERBS), r.stderr
     r = subprocess.run([sys.executable, "-I", str(KIT / "bin" / "loop"), "nosuch"], capture_output=True, text=True, cwd=tmp_path)
-    assert r.returncode == 2
+    assert r.returncode == 64

@@ -4,6 +4,13 @@ INVARIANT: the verbs listed here, the modules on disk and the table in loop/READ
 FAILS WHEN: a verb is documented and has no module, or a module has no row (loop/tests/test_selfcheck.py)."""
 import importlib, json, os, pathlib, sys
 
+EX_USAGE = 64   # an unknown verb, and a usage error of the verb hook and of guard (not guard verdict); the other verbs keep the codes they had. hook.command_for reads it from a guard call as "the guard did not run"
+
+# guard.pre's rule after its own failure (loop/guard.py denies a call it cannot judge): a call is denied when its tool_name, after its last
+# "__", is one of tools, or when its tool_input.command matches command. hook.command_for writes the same rule into the check of a guard
+# call whose kit call exits with a code other than 0, 2 and 64, so the check and the failure branch read this one constant.
+GUARD_FAILURE_RULE = {"tools": ("merge_pull_request", "push_files", "create_or_update_file", "delete_file"), "command": r"push|merge|api|repo\s+edit"}
+
 VERBS = {
     "record": "bank what the principal says, once, verbatim, with its time; search it",
     "gate": "a wait must cite a record; a missing input reads as changed, never as fine",
@@ -46,7 +53,7 @@ def main(argv=None):
         return doctor()
     if argv[0] not in VERBS:
         print(f"loop: no verb {argv[0]!r}; the verbs are {', '.join(VERBS)}, doctor", file=sys.stderr)
-        return 2
+        return EX_USAGE
     try:
         mod = importlib.import_module("loop." + argv[0])
     except ModuleNotFoundError as e:

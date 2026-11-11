@@ -516,6 +516,16 @@ identical block is intended; sharing can come back later by choice.
 
 **What would close it.** Decide by the repository a command acts on, not by the session's working directory; the guard already follows the folder a command runs in.
 
+## P-dcf8 - a guard that does not load blocks only the calls its failure rule names, and nothing with no python3 on PATH `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a guard that does not load blocks only the calls its failure rule names, and nothing with no python3 on PATH")` (CONTRIBUTING rule 6). Opened with the guard's exit codes (pull request 85).*
+
+**The observation.** When `loop/guard.py` does not load (its file fails or is absent, or `loop/config.py` or `loop/cli.py` fails), the kit exits 1 or 3. The guard command that `loop/hook.py` registers then blocks only the calls that `GUARD_FAILURE_RULE` names (a merge or write tool, or a command that mentions push, merge, api or repo edit), judged by a check that runs under `python3`; every other call passes with the kit's exit. With no `python3` on PATH nothing is checked: each call passes with exit 127 and one line that says it was not checked. A hook killed at its 60 s timeout passes under every option. The Artifact delete and force asks are lost while the guard does not load. An alias of git, or a script that pushes, passes. While the guard does not load, `git merge --abort`, `git reset --merge` and any command with `api` in a path are blocked, which is an over-block; repair stays possible through Edit or `git checkout --ours`.
+
+**What would close it.** Either a guard that blocks every call while it does not load (then Read and Edit are blocked too until the guard is repaired, and the repair must go through a call that still passes), or a check at install time that refuses to write the registration of a guard that does not load (the install trial runs the guard once, so it does not see a break after install, nor a missing `python3` at run time). Which of the two is right is open.
+
+**Also open.** An exit 64 of the guard call (its verb is unknown to the kit, or its arguments are refused) blocks every call, while an exit 1 or 3 blocks only the calls the failure rule names: whether that difference is wanted is not decided. The wrapper reads the payload with `p=$(cat)`, so the trailing newlines of a payload do not reach the kit. On an exit 2 the wrapper keeps what the kit wrote on standard output. The install trial runs the kit's own call, and only one test pins that it is not the wrapper's.
+
 ## P-bb1b — the reprint reaches the workers a session starts, and they do not act on it `OPEN`
 
 *ID: `P-` + first four hex of `sha1("the reprint reaches the workers a session starts, and they do not act on it")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*

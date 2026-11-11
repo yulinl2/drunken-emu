@@ -305,7 +305,7 @@ class TheEntry(Base):
         r = subprocess.run([sys.executable, "-I", str(LOOP), "guard", "pre"], input=json.dumps({"tool_name": "Bash", "tool_input": {"command": "git push -f origin x"}, "cwd": self.feature}), capture_output=True, text=True, env=os.environ)
         self.assertEqual(r.returncode, 0, r.stderr); self.assertEqual(json.loads(r.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
         r = subprocess.run([sys.executable, "-I", str(LOOP), "guard", "permissions", "apply"], capture_output=True, text=True, env=os.environ)
-        self.assertEqual(r.returncode, 2)      # a missing --rules is an argument error
+        self.assertEqual(r.returncode, 64)      # a missing --rules is an argument error
 
 class ArtifactGuard(Base):
     def asks(self, ti):

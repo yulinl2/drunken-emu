@@ -123,7 +123,7 @@ def test_registered_commands_carry_the_project_root_and_this_bin_loop(project, t
     assert got["hooks"]["PostToolUse"][0]["matcher"] == "*"
     cmds = _commands(got)
     assert all(f"LOOP_PROJECT={root}" in c and f"python3 -I {BIN_LOOP} " in c and "CLAUDE_PROJECT_DIR" not in c for c in cmds)
-    assert {c.split(f"python3 -I {BIN_LOOP} ", 1)[1] for c in cmds} == {"hook prompt", "hook post", "hook stop", "hook compact"}
+    assert {c.split(f"python3 -I {BIN_LOOP} ", 1)[1].split(" || ", 1)[0] for c in cmds} == {"hook prompt", "hook post", "hook stop", "hook compact"}   # the verb and its arguments end where the wrapper starts: at " || "
 
 
 def test_install_leaves_out_a_verb_that_is_not_in_the_kit_with_a_note(project, trials, capsys):
@@ -150,7 +150,7 @@ def test_install_refuses_a_command_that_fails_on_a_sample_payload(project, capsy
 
 def test_install_refuses_user_and_project_together(project, trials, capsys):
     root, home = project
-    assert hook.main(["install", "--user", "--project"]) == 2        # argparse's usage error: nothing is written anywhere
+    assert hook.main(["install", "--user", "--project"]) == 64        # argparse's usage error: nothing is written anywhere
     assert not (home / ".claude").exists() and not (root / ".claude").exists()
 
 
@@ -258,7 +258,7 @@ def test_compact_exits_zero_whatever_its_steps_do(project):
 
 
 def test_no_subcommand_is_an_argument_error():
-    assert hook.main([]) == 2
+    assert hook.main([]) == 64
 
 
 def test_a_second_projects_install_leaves_the_first_projects_hooks_in_place(project, trials, monkeypatch, tmp_path):
@@ -577,7 +577,7 @@ def test_each_session_is_shown_its_own_waiting_message(project):
 
 def test_the_message_is_shown_whole_under_its_header(project):
     root, home = project
-    text = 'Line one, with "quotes" and ünicøde.\n' + "a long clause, " * 250 + "\nEND"
+    text = 'Line one, with "quotes" and ' + chr(252) + 'nic' + chr(248) + 'de.\n' + "a long clause, " * 250 + "\nEND"
     t = _transcript(root, "aaaaaaaa-1.jsonl", [_queue(text)])
     assert _context(_post(root, home, t)) == _block(text)
 
