@@ -1,8 +1,8 @@
 """Checks each quoted text of a report against the principal's own words, and says where each one stands: FOUND (the same words,
-verbatim and in order, inside one record of the bank or one quoted part of a words file), LOOSE (the same words only once case,
+verbatim and in order, inside one record of the bank, one part of a words file or one line of the method file), LOOSE (the same words only once case,
 dash, quote-mark and ellipsis differences are set aside), ELSEWHERE (the words occur only in a file named with --also: a copy, not
 a record of the principal) or MISSING (nowhere). It measures whether the words are there, never whether they answer a question.
-No transcript is read: the words come from the bank and from the words files, as record find reads them.
+No transcript is read: the words come from the bank, the words files and the method file, as record find reads them.
 
 How a quote is found: the double quotation marks of a line are paired by kind, from left to right: a straight mark is closed by the
 next straight mark, and an opening curly double mark (U+201C) only by the next closing curly double mark (U+201D). The text between a
@@ -19,13 +19,13 @@ U+2019 against the straight apostrophe is FOUND, as at the gate. Every other dif
 mark U+2018, curly double marks inside a quote, a dash, the case of a letter.
 
 INVARIANT: a quote is FOUND only when its parts occur verbatim in gate.N's form (which makes U+2019 straight), in order, inside one
-record of the bank or one quoted part of a words line; the report and the table of --out are never a source; the exit is 0 only when
+record of the bank, one part of a words line (record.principal_parts: the text after a depth-one blockquote marker, where white space of any kind around the marker counts and a marker inside quotation marks is not one; else the quoted parts, whoever they quote) or one non-empty line of the method file, and a method file that does not exist is no source; the report and the table of --out are never a source; the exit is 0 only when
 every quote is FOUND and no line has an unpaired double mark.
 FAILS WHEN: a quote that differs from a record in case, in a dash, or in a quote mark other than U+2019 is FOUND; on a line whose straight marks
 are all quotation marks, the text between two quotes is read as a quote, or a short quote hides the quote after it; a quote closed by a mark of the other kind is read; a line with an unpaired
 double mark exits 0, or is not named in the output; the
 parts of an ellipsis that lie in two records, or out of order, are FOUND; a text that occurs only in a file named with --also is FOUND;
-a report with no quote exits 0; a source that cannot be read is not named as not read (loop/tests/test_quotes.py)
+a report with no quote exits 0; a source that cannot be read is not named as not read; a label quoted before a blockquote marker is FOUND, or the words after the marker are MISSING, also with a tab or a no-break space before the marker or a marker inside quotation marks; a method file that does not exist is named as not read; not read: the principal's words outside quotation marks on a line with no marker (loop/tests/test_quotes.py)
 
 usage (through record): python3 -I bin/loop record quotes FILE [--also FILE ...] [--min 12] [--out F]
   exit 0: every quote FOUND, and no line with an unpaired double mark. 1: any other class, no quote at all, or a line with an
@@ -176,9 +176,8 @@ def bank_texts(cfg, notes):
 
 
 def words_texts(cfg, skip, notes):
-    """([(where, text)], [(file, quoted parts)]): the quoted parts of the lines of the words files, as record find reads them
-    (record.quoted_parts), each part alone. A file in skip (the report, the table of --out) is no words file: a report quotes its own
-    words."""
+    """([(where, text)], [(file, parts)]): the parts of the lines of the words files, as record find reads them (record.principal_parts),
+    each part alone. A file in skip (the report, the table of --out) is no words file: a report quotes its own words."""
     pats = [cfg["words"]] if isinstance(cfg["words"], str) else list(cfg["words"])
     names, seen = [], set()
     for pat in pats:
@@ -201,10 +200,32 @@ def words_texts(cfg, skip, notes):
             notes.append(f"{where} cannot be read ({e}); not read")
             continue
         parts = [(f"{where} line {n}", part) for n, line in enumerate(lines, 1)
-                 for _, _, part in record.quoted_parts(line) if part.strip()]
+                 for _, _, part in record.principal_parts(line) if part.strip()]
         texts += parts
         read.append((where, len(parts)))
     return texts, read
+
+
+def method_texts(cfg, skip, notes):
+    """([(where, text)], [(file, parts)]): each non-empty line of the principal's method file (the file that the principal_method key
+    names) is one part, shown as "method line N"; a file in skip is no source. The method is the principal's own text, so it is read as
+    the words are. A key that is null or empty leaves the method out; a method file that does not exist is no source and is not named, and a file that cannot be read is named as not read."""
+    if not cfg.get("principal_method"):
+        return [], []
+    p = cfg.path("principal_method")
+    if not p.exists():   # a method file that does not exist is no source: nothing is read and nothing is said
+        return [], []
+    where = _rel(p, cfg.root)
+    if p.resolve() in skip:
+        notes.append(f"{where} is the report or the --out table: not a source")
+        return [], []
+    try:
+        lines = p.read_text(encoding="utf-8").split("\n")
+    except (OSError, UnicodeDecodeError) as e:
+        notes.append(f"{where} cannot be read ({e}); not read")
+        return [], []
+    parts = [(f"method line {n}", line) for n, line in enumerate(lines, 1) if line.strip()]
+    return parts, [(where, len(parts))]
 
 
 def elsewhere_texts(names, skip, notes):
@@ -255,7 +276,7 @@ def table_text(summary, sources, not_read, rows):
     """The table --out writes: the summary, the sources, and one row per quote."""
     lines = ["# Quote check (record quotes)", "", summary, "", sources, not_read, "",
              "A MEASUREMENT: it says whether the words are there, not whether they answer a question. FOUND: verbatim, in order, inside "
-             "one record of the bank or one quoted part of a words file. LOOSE: the same words only once case, dash, quote-mark and "
+             "one record of the bank, one part of a words file or one line of the method file. LOOSE: the same words only once case, dash, quote-mark and "
              "ellipsis differences are set aside. ELSEWHERE: only in a file named with --also. MISSING: nowhere.", "",
              "| row | class | quote (cut) | where |", "|---|---|---|---|"]
     lines += [f"| {row} | {cls} | {_cut(q, 90).replace('|', '/')} | {where} |" for cls, row, q, where in rows]
@@ -280,13 +301,14 @@ def run(cfg, report, also, min_chars, out):
     notes = []
     btexts, bank_read = bank_texts(cfg, notes)
     wtexts, words_read = words_texts(cfg, skip, notes)
-    if not bank_read and not words_read:
-        print("record quotes: not evaluated: neither the bank nor a words file can be read; nothing was checked", file=sys.stderr)
+    mtexts, method_read = method_texts(cfg, skip, notes)
+    if not bank_read and not words_read and not method_read:
+        print("record quotes: not evaluated: neither the bank, a words file nor the method file can be read; nothing was checked", file=sys.stderr)
         for note in notes:
             print(f"record quotes: {note}", file=sys.stderr)
         return 3
     extra, also_read = elsewhere_texts(also, skip, notes)
-    owner = [(where, gate.N(t), lenient(t)) for where, t in btexts + wtexts]
+    owner = [(where, gate.N(t), lenient(t)) for where, t in btexts + wtexts + mtexts]
     quoted, unpaired = report_quotes(text, min_chars)
     rows = []
     for row, quote in quoted:
@@ -299,7 +321,8 @@ def run(cfg, report, also, min_chars, out):
                + ("; every quote is FOUND" if ok else "; nothing was checked" if not rows else "")
                + (f"; {len(unpaired)} line(s) with an unpaired double mark" if unpaired else ""))
     read = [f"bank {_rel(cfg.path('bank'), cfg.root)} ({len(btexts)} record(s) searched)"] if bank_read else []
-    read += [f"words {where} ({n} quoted part(s))" for where, n in words_read]
+    read += [f"words {where} ({n} part(s))" for where, n in words_read]
+    read += [f"method {where} ({n} part(s))" for where, n in method_read]
     read += [f"also {name}" for name in also_read]
     sources = "sources read: " + ("; ".join(read) if read else "none")
     not_read = "not read: transcripts (this verb reads none)" + "".join(f"; {note}" for note in notes)

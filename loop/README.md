@@ -22,7 +22,7 @@ the principal speaks
 ## Verbs (`python3 -I bin/loop VERB ...`)
 | Verb | Does | Guarantees | Shows it failed when |
 |---|---|---|---|
-| `record` | `bank`, `raw`, `find`, `pending`, `quotes` | every utterance of the principal is banked once, verbatim, with the time it was typed (a queued one also with the time and way of its delivery); one rule (`delivers` in `loop/record.py`) says what a row delivers, for `bank` and `pending` alike | a typed message, or a queued one that a row delivered, is in the transcript and not in the bank, or in it twice; a row that only contains a queued message among other text delivers it |
+| `record` | `bank`, `raw`, `find`, `pending`, `quotes` | every utterance of the principal is banked once, verbatim, with the time it was typed (a queued one also with the time and way of its delivery); one rule (`delivers` in `loop/record.py`) says what a row delivers, for `bank` and `pending` alike; `find` and `quotes` read a words line by one rule (`principal_parts`: the text after a depth-one `>`, where a `>` on a list line needs white space of any kind around it and a marker inside quotation marks is not one; else the quoted parts) and the method file line by line | a typed message, or a queued one that a row delivered, is in the transcript and not in the bank, or in it twice; a row that only contains a queued message among other text delivers it; a label quoted before a `>` is found |
 | `gate` | `check`, `render`, `baseline`, `selftest` | a wait carries a chain of verbatim quotes down to a root, or a closure in the principal's words | a status changes and the debt list does not; a question is cited as an assertion |
 | `tick` | `run`, `liveness` | the due check runs, one tick at a time, and `run` exits 1 when its check failed; nothing starves | a check has not run for three times its interval and no tick said so |
 | `hook` | `install`, `prompt`, `post`, `stop`, `compact` | what the project's `loop.json` names is run by the session's own events, not by memory; every tool call of the session shows the principal's queued words, each once, and a worker's call (one with an `agent_id`) shows none and counts only itself; the steps and checks of an event share one time budget (`HOOK_TIME` in `loop/hook.py`), which ends before the timeout install writes | a stop is refused more than `stop_cap` times in a row; a hook breaks a tool call; a queued message still waiting is shown at no tool call of the root; a worker's call shows or marks one, or moves the root's count; a hook runs past the timeout install wrote |
@@ -62,10 +62,10 @@ That installs `record`, `keep`, the reprint and the guard. To close the rest of 
 ## Configuration (`loop.json` at the project root; every key optional; an unknown key is refused)
 | Key | Default | What it is |
 |---|---|---|
-| `principal_method` | `PRINCIPAL-METHOD.md` | the principal's own text, printed at every prompt and every `reread_every` tool calls |
+| `principal_method` | `PRINCIPAL-METHOD.md` | the principal's own text, printed at every prompt and every `reread_every` tool calls; `find` and `quotes` read it as a source, line by line (null or an empty value leaves it out; a method file that does not exist is no source, and one that cannot be read is named as not read) |
 | `reread_every` | 5 | how many tool calls between two reprints |
 | `bank` | `loop-state/bank.jsonl` | append-only, in git: one record per utterance |
-| `words` | none | globs of more files that hold the principal's words, for `record find` |
+| `words` | none | globs of more files that hold the principal's words, for `record find` and `record quotes` |
 | `not_principal_prefixes` | none | a text that starts with one of these is not the principal's |
 | `tree`, `chain_debt`, `clause_bank_dir` | under `loop-state/` | the goals and questions, the waits that had no chain at the first run, the bank cut into clauses (optional: without that folder the gate reads `bank`) |
 | `verdicts` | `loop-state/verdicts.jsonl` | an advisor's verdicts, recorded before a guarded act |
@@ -99,7 +99,7 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - It does not judge meaning. A gate checks that a source exists and resolves, not that the reading of it is right.
 - It does not evaluate pages. That is the engine; name its command in `stop_blocks_on`.
 - It does not let due checks take turns yet: a check that keeps failing is picked first at every tick, the others wait until they are more than three intervals late, and `tick liveness` then names them.
-- `record find` reads the words files only inside quotation marks; the principal's words outside quotes are not found there.
+- `record find` and `record quotes` read a words line with no blockquote marker only inside quotation marks, whoever they quote: keep other speakers' words out of quotation marks on such a line; the principal's words outside them are not read there.
 - No verb writes a verdict: the line is written by hand, and the guard refuses a malformed one.
 - The reprint also reaches the workers a session starts. Four of the six that ported this package took it for foreign text and ignored it; whether a worker should be bound by it is open.
 - It cannot tell a public remote from a private one, which is why `backup.remote` has no default: until a project names one, `keep backup` refuses and every prompt says that nothing is kept.

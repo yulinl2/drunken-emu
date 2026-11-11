@@ -1,7 +1,7 @@
 """Root-chain gate: every wait on the principal, and every question to the principal, carries its chain from a root value.
 
-INVARIANT: a wait passes only with a chain of verbatim quotes that equals its tree path, whose root link is the principal's own words and states the value; a debt is paid only by the principal's own words (closed_by), never by a status change alone.
-FAILS WHEN: a status changes and the debt list does not; a question is cited as an assertion; a missing or unreadable tree, bank file or debt file passes instead of failing.
+INVARIANT: a wait passes only with a chain of verbatim quotes that equals its tree path, whose root link is the principal's own words and states the value; a debt is paid only by the principal's own words (closed_by), never by a status change alone. A quote of a words line (OW:) is verbatim only inside one part of the raw line (record.principal_parts, which reads a line as record find does: the text after a depth-one blockquote marker, where white space of any kind around the marker counts and a marker inside quotation marks is not one; else the quoted parts, whoever they quote; a method file that does not exist is no source, and gate reads no method file).
+FAILS WHEN: a status changes and the debt list does not; a question is cited as an assertion; a missing or unreadable tree, bank file or debt file passes instead of failing; the label of a line with a blockquote marker passes as a quote, and the words after the marker do not, also when a tab or a no-break space comes before the marker or the marker sits inside quotation marks; not read: the principal's words outside quotation marks on a line with no marker.
 
 A "wait" is a node whose status starts with "wait". Its `chain` lists EVERY node on its tree path, root first, the node itself
 last (no skipped links, no cherry-picking). Each link is
@@ -10,7 +10,7 @@ source forms: a bank id: the key of a record in the bank that `record bank` writ
               into clauses, the id of a record of principal-clauses, principal-dialog-answers, principal-questions or
               principal-comments in the clause bank directory (a "#aN" suffix is allowed),
               "OW:<line>" (line N of the files that the config key `words` matches, read in sorted order; the quote must lie
-              in one quoted part of that line: the notes around the quoted parts are not the principal's),
+              in one part of that line (record.principal_parts): the notes around the parts are not the principal's),
               or "path:<file under the project root>".
 
 What the gate checks (it checks that the work is done, recorded and verifiable; whether a quote FITS its claim stays the
@@ -119,10 +119,11 @@ def _ow_index(src):
     return n if n >= 1 else None
 
 
-def _ow_line(src, ctx):
-    """The normalized text of the words line that an OW:<line> source names, or None."""
+def _ow_raw(src, ctx):
+    """The raw text of the words line that an OW:<line> source names, or None. Its parts are read from the raw line, as record find
+    reads them (record.principal_parts): a line is put in N's form only for the comparison, never before it is read."""
     n = _ow_index(src)
-    return N(ctx["ow"][n - 1]) if n is not None and n <= len(ctx["ow"]) else None
+    return ctx["ow"][n - 1] if n is not None and n <= len(ctx["ow"]) else None
 
 
 def find_file(rel, root):
@@ -139,10 +140,10 @@ def verify(src, quote, ctx):
     if not q:
         return bad("empty quote")
     if src.startswith("OW:"):
-        n, line = _ow_index(src), _ow_line(src, ctx)
-        if line is None:
+        n, raw = _ow_index(src), _ow_raw(src, ctx)
+        if raw is None:
             return bad(f"bad words id {src}")
-        if not any(q in part for _, _, part in record.quoted_parts(line)):   # the quoted parts only, as record find reads them
+        if not any(q in N(part) for _, _, part in record.principal_parts(raw)):   # the principal's parts only, of the raw line, in N's form
             return bad(f"quote not in words line {n}", "principal-words", f"line {n}")
         return {"ok": True, "reason": "", "kind": "principal-words", "when": f"words line {n}", "near": None}
     base = src.split("#")[0]
@@ -175,17 +176,42 @@ def verify(src, quote, ctx):
     return bad(f"unknown source form: {src!r}")
 
 
+def _raw_pattern(q):
+    """A regular expression that finds the normalized text q (in N's form) in a raw line: a run of white space where q has a space,
+    and either apostrophe where q has a straight one."""
+    out = []
+    for ch in q:
+        if ch == " ":
+            out.append(r"\s+")
+        elif ch == "'":
+            out.append("['" + chr(0x2019) + "]")
+        else:
+            out.append(re.escape(ch))
+    return re.compile("".join(out))
+
+
+def _followed_in_line(raw, q):
+    """The 3 characters after the quote q in the normalized words line, where q is inside one part of the raw line (record.principal_parts,
+    the parts that record find reads). They are found through the raw line, so the notes around the parts are not read."""
+    pat = _raw_pattern(q)
+    for s, _, part in record.principal_parts(raw):
+        m = pat.search(part)
+        if m:
+            rest = raw[s + m.end():]
+            tail = N(rest)
+            return ((" " if rest[:1].isspace() and tail else "") + tail)[:3]
+    return ""
+
+
 def followed_text(src, quote, ctx):
     """The 3 characters after the quote in its source record (a quote cut from a question has no question mark of its own)."""
     q = N(quote)
     if src.startswith("OW:"):
-        text = _ow_line(src, ctx) or ""
-        # as verify does, look the quote up in its quoted parts only: a note that repeats the words is not the principal's
-        i = next((s + part.find(q) for s, _, part in record.quoted_parts(text) if q in part), -1)
-    else:
-        base = src.split("#")[0]
-        text = ctx["bank"][base][2] if base in ctx["bank"] else ""
-        i = text.find(q)
+        # as verify does, the quote is looked up in the principal's parts only: a note that repeats the words is not the principal's
+        return _followed_in_line(_ow_raw(src, ctx) or "", q)
+    base = src.split("#")[0]
+    text = ctx["bank"][base][2] if base in ctx["bank"] else ""
+    i = text.find(q)
     return text[i + len(q): i + len(q) + 3] if i >= 0 else ""
 
 

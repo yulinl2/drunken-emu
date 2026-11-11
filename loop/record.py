@@ -6,12 +6,12 @@ what was typed while a turn was running (a queued message), which the host deliv
 between two tool calls (a queued_command attachment). Five subcommands:
   bank     appends each new message of the principal to the bank, an append-only file of JSON lines (the "bank" key)
   raw      lists what the principal typed, once, from a transcript file or from the git refs of the backup branches
-  find     searches the bank and the words files (the "words" globs) for the given words, case-insensitively
+  find     searches the bank, the words files (the "words" globs) and the method file (the "principal_method" key) for the given words, case-insensitively
   pending  lists the queued messages still waiting in a transcript: typed while a turn runs, not yet delivered to the model
-  quotes   checks each quoted text of a report against the bank and the words files: FOUND, LOOSE, ELSEWHERE or MISSING (loop/quotes.py)
+  quotes   checks each quoted text of a report against the bank, the words files and the method file: FOUND, LOOSE, ELSEWHERE or MISSING (loop/quotes.py)
 
-INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; one rule, delivers(), decides what a row delivers, for the bank and for pending alike (its text is one waiting message, or its text blocks are, or its text is cut exactly into waiting messages joined by one newline each); pending lists each queued message that no later row delivers, once, in file order, and no other message.
-FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed; a row that only contains a waiting message among other text delivers it, a cut that uses one message twice delivers, and a queued slash command is counted as not delivered yet (loop/tests/test_record.py, loop/tests/test_record_ways.py, loop/tests/test_rec_delivery.py)
+INVARIANT: every message of the principal in the transcript is in the bank once, verbatim, with the time it was typed (a queued one also with the time it was delivered and the way: end of turn or between tool calls), and no other text is; one rule, delivers(), decides what a row delivers, for the bank and for pending alike (its text is one waiting message, or its text blocks are, or its text is cut exactly into waiting messages joined by one newline each); pending lists each queued message that no later row delivers, once, in file order, and no other message. A part of a words-file line is read by one rule (principal_parts): the text after a depth-one blockquote marker (a ">" first after spaces or tabs; on a list line, the first ">" with white space of any kind around it, and a marker inside quotation marks is not one), else the quoted parts, whoever they quote; each non-empty line of the method file is a part too, and a method file that does not exist is no source.
+FAILS WHEN: a typed message is in the transcript and not in the bank, or in it twice; a message queued and delivered between two tool calls is missing from the bank, or banked twice; a queued message is banked with the time of its delivery as its time; a tool result or a notice of the harness is banked, or the queued text a notice delivered; a missing transcript, bank or ref is reported as nothing new; a queued message that no later row delivers is missing from pending, or a delivered one is listed; a row that only contains a waiting message among other text delivers it, a cut that uses one message twice delivers, and a queued slash command is counted as not delivered yet; a label quoted before a blockquote marker is read as a part, or the words after the marker are not, also when a tab or a no-break space comes before the marker, or the marker sits inside quotation marks; on a list line whose label holds a `>` between white space outside quotation marks, that `>` is read as the marker and the rest of the label is read as the principal's; the first such `>` is the marker because the principal's own words may hold one; not read: the principal's words outside quotation marks on a line with no marker (loop/tests/test_record.py, loop/tests/test_record_ways.py, loop/tests/test_rec_delivery.py, loop/tests/test_words_parts.py)
 
 usage: python3 -I bin/loop record bank [--src FILE]
        python3 -I bin/loop record raw [--all | SOURCE ...] [--grep REGEX] [--full] [--width N]
@@ -40,7 +40,9 @@ except ImportError:   # no file locks on this platform: the bank is then written
 MAX_CHARS = 20000        # a longer message is banked cut to this many characters, with "truncated": true
 SKILL_BODY_CHARS = 3000  # a skill body the harness injected, longer than this, is not the principal's words
 LONG_REPEAT = 200        # a scheduled delivery repeating a banked text this long is a cron fire or a wake, not typing
-QUOTED = re.compile(r'["\u201c\u300c](.+?)["\u201d\u300d]')   # in a words file, the principal's words are the quoted parts
+QUOTED = re.compile(r'["\u201c\u300c](.+?)["\u201d\u300d]')   # the quoted parts of a words line with no blockquote marker (principal_parts)
+BLOCKQUOTE = re.compile(r"[ \t]*>")                          # a blockquote marker of depth one: a ">" first after spaces or tabs
+LIST_ITEM = re.compile(r"[ \t]*(?:[-*+]|[0-9]+\.)")          # a list marker first after spaces or tabs; such a line may carry a ">" marker (_list_marker_end)
 
 # Text that starts with one of these is not the principal's: notices of the tool itself, hook output, compaction summaries,
 # interrupt markers, the harness's goal check-ins. A prefix that names one project's own jobs is not here: it goes in loop.json
@@ -729,15 +731,51 @@ def words_files(root, pattern):
     return [pathlib.Path(x) for x in sorted(names) if os.path.isfile(x)]
 
 
-def quoted_parts(line):
-    """The quoted parts of a line of a words file, as (start, end, text) with their offsets into the line. The principal's words
-    are the quoted parts; the rest of the line (notes of the assistant, in the words files) is not read. `search` and gate's
-    `verify` both read a words file through this function."""
-    return [(m.start(1), m.end(1), m.group(1)) for m in QUOTED.finditer(line)]
+def _list_marker_end(line):
+    """On a list line: the index just after the first ">" that has white space of any kind before it and white space, or the end of
+    the line, after it, and that is not inside quotation marks (the spans of QUOTED); None when there is none."""
+    quoted = [m.span() for m in QUOTED.finditer(line)]
+    for i, ch in enumerate(line):
+        if ch != ">" or i == 0 or not line[i - 1].isspace():
+            continue
+        if i + 1 < len(line) and not line[i + 1].isspace():
+            continue
+        if any(a < i < b for a, b in quoted):
+            continue
+        return i + 1
+    return None
+
+
+def _marker_end(line):
+    """The index just after the depth-one blockquote marker of a words-file line, or None when it has none: a ">" that is the first
+    character after optional spaces or tabs, or else, on a list line (LIST_ITEM), the marker that _list_marker_end finds."""
+    m = BLOCKQUOTE.match(line)
+    if m:
+        return m.end()
+    if LIST_ITEM.match(line):
+        return _list_marker_end(line)
+    return None
+
+
+def principal_parts(line):
+    """The parts of a line of a words file that are the principal's, as (start, end, text) with their offsets into the line. A line
+    with a depth-one blockquote marker (_marker_end) has exactly one part: the text after the marker, stripped. Nothing else on such
+    a line is a part, a marker with nothing after it gives none, and text after the marker that begins with ">" is a deeper quote, so
+    the line gives none. Any other line gives its quoted parts (QUOTED), whoever they quote; the notes around the parts are not read
+    as the principal's words. record find, record quotes and gate's check of a quote on a words line all read a line through this."""
+    end = _marker_end(line)
+    if end is None:
+        return [(m.start(1), m.end(1), m.group(1)) for m in QUOTED.finditer(line)]
+    rest = line[end:]
+    text = rest.strip()
+    if not text or text.startswith(">"):
+        return []
+    start = end + len(rest) - len(rest.lstrip())
+    return [(start, start + len(text), text)]
 
 
 def search(cfg, words, every=False, limit=60):
-    """(hits, total, notes). A hit is (source, when, where, snippet): a line of the bank, or the quoted words of a words file.
+    """(hits, total, notes). A hit is (source, when, where, snippet): a line of the bank, a part of a words file, or a line of the method file.
     The notes name what could not be read, so that a search which found nothing is not taken as a pass over what it did not read."""
     pats = [re.compile(re.escape(w), re.I) for w in words]
     prefixes = principal_prefixes(cfg)
@@ -780,11 +818,25 @@ def search(cfg, words, every=False, limit=60):
                 notes.append(f"{rel} cannot be read ({e})")
                 continue
             for ln, line in enumerate(lines, 1):
-                quoted = " ".join(t for _, _, t in quoted_parts(line))   # the quoted parts only: the rest of a words line may be notes
-                if quoted:
-                    hits = [p.search(quoted) for p in pats]
+                parts = " ".join(t for _, _, t in principal_parts(line))   # the principal's parts only: the rest of a words line may be notes
+                if parts:
+                    hits = [p.search(parts) for p in pats]
                     if (all(hits) if every else any(hits)):
-                        add("words", "", f"{rel} line {ln}", re.sub(r"\s+", " ", quoted)[:240])
+                        add("words", "", f"{rel} line {ln}", re.sub(r"\s+", " ", parts)[:240])
+    method = cfg.get("principal_method")   # the principal's own text is a source too; a null or empty key leaves it out
+    if method:
+        path = cfg.path("principal_method")
+        if path.exists():   # a method file that does not exist is no source: nothing is read and nothing is said
+            try:
+                lines = path.read_text(encoding="utf-8").split("\n")
+            except (OSError, UnicodeDecodeError) as e:   # a directory, or bytes that are not text: named as not read
+                notes.append(f"{os.path.relpath(path, cfg.root)} cannot be read ({e})")
+            else:
+                for ln, line in enumerate(lines, 1):
+                    if line.strip():   # every line that is not empty is one part
+                        hits = [p.search(line) for p in pats]
+                        if (all(hits) if every else any(hits)):
+                            add("method", "", f"line {ln}", re.sub(r"\s+", " ", line.strip())[:240])
     return out[:limit], len(out), notes
 
 
@@ -830,13 +882,13 @@ def main(argv=None):
     r.add_argument("--grep", metavar="REGEX", help="only the messages that match (case-insensitive)")
     r.add_argument("--full", action="store_true", help="whole messages")
     r.add_argument("--width", type=int, default=150, help="characters per message (default 150)")
-    f = sub.add_parser("find", help="search the bank and the words files")
+    f = sub.add_parser("find", help="search the bank, the words files and the method file")
     f.add_argument("--all", action="store_true", help="every word must occur in the same line")
     f.add_argument("--max", type=int, default=60, metavar="N", help="at most N hits are shown (default 60)")
     f.add_argument("words", nargs="+", metavar="WORD")
     d = sub.add_parser("pending", help="list the principal's messages still waiting in a transcript's queue, one JSON line each")
     d.add_argument("--src", metavar="FILE", help="the transcript (default: the live one)")
-    q = sub.add_parser("quotes", help="check each quoted text of a report against the bank and the words files: FOUND, LOOSE, ELSEWHERE or MISSING")
+    q = sub.add_parser("quotes", help="check each quoted text of a report against the bank, the words files and the method file: FOUND, LOOSE, ELSEWHERE or MISSING")
     q.add_argument("file", metavar="FILE", help="the report whose quoted texts are checked")
     q.add_argument("--also", action="append", default=[], metavar="FILE", help="another file a quote may be found in (ELSEWHERE, never FOUND); repeat for more")
     q.add_argument("--min", type=int, default=12, metavar="N", help="skip the quotes shorter than N characters (default 12)")
