@@ -1,6 +1,6 @@
 # loop: a closed loop around an assistant session
 
-`bin/emu` is the engine: it evaluates what a reader meets. `bin/loop` is the harness that calls it, and calls everything else a session would otherwise have to remember. Standard library only. No data of any project: a project names its own files in one `loop.json`.
+`bin/emu` is the engine: it evaluates what a reader meets. `bin/loop` is the harness: it calls what a session would otherwise have to remember, and it calls the engine when a project's `loop.json` names it under `checks`, `stop_blocks_on` or `watch` (none is set by default). Standard library only. No data of any project: a project names its own files in one `loop.json`.
 
 Extracted on 2026-11-10 from a private project in which each part had been running under tests. Here the parts are one package with one entry and one configuration; what belongs to that project stayed there (last section but one).
 
@@ -39,7 +39,7 @@ A hook is a command: it cannot read the session's usage or start a compaction. A
 | Part | Does | Seen (`docs/SANDBOX-FACTS.md`, 2026-11-10) |
 |---|---|---|
 | `usage` | the context's fill, each rate-limit window's percent used and reset time, the session's cost | live figures inside a turn, where the host's own record of the session lagged a whole turn |
-| `compact` | starts a compaction once the turn has ended, with the principal's line and one pointer to the session's state file | started by a session itself, in two sessions; each summary carried the text |
+| `compact` | starts a compaction once the turn has ended, with the principal's line, then one line of `also-keep.txt` and the call's own `also_keep` when either is given | started by a session itself, in two sessions; each summary carried the text |
 | every compaction | adds the same two texts, also to a typed or an automatic one; logs tokens and cost before and after | in both sessions |
 
 It loads at a session's start from a skills folder: `.claude/skills/loop` here is a link to it, and a fresh session had both tools with no person involved. A copy placed in `~/.claude/skills/` in the middle of a session was not loaded. Its state is in `~/.claude/loop/`: `line.txt` (the principal's line: the project's own words, none here), `also-keep.txt` (one line: where the session's state file is; the line selects, the file carries the state) and `log.jsonl`.
@@ -49,7 +49,7 @@ It loads at a session's start from a skills folder: `.claude/skills/loop` here i
 python3 -I bin/loop doctor                  # what is found from this directory
 python3 -I bin/loop hook install --user     # the user-level settings: the channel seen to fire in cloud sessions
 ```
-The installed commands carry the project's root, so they work from any working directory. `install` first tries each command once on an empty payload: the command must start and read its configuration. A trial banks nothing and backs nothing up. `install` refuses where there is no `loop.json`: a project names itself.
+The installed commands carry the project's root, so they work from any working directory. `install` first tries each command once on a trial payload (`{"loop_trial": true}`): the command must start and read its configuration. A trial banks nothing and backs nothing up. `install` refuses where there is no `loop.json`: a project names itself.
 
 That installs `record`, `keep`, the reprint and the guard. To close the rest of the loop, the project's `loop.json` names where a stop is refused and what the tick runs; the tree the gate reads is a source, written by hand:
 ```

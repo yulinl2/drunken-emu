@@ -57,7 +57,7 @@ import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 
-from loop import config
+from loop import config, tree
 
 LADDER = {"active": [2, 6, 24, 72, 168], "slow": [168, 336, 720], "parked": []}  # hours between two looks, by rung
 STATE_LANE = {"open": "active", "provisional": "active", "answered": "slow", "superseded": "slow", "parked": "parked"}
@@ -232,30 +232,15 @@ def check_item(key, item):
 
 
 def tree_nodes(cfg):
-    """(nodes, status, detail): the nodes of the project's tree, keyed by id. A node is an object with an id, found under the
-    roots and their children. status is "ok"; "missing" (no file, so no parent outside the items is confirmed); or "corrupt"
-    (the file cannot be read: an error wherever a parent outside the items needs it)."""
-    path = cfg.path("tree")
-    if not path.is_file():
-        return {}, "missing", "no tree at %s" % path
+    """(nodes, status, detail): the nodes of the project's tree, keyed by id, read through loop/tree.py. status is "ok"; "missing"
+    (no file, so no parent outside the items is confirmed); "unreadable" or "malformed" (the tree cannot be read whole, an error
+    wherever a parent outside the items needs it). detail is "" when ok, else PATH: REASON, or "no tree at PATH" when missing."""
     try:
-        tree = json.loads(path.read_text(encoding="utf-8"))
-        roots = tree["roots"]
-        if not isinstance(roots, list):
-            raise ValueError("roots is not a list")
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        return {}, "corrupt", "%s: %s" % (path, exc)
-    nodes, stack = {}, list(roots)
-    while stack:
-        found = stack.pop()
-        if not isinstance(found, dict):
-            continue
-        if isinstance(found.get("id"), str):
-            nodes.setdefault(found["id"], found)
-        kids = found.get("children")
-        if isinstance(kids, list):
-            stack.extend(kids)
-    return nodes, "ok", ""
+        return tree.load(cfg).nodes, "ok", ""
+    except tree.Refused as exc:
+        if exc.kind == "missing":
+            return {}, "missing", "no tree at %s" % exc.path
+        return {}, exc.kind, "%s: %s" % (exc.path, exc.detail)
 
 
 def check_registry(data, cfg):
@@ -278,8 +263,9 @@ def check_registry(data, cfg):
                 outside.append((key, parent))
     if outside:
         nodes, status, detail = tree_nodes(cfg)
-        if status == "corrupt":
-            problems.append(("ERROR", "tree is not readable (%s); parents outside the items cannot be checked" % detail))
+        if status in ("unreadable", "malformed"):
+            wording = "not readable" if status == "unreadable" else "malformed"
+            problems.append(("ERROR", "tree is %s (%s); parents outside the items cannot be checked" % (wording, detail)))
         else:
             for key, parent in outside:
                 if parent not in nodes:

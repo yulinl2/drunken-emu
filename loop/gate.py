@@ -39,7 +39,7 @@ import re
 import sys
 import tempfile
 
-from loop import config, record
+from loop import config, record, tree
 
 BANK_FILES = ("principal-clauses", "principal-dialog-answers", "principal-questions", "principal-comments")
 KIND_OF_FILE = {"principal-clauses": "principal-clause", "principal-comments": "principal-comment", "bank": "principal-words"}
@@ -226,31 +226,6 @@ def speech_problem(quote, act, followed):
     return ""
 
 
-class DuplicateIds(Exception):
-    """The tree names a node id more than once."""
-
-
-def tree_paths(tree):
-    """-> ({id: node}, {id: path of ids from the root}). An id is one node: a second node of the same id would replace the
-    first in both maps, and a wait under that id would leave the check with nothing said. The tree is kept by hand, so a
-    repeated id is refused, not resolved."""
-    nodes, path, twice = {}, {}, []
-
-    def walk(n, p):
-        if n["id"] in nodes:
-            twice.append(str(n["id"]))
-        nodes[n["id"]] = n
-        path[n["id"]] = p + [n["id"]]
-        for c in n.get("children") or []:
-            walk(c, p + [n["id"]])
-
-    for r in tree["roots"]:
-        walk(r, [])
-    if twice:
-        raise DuplicateIds(sorted(set(twice)))
-    return nodes, path
-
-
 def parse_iso(s):
     return datetime.datetime.fromisoformat(s).timestamp()
 
@@ -344,17 +319,12 @@ def waits_of(nodes):
 
 
 def load_tree(cfg):
-    """-> (nodes, paths, None); or (None, None, detail) when the tree is missing or unreadable."""
-    t = cfg.path("tree")
-    if not t.is_file():
-        return None, None, f"no tree at {_rel(t, cfg.root)}"
+    """-> (nodes, paths, None); or (None, None, TEXT) when loop/tree.py refuses the tree, TEXT being the refusal's text."""
     try:
-        nodes, paths = tree_paths(json.loads(t.read_text(encoding="utf-8")))
-    except DuplicateIds as e:
-        return None, None, f"tree at {_rel(t, cfg.root)} names a node id more than once ({', '.join(e.args[0])}): an id is one node"
-    except MALFORMED:
-        return None, None, f"tree at {_rel(t, cfg.root)} is not readable"
-    return nodes, paths, None
+        loaded = tree.load(cfg)
+    except tree.Refused as exc:
+        return None, None, str(exc)
+    return loaded.nodes, loaded.paths, None
 
 
 def load_debt(cfg):
