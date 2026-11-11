@@ -25,6 +25,8 @@ that is never executed is not a regeneration command.
 ```text
 .
 |-- .claude/
+|   |-- skills/
+|   |   `-- loop
 |   `-- settings.json
 |-- .github/
 |   `-- workflows/
@@ -35,6 +37,7 @@ that is never executed is not a regeneration command.
 |   |-- emu
 |   |-- figpipe
 |   |-- gen_tree.py
+|   |-- loop
 |   `-- sync_artifact.py
 |-- checks/
 |   |-- fixtures/
@@ -99,7 +102,9 @@ that is never executed is not a regeneration command.
 |   |-- test_prose_readers.py
 |   |-- test_static_targets.py
 |   |-- test_sync_artifact.py
-|   `-- tree_relations.py
+|   |-- test_verdict.py
+|   |-- tree_relations.py
+|   `-- verdict.py
 |-- docs/
 |   |-- evidence/
 |   |   `-- hw1-correction-2026-10-03/
@@ -129,6 +134,7 @@ that is never executed is not a regeneration command.
 |   |   |-- hw2-sample-pass.measured-example-bank.json
 |   |   |-- hw2-sample-pass.measured.json
 |   |   `-- hw2-sample-pass.prediction.json
+|   |-- EMU-LOOP-RETIRED.md
 |   |-- EXPLORE-SPEC.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
@@ -234,6 +240,52 @@ that is never executed is not a regeneration command.
 |   `-- render_svg.js
 |-- harness/
 |   `-- harness.html
+|-- loop/
+|   |-- mod/
+|   |   |-- .claude-plugin/
+|   |   |   `-- plugin.json
+|   |   `-- hooks/
+|   |       |-- hooks.json
+|   |       |-- register.test.ts
+|   |       `-- register.ts
+|   |-- tests/
+|   |   |-- oracle_push.py
+|   |   |-- test_closed_loop.py
+|   |   |-- test_config.py
+|   |   |-- test_exit_codes.py
+|   |   |-- test_gate.py
+|   |   |-- test_guard.py
+|   |   |-- test_hook.py
+|   |   |-- test_keep.py
+|   |   |-- test_keep_last_run.py
+|   |   |-- test_quotes.py
+|   |   |-- test_rec_delivery.py
+|   |   |-- test_record.py
+|   |   |-- test_record_ways.py
+|   |   |-- test_revisit.py
+|   |   |-- test_selfcheck.py
+|   |   |-- test_tick.py
+|   |   |-- test_tree.py
+|   |   |-- test_tree_switch.py
+|   |   |-- test_verdict.py
+|   |   |-- test_watch.py
+|   |   `-- test_words_parts.py
+|   |-- README.md
+|   |-- __init__.py
+|   |-- cli.py
+|   |-- config.py
+|   |-- gate.py
+|   |-- guard.py
+|   |-- hook.py
+|   |-- keep.py
+|   |-- keep_backup.sh
+|   |-- quotes.py
+|   |-- record.py
+|   |-- revisit.py
+|   |-- tick.py
+|   |-- tree.py
+|   |-- verdict.py
+|   `-- watch.py
 |-- out/
 |   `-- .gitkeep
 |-- theory/
@@ -257,5 +309,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-29 directories, 203 files tracked
+35 directories, 249 files tracked
 ```

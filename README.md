@@ -79,10 +79,12 @@ drunken-emu/
 
 ## Bootstrap (any fresh session)
 
-Nothing to install. Verified in a claude.ai container: Python `playwright` is
+Nothing to install in a claude.ai container as measured in 2026-08: Python `playwright` is
 preinstalled and the Chromium binary ships at `/opt/pw-browsers/` (not the usual
 `~/.cache/ms-playwright`, which is why `playwright install` looks necessary and
-is not). Confirm and go:
+is not). A Claude Code cloud container (2026-10-18, 2026-11-10) has that Chromium binary and no
+Python with `pytest` or `playwright`: make a virtual environment first (`docs/SANDBOX-FACTS.md`;
+the Falsified table below). Confirm and go:
 
 ```
 python3 -c "from playwright.sync_api import sync_playwright
@@ -116,6 +118,7 @@ a removed error is an error that can come back.
 | "mount ~ 0.18 s + 0.55 ms/node" *as a portable constant* | Re-measured in a different container with simpler span fixtures: 0.24 s + 0.17 ms/node. Same shape, 3x different slope. The relationship is the finding; the constant is fixture- and hardware-local. |
 | "Blind by default" as a complete model of a first-time reader | Not killed by measurement — killed by re-reading the original requirement, which asked for *long recursive click chains, each step with a stated intention, driven by common sense and by what is visible on the page*. The anti-leak rule licenses content-blindness only. Intention-lessness was a capability gap wearing a correct principle as a defence, and the defence was persuasive enough to be quoted back as the kit's core virtue before anyone re-read the requirement it displaced. Current state: 4 taps, recursion depth 0, zero feedback. Tracked as `explore`. |
 | "About 2.6 k lines, measured 2026-09-29: `bin/` 717, `checks/*.py` 1,573, `harness/` 22, README 277" (the earlier "638" died the same way) | Re-measured 2026-10-14 at `068d5fc`: `bin/` 720, `checks/**/*.py` 10,603, `harness/` 16, README 315, 11,654 lines in all, 4.5 times the claim. It was not a bad count: at the commit before it was written (`6d648d2`) the tree has `bin/` 717, `checks/*.py` 1,573 and README 277 exactly as stated (`harness/` 16, not 22), so what killed it was fifteen days of edits and one change of shape. `checks/*.py` alone is now 7,212 (8,263 in all, 3.2 times the claim), and `checks/hw2_sample_prediction/` (added 2026-10-05, 3,391 lines) lies outside that glob altogether. The README had said the number "drifts with every edit"; nothing flagged it, because `ci_claims.py` asserts timing orderings, not line counts, and `fact_check.py` (PR #4) recomputes only claims tied to a file path. `## Authored surface` now gives the command, which counts tracked files recursively, and a dated measurement. |
+| "Nothing to install" *in every container* | In two Claude Code cloud containers (2026-10-18, 2026-11-10) none of `/usr/bin/python3` 3.11, 3.12 or 3.13 had `pytest` or `playwright`; nothing ran until `python3 -m venv DIR` and `DIR/bin/pip install pytest pyyaml playwright`. The Chromium binary was there. The claim held where it was measured (a claude.ai artifact container, 2026-08) and was written as if it held everywhere. |
 
 The third row is a different species from the first two. Those were wrong
 numbers; a measurement killed them. This one was a wrong *justification* — it
@@ -184,6 +187,17 @@ python3 -m pytest -q checks/test_chain.py                                   # no
 Format, load, verifiers, fixtures: `docs/OPERATION-CHAINS.md`.
 
 A prediction registered before a real pass, and scored after it: `docs/predictions/hw2-sample-pass.md`; pinned by `python3 -m pytest -q checks/test_prediction.py` (no browser). Remade for a new speeds-kit head by one command, `python3 -m checks.hw2_sample_prediction rebuild --speeds-kit PATH` (needs Chromium; the registration says what it does).
+
+## The loop (`loop/`, `bin/loop`): since 2026-11-10
+
+`bin/emu` is the engine; `bin/loop` is a harness around a session. It calls the engine when a project's `loop.json` names it
+(no project does by default; P-dae1). The verbs are `record`, `gate`, `tick`, `hook`, `guard`, `keep`, `watch`, `revisit` and
+`doctor`; there is one configuration file per project (`loop.json`); it needs the standard library, git and bash. `watch` judges a changed file through its check and holds a stop while the verdict fails; it replaces the retired `checks/emu_loop.py` (`docs/EMU-LOOP-RETIRED.md`). The manual, what each verb guarantees, and the known limits are in `loop/README.md`.
+
+```
+python3 -m pytest -q loop/tests        # no Chromium, no model
+python3 -I bin/loop doctor             # what the loop can see from here; it changes nothing
+```
 
 ## Why it is shaped this way
 

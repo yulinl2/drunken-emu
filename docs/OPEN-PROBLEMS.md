@@ -442,7 +442,7 @@ identical block is intended; sharing can come back later by choice.
 
 **The idea, mapped.**
 
-| The figure | The kit today | `checks/emu_loop.py` v0 |
+| The figure | The kit today | `checks/emu_loop.py` v0 (retired 2026-11-10: a stub, see the update at the end of this entry) |
 |---|---|---|
 | Claude edits `solver.py` | a session edits the artifact | the same; `--watch` globs |
 | Circuit | the rendered page, or a recorded chain | a `bin/emu smoke` run; a chain file |
@@ -464,14 +464,14 @@ identical block is intended; sharing can come back later by choice.
 - D2. A scripted decider "knows too much" (P-b279); a model decider is paid and not reproducible (EXPLORE-SPEC, "Cost and placement"), the opposite of what a hook-driven gate wants.
 - D3. The two chain fixtures are one recorded chain (`hw1_correction_pass.json`, narrated 2026-10-03) and one *designed* chain (`hw1_correction_pass_fixed.json`, 2026-10-04). Telling them apart shows the plumbing ranks a known-bad above a known-good, not that the loop improves any page.
 
-**Concerns.**
+**Concerns.** (About `checks/emu_loop.py` as v0 was; retired 2026-11-10, see the update at the end of this entry.)
 - C1. Goodhart: an agent that can read the checker can tune to it. The ledger keeps every candidate, so a regression is visible afterwards; nothing prevents it.
 - C2. A Stop gate can trap a session. v0 caps refusals per arming (`--max-rounds`, default 3; 0 observes and never blocks), counts them in the ledger, and fails open on any hook error.
 - C3. Cost on every tool call: a disarmed hook measured 55.2 ms per call (mean of 20 runs, this container) for any session that installs the hooks; none for one that does not (`install` defaults to the uncommitted `.claude/settings.local.json`).
 - C4. `checks/smoke.py:23` calls `p.chromium.launch` itself instead of `checks.browser.alaunch`, so it fails whenever pip's Playwright is newer than the container's Chromium (SANDBOX-FACTS, 2026-10-17). Not fixed here.
 - C5. `install` left an untracked `.claude/settings.local.json`, and the harness's own Stop hook flags every untracked file and tells the session to commit it (`~/.claude/stop-hook-git-check.sh:32-37`): the first version of the loop generated work for a gate it did not know existed. `install` now adds the local file to `.git/info/exclude` (this clone only), and a test uses that hook's own predicate. `--shared` writes the tracked `.claude/settings.json` and needs no such step.
 
-**What exists (prototype v0, branch `claude/emu-loop-prototype`).** `checks/emu_loop.py` (stdlib only): `arm`, `disarm`, `status`, `eval`, `install`, and the two hook handlers. Layers: `smoke` (`bin/emu smoke`; an infrastructure failure is NOT EVALUATED, not FAIL) and `chain` (`bin/emu chain check`, parsed into findings and load). A candidate is the artifact bytes plus the chain bytes; a layer that did not run makes the verdict NOT EVALUATED, which the Stop gate treats as not passing. Every feedback block lists the layers that ran, the ones that did not, and says the verdict is a proxy. `checks/test_emu_loop.py`: 16 tests, 0.73 s, no browser, **not wired into CI** (open: whether it should be). Measured here: `bin/emu chain check` on `hw1_correction_pass.json` exits 1 (26 findings, load 160.40 for its "expensive" chain plus 2.50 for "cheap"); on `..._fixed.json` exits 0 (0 findings, load 15.00). **Unit-tested, not observed end to end**: the hook did not run in the session that built it (question 3).
+**What existed (prototype v0, branch `claude/emu-loop-prototype`; retired 2026-11-10, see the update at the end of this entry).** `checks/emu_loop.py` (stdlib only): `arm`, `disarm`, `status`, `eval`, `install`, and the two hook handlers. Layers: `smoke` (`bin/emu smoke`; an infrastructure failure is NOT EVALUATED, not FAIL) and `chain` (`bin/emu chain check`, parsed into findings and load). A candidate is the artifact bytes plus the chain bytes; a layer that did not run makes the verdict NOT EVALUATED, which the Stop gate treats as not passing. Every feedback block lists the layers that ran, the ones that did not, and says the verdict is a proxy. `checks/test_emu_loop.py`: 16 tests, 0.73 s, no browser, **not wired into CI** (open: whether it should be). Measured here: `bin/emu chain check` on `hw1_correction_pass.json` exits 1 (26 findings, load 160.40 for its "expensive" chain plus 2.50 for "cheap"); on `..._fixed.json` exits 0 (0 findings, load 15.00). **Unit-tested, not observed end to end**: the hook did not run in the session that built it (question 3).
 
 **Not done, and why.** The loop is not closed: the evaluator reads a chain somebody recorded, and capturing one from a driven run is P-9d8b; the goal-directed explore layer (P1) is not in the loop; no model decider. Nothing here claims the loop improves an artifact. This entry must not be read as licence for a fixed tap sequence to stand in for the user trial (EXPLORE-SPEC, "What must not happen to this spec"); the layer labels in every feedback block exist to stop that.
 
@@ -487,3 +487,49 @@ identical block is intended; sharing can come back later by choice.
   - `install` keeps a hook command that shares a group with this one;
   - the regression hint offers a one-line restore only when that restores the whole candidate (artifact and trial).
 - `test_emu_loop.py` now has 24 tests.
+
+**2026-11-10: a harness that calls the kit without being asked (P-dae1).** `loop/` (pull request 85) runs its steps from the session's own events: at the prompt, at every Nth tool call, before a guarded tool call and at every stop. A project that names the engine's command in `stop_blocks_on` is told its verdict at every stop without calling it, and a backup that failed is said at the next prompt. Seen working in tests that send the events themselves (`loop/tests/test_closed_loop.py`), and, for another project's user-level hooks, in one live session (`docs/SANDBOX-FACTS.md`, 2026-11-10). Not yet seen: the loop's own hooks installed in a live session with the engine named as a blocker. That observation closes P-dae1 or says why not; until then it stays `OPEN`.
+
+**2026-11-10: `checks/emu_loop.py` is retired, and `loop watch` supersedes it (`loop/watch.py`; `loop/README.md`, the `watch` row).** `loop watch` judges a changed watched file through its check, puts the verdict into the session's context after the edit, and holds a stop while the newest verdict fails, is not evaluated or is dominated. `checks/emu_loop.py` is now a stub that exits 0 and says so (`checks/test_emu_loop.py`); each of its 29 tests is mapped in `docs/EMU-LOOP-RETIRED.md`. P-dae1 stays `OPEN`: the observation above is still not made, and question 3 now concerns the loop's own hooks (`loop/hook.py`), not the retired module.
+
+## P-4009 — a test fixture made by editing a real record carries the record `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a test fixture made by editing a real record carries the record")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** Twice in one day a review found material of a private project in the tests of a package ported from it: first a real timestamp beside a paraphrase, then the openings of real commands with one word changed. The builders had been told to invent their fixtures; they edited real ones. The scans run before each review looked for strings, dates and names from a list, and none could see an edit of a record it did not hold verbatim.
+
+**What would close it.** A check that fails when a fixture is close to a record of the source project (the second review compared rare-word overlap against the source's own records), run where the source can be read; and an order to builders that names the property (no value in a fixture may be derived from a real record: not its time, its length, its wording or its file names) and not the word "invented".
+
+## P-6430 — a tick lets a check that keeps failing run first at every tick `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a tick lets a check that keeps failing run first at every tick")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** `loop/tick.py` puts a failed check at the front, due at once, and picks the first due check in level order. One check that keeps failing therefore runs at every tick, and every other check waits until it is more than three intervals late; `tick liveness` then names them. The policy reports its own starvation and also produces it.
+
+**What would close it.** Among the checks that are due, pick the one that has waited longest in units of its own interval, so that a failing check takes turns. Three tests in `loop/tests/test_tick.py` pin the present rule and change with it.
+
+## P-ee14 — under sessions: here the guard does not read a session that works outside the project `OPEN`
+
+*ID: `P-` + first four hex of `sha1("under sessions: here the guard does not read a session that works outside the project")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** With the default `"sessions": "here"`, `loop/guard.py` leaves alone a session whose working directory is outside the project, unless its command names the project's root as an absolute path. From such a session a push that reaches the project by a relative path and every MCP merge or file write pass with nothing said. Reading every session instead would make one project's verdicts and protected branches a policy for every repository on the machine.
+
+**What would close it.** Decide by the repository a command acts on, not by the session's working directory; the guard already follows the folder a command runs in.
+
+## P-dcf8 - a guard that does not load blocks only the calls its failure rule names, and nothing with no python3 on PATH `OPEN`
+
+*ID: `P-` + first four hex of `sha1("a guard that does not load blocks only the calls its failure rule names, and nothing with no python3 on PATH")` (CONTRIBUTING rule 6). Opened with the guard's exit codes (pull request 85).*
+
+**The observation.** When `loop/guard.py` does not load (its file fails or is absent, or `loop/config.py` or `loop/cli.py` fails), the kit exits 1 or 3. The guard command that `loop/hook.py` registers then blocks only the calls that `GUARD_FAILURE_RULE` names (a merge or write tool, or a command that mentions push, merge, api or repo edit), judged by a check that runs under `python3`; every other call passes with the kit's exit. With no `python3` on PATH nothing is checked: each call passes with exit 127 and one line that says it was not checked. A hook killed at its 60 s timeout passes under every option. The Artifact delete and force asks are lost while the guard does not load. An alias of git, or a script that pushes, passes. While the guard does not load, `git merge --abort`, `git reset --merge` and any command with `api` in a path are blocked, which is an over-block; repair stays possible through Edit or `git checkout --ours`.
+
+**What would close it.** Either a guard that blocks every call while it does not load (then Read and Edit are blocked too until the guard is repaired, and the repair must go through a call that still passes), or a check at install time that refuses to write the registration of a guard that does not load (the install trial runs the guard once, so it does not see a break after install, nor a missing `python3` at run time). Which of the two is right is open.
+
+**Also open.** An exit 64 of the guard call (its verb is unknown to the kit, or its arguments are refused) blocks every call, while an exit 1 or 3 blocks only the calls the failure rule names: whether that difference is wanted is not decided. The wrapper reads the payload with `p=$(cat)`, so the trailing newlines of a payload do not reach the kit. On an exit 2 the wrapper keeps what the kit wrote on standard output. The install trial runs the kit's own call, and only one test pins that it is not the wrapper's.
+
+## P-bb1b — the reprint reaches the workers a session starts, and they do not act on it `OPEN`
+
+*ID: `P-` + first four hex of `sha1("the reprint reaches the workers a session starts, and they do not act on it")` (CONTRIBUTING rule 6). Opened 2026-11-10 with pull request 85.*
+
+**The observation.** A session's user-level hooks fire for the tool calls of the agents and workflows it starts (`docs/SANDBOX-FACTS.md`, 2026-11-10). Four of six workers said in their reports that they took the reprinted method for foreign text and ignored it, as their orders told them to treat text inside tool results. Their calls also advanced the parent's counter.
+
+**The question, not a rule.** Should a worker be bound by the principal's method at all, and if so, through which channel that a worker takes for its principal's?

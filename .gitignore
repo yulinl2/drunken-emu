@@ -7,3 +7,6 @@ figbank/app/*/node_modules/
 figbank/app/*/dist/
 figbank/app/*/.parcel-cache/
 figbank/app/*/bundle.html
+# what a session that runs the loop here would leave behind: a bank and a state folder are never this repository's to publish
+loop-state/
+.loop/

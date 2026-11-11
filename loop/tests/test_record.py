@@ -1,0 +1,479 @@
+"""The record verb (loop/record.py) over fixtures in temporary directories: the bank, the raw listing and the search.
+The fixture texts are invented; none of them is a message, a name or an id of any project."""
+import json
+import pathlib
+import sys
+
+import pytest
+
+KIT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(KIT))
+from loop import config, record  # noqa: E402
+
+ANSWER = 'User has answered your questions: "Which colour?"="The darker blue, please".'
+
+
+def rec(kind, **kw):
+    return {"type": kind, **kw}
+
+
+def user(uuid, ts, content, **kw):
+    return rec("user", uuid=uuid, timestamp=ts, message={"role": "user", "content": content}, **kw)
+
+
+def write_jsonl(path, rows):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+
+
+def bank_rows():
+    path = config.load().path("bank")
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").split("\n") if line.strip()]
+
+
+@pytest.fixture
+def project(tmp_path, monkeypatch):
+    """A temporary project: LOOP_PROJECT and HOME point into tmp_path, and no transcript is found unless a test names one."""
+    root = tmp_path / "project"
+    root.mkdir()
+    (root / "loop.json").write_text("{}", encoding="utf-8")   # a project names itself
+    monkeypatch.setenv("LOOP_PROJECT", str(root))
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("LOOP_TRANSCRIPT", raising=False)
+    monkeypatch.delenv("LOOP_PROJECTS_DIR", raising=False)
+    return root
+
+
+TRANSCRIPT = [
+    user("u1", "t1", "a typed message"),
+    rec("assistant", uuid="a1", message={"role": "assistant", "content": [
+        {"type": "tool_use", "id": "ask1", "name": "AskUserQuestion", "input": {}},
+        {"type": "tool_use", "id": "ask2", "name": "AskUserQuestion", "input": {}},
+        {"type": "tool_use", "id": "bash1", "name": "Bash", "input": {}}]}),
+    rec("user", uuid="u2", timestamp="t2", message={"role": "user", "content": [{"type": "tool_result", "tool_use_id": "ask1", "content": ANSWER}]}),
+    rec("user", uuid="u3", timestamp="t3", message={"role": "user", "content": [{"type": "tool_result", "tool_use_id": "bash1", "content": "ls output the principal did not type"}]}),
+    rec("user", uuid="u4", timestamp="t4", message={"role": "user", "content": [{"type": "tool_result", "tool_use_id": "ask2", "content": [{"type": "text", "text": "answer in a list"}]}]}),
+]
+
+
+def test_dialog_answers_are_banked_and_other_tool_results_are_not(project, capsys):
+    src = project / "t.jsonl"
+    write_jsonl(src, TRANSCRIPT)
+    assert record.main(["bank", "--src", str(src)]) == 0
+    capsys.readouterr()
+    bank = bank_rows()
+    assert [(b["key"], b["kind"]) for b in bank] == [("u1", "typed"), ("u2", "dialog"), ("u4", "dialog")]
+    assert bank[1]["text"] == ANSWER and bank[2]["text"] == "answer in a list"
+    assert "ls output" not in json.dumps(bank)
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert "nothing new" in capsys.readouterr().out
+    assert len(bank_rows()) == 3
+
+
+def test_skill_bodies_and_harness_notices_are_not_banked_and_wrapped_principal_words_are_flagged(project):
+    def meta(uuid, ts, text):
+        return rec("user", uuid=uuid, timestamp=ts, isMeta=True, message={"role": "user", "content": text})
+    rows = [user("v1", "t1", "typed by the principal"),
+            meta("v2", "t2", "# A skill\n" + "body " * 700),
+            meta("v3", "t3", "Goal check-in: a goal text the harness injected is still active"),
+            meta("v4", "t4", "This session's worker process was restarted. If your previous turn was already complete, take no action."),
+            meta("v5", "t5", "Stop hook feedback:\n[a hook script]: There are uncommitted changes"),
+            meta("v7", "t7", "Your response above was stopped by a safety classifier."),
+            user("v6", "t6", "# A long heading the principal typed\n" + "word " * 700),
+            meta("v8", "t8", "a line the principal typed, that a harness row carries")]
+    src = project / "t.jsonl"
+    write_jsonl(src, rows)
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["key"], b["meta"]) for b in bank_rows()] == [("v1", False), ("v6", False), ("v8", True)]
+
+
+def test_scheduled_repeats_replays_and_line_separators(project):
+    long = "Water the tomatoes at dawn. " * 10
+    cmd = "<command-name>/compact</command-name> " + "keep the hedges " * 15
+    rows = [user("w1", "2026-01-01T00:00:01Z", long, isMeta=True, turnOrigin="scheduled", wakeupSource="schedule_wakeup"),
+            user("w2", "2026-01-01T00:10:01Z", long, isMeta=True, turnOrigin="scheduled", wakeupSource="schedule_wakeup"),
+            user("o1", "2026-01-01T00:11:00Z", cmd, clientPlatform="ios"),
+            user("o2", "2026-01-01T00:12:00Z", cmd, clientPlatform="ios"),
+            user("h1", "2026-01-01T00:13:00.100Z", "same second", origin={"kind": "human"}),
+            user("h2", "2026-01-01T00:13:00.900Z", "same second", origin={"kind": "human"}),
+            user("s1", "2026-01-01T00:14:00Z", "a" + chr(0x2028) + "b" + chr(0x2029) + "c\x85d", origin={"kind": "human"})]
+    src = project / "t.jsonl"
+    write_jsonl(src, rows)
+    assert record.main(["bank", "--src", str(src)]) == 0
+    bank = bank_rows()
+    assert [b["key"] for b in bank] == ["w1", "o1", "o2", "h1", "s1"]
+    assert [b["line"] for b in bank] == [1, 3, 4, 5, 7]
+    assert bank[-1]["text"] == "a" + chr(0x2028) + "b" + chr(0x2029) + "c\x85d"
+
+
+# The raw listing: one line of the transcript per entry, as the file holds it.
+def raw_rec(content, ts="2026-01-01T00:08:00.000Z", **kw):
+    return json.dumps({"type": "user", "timestamp": ts, "message": {"role": "user", "content": content}, **kw})
+
+
+RAW_LINES = [
+    raw_rec("Tidy the fixtures."), raw_rec("Tidy the fixtures."),
+    raw_rec([{"type": "text", "text": "<system-reminder>x</system-reminder>"}, {"type": "text", "text": "na\xefve?"}]),
+    raw_rec([{"type": "tool_result", "tool_use_id": "t", "content": "NOT the principal"}]),
+    raw_rec("<command-name>/goal</command-name><command-args>\n\n> a quoted line\n\nDoes the gate hold?</command-args>"),
+    raw_rec("/goal\n\n> a quoted line\n\nDoes the gate hold?"),
+    raw_rec("This session is being continued from a previous conversation", isCompactSummary=True),
+    raw_rec("Caveat: generated while running local commands"),
+    raw_rec("Goal check-in: the goal is still active"),
+    raw_rec("a subagent's prompt", isSidechain=True),
+    raw_rec("hook text", isMeta=True),
+    json.dumps({"type": "queue-operation", "operation": "enqueue", "timestamp": "2026-01-01T00:20:00.000Z", "content": "queued words"}),
+    "not json at all", "[1, 2]",
+]
+
+
+def test_only_typed_text_survives_and_once():
+    got = [t for _, t in record.typed_messages(RAW_LINES, record.NOT_PRINCIPAL + record.RAW_EXTRA)]
+    assert got == ["Tidy the fixtures.", "na\xefve?", "> a quoted line\n\nDoes the gate hold?", "queued words"]
+
+
+def test_grep_filters_and_the_header_counts_both(project, capsys):
+    src = project / "t.jsonl"
+    src.write_text("\n".join(RAW_LINES) + "\n", encoding="utf-8")
+    assert record.main(["raw", str(src), "--grep", "GATE HOLD"]) == 0
+    out = capsys.readouterr().out
+    assert "4 messages" in out and "1 match" in out
+    assert len(out.strip().split("\n")) == 2
+
+
+@pytest.fixture
+def words(project):
+    """A bank of three records, a requests file with one quoted line, and loop.json naming the words files."""
+    (project / "loop.json").write_text(json.dumps({"words": ["requests.md", "docs/evidence/*principal-words*.md"]}), encoding="utf-8")
+    bank = config.load().path("bank")
+    bank.parent.mkdir(parents=True, exist_ok=True)
+    recs = [
+        {"key": "a", "line": 1, "timestamp": "2026-01-01T00:00:01Z", "text": "> an earlier note\n\nPlant the orchard before the fence goes up.", "chars": 60},
+        {"key": "b", "line": 2, "timestamp": "2026-01-02T00:00:00Z", "text": "This session's worker process was restarted: launch launch launch", "chars": 60},
+        {"key": "c", "line": 3, "timestamp": "2026-01-03T00:00:00Z", "text": "#" + "x launch " * 800, "chars": 6400},
+    ]
+    bank.write_text("\n".join(json.dumps(r) for r in recs) + "\n", encoding="utf-8")
+    (project / "requests.md").write_text('- the assistant notes a launch, no quotes\n- 08:15: "why is the kettle not on? launch it"\n', encoding="utf-8")
+    return project
+
+
+def find(words, every=False):
+    return record.search(config.load(), words, every)
+
+
+def test_finds_the_principal_line_in_the_bank(words):
+    hits, _, _ = find(["orchard"])
+    assert any(h[0] == "bank" and "orchard" in h[3] for h in hits)
+
+
+def test_skips_a_harness_notice_and_an_old_long_skill_body(words):
+    hits, _, _ = find(["launch"])
+    assert not any("worker process" in h[3] for h in hits)
+    assert not any(h[3].startswith("#x launch") for h in hits)
+
+
+def test_only_quoted_text_counts_in_a_words_file(words):
+    hits, _, _ = find(["launch"])
+    assert [h[3] for h in hits if h[0] == "words"] == ["why is the kettle not on? launch it"]
+
+
+def test_all_needs_every_keyword_on_one_line(words):
+    assert find(["launch", "orchard"], every=True)[1] == 0
+    assert find(["orchard", "fence"], every=True)[1] == 1
+
+
+def test_every_dated_principal_words_file_is_searched(words):
+    evidence = words / "docs" / "evidence"
+    evidence.mkdir(parents=True)
+    (evidence / "2026-01-01-principal-words.md").write_text('"first file line about launching"\n', encoding="utf-8")
+    (evidence / "2026-01-02-more-principal-words.md").write_text('"second file line about weather"\n', encoding="utf-8")
+    hits, _, _ = find(["second file"])
+    assert [h[0] for h in hits] == ["words"]
+    assert "2026-01-02" in hits[0][2]
+
+
+def test_a_hit_inside_a_compact_command_is_flagged_as_possibly_the_principals_own_line(words):
+    z = {"key": "z", "line": 9, "timestamp": "2026-01-03T00:09:00Z",
+         "text": "<command-name>/compact</command-name><command-args>fence colours are the principal's call</command-args>", "chars": 120}
+    with config.load().path("bank").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(z) + "\n")
+    hits, _, _ = find(["fence colours"])
+    assert len(hits) == 1 and "/compact command" in hits[0][2]
+    plain, _, _ = find(["orchard"])
+    assert "/compact command" not in plain[0][2]
+
+
+def test_a_queued_message_with_no_delivery_is_banked_once_as_queued(project):
+    src = project / "t.jsonl"
+    write_jsonl(src, [user("u1", "2026-01-01T00:00:01Z", "a typed message"),
+                      rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z",
+                          content="sent while a turn was running")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["key"], b["kind"], b["text"]) for b in bank_rows()] == [
+        ("u1", "typed", "a typed message"), ("t:line:2", "queued", "sent while a turn was running")]
+
+
+def test_a_queued_message_that_also_arrives_as_a_user_message_is_banked_once(project):
+    src = project / "t.jsonl"
+    write_jsonl(src, [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z", content="ship the fix"),
+                      user("u2", "2026-01-01T00:02:00Z", "ship the fix")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("t:line:1", "queued")]     # keyed by the enqueue row, one row
+    assert (bank_rows()[0]["timestamp"], bank_rows()[0]["delivered_at"]) == ("2026-01-01T00:01:00Z", "2026-01-01T00:02:00Z")
+
+
+def test_a_queued_record_banked_before_its_delivery_stands_and_the_delivery_is_not_banked_again(project, capsys):
+    src = project / "t.jsonl"
+    queued = rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z", content="ship the fix")
+    write_jsonl(src, [queued])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    write_jsonl(src, [queued, user("u2", "2026-01-01T00:02:00Z", "ship the fix")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["key"], b["kind"]) for b in bank_rows()] == [("t:line:1", "queued")]
+    assert "nothing new" in capsys.readouterr().out
+
+
+def test_a_queued_notification_is_not_banked(project, capsys):
+    src = project / "t.jsonl"
+    write_jsonl(src, [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z",
+                          content="<task-notification>a background job ended</task-notification>")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert bank_rows() == []
+    assert "nothing new" in capsys.readouterr().out
+
+
+def test_queued_html_is_banked_and_a_queued_harness_wrapper_is_not(project):
+    src = project / "t.jsonl"
+    write_jsonl(src, [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:01:00Z",
+                          content="<div>keep this</div> and some more words"),
+                      rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:02:00Z",
+                          content="<system-reminder>a harness notice</system-reminder>"),
+                      rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:03:00Z",
+                          content="<task-notification>a background job ended</task-notification>")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [(b["kind"], b["text"]) for b in bank_rows()] == [("queued", "<div>keep this</div> and some more words")]
+
+
+def test_running_bank_twice_adds_nothing_the_second_time(project, capsys):
+    src = project / "t.jsonl"
+    write_jsonl(src, TRANSCRIPT + [rec("queue-operation", operation="enqueue", timestamp="2026-01-01T00:05:00Z", content="a queued message")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    path = config.load().path("bank")
+    first = path.read_bytes()
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert path.read_bytes() == first
+    assert len(bank_rows()) == 4
+
+
+def test_a_prefix_given_in_loop_json_keeps_a_matching_text_out(project):
+    (project / "loop.json").write_text(json.dumps({"not_principal_prefixes": ["Nightly sync report"]}), encoding="utf-8")
+    src = project / "t.jsonl"
+    write_jsonl(src, [user("n1", "2026-01-01T00:00:01Z", "Nightly sync report: 12 rows changed"),
+                      user("n2", "2026-01-01T00:00:02Z", "a typed message")])
+    assert record.main(["bank", "--src", str(src)]) == 0
+    assert [b["key"] for b in bank_rows()] == ["n2"]
+
+
+def test_no_transcript_is_a_failure_with_a_reason(project, capsys):
+    assert record.main(["bank"]) == 1
+    assert "no transcript is named" in capsys.readouterr().err
+    assert bank_rows() == []
+
+
+# the four findings of the review of the first published head, each pinned
+
+def test_a_record_without_a_uuid_is_keyed_by_its_transcript_so_two_sessions_do_not_collide(project):
+    """One bank holds every session of a project. A queued message has no uuid: keyed by its line alone, the message at
+    line 1 of a second session would be taken for the one at line 1 of the first and dropped."""
+    for name, words in (("first-session", "queued in the first session"), ("second-session", "queued in the second session")):
+        src = project / (name + ".jsonl")
+        src.write_text(json.dumps({"type": "queue-operation", "operation": "enqueue", "timestamp": "2026-01-01T00:20:00.000Z",
+                                   "content": words}) + "\n", encoding="utf-8")
+        assert record.main(["bank", "--src", str(src)]) == 0
+    rows = bank_rows()
+    assert sorted(r["text"] for r in rows) == ["queued in the first session", "queued in the second session"]
+    assert sorted(r["key"] for r in rows) == ["first-session:line:1", "second-session:line:1"]
+
+
+def test_two_runs_that_overlap_take_turns_on_the_bank(project):
+    """The bank is read, planned against and appended to under one lock: while another writer holds it, a run waits, and
+    then banks each message once."""
+    import fcntl, subprocess, sys, time
+    src = project / "t.jsonl"
+    write_jsonl(src, [user("u1", "2026-01-01T00:00:01Z", "a typed message")])
+    lock = project / ".loop" / "bank.lock"
+    lock.parent.mkdir(exist_ok=True)
+    entry = pathlib.Path(record.__file__).resolve().parents[1] / "bin" / "loop"
+    with open(lock, "w") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)
+        run = subprocess.Popen([sys.executable, "-I", str(entry), "record", "bank", "--src", str(src)],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        time.sleep(1.5)
+        assert run.poll() is None and bank_rows() == []        # it waits for the lock, and has written nothing
+        fcntl.flock(held, fcntl.LOCK_UN)
+        assert run.wait(60) == 0
+    assert [r["text"] for r in bank_rows()] == ["a typed message"]
+
+
+def test_a_record_that_a_part_boundary_cuts_is_read_whole_from_a_backup(tmp_path):
+    """A backup cuts a transcript into parts at arbitrary bytes. Read as one stream, the message that the cut falls in, and
+    the two-byte character the cut falls in, come back whole; read part by part, both halves would be thrown away."""
+    import subprocess
+    repo = tmp_path / "repo"
+    parts = repo / "transcripts" / "-p__s.jsonl.parts"
+    parts.mkdir(parents=True)
+    whole = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in (
+        {"type": "user", "uuid": "a", "timestamp": "2026-01-01T00:00:01.000Z", "message": {"role": "user", "content": "before the cut"}},
+        {"type": "user", "uuid": "b", "timestamp": "2026-01-01T00:00:02.000Z", "message": {"role": "user", "content": "caf\xe9 across the cut"}},
+        {"type": "user", "uuid": "c", "timestamp": "2026-01-01T00:00:03.000Z", "message": {"role": "user", "content": "after the cut"}})).encode("utf-8")
+    cut = whole.index("\xe9".encode("utf-8")) + 1            # between the two bytes of the accented letter
+    (parts / "part-000").write_bytes(whole[:cut])
+    (parts / "part-001").write_bytes(whole[cut:])
+    subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
+    for args in (["add", "-A"], ["commit", "-q", "-m", "x"]):
+        subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", *args],
+                       check=True, capture_output=True)
+    texts = [t for _, t in record.typed_messages(record.ref_lines(repo, "HEAD"), ())]
+    assert texts == ["before the cut", "caf\xe9 across the cut", "after the cut"]
+
+
+# the queue: what the principal typed while a turn ran and no later row has delivered yet (pending, pending_since)
+
+T1, T2, T3 = "2026-01-01T00:01:00Z", "2026-01-01T00:02:00Z", "2026-01-01T00:03:00Z"
+
+
+def queued(ts, content, **kw):
+    return rec("queue-operation", operation="enqueue", timestamp=ts, content=content, **kw)
+
+
+def waiting_texts(waiting):
+    return [w["text"] for w in waiting]
+
+
+def test_a_queued_message_with_no_delivery_is_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [user("u1", "2026-01-01T00:00:01Z", "a typed message"), queued(T1, "sent while a turn was running")])
+    assert record.pending(src) == [{"line": 2, "at": T1, "text": "sent while a turn was running"}]
+
+
+def test_a_user_row_with_equal_text_delivers_the_queued_message(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "ship the fix"), user("u2", T2, "ship the fix")])
+    assert record.pending(src) == []
+
+
+def test_two_queued_messages_delivered_in_one_user_row_are_not_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    batch = rec("user", uuid="u3", timestamp=T2, message={"role": "user", "content": [
+        {"type": "text", "text": "first queued"}, {"type": "text", "text": "second queued"}]})
+    write_jsonl(src, [queued(T1, "first queued"), queued(T1, "second queued"), batch, queued(T3, "still waiting")])
+    assert waiting_texts(record.pending(src)) == ["still waiting"]
+
+
+def test_a_match_only_inside_a_tool_result_does_not_deliver(tmp_path):
+    src = tmp_path / "t.jsonl"
+    result = rec("user", uuid="u4", timestamp=T2, message={"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "b1", "content": "the output says: check the logs"}]})
+    write_jsonl(src, [queued(T1, "check the logs"), result])
+    assert waiting_texts(record.pending(src)) == ["check the logs"]
+
+
+def test_an_attachment_of_type_queued_command_delivers_through_its_prompt_text_and_no_other_attachment_does(tmp_path):
+    """A queued_command attachment delivers through its prompt text (a string, or a list of items with text); a prompt of any other
+    shape has no text to deliver, and no other attachment type delivers."""
+    src = tmp_path / "t.jsonl"
+    shaped = rec("attachment", timestamp=T2, attachment={"type": "queued_command", "prompt": {"items": [{"text": "run the tests"}]}})
+    other = rec("attachment", timestamp=T3, attachment={"type": "file", "content": "keep the hedges"})
+    write_jsonl(src, [queued(T1, "run the tests"), queued(T1, "keep the hedges"), shaped, other])
+    assert waiting_texts(record.pending(src)) == ["run the tests", "keep the hedges"]
+
+
+def test_a_queued_notification_is_never_pending(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "<task-notification>a background job ended</task-notification>"),
+                      queued(T2, "[SYSTEM NOTIFICATION: a check ended]"),
+                      queued(T3, "<system-reminder>a harness notice</system-reminder>")])
+    assert record.pending(src) == []
+
+
+def test_a_slash_command_is_never_pending_and_a_slash_followed_by_a_space_is(tmp_path):
+    src = tmp_path / "t.jsonl"
+    write_jsonl(src, [queued(T1, "/compact keep the hedges"), queued(T2, "  /loop 5m check the deploy  "), queued(T3, "/ 2 pages are left")])
+    assert waiting_texts(record.pending(src)) == ["/ 2 pages are left"]
+
+
+def test_the_incremental_form_reads_only_the_appended_bytes_and_a_delivery_takes_a_message_out(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state" / "queued.json"
+    write_jsonl(src, [queued(T1, "first waiting message")])
+    waiting, n = record.pending_since(state, src)
+    assert n == src.stat().st_size and waiting_texts(waiting) == ["first waiting message"]
+    waiting, n = record.pending_since(state, src)
+    assert n == 0 and waiting_texts(waiting) == ["first waiting message"]          # an unchanged file: nothing is read
+    appended = json.dumps(queued(T2, "second waiting message"), ensure_ascii=False) + "\n"
+    with src.open("a", encoding="utf-8") as f:
+        f.write(appended)
+    waiting, n = record.pending_since(state, src)
+    assert n == len(appended.encode("utf-8")) and [w["line"] for w in waiting] == [1, 2]
+    assert waiting == record.pending(src)                                             # the same list as reading the whole file
+    with src.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(user("u5", T3, "second waiting message")) + "\n")
+    assert waiting_texts(record.pending_since(state, src)[0]) == ["first waiting message"]
+
+
+def test_a_file_that_became_shorter_is_read_again_from_its_start(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    write_jsonl(src, [queued(T1, "an old message"), queued(T2, "a second old message")])
+    record.pending_since(state, src)
+    write_jsonl(src, [queued(T3, "new")])
+    waiting, n = record.pending_since(state, src)
+    assert [(w["line"], w["text"]) for w in waiting] == [(1, "new")] and n == src.stat().st_size
+
+
+def test_a_last_line_that_is_not_whole_yet_is_read_once_it_is_whole(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    whole = json.dumps(queued(T1, "written in two parts")) + "\n"
+    src.write_text(whole[:25], encoding="utf-8")
+    assert record.pending_since(state, src)[0] == []
+    src.write_text(whole, encoding="utf-8")
+    assert waiting_texts(record.pending_since(state, src)[0]) == ["written in two parts"]
+
+
+def test_a_whole_row_whose_newline_is_not_written_yet_is_counted_once(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "state.json"
+    src.write_text(json.dumps(queued(T1, "no newline yet")), encoding="utf-8")
+    assert [(w["line"], w["text"]) for w in record.pending_since(state, src)[0]] == [(1, "no newline yet")]
+    with src.open("a", encoding="utf-8") as f:
+        f.write("\n" + json.dumps(queued(T2, "next")) + "\n")
+    assert [(w["line"], w["text"]) for w in record.pending_since(state, src)[0]] == [(1, "no newline yet"), (2, "next")]
+
+
+def test_a_state_file_that_holds_no_read_position_raises_and_names_the_file(tmp_path):
+    src, state = tmp_path / "t.jsonl", tmp_path / "queued.json"
+    write_jsonl(src, [queued(T1, "a message")])
+    state.write_text("{broken", encoding="utf-8")
+    with pytest.raises(record.RecordError, match="queued.json"):
+        record.pending_since(state, src)
+
+
+def test_the_pending_verb_prints_one_json_line_per_waiting_message_and_nothing_else(project, capsys):
+    src = project / "t.jsonl"
+    write_jsonl(src, [queued(T1, "a waiting message with " + chr(0x2028) + " a separator"), user("u2", T2, "a typed message"), queued(T3, "a second one")])
+    assert record.main(["pending", "--src", str(src)]) == 0
+    out = capsys.readouterr().out
+    assert out.count("\n") == 2 and chr(0x2028) not in out
+    assert [json.loads(line) for line in out.split("\n")[:2]] == [
+        {"line": 1, "at": T1, "text": "a waiting message with " + chr(0x2028) + " a separator"}, {"line": 3, "at": T3, "text": "a second one"}]
+
+
+def test_the_pending_verb_names_nothing_when_nothing_waits_and_reads_the_live_transcript(project, capsys, monkeypatch):
+    src = project / "t.jsonl"
+    write_jsonl(src, [queued(T1, "ship it"), user("u2", T2, "ship it")])
+    monkeypatch.setenv("LOOP_TRANSCRIPT", str(src))
+    assert record.main(["pending"]) == 0 and capsys.readouterr().out == ""
+
+
+def test_the_pending_verb_without_any_transcript_says_so(project, capsys):
+    assert record.main(["pending"]) == 1 and "no transcript is named" in capsys.readouterr().err

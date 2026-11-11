@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Entry point of the loop, the harness around a session; bin/emu is the engine's entry point.
+usage: python3 -I bin/loop VERB [...]      python3 -I bin/loop help      python3 -I bin/loop doctor"""
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from loop.cli import main
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
