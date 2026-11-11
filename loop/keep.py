@@ -32,14 +32,15 @@ would land outside it (through "..", or through a symlink already in DIR) is lef
 A rebuilt file named MANIFEST.tsv at the top of the root is written as MANIFEST.tsv.rebuilt.
 The rebuilt files can hold the principal's data: keep DIR private."""
 import tempfile
-import argparse, collections, json, os, pathlib, re, shutil, subprocess, sys
+import argparse, collections, json, os, pathlib, re, shutil, signal, subprocess, sys
 from loop import config
 
 REPO = None                                   # set by main() from the project's configuration: where the refs are read
 KEEP_BACKUP = pathlib.Path(__file__).with_name("keep_backup.sh")
 MANIFEST_HEADER = ["path", "bytes", "latest_source", "writes", "full_reads", "edits_applied", "edits_not_fitting",
                    "long_line_may_be_cut", "last_change_utc"]
-NUMBERED = re.compile(r"^\s*(\d+)(?:\t|→)(.*)$", re.S)
+ARROW = chr(0x2192)                           # the arrow that a Read puts after each line number
+NUMBERED = re.compile(r"^\s*(\d+)(?:\t|" + ARROW + r")(.*)$", re.S)
 READ_LIMIT = 2000
 TOOL_SUFFIXES = (".py", ".js", ".sh", ".txt")  # restore: these are tools (newer wins); every other file is state
 
@@ -260,11 +261,27 @@ def session_id(transcript):
     return (name[:-6] if name.endswith(".jsonl") else name)[:8] or None
 
 
-def last_run(cfg, sid=None):
-    """The first line of a backup's LAST-RUN file: "ok T", "running since T" or "FAILED T: step ...". Each session has its own
-    backup worktree (state_dir/backup-wt-<sid>), so that a second session of a project does not fail on the first one's
-    branch: with a sid, that session's last run; without, the newest of any session. "" when there is none. Read without
-    creating the state directory, so that doctor and the prompt hook can call it."""
+PUSHED_LIMIT_S = 5                              # the one fetch of the pushed copy: at most this long
+MISSING_REF = b"couldn't find remote ref"        # what git says for a branch the remote does not have (read with LC_ALL=C)
+
+
+class LastRun(str):
+    """What last_run returns: the line of a backup's last run, and where it came from in .source. "local": this machine's
+    LAST-RUN or status file (its first line). "pushed": the first two lines of LAST-RUN on the session's branch at the remote.
+    "unreachable": the remote did not answer the fetch in time, or refused it. "none": there is no line anywhere. It is a str,
+    so a caller that compares or prefixes the line reads it as it always did."""
+    source = "none"
+
+
+def _run(line, source):
+    got = LastRun(line)
+    got.source = source
+    return got
+
+
+def _local_line(cfg, sid):
+    """The first line of this machine's LAST-RUN or status file: the session's (sid), else the newest of any session's. None
+    when there is no such file; "" when one is there but cannot be read."""
     try:
         d = cfg.path("state_dir")
         # a run that could not make its worktree leaves backup-<sid>.status; the next run that has one removes it
@@ -272,9 +289,59 @@ def last_run(cfg, sid=None):
             runs = [p for p in (d / f"backup-wt-{sid}" / "LAST-RUN", d / f"backup-{sid}.status") if p.is_file()]
         else:
             runs = sorted(list(d.glob("backup-wt-*/LAST-RUN")) + list(d.glob("backup-*.status")), key=lambda p: p.stat().st_mtime)
-        return runs[-1].read_text(encoding="utf-8").split("\n")[0] if runs else ""
+        return runs[-1].read_text(encoding="utf-8").split("\n")[0] if runs else None
     except OSError:
         return ""
+
+
+def last_run(cfg, sid=None, fetch=True):
+    """The line of a backup's last run, a LastRun: "ok T", "running since T" or "FAILED T: step ...", and from the pushed copy
+    its first two lines. Each session has its own backup worktree (state_dir/backup-wt-<sid>), so a second session of a project
+    does not fail on the first one's branch: with a sid, that session's last run; without, the newest local one. This machine's
+    LAST-RUN or status file comes first; with none, and a sid named, and fetch true, the session's branch at the project's backup
+    remote is read (_pushed). Nothing is created here, so that doctor and the prompt hook can call it. The backup's own waited
+    run passes fetch=False: its status never waits on the remote."""
+    line = _local_line(cfg, sid)
+    if line is not None:
+        return _run(line, "local")
+    if not (fetch and sid):
+        return _run("", "none")
+    return _pushed(cfg, sid)
+
+
+def _pushed(cfg, sid):
+    """The first two lines of LAST-RUN on the branch PREFIX + sid at the project's backup remote. One fetch of that branch into
+    a scratch repository, at depth 1 and at most PUSHED_LIMIT_S seconds, so no ref of the project and no file of its work tree
+    is touched. "unreachable" when the fetch fails for any reason but a missing branch, or does not end in time; "none" when the
+    remote has no such branch, or the branch has no LAST-RUN."""
+    b = cfg["backup"]
+    remote = str(b["remote"]).strip()
+    if not remote:
+        return _run("", "none")
+    env = {**os.environ, "LC_ALL": "C", "GIT_TERMINAL_PROMPT": "0"}   # git's words for the errors below; never a password prompt
+    named = subprocess.run(["git", "-C", str(cfg.root), "remote", "get-url", remote], capture_output=True, env=env)
+    url = named.stdout.decode("utf-8", "replace").strip() if named.returncode == 0 else ""
+    url = url or remote   # a configured remote's URL; anything else is taken as a URL or a path
+    with tempfile.TemporaryDirectory(prefix="keep-pushed-") as scratch:
+        subprocess.run(["git", "init", "-q", "--bare", scratch], capture_output=True, env=env)
+        proc = subprocess.Popen(["git", "--git-dir", scratch, "fetch", "--quiet", "--no-tags", "--depth", "1", url,
+                                 f"refs/heads/{b['prefix']}{sid}"], cwd=str(cfg.root), env=env, stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE, start_new_session=True)   # its own process group: at the limit, git's helpers end too
+        try:
+            _, err = proc.communicate(timeout=PUSHED_LIMIT_S)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except OSError:
+                pass
+            proc.communicate()
+            return _run("", "unreachable")
+        if proc.returncode:
+            return _run("", "none" if MISSING_REF in err else "unreachable")
+        shown = subprocess.run(["git", "--git-dir", scratch, "show", "FETCH_HEAD:LAST-RUN"], capture_output=True, env=env)
+        if shown.returncode:
+            return _run("", "none")
+        return _run("\n".join(shown.stdout.decode("utf-8", "replace").splitlines()[:2]), "pushed")
 
 
 def backup(a):
@@ -303,8 +370,10 @@ def backup(a):
     except OSError as e:
         print(f"keep backup: cannot run {KEEP_BACKUP.name}: {e}", file=sys.stderr)
         return 1
-    last = last_run(cfg, session_id(t))
-    if a.wait and rc == 0 and last.startswith("FAILED"):
+    if not a.wait:
+        return rc
+    last = last_run(cfg, session_id(t), fetch=False)   # this run's own status: the remote is never asked for it
+    if rc == 0 and last.startswith("FAILED"):
         print(f"keep backup: {last}", file=sys.stderr)
         return 1
     return rc

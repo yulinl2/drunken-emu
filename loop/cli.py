@@ -29,8 +29,10 @@ def doctor():
     except (OSError, ValueError):
         hooked = []
     t = cfg.transcript()
+    last = keep.last_run(cfg, keep.session_id(t))   # this session's line: its own state, else its pushed copy; the source says which
     print(json.dumps({"project": str(cfg.root), "loop_json": bool(cfg.file), "exists": paths, "verbs_present": mods,
-                      "hooks_in_user_settings": hooked, "transcript_found": bool(t), "last_backup": keep.last_run(cfg) or None}, indent=1))
+                      "hooks_in_user_settings": hooked, "transcript_found": bool(t), "last_backup": str(last) or None,
+                      "last_backup_source": last.source}, indent=1))
     return 0
 
 
