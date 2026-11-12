@@ -136,6 +136,9 @@ that is never executed is not a regeneration command.
 |   |   `-- hw2-sample-pass.prediction.json
 |   |-- EMU-LOOP-RETIRED.md
 |   |-- EXPLORE-SPEC.md
+|   |-- HARNESS-EXTRACTION.md
+|   |-- HARNESS-HISTORY.md
+|   |-- HARNESS-VALIDATION.md
 |   |-- LATEST-CONCLUSIONS.md
 |   |-- OPEN-PROBLEMS.md
 |   |-- OPERATION-CHAINS.md
@@ -145,6 +148,13 @@ that is never executed is not a regeneration command.
 |   |-- TREE.md
 |   |-- ZENODO-RUNBOOK.md
 |   `-- issue-sweep-2026-10-23.md
+|-- examples/
+|   `-- loop-minimal/
+|       |-- README.md
+|       |-- artifact.json
+|       |-- check.py
+|       |-- loop.json
+|       `-- policy.json
 |-- figbank/
 |   |-- app/
 |   |   |-- frontier-tree/
@@ -241,6 +251,9 @@ that is never executed is not a regeneration command.
 |-- harness/
 |   `-- harness.html
 |-- loop/
+|   |-- adapters/
+|   |   |-- __init__.py
+|   |   `-- emu.py
 |   |-- mod/
 |   |   |-- .claude-plugin/
 |   |   |   `-- plugin.json
@@ -288,12 +301,16 @@ that is never executed is not a regeneration command.
 |   `-- watch.py
 |-- out/
 |   `-- .gitkeep
+|-- tests/
+|   `-- test_export_loop.py
 |-- theory/
 |   |-- LIVENESS.md
 |   |-- RECORD-THEORY.md
 |   |-- RESULTS.md
 |   |-- liveness.py
 |   `-- proto.py
+|-- tools/
+|   `-- export_loop.py
 |-- vendor/
 |   |-- babel.js
 |   |-- react.js
@@ -309,5 +326,5 @@ that is never executed is not a regeneration command.
 |-- README.md
 `-- THIRD_PARTY_NOTICES.md
 
-35 directories, 249 files tracked
+40 directories, 261 files tracked
 ```

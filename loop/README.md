@@ -100,7 +100,7 @@ The principal's method text, the contents of the bank, the tree, the verdicts, t
 - It does not evaluate pages. That is the engine; name its command in `stop_blocks_on`.
 - It does not let due checks take turns yet: a check that keeps failing is picked first at every tick, the others wait until they are more than three intervals late, and `tick liveness` then names them.
 - `record find` and `record quotes` read a words line with no blockquote marker only inside quotation marks, whoever they quote: keep other speakers' words out of quotation marks on such a line; the principal's words outside them are not read there.
-- No verb writes a verdict: the line is written by hand, and the guard refuses a malformed one.
+- `guard verdict` records a supplied answer and checks its shape; it does not judge whether the answer is sound. Hand-written rows remain readable.
 - The reprint also reaches the workers a session starts. Four of the six that ported this package took it for foreign text and ignored it; whether a worker should be bound by it is open.
 - It cannot tell a public remote from a private one, which is why `backup.remote` has no default: until a project names one, `keep backup` refuses and every prompt says that nothing is kept.
 - `keep backup` needs bash 4, GNU coreutils and findutils, and `flock`; it has not run on macOS. Each session keeps its own backup worktree under the state folder, and old ones are not removed yet.

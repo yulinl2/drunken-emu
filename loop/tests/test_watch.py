@@ -13,6 +13,7 @@ import pytest
 KIT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(KIT))
 from loop import config, hook, watch  # noqa: E402
+from loop.adapters import emu
 
 STUB = '''import json, re, sys, time
 from pathlib import Path
@@ -547,9 +548,9 @@ ENGINE_CHAIN = json.dumps({"provenance": {"source": "narrated", "date": "2026-11
                                      "TAP Settings"]})
 
 
-def test_a_pass_of_another_command_says_it_reports_no_layers(proj, monkeypatch, capsys):
+def test_a_pass_of_another_command_keeps_unreported_coverage_unknown(proj, monkeypatch, capsys):
     put(proj, "LOAD=1\n")
-    assert "PASS (the check reports no layers)" in context(hook_run(monkeypatch, capsys, proj, "post")[1])
+    assert "PASS (coverage beyond reported layers is unknown)" in context(hook_run(monkeypatch, capsys, proj, "post")[1])
 
 
 def test_a_pass_of_the_engine_verdict_says_what_the_engine_did_not_run(proj, monkeypatch, capsys):
@@ -564,10 +565,10 @@ def test_a_pass_of_the_engine_verdict_says_what_the_engine_did_not_run(proj, mon
 
 
 def test_the_layers_a_pass_leaves_out_are_the_ones_the_engine_assigns():
-    """The layer names watch.py knows are those checks/verdict.py assigns to its layers; a layer added there must be added here."""
+    """The layer names the emu adapter knows are those checks/verdict.py assigns to its layers; a layer added there must be added here."""
     src = (KIT / "checks" / "verdict.py").read_text(encoding="utf-8")
     assigned = set(re.findall(r'layers\["(\w+)"\] = ', src))
-    assert assigned == set(watch.EMU_LAYERS), (sorted(assigned), watch.EMU_LAYERS)
+    assert assigned == set(emu.EMU_LAYERS), (sorted(assigned), emu.EMU_LAYERS)
 
 
 def test_a_pass_whose_verdict_says_nothing_about_what_it_leaves_out_says_it_is_unknown():
@@ -578,7 +579,7 @@ def test_a_pass_whose_verdict_says_nothing_about_what_it_leaves_out_says_it_is_u
 def test_a_stop_that_lets_a_pass_through_says_what_the_pass_did_not_run(proj, monkeypatch, capsys):
     put(proj, "LOAD=1\n")
     rc, _, err = hook_run(monkeypatch, capsys, proj, "stop")
-    assert rc == 0 and "loop hook stop: passed: watch stub app.txt (the check reports no layers)" in err, err
+    assert rc == 0 and "loop hook stop: passed: watch stub app.txt (coverage beyond reported layers is unknown)" in err, err
 
 
 def test_status_names_what_a_pass_did_not_run(proj, capsys):
@@ -586,7 +587,7 @@ def test_status_names_what_a_pass_did_not_run(proj, capsys):
     watch.main(["eval"])
     capsys.readouterr()
     assert watch.main(["status"]) == 0
-    assert "PASS (the check reports no layers)" in capsys.readouterr().out
+    assert "PASS (coverage beyond reported layers is unknown)" in capsys.readouterr().out
 
 
 # retired checks/emu_loop.py (docs/EMU-LOOP-RETIRED.md): the engine's verdict judged through watch, a missing trial chain, a restore
@@ -659,3 +660,14 @@ def test_a_check_error_under_a_banner_still_reaches_the_session(proj, monkeypatc
     put(proj, "an artifact\n")
     ctx = context(hook_run(monkeypatch, capsys, proj, "post")[1])
     assert "NOT EVALUATED" in ctx and "RuntimeError: the page did not mount" in ctx, ctx
+
+
+def test_generic_checker_without_layers_says_so():
+    assert watch.pass_note(["python3", "check.py"], {}, "") == "the check reports no layers"
+
+
+def test_emu_adapter_preserves_complete_and_partial_coverage():
+    assert emu.accepts(["bash", "bin/emu", "verdict", "page.html"])
+    assert not emu.accepts(["python3", "check.py"])
+    assert emu.pass_note({"smoke": "pass", "chain": "pass"}, "not in the verdict yet:  are not in this loop") == "all layers ran"
+    assert emu.pass_note({"chain": "pass"}, "not in the verdict yet: explore (optional) and chains captured from a driven run are not in this loop") == "not run: smoke, explore, chains captured from a driven run"

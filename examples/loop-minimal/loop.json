@@ -1,0 +1,10 @@
+{
+  "principal_method": null,
+  "stop_runs": [],
+  "watch": [{
+    "name": "json-contract",
+    "files": ["artifact.json"],
+    "inputs": ["check.py", "policy.json"],
+    "run": ["python3", "-I", "check.py", "{path}"]
+  }]
+}
