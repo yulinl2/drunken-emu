@@ -1,7 +1,9 @@
 # Reusable harness and evaluator boundary
 
 This extraction starts at [PR #85](https://github.com/yulinl2/drunken-emu/pull/85),
-head `9a483c07859d205474ba573fc5deb7cdf18df3d5`, not the default branch.
+head `d444a0031a92104473e7949241d75a67167e84f2` on 2026-11-12, with
+`9a483c07859d205474ba573fc5deb7cdf18df3d5` kept as the earlier checkpoint,
+not at the default branch.
 Reason: that head already consolidates the latest tested session loop and retires
 the older engine-specific harness. Export its implementation; do not fork a
 second implementation. [History](HARNESS-HISTORY.md) preserves the reasons,

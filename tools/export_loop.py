@@ -59,14 +59,14 @@ def sources():
               if p.suffix in (".py", ".sh") or p.name == "README.md"]
     # Host adapter files are selected from Git, not an unbounded worktree crawl.
     tracked = git("ls-files", "-z", "loop/mod").decode().split("\0")
-    names += [p for p in tracked if p]
+    names += [p for p in tracked if p and not p.endswith(".test.ts")]
     names += [p.relative_to(ROOT).as_posix() for p in (ROOT / "loop/adapters").glob("*.py")]
     names += ["examples/loop-minimal/" + n for n in
               ("README.md", "loop.json", "check.py", "artifact.json", "policy.json")]
-    for doc in ("docs/HARNESS-EXTRACTION.md", "docs/HARNESS-VALIDATION.md",
-                "docs/HARNESS-HISTORY.md", "docs/EMU-LOOP-RETIRED.md"):
-        if (ROOT / doc).is_file():
-            names.append(doc)
+    # The manual's linked evidence is required: absence must fail the export,
+    # rather than silently ship a package with a broken validation pointer.
+    names += ["docs/HARNESS-EXTRACTION.md", "docs/HARNESS-VALIDATION.md",
+              "docs/HARNESS-HISTORY.md", "docs/EMU-LOOP-RETIRED.md"]
     return sorted(set(names))
 
 

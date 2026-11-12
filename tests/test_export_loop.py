@@ -76,6 +76,8 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256((self.package / name).read_bytes()).hexdigest(), rec["sha256"])
         self.assertFalse((self.package / ".git").exists())
         self.assertFalse((self.package / "checks").exists())
+        self.assertFalse((self.package / "loop/mod/hooks/register.test.ts").exists())
+        self.assertTrue((self.package / "loop/mod/hooks/register.ts").is_file())
         self.run_cmd(self.package / "tools/export_loop.py", "--verify", self.package)
         with (self.package / "loop/config.py").open("a") as stream:
             stream.write("\n# corruption\n")
