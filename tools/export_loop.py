@@ -30,6 +30,8 @@ checks a JSON contract. The browser engine, its vendor bundles, repository
 history, tests, user settings and instance state are not included. Original
 LICENSE, NOTICE and THIRD_PARTY_NOTICES.md are retained; the vendor references
 in those notices describe the source repository, not bundled runtime dependencies.
+The emu-specific coverage reader remains in the source checkout; this export
+uses the generic check protocol without inferring coverage from a command's name.
 
 Python standard library and git suffice for the sample on Linux. Hooks and
 transcript handling target Claude Code; backup requires bash 4, GNU tools and
@@ -60,7 +62,9 @@ def sources():
     # Host adapter files are selected from Git, not an unbounded worktree crawl.
     tracked = git("ls-files", "-z", "loop/mod").decode().split("\0")
     names += [p for p in tracked if p and not p.endswith(".test.ts")]
-    names += [p.relative_to(ROOT).as_posix() for p in (ROOT / "loop/adapters").glob("*.py")]
+    # The general runtime needs the dispatcher, not the source checkout's
+    # subject-specific readers. Instances may install their own readers later.
+    names += ["loop/adapters/__init__.py"]
     names += ["examples/loop-minimal/" + n for n in
               ("README.md", "loop.json", "check.py", "artifact.json", "policy.json")]
     # The manual's linked evidence is required: absence must fail the export,
@@ -101,7 +105,8 @@ def export(destination):
         records["README.md"] = {"sha256": digest(README.encode()), "mode": "0o644", "generated": True}
         manifest = {"format": 1, "source_head": head, "files": records,
                     "scope": "loop runtime, optional host adapter, generic instance scaffold",
-                    "excluded": [".git", "user settings", "instance state", "browser engine", "tests", "vendor bundles"],
+                    "excluded": [".git", "user settings", "instance state", "browser engine", "tests", "vendor bundles",
+                                 "subject-specific report readers"],
                     "verification": "inventory only; no test or semantic correctness claim"}
         (stage / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         # mkdir reserves the destination exclusively; a race cannot overwrite it.

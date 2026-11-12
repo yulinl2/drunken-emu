@@ -26,12 +26,13 @@ that every assistant host or operating system supports its adapters.
 | `guard.py` | Recognised command tripwire; record a supplied advisor answer before an act | A security boundary or independently generated advisor judgment |
 | `hook.py`, transcript readers, `mod/` | Claude event/transcript/compaction adapters | Codex integration or portable event delivery |
 | `keep.py`, `keep_backup.sh` | Session-specific backup/restore/replay | Universal platform support or losslessness when input was never captured |
-| `adapters/emu.py` | Existing emu-specific coverage interpretation | Generic orchestration policy |
+| `adapters/emu.py` (source checkout only) | Existing emu-specific coverage interpretation | Generic orchestration policy or portable export |
 | External evaluator | Define and execute subject-specific checks | Authority to redefine the principal's goal |
 | Instance `loop.json` and its files | Own goals, sources, policies, check commands and private backup destination | Reusable runtime data |
 
-The `bin/emu` engine remains in this repository with its browser/chain dependencies;
-it is one evaluator of the harness, not a required dependency of its export.
+The `bin/emu` engine and its report adapter remain in this repository with its
+browser/chain dependencies; they are one evaluator of the harness, not required
+dependencies of its export.
 The minimal scaffold supplies a different, dependency-free evaluator so this
 boundary is exercised. Browser functionality is not silently copied or advertised
 as part of the smaller package.

@@ -11,9 +11,8 @@ standard output may be one JSON object: "vector" (numbers, every axis lower is b
 The bytes of the files that `inputs` globs match (sorted by path; each as its path and the hash of its bytes) are part of the
 candidate a verdict is for, so a changed input means no record for those bytes and the watched file is judged again.
 A watched file or an input that changes while its check runs gets no verdict from that run. A glob that
-matches no file is said by `eval` and `status`. A PASS says what its check did not run: for the engine's verdict (bin/emu verdict),
-the optional report adapter names the layers it does not run; for another command, coverage beyond its reported layers is
-unknown (or it reports no layers).
+matches no file is said by `eval` and `status`. A PASS says what its check did not run when an installed report reader
+recognizes it; otherwise coverage beyond reported layers is unknown (or it reports no layers).
 
 Records go to .loop/watch.jsonl, which is only appended to; a judged file is kept under .loop/cand/ by its hash. A line of the
 ledger that is not a record (RECORD_KEYS) is skipped and said, and the bytes it was for are judged again. Among the passing

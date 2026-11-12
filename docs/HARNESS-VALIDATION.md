@@ -14,10 +14,14 @@ exported `MANIFEST.json` records the exact source commit and bytes delivered.
 | Unmodified `9a483c0`, Python 3.12, `pytest -q loop/tests` | 485 passed | Local baseline before adapter extraction. |
 | Unmodified engine, browser-free checks | 335 passed | Engine protocol and chain fixtures, not live reader outcomes. |
 | Real Chromium static-page controls | 5 passed with `PW_CHROMIUM=/usr/bin/chromium` | Source-preserving HTML across CLI modes; planted small control and JavaScript error detected. The bundled Playwright browser revision was unavailable in this executor. |
-| Relocated export integration checks | 4 passed again after the PR head advanced | New directory and isolated HOME; PASS, FAIL and NOT EVALUATED; checker and policy byte changes; inventory corruption and symlink refusal; no overwrite. |
-| Full merged loop and export suite, `083a4bf` atop `d444a00`, Python 3.12.14 | 673 passed in 64.84 s | Local source branch before the final packaging/doc edits; one external pytest deprecation warning. |
+| Relocated export integration checks | 5 passed after adapter separation | New directory and isolated HOME; PASS, FAIL and NOT EVALUATED; checker and policy byte changes; unrelated `verdict.py` remains generic; inventory corruption and symlink refusal; no overwrite. |
+| Full merged loop and export suite after adapter separation, Python 3.12.14, `python3 -m pytest -q loop/tests tests/test_export_loop.py` | 674 passed in 68.28 s | Local source branch based on `d444a00`; one external pytest deprecation warning. |
 | Relocated package commands | passed in an isolated HOME | All eight verb help commands, `doctor`, `gate selftest`, `hook install --user --dry-run`, `watch eval/status`, and manifest verification. No hook installed. |
-| Final exported package manifest | PENDING | Verify after source tree is complete and committed. |
+| Precommit export of the final 35-file selection | inventory verification, `watch eval` and `gate selftest` passed | Manifest correctly marked five uncommitted source files as differing from HEAD; the committed export must show zero. |
+
+The final package's own `MANIFEST.json` identifies its source commit and each
+file's bytes. Its inventory check and all `matches_head` flags must be verified
+after the source commit exists; this document cannot attest its own export.
 
 The three upstream commits from `9a483c0` through `d444a00` do not change
 `checks/verdict.py`, `checks/static_target.py`, `checks/test_static_targets.py`

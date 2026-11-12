@@ -76,6 +76,7 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256((self.package / name).read_bytes()).hexdigest(), rec["sha256"])
         self.assertFalse((self.package / ".git").exists())
         self.assertFalse((self.package / "checks").exists())
+        self.assertFalse((self.package / "loop/adapters/emu.py").exists())
         self.assertFalse((self.package / "loop/mod/hooks/register.test.ts").exists())
         self.assertTrue((self.package / "loop/mod/hooks/register.ts").is_file())
         self.run_cmd(self.package / "tools/export_loop.py", "--verify", self.package)
@@ -83,6 +84,22 @@ class ExportTests(unittest.TestCase):
             stream.write("\n# corruption\n")
         result = self.run_cmd(self.package / "tools/export_loop.py", "--verify", self.package, expected=1)
         self.assertIn("bytes changed: loop/config.py", result.stdout)
+
+    def test_external_verdict_name_does_not_imply_engine_coverage(self):
+        # The source reader historically recognizes any command named
+        # verdict.py. An unrelated check in the general export must not inherit
+        # its expectations about smoke/chain coverage or report wording.
+        (self.project / "verdict.py").write_bytes((self.project / "check.py").read_bytes())
+        config_path = self.project / "loop.json"
+        config = json.loads(config_path.read_text())
+        config["watch"][0]["run"][2] = "verdict.py"
+        config["watch"][0]["inputs"][0] = "verdict.py"
+        config_path.write_text(json.dumps(config))
+        self.loop("watch", "eval")
+        record = self.records()[-1]
+        self.assertEqual(record["gate"], "pass")
+        self.assertEqual(record["note"], "coverage beyond reported layers is unknown")
+        self.assertEqual(record["layers"], {"required_key": "pass", "meaning": "not_evaluated"})
 
     def test_deterministic_manifest_and_existing_destination_preserved(self):
         second = self.base / "second"
