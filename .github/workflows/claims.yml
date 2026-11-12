@@ -47,6 +47,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install --quiet pytest
       - run: python3 -m pytest -q loop/tests
+      - run: python3 -m pytest -q tests/test_export_loop.py
 
   figbank:
     # the figure bank's own gates: renderer, budget/overflow/ellipsis, React host, text calibration. No browser.

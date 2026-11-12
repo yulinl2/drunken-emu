@@ -12,8 +12,8 @@ The bytes of the files that `inputs` globs match (sorted by path; each as its pa
 candidate a verdict is for, so a changed input means no record for those bytes and the watched file is judged again.
 A watched file or an input that changes while its check runs gets no verdict from that run. A glob that
 matches no file is said by `eval` and `status`. A PASS says what its check did not run: for the engine's verdict (bin/emu verdict),
-the layers it does not run (EMU_LAYERS, which a test ties to checks/verdict.py) and what its "not in the verdict yet" line names;
-for another command, that it reports no layers.
+the optional report adapter names the layers it does not run; for another command, coverage beyond its reported layers is
+unknown (or it reports no layers).
 
 Records go to .loop/watch.jsonl, which is only appended to; a judged file is kept under .loop/cand/ by its hash. A line of the
 ledger that is not a record (RECORD_KEYS) is skipped and said, and the bytes it was for are judged again. Among the passing
@@ -37,6 +37,7 @@ usage: python3 -I bin/loop watch eval [PATH ...]   judge now, every watched file
 import argparse, datetime, fnmatch, glob, hashlib, json, os, re, subprocess, sys, time
 
 from loop import config
+from loop.adapters import pass_note
 
 LEDGER = "watch.jsonl"          # append-only, in the state folder
 RECORD_KEYS = ("at", "id", "check", "path", "sha", "config", "gate", "vector", "layers", "tail", "trigger", "supersedes",
@@ -51,10 +52,7 @@ WORD = {"pass": "PASS", "fail": "FAIL", "not_evaluated": "NOT EVALUATED"}
 GATE_OF_EXIT = {0: "pass", 3: "not_evaluated"}   # any other exit is a fail
 OUT_OF_TIME = "not evaluated (out of time): the hook's time budget ran out before this file was judged"
 OUT_OF_TIME_CHECK = "not evaluated (out of time): the hook's time budget ran out while the check ran"
-NO_LAYERS = "the check reports no layers"
 NOTE_MISSING = "what did not run was not recorded"
-EMU_LAYERS = ("smoke", "chain")  # the layers checks/verdict.py runs: smoke unless --no-smoke, chain when --chain is given
-NOT_YET = re.compile(r"^not in the verdict yet: (.*) (?:is|are) not in this loop\s*$", re.M)   # the line checks/verdict.py prints
 
 
 def now():
@@ -276,24 +274,6 @@ def _json_line(text):
     except ValueError:
         return {}
     return obj if isinstance(obj, dict) else {}
-
-
-def _is_emu_verdict(run):
-    """The engine's verdict: `bin/emu verdict ...`, or checks/verdict.py itself."""
-    return any(a.endswith("emu") and b == "verdict" for a, b in zip(run, run[1:])) or any(w.endswith("verdict.py") for w in run)
-
-
-def pass_note(run, layers, text):
-    """What a PASS did not run, in the check's own words. For the engine's verdict: the layers its report does not name (EMU_LAYERS),
-    and the layers its "not in the verdict yet" line names (without their parenthesised notes). For another command: NO_LAYERS."""
-    if not _is_emu_verdict(run):
-        return NO_LAYERS
-    m = NOT_YET.search(text)
-    if m is None:
-        return "not run: unknown, the verdict did not say what it leaves out"
-    yet = [re.sub(r"\s*\([^)]*\)", "", part).strip() for part in re.split(r" and ", m.group(1))]
-    gone = [n for n in EMU_LAYERS if n not in layers] + [n for n in yet if n]
-    return ("not run: " + ", ".join(gone)) if gone else "all layers ran"
 
 
 def _limit(deadline):

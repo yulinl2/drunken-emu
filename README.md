@@ -14,6 +14,10 @@ visual affordance, screenshots judged by eye, mechanics asserted by script.
 HTML is served on loopback from its own directory; it never passes through the
 JSX converter. See [Static pages](docs/STATIC-PAGES.md) for the scope and limits.
 
+For a standalone session harness, see [extraction and evaluator contract](docs/HARNESS-EXTRACTION.md).
+`python3 tools/export_loop.py /path/to/new-package` exports the existing loop,
+a runnable minimal instance, and a hash manifest without the browser engine or project data.
+
 > **Fresh session? Read in this order.** `docs/OPEN-PROBLEMS.md` (what is
 > unfinished and why) → this file's `## Falsified` (what was already tried and
 > killed) → `docs/SANDBOX-FACTS.md` (measured environment facts, so you do not
